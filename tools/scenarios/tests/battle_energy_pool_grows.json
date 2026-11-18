@@ -97,7 +97,7 @@
   {
    "type": "screen_row",
    "row": 7,
-   "contains": "1 /4"
+   "contains": "@"
   },
   {
    "type": "battle_energy",

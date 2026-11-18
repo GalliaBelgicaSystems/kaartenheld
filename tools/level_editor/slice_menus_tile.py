@@ -11,6 +11,8 @@ Cell map (positional: CSV row/col == sheet cell):
       cursor category, category border, category corner, category
       separator, list scroll arrow, quests separator, health points
       icon, action point icon, cards icon).
+  Row 1, cols 0-3: the 4 status-bar icons (scan order: full heart,
+      half heart, AP, arrow) for the battle status bar.
   Cols 12-15, rows 0-3: the 4x4 hero-status portrait ("hero status RC":
       row digit + col digit, sheet order).  Corners (15,0)/(12,3) are
       blank by design (transparent portrait corners).
@@ -49,6 +51,7 @@ JSON_PATH = os.path.join(REPO_ROOT, "tools", "level_editor", "tilesets",
 TILE = 8
 EXPECT_W, EXPECT_H = 128, 32
 SINGLES = [(c, 0) for c in range(12)]
+STATUS = [(c, 1) for c in range(4)]
 HERO = [(c, r) for r in range(4) for c in range(12, 16)]
 HERO_BLANK = [(15, 0), (12, 3)]
 
@@ -86,7 +89,7 @@ def main():
     if len(names) != len(set(names)):
         raise SystemExit("menu-tile-description.csv: names must be unique")
 
-    for (c, r) in SINGLES:
+    for (c, r) in SINGLES + STATUS:
         if not cell_drawn(img, c, r):
             raise SystemExit(
                 "expected drawn single at (%d,%d) for %r"
@@ -99,7 +102,7 @@ def main():
                 % (c, r, not want, want))
     for r in range(4):
         for c in range(12):
-            if (c, r) in SINGLES:
+            if (c, r) in SINGLES + STATUS:
                 continue
             if cell_drawn(img, c, r):
                 raise SystemExit(
@@ -121,7 +124,7 @@ def main():
             "category": "ui",
         })
 
-    for (c, r) in SINGLES + HERO:
+    for (c, r) in SINGLES + HERO + STATUS:
         label = grid[r][c]
         tid = "menus_" + slugify(label)
         cell = img.crop((c * TILE, r * TILE, (c + 1) * TILE, (r + 1) * TILE))

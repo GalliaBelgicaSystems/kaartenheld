@@ -45,7 +45,7 @@
   {
    "type": "tilemap_attr",
    "row": 7,
-   "col": 1,
+   "col": 0,
    "expected": 2
   }
  ]

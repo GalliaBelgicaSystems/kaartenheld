@@ -647,24 +647,30 @@ static uint8_t battle_energy_display(const volatile Battle *b);
 static void battle_draw_hero_row(const volatile Battle *battle)
 {
     volatile uint8_t *dst;
-    /* Staged rows/cols (WRAM copy of the active BattleScreenDef): the
-     * hero sprite badge at (hero_label_row, hero_label_col); the HP
-     * block at (hero_hp_row, hero_hp_col) with the heart icon on its
-     * left; the AP block at (ap_row, ap_col).  Row 7 reads (col):
-     * 0:sp 1:sprite 2:sp 3:heart 4:: 5-6:HP 7:/ 8-9:maxHP 10:sp
-     * 11:bolt 12:: 13:AP 14:dot 15:/ 16:maxAP 17:dot 18-19:sp. */
+    int16_t quiver;
+    uint8_t arrows;
+    uint8_t heart_tile;
+    /* Single-line hero status (cols): 0:sprite 1-2:sp 3:heart 4-5:HP
+     * 6-7:sp 8:AP icon 9:AP 10-11:sp 12:deck icon 13-14:deck
+     * 15:sp 16:arrow icon 17-18:arrows 19:sp.  Current values only, no
+     * slashes or totals: HP via num2, AP/pool single digits (pool never
+     * exceeds 9), deck/arrows via num2 (clamped at 99). */
     uint8_t label_row = g_battle_hud.hero_label_row;
     uint8_t label_col = g_battle_hud.hero_label_col;
     uint8_t hp_row = g_battle_hud.hero_hp_row;
     uint8_t hp_col = g_battle_hud.hero_hp_col;
     uint8_t ap_row = g_battle_hud.ap_row;
     uint8_t ap_col = g_battle_hud.ap_col;
+    uint8_t deck_icon_col;
+    uint8_t arrow_icon_col;
 
     if (hp_col < 2) hp_col = 2;
     if (ap_col < 2) ap_col = 2;
+    deck_icon_col = (uint8_t)(ap_col + 4);
+    arrow_icon_col = (uint8_t)(ap_col + 8);
 
-    /* Clear first, draw second: all three blocks share the row, and the
-     * blank pass would otherwise erase the label. */
+    /* Clear first, draw second: all blocks share the row, and the
+     * blank pass would otherwise erase the sprite. */
     battle_draw_text_line(0, label_row, NULL, 20);
     if (hp_row != label_row) battle_draw_text_line(0, hp_row, NULL, 20);
     if (ap_row != label_row && ap_row != hp_row)
@@ -686,55 +692,66 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_color_span(label_col, label_row, 1,
                       battle_status_color(&s_battle_status[0]));
 
-    /* Badge, last number ends at col 19: icon immediately followed
-     * by colon, then the numbers (no space cell). */
-    battle_put_char((uint8_t)(hp_col + 1), hp_row, ':');
-    battle_draw_num2((uint8_t)(hp_col + 2), hp_row, battle->player.hp);
-    battle_put_char((uint8_t)(hp_col + 4), hp_row, '/');
-    battle_draw_num2((uint8_t)(hp_col + 5), hp_row, battle->player.max_hp);
+    /* HP block: status-bar heart (full normally, half at half HP or
+     * less) + current HP only -- no slash, no total.  Icon stamps
+     * unconditionally (skip-guards cannot clear art tiles). */
+    if (((uint16_t)battle->player.hp + (uint16_t)battle->player.hp) <=
+        (uint16_t)battle->player.max_hp)
+        heart_tile = UI_TILE_MENUS_STATUS_HALF;
+    else
+        heart_tile = UI_TILE_MENUS_STATUS_HEART;
+    battle_draw_num2((uint8_t)(hp_col + 1), hp_row, battle->player.hp);
     /* Heal flash: two slime-light green pulses on a white base over
      * the heal jingle (BG slot GOLD is reprogrammed to #77E331 for the
-     * duration; phase staged by the bank-9 tick); otherwise the block
-     * keeps its steady green. */
+     * duration; phase staged by the bank-9 tick); otherwise the digits
+     * keep their steady green. */
     if (g_battle_heal_flash != 0 && g_battle_heal_phase != 0) {
-        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_GOLD);
+        battle_color_span((uint8_t)(hp_col + 1), hp_row, 2, UI_COLOR_GOLD);
     } else {
-        battle_color_span((uint8_t)(hp_col + 1), hp_row, 6, UI_COLOR_FIELD);
+        battle_color_span((uint8_t)(hp_col + 1), hp_row, 2, UI_COLOR_FIELD);
     }
 
-    /* Icon tile + palette come from the staged HUD skin (battle_hud.json). */
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)hp_row << 5) + hp_col);
     VBK_REG = 0;
-    battle_vram_sync_write(dst, g_hud_skin_wram.hp_icon_tile);
+    battle_vram_sync_write(dst, heart_tile);
 #ifdef DEBUG_BUILD
-    g_tilemap_mirror[hp_row * 32 + hp_col] = g_hud_skin_wram.hp_icon_tile;
+    g_tilemap_mirror[hp_row * 32 + hp_col] = heart_tile;
 #endif
     battle_color_span(hp_col, hp_row, 1, g_hud_skin_wram.hp_icon_color);
 
-    /* AP badge (moved up from the deck line so row 7 carries the whole
-     * hero status): bolt icon, then :E·/M· glued to the separators.
-     * Icon and dots stamp unconditionally (skip-guards cannot clear
-     * art tiles); the row blank above already cleared the text cells. */
-    battle_put_char((uint8_t)(ap_col + 1), ap_row, ':');
-    battle_put_char((uint8_t)(ap_col + 2), ap_row, (char)('0' + battle_energy_display(battle)));
-    battle_put_char((uint8_t)(ap_col + 4), ap_row, '/');
-    battle_put_char((uint8_t)(ap_col + 5), ap_row, (char)('0' + g_battle_pool_max));
-    battle_color_span((uint8_t)(ap_col + 1), ap_row, 5, UI_COLOR_FIELD);
+    /* AP badge: status-bar AP icon + current pool only (single digit,
+     * pool never exceeds 9) -- no slash, no total. */
+    battle_put_char((uint8_t)(ap_col + 1), ap_row, (char)('0' + battle_energy_display(battle)));
+    battle_color_span((uint8_t)(ap_col + 1), ap_row, 1, UI_COLOR_FIELD);
     VBK_REG = 0;
     dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + ap_col);
-    battle_vram_sync_write(dst, g_hud_skin_wram.ap_icon_tile);
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col + 3));
-    battle_vram_sync_write(dst, UI_TILE_AP_DOT);
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + (ap_col + 6));
-    battle_vram_sync_write(dst, UI_TILE_AP_DOT);
+    battle_vram_sync_write(dst, UI_TILE_MENUS_STATUS_AP);
 #ifdef DEBUG_BUILD
-    g_tilemap_mirror[ap_row * 32 + ap_col] = g_hud_skin_wram.ap_icon_tile;
-    g_tilemap_mirror[ap_row * 32 + (ap_col + 3)] = UI_TILE_AP_DOT;
-    g_tilemap_mirror[ap_row * 32 + (ap_col + 6)] = UI_TILE_AP_DOT;
+    g_tilemap_mirror[ap_row * 32 + ap_col] = UI_TILE_MENUS_STATUS_AP;
 #endif
     battle_color_span(ap_col, ap_row, 1, g_hud_skin_wram.ap_icon_color);
-    battle_color_span((uint8_t)(ap_col + 3), ap_row, 1, g_hud_skin_wram.ap_icon_color);
-    battle_color_span((uint8_t)(ap_col + 6), ap_row, 1, g_hud_skin_wram.ap_icon_color);
+
+    /* Deck + quiver: icons + current counts only.  The quiver reads the
+     * live shared arrow pool (bows consume mid-battle), clamped at zero
+     * like the shop/HERO displays; num2 clamps at 99. */
+    battle_draw_num2((uint8_t)(deck_icon_col + 1), ap_row,
+                     (uint8_t)(battle->deck.count - battle->deck.draw_idx));
+    battle_color_span((uint8_t)(deck_icon_col + 1), ap_row, 2, UI_COLOR_FIELD);
+    quiver = g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1];
+    arrows = (quiver < 0) ? 0 : (uint8_t)quiver;
+    battle_draw_num2((uint8_t)(arrow_icon_col + 1), ap_row, arrows);
+    battle_color_span((uint8_t)(arrow_icon_col + 1), ap_row, 2, UI_COLOR_FIELD);
+    VBK_REG = 0;
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + deck_icon_col);
+    battle_vram_sync_write(dst, g_hud_skin_wram.deck_icon_tile);
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)ap_row << 5) + arrow_icon_col);
+    battle_vram_sync_write(dst, UI_TILE_MENUS_STATUS_ARROW);
+#ifdef DEBUG_BUILD
+    g_tilemap_mirror[ap_row * 32 + deck_icon_col] = g_hud_skin_wram.deck_icon_tile;
+    g_tilemap_mirror[ap_row * 32 + arrow_icon_col] = UI_TILE_MENUS_STATUS_ARROW;
+#endif
+    battle_color_span(deck_icon_col, ap_row, 1, g_hud_skin_wram.deck_icon_color);
+    battle_color_span(arrow_icon_col, ap_row, 1, g_hud_skin_wram.deck_icon_color);
 }
 
 /* AP shown in the badge during a decision phase: the phase pool minus the
@@ -752,46 +769,6 @@ static uint8_t battle_energy_display(const volatile Battle *b)
         }
     }
     return (uint8_t)(b->energy - reserved);
-}
-
-/* Draw-pile, quiver & deck counter line: [deck icon]DECK:NN ARROWS:NN.
- * The AP badge moved up to the hero row; this row keeps the draw pile
- * plus the shared arrow pool (limited-arrows) so the player sees ammo
- * without opening a menu.  Layout: icon at deck_col - 1, DECK:NN, one
- * space, ARROWS:NN.  The count reads the live currency slot (bows
- * consume mid-battle), clamped at zero like the shop/HERO displays. */
-static void battle_draw_deck_line(const volatile Battle *battle)
-{
-    volatile uint8_t *dst;
-    int16_t quiver;
-    uint8_t arrows;
-    /* Staged rows/cols (WRAM copy of the active BattleScreenDef): deck
-     * icon + count at (deck_row, deck_col). */
-    uint8_t deck_row = g_battle_hud.deck_row;
-    uint8_t deck_col = g_battle_hud.deck_col;
-
-    if (deck_col < 1) deck_col = 1;
-
-    /* Clear first, draw second. */
-    battle_draw_text_line(0, deck_row, NULL, 20);
-    battle_draw_text_line(deck_col, deck_row, "DECK:", 5);
-    battle_draw_num2((uint8_t)(deck_col + 5), deck_row,
-                     (uint8_t)(battle->deck.count - battle->deck.draw_idx));
-    battle_draw_text_line((uint8_t)(deck_col + 7), deck_row, " ARROWS:", 8);
-    quiver = g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1];
-    arrows = (quiver < 0) ? 0 : (uint8_t)quiver;
-    battle_draw_num2((uint8_t)(deck_col + 15), deck_row, arrows);
-    battle_color_span(deck_col, deck_row, 17, UI_COLOR_FIELD);
-
-    /* Icon tile + palette come from the staged HUD skin (battle_hud.json). */
-    VBK_REG = 0;
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)deck_row << 5) + (deck_col - 1));
-    battle_vram_sync_write(dst, g_hud_skin_wram.deck_icon_tile);
-#ifdef DEBUG_BUILD
-    g_tilemap_mirror[deck_row * 32 + (deck_col - 1)] = g_hud_skin_wram.deck_icon_tile;
-#endif
-
-    battle_color_span((uint8_t)(deck_col - 1), deck_row, 1, g_hud_skin_wram.deck_icon_color);
 }
 
 /* Tier display names (docs/combo-system.md hand table).  Rows live in
@@ -1623,7 +1600,6 @@ void ui_update_battle_banked(void)
     if (d & (BATTLE_DIRTY_ENEMIES | BATTLE_DIRTY_BLINK)) battle_draw_enemy_columns(battle);
     if (d & BATTLE_DIRTY_HERO) {
         battle_draw_hero_row(battle);
-        battle_draw_deck_line(battle);
     }
     if (d & BATTLE_DIRTY_COMBO) battle_draw_battle_combo(battle);
     if (d & BATTLE_DIRTY_HAND) battle_draw_battle_hand(battle);

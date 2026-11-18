@@ -282,6 +282,46 @@
       "ascii": "#",
       "image_url": "/tiles/menus/menus_hero_status_33.png",
       "category": "ui"
+    },
+    {
+      "id": "menus_status_bar_full_heart",
+      "label": "status bar full heart",
+      "gb_constant": "TILE_MENUS_STATUS_BAR_FULL_HEART",
+      "walkable": false,
+      "color": "#8b1b1b",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_status_bar_full_heart.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_status_bar_half_heart",
+      "label": "status bar half heart",
+      "gb_constant": "TILE_MENUS_STATUS_BAR_HALF_HEART",
+      "walkable": false,
+      "color": "#8b1b1b",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_status_bar_half_heart.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_status_bar_ap",
+      "label": "status bar AP",
+      "gb_constant": "TILE_MENUS_STATUS_BAR_AP",
+      "walkable": false,
+      "color": "#755930",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_status_bar_ap.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_status_bar_arrow",
+      "label": "status bar arrow",
+      "gb_constant": "TILE_MENUS_STATUS_BAR_ARROW",
+      "walkable": false,
+      "color": "#755930",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_status_bar_arrow.png",
+      "category": "ui"
     }
   ]
 }
