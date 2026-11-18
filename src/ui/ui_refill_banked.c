@@ -33,7 +33,9 @@ void ui_refill_semantic_banked(void)
 
     w = (const World *)g_bk_ptr_a;
     p = &g_ui_screen_buf[0][0];
-    for (y = 0; y < WORLD_VIEW_H; y++) {
+    /* Rows 0..16 only: row 17 is owned by the Window status-bar HUD on
+     * the overworld, so steady camera refills must not overwrite it. */
+    for (y = 0; y < (WORLD_VIEW_H - 1); y++) {
         row = (uint8_t)(w->scroll_y + y);
         mrow = &w->map[0][0] + ((uint16_t)row << 5);
         for (x = 0; x < WORLD_VIEW_W; x++) {
@@ -58,7 +60,7 @@ void ui_refill_semantic_banked(void)
         if (!a->active) continue;
         sx = (uint8_t)(a->x - w->scroll_x);
         sy = (uint8_t)(a->y - w->scroll_y);
-        if (sx < WORLD_VIEW_W && sy < WORLD_VIEW_H) {
+        if (sx < WORLD_VIEW_W && sy < (WORLD_VIEW_H - 1)) {
             /* Row stride is WORLD_VIEW_W + 1 (NUL terminator column). */
             uint8_t *arow = (uint8_t *)&g_ui_screen_buf[0][0];
             for (i = 0; i < sy; i++) arow += (WORLD_VIEW_W + 1);

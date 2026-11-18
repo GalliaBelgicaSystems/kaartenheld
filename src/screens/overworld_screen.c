@@ -202,6 +202,10 @@ void overworld_screen_render(Game *g)
              * redraw fallback inside, same end state). */
             ui_draw_world_transition(w);
         }
+        /* Bottom-row status bar on the Window layer (0x9C00, WY=136):
+         * painted only on transitions (boot, map change, battle/shop/
+         * menu/dialogue returns) so steady frames do zero VRAM work. */
+        ui_draw_ow_hud();
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_OVERWORLD, 0,
                        (uint8_t)w->map_id, 0);
         rc->valid = true;
@@ -221,11 +225,6 @@ void overworld_screen_render(Game *g)
     py = (uint8_t)(world_player_py(w) - w->camera_px_y);
     ui_sprite_move(px, py);
     ui_draw_actors_sprites(w);
-    /* Bottom-row status bar (row 17, cols 0-18; col 19 untouched for
-     * the spinner): repainted every frame -- it is screen-anchored but
-     * lives in the scrolling ring, so a camera move changes every
-     * cell's ring address even when the values are identical. */
-    ui_draw_ow_hud(w);
     rc->prev_player_x = px;
     rc->prev_player_y = py;
 }

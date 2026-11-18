@@ -180,6 +180,12 @@ void ui_init(void)
         OCPD_REG = ((const uint8_t *)cgb_obj_palettes)[p];
     }
 
+    /* Window layer: tilemap 0x9C00 (bit 6), positioned at row 17 (WY=136,
+     * WX=7), kept disabled (bit 5 clear) outside the overworld. */
+    LCDC_REG = (uint8_t)((LCDC_REG & ~0x20u) | 0x40u);
+    WX_REG = 7;
+    WY_REG = 136;
+
     SHOW_BKG;
 
     ui_sprite_init();
@@ -1006,13 +1012,10 @@ void ui_draw_battle_timer(const Battle *battle)
 /* Thin fixed-bank wrapper: the overworld status-bar body lives in
  * ROM bank 8 (src/game/ow_hud_banked.c, AGENTS.md 52.18 -- the fixed
  * bank is hard against 0x8000, and debug bank 5 has no room for the
- * ~870 B body). Dispatched once per overworld frame
- * from overworld_screen_render. Stages the World pointer; the body
- * reads live party/AP/arrow/gold state from WRAM itself. */
-void ui_draw_ow_hud(const World *world)
+ * body). Dispatched on overworld transitions from overworld_screen_render;
+ * the body reads live party/AP/arrow/gold state from WRAM itself. */
+void ui_draw_ow_hud(void)
 {
-    if (!world) return;
-    g_bk_ptr_a = (void *)world;
     g_bk_call_bank = 8;
     g_bk_call_target = (uint16_t)&ui_ow_hud_banked;
     banked_call_run();

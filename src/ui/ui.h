@@ -458,11 +458,12 @@ void ui_draw_dialogue_page(const DialogueState *dialogue,
                            uint8_t scroll_x, uint8_t scroll_y);
 void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
                            uint8_t max_chars, uint8_t ox, uint8_t oy);
-/* Bank-8 no-arg body behind ui_draw_ow_hud(): repaints the overworld
- * status bar (row 17, cols 0-18; col 19 is the spinner cell, untouched)
- * from live party/AP/arrow/gold state every overworld frame. */
+/* Bank-8 no-arg body behind ui_draw_ow_hud(): paints the overworld
+ * status bar onto Window tilemap row 0 (0x9C00, WX=7, WY=136, cols
+ * 0-19; cols 18-19 are blank white under the spinner OAM) from live
+ * party/AP/arrow/gold state on overworld transitions. */
 void ui_ow_hud_banked(void);
-void ui_draw_ow_hud(const World *world);
+void ui_draw_ow_hud(void);
 
 /* Bank-11 no-arg body behind the overworld status-bar icon stream:
  * restreams the 4 status icons to VRAM 208-211 and programs the

@@ -9,11 +9,14 @@
 #include "game_ids.h"
 
 /* ── Overworld status-bar HUD (ROM bank 8) ──────────────────────────
- * Bottom screen row (row 17) is a white status bar, repainted every
- * overworld frame (dispatched from overworld_screen_render through
- * the thin fixed wrapper ui_draw_ow_hud). Bank 8: the body does not
- * fit the thin banks (debug bank 5 has ~540 B free); bank 8 has room
- * in both builds.
+ * Bottom screen row (row 17) is a white status bar rendered on the PPU
+ * Window layer (0x9C00 row 0, WX=7, WY=136), updated on overworld
+ * transitions (boot, map change, battle/shop/menu/dialogue returns)
+ * through the thin fixed wrapper ui_draw_ow_hud().  Keeping the bar in
+ * the Window layer prevents camera scrolling from duplicating or
+ * erasing BG map tiles, and skipping steady overworld frames keeps
+ * walking at full 60 fps.  Bank 8: the body does not fit the thin banks
+ * (debug bank 5 has ~540 B free); bank 8 has room in both builds.
  *
  *   col: 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
  *   row17:" _ H H H _ _ A n n _ > n n _ d d d G _ _ "
@@ -36,20 +39,10 @@
  * - The buffer keeps plain letters, so harness screen_row asserts
  *   are stable across art changes.
  *
- * Unconditional repaint (no skip-optimization, no scroll cache): the
- * bar is screen-anchored but lives in the scrolling 32x32 ring, so a
- * camera move changes every cell's ring address even when the content
- * is identical. Needs no extra WRAM (stack-gap budget, AGENTS.md
- * §52.24). Self-contained (AGENTS.md §52.11.1): WRAM game state +
- * same-bank code only, no fixed-bank calls, no div/mod (repeated
- * subtraction: the SDCC div library would land in fixed _CODE,
- * AGENTS.md 52.18). No di/ei anywhere (AGENTS.md §52.11.3):
- * BANKED_VRAM_WRITE only. */
-
-#ifdef DEBUG_BUILD
-extern uint8_t g_tilemap_mirror[32 * 32];
-extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
-#endif
+ * Self-contained (AGENTS.md §52.11.1): WRAM game state + same-bank
+ * code only, no fixed-bank calls, no div/mod (repeated subtraction:
+ * the SDCC div library would land in fixed _CODE, AGENTS.md 52.18).
+ * No di/ei anywhere (AGENTS.md §52.11.3): BANKED_VRAM_WRITE only. */
 
 #define OW_HUD_ROW 17u
 #define OW_HUD_COLS 20u
@@ -85,28 +78,8 @@ static uint8_t hud_tile(char ch)
     return (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
 }
 
-/* Paint one bar cell: tilemap tile + paper attr (+ DEBUG mirrors)
- * and the semantic buffer letter. */
-static void hud_cell(uint8_t col, char ch, uint8_t ring_row, uint8_t sx)
-{
-    uint8_t ring_col = (uint8_t)((sx + col) & 31);
-    uint16_t idx = (uint16_t)((uint16_t)(ring_row << 5) + ring_col);
-    uint8_t tile = hud_tile(ch);
-    VBK_REG = 0;
-    BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), tile);
-    VBK_REG = 1;
-    BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), UI_COLOR_PAPER);
-    VBK_REG = 0;
-#ifdef DEBUG_BUILD
-    g_tilemap_mirror[idx] = tile;
-    g_tilemap_attr_mirror[idx] = UI_COLOR_PAPER;
-#endif
-    g_ui_screen_buf[OW_HUD_ROW][col] = ch;
-}
-
 void ui_ow_hud_banked(void)
 {
-    const World *w;
     uint8_t hp;
     uint8_t hp0;
     uint8_t full;
@@ -115,14 +88,10 @@ void ui_ow_hud_banked(void)
     int16_t ap;
     int16_t arrows;
     int16_t gold;
-    uint8_t ring_row;
-    uint8_t sx;
     uint8_t col;
     uint8_t cell;
+    volatile uint8_t *dst;
     char line[20];
-
-    w = (const World *)g_bk_ptr_a;
-    if (!w) return;
 
     hp = g_game.state.party.members[0].hp;
     hp0 = hp;
@@ -182,9 +151,25 @@ void ui_ow_hud_banked(void)
     line[18] = ' ';
     line[19] = ' ';
 
-    ring_row = (uint8_t)((w->scroll_y + OW_HUD_ROW) & 31);
-    sx = w->scroll_x;
+    /* Paint Window row 0 (0x9C00..0x9C13) in two contiguous passes: tiles
+     * first (VBK=0), then paper attrs on CGB (VBK=1), then enable the
+     * Window anchored at screen row 17 (WY=136, WX=7). */
+    dst = (volatile uint8_t *)0x9C00u;
+    VBK_REG = 0;
     for (col = 0; col < OW_HUD_COLS; col++) {
-        hud_cell(col, line[col], ring_row, sx);
+        uint8_t tile = hud_tile(line[col]);
+        BANKED_VRAM_WRITE(dst + col, tile);
+        g_ui_screen_buf[OW_HUD_ROW][col] = line[col];
     }
+    g_ui_screen_buf[OW_HUD_ROW][OW_HUD_COLS] = '\0';
+    if (g_is_cgb) {
+        VBK_REG = 1;
+        for (col = 0; col < OW_HUD_COLS; col++) {
+            BANKED_VRAM_WRITE(dst + col, UI_COLOR_PAPER);
+        }
+        VBK_REG = 0;
+    }
+    WX_REG = 7;
+    WY_REG = 136;
+    LCDC_REG |= 0x60u;
 }

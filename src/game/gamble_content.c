@@ -837,6 +837,7 @@ void gamble_enter_screen(void)
     }
     SCX_REG = 0;
     SCY_REG = 0;
+    LCDC_REG &= (uint8_t)~0x20u;
     g_game.prev_screen = g_game.screen;
     g_game.screen = SCREEN_GAMBLE;
     g_game.render_cache.valid = false;
