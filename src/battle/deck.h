@@ -22,11 +22,6 @@ void deck_init_default(Deck *d);
 /* Banked no-arg body (ROM bank 2) dispatched by deck_init_default(). */
 void deck_init_default_banked(void);
 
-/* Draw next card from the draw pile.  Never reshuffles: a dry pile yields
- * the phantom-card safety net (reshuffling is an explicit battle-level
- * turn, see battle.c). */
-void deck_draw(Deck *d, Card *out_card);
-
 /* Fold the undrawn remainder cards[draw_idx..count) into the discard pile,
  * then move the combined pile back into the draw pile (Fisher-Yates via
  * rng_next) and reset the draw index.  The fold makes the refill lossless:

@@ -148,16 +148,17 @@ static void nav_card_select(Battle *b)
     }
 
     if (!nav_hand_playable(b, b->cursor_pos)) {
-        /* NO ARROWS only for the arrows condition itself (staged bows
-         * at/over the pool): a bow that fails on energy with arrows
-         * left -- or on the grey mask -- must still say NO ENERGY.
-         * A depleted (uses == 0) card keeps OUT OF USES. */
-        if (b->hand[b->cursor_pos].type == BATTLE_CARD_TYPE_BOW &&
-            nav_staged_bows(b) >= g_bk_byte_d) {
+        /* Depleted (uses == 0) keeps OUT OF USES; a bow that fails on
+         * the arrows condition itself (staged bows at/over the pool)
+         * flashes NO ARROWS; everything else (energy, grey mask) says
+         * NO ENERGY. */
+        if (b->hand[b->cursor_pos].uses_remaining == 0) {
+            nav_msg(b, 2);
+        } else if (b->hand[b->cursor_pos].type == BATTLE_CARD_TYPE_BOW &&
+                   nav_staged_bows(b) >= g_bk_byte_d) {
             nav_msg(b, BATTLE_MSG_NO_ARROWS);
         } else {
-            nav_msg(b,
-                    (b->hand[b->cursor_pos].uses_remaining == 0) ? 2 : 1);
+            nav_msg(b, 1);
         }
         return;
     }

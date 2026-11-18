@@ -132,7 +132,10 @@ void item_screen_update(Game *g)
         g->item_menu_msg_ttl--;
         if (g->item_menu_msg_ttl == 0) {
             g->item_menu_message = MSG_NONE;
-            g->render_cache.valid = false;
+            if (g->item_menu_tab == TAB_DECK && g->item_menu_mode == MODE_LIST)
+                g_bk_paint_req = 1;
+            else
+                g->render_cache.valid = false;
         }
     }
 

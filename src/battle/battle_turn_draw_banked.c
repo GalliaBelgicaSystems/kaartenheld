@@ -30,20 +30,6 @@ static void turn_draw_take(Battle *b, uint8_t hand_idx, uint8_t pile_idx)
     b->deck.draw_idx++;
 }
 
-/* Default-sword fill for the covered case (see below): one copy of the
- * phantom fallback deck_draw() mints, so the three call sites share it. */
-static void turn_fill_default_sword(Battle *b, uint8_t hand_idx)
-{
-    b->hand[hand_idx].type = BATTLE_CARD_TYPE_SWORD;
-    b->hand[hand_idx].value = 2;
-    b->hand[hand_idx].uses_remaining = 0xFF;
-    b->hand[hand_idx].cost = 1;
-    b->hand[hand_idx].effect = CARD_EFFECT_DAMAGE_TARGET;
-    b->hand[hand_idx].status_id = STATUS_NONE;
-    b->hand[hand_idx].status_chance = 0;
-    b->hand[hand_idx].ring = 0;
-}
-
 /* ── Banked hand-refill body (ROM bank 14) ───────────────────────────
  * Hosts battle_turn_draw()'s decision logic out of the fixed bank
  * (which sits hard against 0x8000, AGENTS.md 52.18).  The fixed
@@ -58,20 +44,21 @@ static void turn_fill_default_sword(Battle *b, uint8_t hand_idx)
  *
  * Decision contract (unchanged from the fixed version): atomic -- a
  * partial pile plus a non-empty discard deals NOTHING and reports dry
- * so the caller reshuffles first; the fully-dry case reports covered
- * only when the discard pile is also empty (remaining slots take the
- * default sword, exactly like the fixed deck_draw() fallback in
- * docs/deck.md).  Drawable counts non-bows plus bows up to the arrow
- * backing -- bows without backing are skipped, never drawn empty, so
- * the raw pile size alone must not gate the check.
+ * so the caller reshuffles first; the short-pile case reports covered
+ * only when the discard pile is also empty.  Drawable counts non-bows
+ * plus bows up to the arrow backing -- bows without backing are
+ * skipped, never drawn empty, so the raw pile size alone must not
+ * gate the check.
  *
- * Limited-arrows draw (never-draw-empty): bows are drawn only while
- * backing lasts (arrows minus bows already in hand).  Pass 1 pulls
- * past bows to the next non-bow in pile order; pass 2 then takes the
- * cheapest pile bows first (AP order) up to the remaining backing.
- * Skipped bows stay in the pile (the take rotates the segment so
- * their relative order survives) and become drawable again once
- * arrows are restocked.
+ * Limited-arrows draw (never-draw-empty): each open slot inspects the
+ * pile top (draw_idx).  Non-bows deal in shuffled pile order; a bow at
+ * draw_idx while backing lasts (arrows minus bows already in hand)
+ * takes the cheapest pile bow first (AP order, ties broken by pile
+ * order); once backing is exhausted, bows at draw_idx are skipped by
+ * pulling the next non-bow past them (the rotation keeps skipped bows'
+ * relative order for when arrows are restocked).  Unfillable slots
+ * stay EMPTY (never filled with phantom swords that would pollute the
+ * discard pile and overflow MAX_DECK_SIZE on reshuffle).
  */
 void battle_turn_draw_banked(void)
 {
@@ -108,48 +95,37 @@ void battle_turn_draw_banked(void)
     if (pile_nbow > backing) pile_nbow = backing;
     if ((uint8_t)(pile_nb + pile_nbow) < need) {
         /* Short: reshuffle first when the discard can feed one, else
-         * the covered case (deal what is drawable, sword-fill the
-         * rest, report covered). */
+         * deal what is drawable and leave the remaining slots EMPTY. */
         if (b->deck.discard_count != 0) return;
     }
-    /* Pass 1: non-bows in pile order, pulling past bows. */
     for (i = 0; i < BATTLE_HAND_SIZE && need > 0; i++) {
         if (b->hand[i].type != BATTLE_CARD_TYPE_EMPTY) continue;
         j = b->deck.draw_idx;
-        while (j < b->deck.count &&
-               b->deck.cards[j].type == BATTLE_CARD_TYPE_BOW) {
-            j++;
+        if (j >= b->deck.count) break;
+        if (b->deck.cards[j].type == BATTLE_CARD_TYPE_BOW) {
+            if (backing > 0) {
+                best = j;
+                best_cost = b->deck.cards[j].cost;
+                for (j = (uint8_t)(j + 1); j < b->deck.count; j++) {
+                    if (b->deck.cards[j].type == BATTLE_CARD_TYPE_BOW &&
+                        b->deck.cards[j].cost < best_cost) {
+                        best_cost = b->deck.cards[j].cost;
+                        best = j;
+                    }
+                }
+                turn_draw_take(b, i, best);
+                backing--;
+                need--;
+                continue;
+            }
+            while (j < b->deck.count &&
+                   b->deck.cards[j].type == BATTLE_CARD_TYPE_BOW) {
+                j++;
+            }
+            if (j >= b->deck.count) break;
         }
-        if (j >= b->deck.count) continue;
         turn_draw_take(b, i, j);
         need--;
-    }
-    /* Pass 2: cheapest pile bows first, up to the backing left. */
-    for (i = 0; i < BATTLE_HAND_SIZE && need > 0 && backing > 0; i++) {
-        if (b->hand[i].type != BATTLE_CARD_TYPE_EMPTY) continue;
-        best = b->deck.count;
-        best_cost = 0xFF;
-        for (j = b->deck.draw_idx; j < b->deck.count; j++) {
-            if (b->deck.cards[j].type != BATTLE_CARD_TYPE_BOW) continue;
-            if (b->deck.cards[j].cost < best_cost) {
-                best_cost = b->deck.cards[j].cost;
-                best = j;
-            }
-        }
-        if (best >= b->deck.count) break;
-        turn_draw_take(b, i, best);
-        backing--;
-        need--;
-    }
-    /* Covered case only (short pile + empty discard, per the check
-     * above): sword-fill whatever is still open.  A short pile with a
-     * non-empty discard returned dry before dealing anything. */
-    if (need > 0 && b->deck.discard_count == 0) {
-        for (i = 0; i < BATTLE_HAND_SIZE && need > 0; i++) {
-            if (b->hand[i].type != BATTLE_CARD_TYPE_EMPTY) continue;
-            turn_fill_default_sword(b, i);
-            need--;
-        }
     }
     g_bk_byte_c = 1;
 }

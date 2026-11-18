@@ -7,6 +7,7 @@
 #include "ui.h"
 #include "banked.h"
 #include "telemetry.h"
+#include "telemetry_ring.h"
 #include "shops.h"
 #include "rpg/loot.h"
 #include "rpg/cards.h"
@@ -398,6 +399,10 @@ void item_view_rewindow_banked(void)
     item_window_build(g);
 }
 
+static uint8_t s_dck_rep_dir; /* 0 = idle, 1 = up, 2 = down */
+static uint8_t s_dck_rep_t;
+static uint8_t s_dck_grp_id;
+
 /* Clear CGB BG attributes on content rows 3..12 (cols 1..17) before a
  * full DECK-tab render when switching tabs/modes inside SCREEN_ITEM.
  * Lives here in bank 15 (called from item_view_build_banked, which
@@ -407,6 +412,8 @@ static void cu_clear_deck_attrs(Game *g)
 {
     uint8_t y, x;
     volatile uint8_t *dst;
+    s_dck_rep_dir = 0;
+    s_dck_rep_t = 0;
     if (!g_is_cgb || g->render_cache.prev_screen != SCREEN_ITEM) return;
     VBK_REG = 1;
     for (y = 3; y <= 12; y++) {
@@ -1054,12 +1061,6 @@ void item_menu_cycle_banked(void)
 #define DCK_REP_DELAY 18
 #define DCK_REP_RATE 6
 
-/* Held-button auto-repeat + grouped-A scratch (moved with the update):
- * WRAM, since SDCC caches registers across the trampoline. */
-static uint8_t s_dck_rep_dir; /* 0 = idle, 1 = up, 2 = down */
-static uint8_t s_dck_rep_t;
-static uint8_t s_dck_grp_id;
-
 /* DECK-tab update (bank 15, staging: g_bk_ptr_a = Game*, no-arg body).
  * Dispatched from item_screen_update's fixed router for TAB_DECK; the
  * other tabs keep their fixed pre-branch.  Same-bank helpers are
@@ -1213,19 +1214,17 @@ void item_deck_update_banked(void)
                         if (verdict == 1) {
                             cs->deck.cards[cs->deck.count] = mid;
                             cs->deck.count++;
-                            g_bk_card_evt =
-                                (uint8_t)EVENT_CARD_ADDED_TO_DECK;
-                            g_bk_card_d0 = (uint8_t)mid;
-                            g_bk_card_d1 = 0;
+                            telemetry_ring_emit(
+                                EVENT_CARD_ADDED_TO_DECK,
+                                (uint8_t)mid, 0, 0, 0);
                             g_bk_sfx_req = (uint8_t)(SFX_SELECT + 1);
                         } else if (verdict == 3) {
                             msg = DCK_MSG_DECK_FULL;
                         } else if (verdict == 2) {
                             msg = DCK_MSG_NEED_AP;
-                            g_bk_card_evt =
-                                (uint8_t)EVENT_CARD_EQUIP_LOCKED;
-                            g_bk_card_d0 = (uint8_t)mid;
-                            g_bk_card_d1 = g_bk_byte_b;
+                            telemetry_ring_emit(
+                                EVENT_CARD_EQUIP_LOCKED,
+                                (uint8_t)mid, g_bk_byte_b, 0, 0);
                         } else if (verdict == 4) {
                             msg = DCK_MSG_DECK_CAPPED;
                         }
@@ -1243,10 +1242,9 @@ void item_deck_update_banked(void)
                     /* Race: nothing decked under us; silent no-op. */
                 } else {
                     s_dck_grp_id = g_bk_byte_b;
-                    g_bk_card_evt =
-                        (uint8_t)EVENT_CARD_REMOVED_FROM_DECK;
-                    g_bk_card_d0 = (uint8_t)s_dck_grp_id;
-                    g_bk_card_d1 = 0;
+                    telemetry_ring_emit(
+                        EVENT_CARD_REMOVED_FROM_DECK,
+                        (uint8_t)s_dck_grp_id, 0, 0, 0);
                     g_bk_sfx_req = (uint8_t)(SFX_SELECT + 1);
                 }
             }
