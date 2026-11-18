@@ -83,6 +83,7 @@ static void st_draw_text_fast(void)
 /* Tab header: single source of truth is menu_tabs_snippet.h (compiled
  * per bank: banked bodies cannot call across banks, AGENTS.md 52.11.1).
  * HERO cursor col 11. */
+#define MENU_NEED_ATTR_CLEAR
 #define MENU_TAB_DRAW_TEXT ST_DRAW_TEXT
 #include "menu_tabs_snippet.h"
 
@@ -114,16 +115,21 @@ static void st_format_uint(uint16_t uval, char *out)
     *out = '\0';
 }
 
-/* Right-aligned number ending at end_col (6-byte stack scratch: no WRAM
+/* Right-aligned number in [start_col..end_col], padding leading cells
+ * with spaces in one left-to-right pass (6-byte stack scratch: no WRAM
  * growth, AGENTS.md 52.24). */
-static void st_draw_rjust(uint8_t y, uint8_t end_col, uint16_t v)
+static void st_draw_rjust(uint8_t y, uint8_t start_col, uint8_t end_col, uint16_t v)
 {
     char b[6];
     uint8_t len = 0;
+    uint8_t num_col;
     st_format_uint(v, b);
     while (b[len] != (char)0) len++;
     if (len == 0) len = 1;
-    ST_DRAW_TEXT((uint8_t)(end_col - len + 1), y, b, len);
+    num_col = (uint8_t)(end_col - len + 1);
+    if (num_col > start_col)
+        ST_DRAW_TEXT(start_col, y, NULL, (uint8_t)(num_col - start_col));
+    ST_DRAW_TEXT(num_col, y, b, len);
 }
 
 /* Icon cell stamp (VRAM tile + buffer space, LCD-on safe). */
@@ -164,16 +170,7 @@ void item_status_render_banked(void)
     uint8_t hy;
     if (!g) return;
 
-    /* Direct paint, no pre-blank: unpainted rows blanked below, each
-     * painted row covers its full width in one pass, so tab switches
-     * never show an all-blank intermediate. */
-    ST_DRAW_TEXT(0, 2, "                    ", 20);
-    {
-        uint8_t by;
-        for (by = 8; by <= 14; by++)
-            ST_DRAW_TEXT(0, by, "                    ", 20);
-    }
-    ST_DRAW_TEXT(0, 17, "                    ", 20);
+    menu_clear_content_attrs();
 
     /* Hide any card art OAM inherited from the DECK list. */
     for (e = 1; e <= 32; e++) {
@@ -182,68 +179,67 @@ void item_status_render_banked(void)
 
     menu_draw_tabs(11);
 
-    /* Left block (cols 0-9, or 0-10 when HP/max >= 100): HP/AP/GOLD/DECK
-     * with icon cells.  Keep "HP  15/15" + col-9 heart for 2-digit HP,
-     * and shift max_hp/heart right by 1 col for 3-digit HP so it never
-     * overwrites the '/' at col 6. */
+    /* Strict top-to-bottom single-pass paint (rows 2..17), every cell
+     * written once. */
+    ST_DRAW_TEXT(0, 2, NULL, 20);
+
     {
         uint8_t hp = g->state.party.members[0].hp;
         uint8_t max_hp = g->state.party.members[0].max_hp;
         if (hp >= 100 || max_hp >= 100) {
             ST_DRAW_TEXT(0, 3, "HP ", 3);
-            st_draw_rjust(3, 5, (uint16_t)hp);
+            st_draw_rjust(3, 3, 5, (uint16_t)hp);
             ST_DRAW_TEXT(6, 3, "/", 1);
-            st_draw_rjust(3, 9, (uint16_t)max_hp);
+            st_draw_rjust(3, 7, 9, (uint16_t)max_hp);
             st_stamp_icon(3, 10, UI_TILE_MENUS_HP_ICON);
-            ST_DRAW_TEXT(11, 3, "  ", 2);
+            ST_DRAW_TEXT(11, 3, NULL, 2);
         } else {
             ST_DRAW_TEXT(0, 3, "HP  ", 4);
-            st_draw_rjust(3, 5, (uint16_t)hp);
+            st_draw_rjust(3, 4, 5, (uint16_t)hp);
             ST_DRAW_TEXT(6, 3, "/", 1);
-            st_draw_rjust(3, 8, (uint16_t)max_hp);
+            st_draw_rjust(3, 7, 8, (uint16_t)max_hp);
             st_stamp_icon(3, 9, UI_TILE_MENUS_HP_ICON);
-            ST_DRAW_TEXT(10, 3, "   ", 3);
+            ST_DRAW_TEXT(10, 3, NULL, 3);
         }
-        /* Right of the HP block (card rows run full width). */
-        ST_DRAW_TEXT(17, 3, "   ", 3);
     }
     ST_DRAW_TEXT(0, 4, "AP ", 3);
-    ST_DRAW_TEXT(3, 4, "     ", 5);
-    ST_DRAW_TEXT(10, 4, "   ", 3);
-    ST_DRAW_TEXT(17, 4, "   ", 3);
-    st_draw_rjust(4, 8,
+    st_draw_rjust(4, 3, 8,
         (uint16_t)g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1]);
     st_stamp_icon(4, 9, UI_TILE_MENUS_AP_ICON);
-    ST_DRAW_TEXT(0, 5, "GOLD   ", 7);
-    ST_DRAW_TEXT(10, 5, "   ", 3);
-    ST_DRAW_TEXT(17, 5, "   ", 3);
-    st_draw_rjust(5, 8, (uint16_t)g->state.currency.amount[0]);
-    ST_DRAW_TEXT(9, 5, "G", 1);
-    ST_DRAW_TEXT(0, 6, "DECK   ", 7);
-    ST_DRAW_TEXT(10, 6, "   ", 3);
-    ST_DRAW_TEXT(17, 6, "   ", 3);
-    st_draw_rjust(6, 8, (uint16_t)g->state.cards.deck.count);
+    ST_DRAW_TEXT(10, 4, NULL, 3);
+
+    ST_DRAW_TEXT(0, 5, "GOLD", 4);
+    st_draw_rjust(5, 4, 8, (uint16_t)g->state.currency.amount[0]);
+    ST_DRAW_TEXT(9, 5, "G", 4);
+
+    ST_DRAW_TEXT(0, 6, "DECK", 4);
+    st_draw_rjust(6, 4, 8, (uint16_t)g->state.cards.deck.count);
     st_stamp_icon(6, 9, UI_TILE_DECK_ICON);
-    /* Shared bow-ammo pool (limited-arrows currency slot): clamped at
-     * zero for display, like the shop row.  Tail to full width. */
-    {
-        int16_t arrows =
-            g->state.currency.amount[CURRENCY_ID_ARROWS - 1];
-        ST_DRAW_TEXT(0, 7, "ARROWS ", 7);
-        st_draw_rjust(7, 8,
-            (uint16_t)(arrows < 0 ? 0 : arrows));
-        ST_DRAW_TEXT(9, 7, "           ", 11);
-    }
+    ST_DRAW_TEXT(10, 6, NULL, 3);
+
     /* Hero-status portrait ("hero status RC", sheet cols 12-15): 4x4
-     * at cols 13-16, rows 3-6, in sheet order. */
+     * at cols 13-16, rows 3-6, plus cols 17-19 tail spaces. */
     for (hy = 0; hy < 4; hy++) {
         for (hx = 0; hx < 4; hx++)
             st_stamp_icon((uint8_t)(3 + hy), (uint8_t)(13 + hx),
                 s_st_hero_slots[(uint8_t)((uint8_t)(hy << 2) + hx)]);
+        ST_DRAW_TEXT(17, (uint8_t)(3 + hy), NULL, 3);
     }
-    /* Same bottom chrome as the other tabs: row-15 border + B:BACK. */
+
+    {
+        int16_t arrows =
+            g->state.currency.amount[CURRENCY_ID_ARROWS - 1];
+        ST_DRAW_TEXT(0, 7, "ARROWS", 6);
+        st_draw_rjust(7, 6, 8,
+            (uint16_t)(arrows < 0 ? 0 : arrows));
+        ST_DRAW_TEXT(9, 7, NULL, 11);
+    }
+
+    for (hy = 8; hy <= 14; hy++)
+        ST_DRAW_TEXT(0, hy, NULL, 20);
+
     for (hx = 0; hx < 20; hx++)
         menu_stamp_chrome(15, hx, UI_TILE_MENUS_BOTTOM_BORDER);
-    ST_DRAW_TEXT(0, 16, "B:BACK", 6);
-    ST_DRAW_TEXT(6, 16, "              ", 14);
+    ST_DRAW_TEXT(0, 16, "B:BACK", 20);
+    ST_DRAW_TEXT(0, 17, NULL, 20);
 }

@@ -29,6 +29,9 @@
 
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
 
 /* Item menu navigation layout constants (mirror item_screen.c). */
 #define CUR_FIRST_CARD 1
@@ -270,10 +273,14 @@ uint8_t s_ic_scroll_flags;
 static uint8_t s_cu_prev_pos[8];
 static uint8_t s_cu_prev_pos_r[8];
 
-/* Unconditional VRAM+buffer span clear (no same-char skip): icon stamps
- * write VRAM tiles the buffer never sees (rider/weapon/chrome cells,
- * AP pips), so a skip-based blank would leave their tiles haunting
- * emptied rows (AGENTS.md 52.25 family). */
+extern uint8_t g_is_cgb;
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
+
+/* Unconditional VRAM+buffer+attr span clear: icon stamps write VRAM
+ * tiles and CGB palettes the buffer never sees (rider/weapon/chrome
+ * cells, AP pips), so an emptied slot must reset both planes. */
 static void cu_blank_span(uint8_t y, uint8_t x, uint8_t n)
 {
     uint8_t i;
@@ -287,6 +294,18 @@ static void cu_blank_span(uint8_t y, uint8_t x, uint8_t n)
         *buf = ' ';
         dst++;
         buf++;
+    }
+    if (g_is_cgb) {
+        dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+        VBK_REG = 1;
+        for (i = 0; i < n; i++) {
+            BANKED_VRAM_WRITE(dst, 0);
+#ifdef DEBUG_BUILD
+            g_tilemap_attr_mirror[((uint16_t)y << 5) + x + i] = 0;
+#endif
+            dst++;
+        }
+        VBK_REG = 0;
     }
 }
 
@@ -379,6 +398,30 @@ void item_view_rewindow_banked(void)
     item_window_build(g);
 }
 
+/* Clear CGB BG attributes on content rows 3..12 (cols 1..17) before a
+ * full DECK-tab render when switching tabs/modes inside SCREEN_ITEM.
+ * Lives here in bank 15 (called from item_view_build_banked, which
+ * runs before every TAB_DECK render) rather than bank 2 so bank 2
+ * stays inside its tight 16 KB ceiling. */
+static void cu_clear_deck_attrs(Game *g)
+{
+    uint8_t y, x;
+    volatile uint8_t *dst;
+    if (!g_is_cgb || g->render_cache.prev_screen != SCREEN_ITEM) return;
+    VBK_REG = 1;
+    for (y = 3; y <= 12; y++) {
+        dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + 1u);
+        for (x = 1; x <= 17; x++) {
+            BANKED_VRAM_WRITE(dst, 0);
+#ifdef DEBUG_BUILD
+            g_tilemap_attr_mirror[((uint16_t)y << 5) + x] = 0;
+#endif
+            dst++;
+        }
+    }
+    VBK_REG = 0;
+}
+
 void item_view_build_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -388,6 +431,7 @@ void item_view_build_banked(void)
     uint8_t desc;
     CardId id;
     if (!g) return;
+    cu_clear_deck_attrs(g);
     s_view_count = 0;
     for (i = 0; i < g->state.cards.collection.count; i++) {
         id = g->state.cards.collection.entries[i].id;
@@ -553,20 +597,13 @@ static void item_window_build(Game *g)
             oL = s_cu_prev_pos[k];
             oR = s_cu_prev_pos_r[k];
             y = (uint8_t)(CUR_CARDS_TOP + k);
-            if (oL != 0xFF && s_ic_draw_pos[k] == 0xFF &&
-                oR != 0xFF && s_ic_draw_pos_r[k] == 0xFF) {
-                cu_blank_span(y, 0, 20);
+            if (oL != 0xFF && s_ic_draw_pos[k] == 0xFF) {
+                cu_blank_span(y, 0, 9);
                 cu_hide_side(k, 0);
+            }
+            if (oR != 0xFF && s_ic_draw_pos_r[k] == 0xFF) {
+                cu_blank_span(y, 10, 10);
                 cu_hide_side(k, 1);
-            } else {
-                if (oL != 0xFF && s_ic_draw_pos[k] == 0xFF) {
-                    cu_blank_span(y, 0, 9);
-                    cu_hide_side(k, 0);
-                }
-                if (oR != 0xFF && s_ic_draw_pos_r[k] == 0xFF) {
-                    cu_blank_span(y, 10, 10);
-                    cu_hide_side(k, 1);
-                }
             }
         }
     }
@@ -1033,6 +1070,8 @@ static uint8_t s_dck_grp_id;
  * full render (item_view_build_banked runs before every DECK paint
  * and parks vanished rows itself), so every path here just
  * invalidates -- no in-place repaint, no wipe. */
+static void pk_draw_rows(Game *g);
+
 void item_deck_update_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -1059,7 +1098,7 @@ void item_deck_update_banked(void)
                 (edges & (uint8_t)(1u << INPUT_DOWN))) {
                 g->item_menu_pick_row =
                     (uint8_t)(g->item_menu_pick_row == 0 ? 1 : 0);
-                g->render_cache.valid = false;
+                pk_draw_rows(g);
                 g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
             } else if ((edges & (uint8_t)(1u << INPUT_LEFT)) ||
                        (edges & (uint8_t)(1u << INPUT_RIGHT))) {
@@ -1071,7 +1110,7 @@ void item_deck_update_banked(void)
                 }
                 g_bk_byte_b = 0;
                 item_menu_cycle_banked();
-                g->render_cache.valid = false;
+                pk_draw_rows(g);
             } else if (edges & (uint8_t)(1u << INPUT_A)) {
                 g->item_menu_mode = DCK_MODE_LIST;
                 g->render_cache.valid = false;
@@ -1214,10 +1253,13 @@ void item_deck_update_banked(void)
             g->item_menu_message = msg;
             if (msg != DCK_MSG_NONE) g->item_menu_msg_ttl = 45;
         }
-        /* Reconcile + repaint: the next full render rebuilds the view
-         * (sums + draw maps, parking a vanished row's cursor) and
-         * repaints without wiping, so nothing blinks. */
-        g->render_cache.valid = false;
+        /* Reconcile + repaint in place (no full render): refreshes
+         * group sums + draw maps (erasing emptied slots and parking a
+         * vanished row's cursor) and stages g_bk_paint_req for the
+         * bank-2 row painter. */
+        item_sums_build(g);
+        item_window_build(g);
+        g_bk_paint_req = 1;
         return;
     }
 
@@ -1267,6 +1309,9 @@ void item_deck_update_banked(void)
  * first, so all cells are covered either way). */
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
 extern volatile uint8_t *s_ic_dst;
 extern char *s_ic_buf;
 extern uint8_t s_ic_txt_i;
@@ -1338,6 +1383,16 @@ static const char *pk_sort_name(uint8_t s)
     }
 }
 
+static void pk_draw_rows(Game *g)
+{
+    pk_draw_text(0, 7, (g->item_menu_pick_row == 0) ? ">" : " ", 2);
+    pk_draw_text(2, 7, "FILTER", 10);
+    pk_draw_text(12, 7, pk_filter_name(g->item_menu_filter), 8);
+    pk_draw_text(0, 9, (g->item_menu_pick_row != 0) ? ">" : " ", 2);
+    pk_draw_text(2, 9, "SORT", 10);
+    pk_draw_text(12, 9, pk_sort_name(g->item_menu_sort), 8);
+}
+
 void item_picker_render_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -1353,31 +1408,11 @@ void item_picker_render_banked(void)
     }
     for (r = 2; r <= 6; r++)
         pk_blank_row(r);
+    pk_draw_rows(g);
     pk_blank_row(8);
     for (r = 10; r <= 13; r++)
         pk_blank_row(r);
+    pk_draw_text(0, 14, "LR CYCLE  A:OK B:NO", 20);
     for (r = 15; r <= 17; r++)
         pk_blank_row(r);
-    pk_draw_text(0, (uint8_t)(7 + (uint8_t)(g->item_menu_pick_row * 2)), ">", 1);
-    pk_draw_text(1, 7, " ", 1);
-    pk_draw_text(2, 7, "FILTER", 6);
-    pk_draw_text(8, 7, "    ", 4);
-    pk_draw_text(12, 7, pk_filter_name(g->item_menu_filter), 3);
-    pk_draw_text(15, 7, "     ", 5);
-    pk_draw_text(1, 9, " ", 1);
-    pk_draw_text(2, 9, "SORT", 4);
-    pk_draw_text(6, 9, "      ", 6);
-    pk_draw_text(12, 9, pk_sort_name(g->item_menu_sort), 4);
-    pk_draw_text(16, 9, "    ", 4);
-    pk_draw_text(0, 14, "LR CYCLE  A:OK B:NO", 19);
-    pk_draw_text(19, 14, " ", 1);
-    /* Clear the non-selected caret row (DECK card text would survive
-     * in the gap columns). */
-    if (g->item_menu_pick_row == 0) {
-        pk_draw_text(0, 9, " ", 1);
-        pk_draw_text(1, 9, " ", 1);
-    } else {
-        pk_draw_text(0, 7, " ", 1);
-        pk_draw_text(1, 7, " ", 1);
-    }
 }

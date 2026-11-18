@@ -115,6 +115,10 @@ static void iq_draw_text_fast(void)
     iq_draw_text_fast(); \
 } while(0)
 
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
+
 static void iq_color_span_fast(void)
 {
     uint8_t x = s_ic_arg_x;
@@ -129,7 +133,10 @@ static void iq_color_span_fast(void)
     s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
     VBK_REG = 1;
     for (s_ic_col_i = 0; s_ic_col_i < len; s_ic_col_i++) {
-        BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i], (uint8_t)(pal & 0x07));
+        BANKED_VRAM_WRITE(&s_ic_dst[s_ic_col_i], pal);
+#ifdef DEBUG_BUILD
+        g_tilemap_attr_mirror[(uint16_t)y * 32 + s_ic_col_i + x] = pal;
+#endif
     }
     VBK_REG = 0;
 }
@@ -142,6 +149,7 @@ static void iq_color_span_fast(void)
 /* Tab header: single source of truth is menu_tabs_snippet.h ──────────
  * (compiled per bank: banked bodies cannot call across banks,
  * AGENTS.md 52.11.1).  QUEST cursor col 5. */
+#define MENU_NEED_ATTR_CLEAR
 #define MENU_TAB_DRAW_TEXT IQ_DRAW_TEXT
 #include "menu_tabs_snippet.h"
 
@@ -217,10 +225,12 @@ static void iq_quest_draw_status_line(Game *g, const QuestDefinition *q, uint8_t
     st = iq_quest_status(&g->state, q);
 
     /* NOT_STARTED never reaches here: iq_draw_quest only draws tracked
-     * (ACTIVE/COMPLETE) quests, so anything else is COMPLETE. */
+     * (ACTIVE/COMPLETE) quests, so anything else is COMPLETE.  Strict
+     * left-to-right single pass per row. */
     if (st == QUEST_STATUS_ACTIVE) {
         if (q->progress_variable != 0) {
             val = (uint8_t)iq_variable_get(&g->state, q->progress_variable);
+            IQ_DRAW_TEXT(0, y, NULL, 2);
             IQ_DRAW_TEXT(2, y, q->progress_label ? q->progress_label : "", 8);
             b[0] = ':';
             b[1] = ' ';
@@ -228,19 +238,13 @@ static void iq_quest_draw_status_line(Game *g, const QuestDefinition *q, uint8_t
             b[3] = '/';
             b[4] = (char)('0' + (uint8_t)q->progress_target);
             b[5] = '\0';
-            IQ_DRAW_TEXT(10, y, b, 5);
-            /* Gaps around the counter (DECK digits run full width). */
-            IQ_DRAW_TEXT(0, y, "  ", 2);
-            IQ_DRAW_TEXT(15, y, "     ", 5);
+            IQ_DRAW_TEXT(10, y, b, 10);
         } else {
-            IQ_DRAW_TEXT(2, y, "active", 6);
-            IQ_DRAW_TEXT(0, y, "  ", 2);
-            IQ_DRAW_TEXT(8, y, "            ", 12);
+            IQ_DRAW_TEXT(0, y, "  active", 20);
         }
     } else {
-        IQ_DRAW_TEXT(1, y, "complete - ", 11);
+        IQ_DRAW_TEXT(0, y, " complete - ", 12);
         IQ_DRAW_TEXT(12, y, q->complete_note ? q->complete_note : "", 8);
-        IQ_DRAW_TEXT(0, y, " ", 1);
     }
 }
 
@@ -286,100 +290,71 @@ static void iq_draw_quest(Game *g)
         (uint8_t)(total - QUEST_WINDOW) : 0;
     if (g->item_menu_scroll > max_scroll)
         g->item_menu_scroll = max_scroll;
-    /* Bottom box border on row 15, same row as the DECK screen
-     * (full width; the down indicator below overlays col 19 only
-     * while more blocks sit below the window). */
-    for (i = 0; i < 20; i++)
-        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
-    /* Row 2 holds only the up caret; the DECK filter row would
-     * survive here otherwise. */
-    IQ_DRAW_TEXT(0, 2, "                   ", 19);
-    /* Scroll indicators on the free rows (buffer '^'/'v'). */
+    /* Row 2: spaces + up caret at col 19 (strict top-to-bottom order). */
+    IQ_DRAW_TEXT(0, 2, NULL, 19);
     iq_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^',
                     UI_TILE_MENUS_LIST_SCROLL_UP, ui_font_tile_base);
+    if (total == 0) {
+        IQ_DRAW_TEXT(0, QUEST_ROW_TOP, "  no quests yet", 20);
+        for (i = (uint8_t)(QUEST_ROW_TOP + 1); i <= 14; i++)
+            IQ_DRAW_TEXT(0, i, NULL, 20);
+    } else {
+        drawn = 0;
+        vis = 0;
+        for (s_iq_qst_pos = 0; s_iq_qst_pos < GAME_QUEST_COUNT; s_iq_qst_pos++) {
+            s_iq_q = &g_quests[s_iq_qst_pos];
+            if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_NOT_STARTED)
+                continue;
+            if (vis < g->item_menu_scroll ||
+                vis >= (uint8_t)(g->item_menu_scroll + QUEST_WINDOW)) {
+                vis++;
+                continue;
+            }
+            y = iq_slot_row(drawn);
+            IQ_DRAW_TEXT(0, y, (g->item_menu_index == vis) ? ">" : " ", 1);
+            g_ui_screen_buf[y][1] = ' ';
+            s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + 1);
+            VBK_REG = 0;
+            if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_COMPLETE) {
+                BANKED_VRAM_WRITE(s_ic_dst, (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' ')));
+                IQ_COLOR_SPAN(1, y, 1, UI_COLOR_GOLD);
+            } else {
+                BANKED_VRAM_WRITE(s_ic_dst, (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' ')));
+                IQ_COLOR_SPAN(1, y, 1, UI_COLOR_WOOD);
+            }
+            IQ_DRAW_TEXT(2, y, s_iq_q->name, 18);
+
+            iq_quest_draw_status_line(g, s_iq_q, (uint8_t)(y + 1));
+            IQ_DRAW_TEXT(0, (uint8_t)(y + 2), NULL, 2);
+            for (i = 2; i <= 10; i++)
+                menu_stamp_chrome((uint8_t)(y + 2),
+                                  i, UI_TILE_MENUS_QUESTS_SEPARATOR);
+            IQ_DRAW_TEXT(11, (uint8_t)(y + 2), NULL, 9);
+            drawn++;
+            vis++;
+        }
+        for (; drawn < QUEST_WINDOW; drawn++) {
+            y = iq_slot_row(drawn);
+            IQ_DRAW_TEXT(0, y, NULL, 20);
+            IQ_DRAW_TEXT(0, (uint8_t)(y + 1), NULL, 20);
+            IQ_DRAW_TEXT(0, (uint8_t)(y + 2), NULL, 20);
+        }
+    }
+    /* Row 15: bottom border on cols 0..18, down caret or border on col 19. */
+    for (i = 0; i < 19; i++)
+        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
     iq_stamp_scroll(15, 19,
         (uint8_t)((uint8_t)(g->item_menu_scroll + QUEST_WINDOW) < total),
         'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
         UI_TILE_MENUS_BOTTOM_BORDER);
-    /* Only accepted quests are tracked: NOT_STARTED entries stay hidden
-     * (an empty quest log shows a placeholder instead of "not started"
-     * rows).  item_menu_index addresses the VISIBLE list, so the caret
-     * compares against the visible position, not the table position. */
-    drawn = 0;
-    vis = 0;
-    for (s_iq_qst_pos = 0; s_iq_qst_pos < GAME_QUEST_COUNT; s_iq_qst_pos++) {
-        s_iq_q = &g_quests[s_iq_qst_pos];
-        if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_NOT_STARTED)
-            continue;
-        if (vis < g->item_menu_scroll ||
-            vis >= (uint8_t)(g->item_menu_scroll + QUEST_WINDOW)) {
-            vis++;
-            continue;
-        }
-        y = iq_slot_row(drawn);
-        if (g->item_menu_index == vis) IQ_DRAW_TEXT(0, y, ">", 1);
-        else IQ_DRAW_TEXT(0, y, " ", 1);
-        IQ_DRAW_TEXT(2, y, s_iq_q->name, 18);
-
-        s_ic_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + 1);
-        VBK_REG = 0;
-        /* Quest marker as a font glyph ('!' active, '*' complete): the
-         * former deck-icon tile read poorly at 8x8 (AGENTS.md 52.22
-         * loader now overwrites tile 116 with the combat deck art). */
-        if (iq_quest_status(&g->state, s_iq_q) == QUEST_STATUS_COMPLETE) {
-            BANKED_VRAM_WRITE(s_ic_dst, (uint8_t)(ui_font_tile_base + (uint8_t)('*' - ' ')));
-            IQ_COLOR_SPAN(1, y, 1, UI_COLOR_GOLD);
-        } else {
-            BANKED_VRAM_WRITE(s_ic_dst, (uint8_t)(ui_font_tile_base + (uint8_t)('!' - ' ')));
-            IQ_COLOR_SPAN(1, y, 1, UI_COLOR_WOOD);
-        }
-
-        iq_quest_draw_status_line(g, s_iq_q, (uint8_t)(y + 1));
-        /* Separator-row non-rule cells (card rows run full width
-         * here): clear before stamping the rule. */
-        IQ_DRAW_TEXT(0, (uint8_t)(y + 2), "  ", 2);
-        IQ_DRAW_TEXT(11, (uint8_t)(y + 2), "         ", 9);
-        for (i = 2; i <= 10; i++)
-            menu_stamp_chrome((uint8_t)(y + 2),
-                              i, UI_TILE_MENUS_QUESTS_SEPARATOR);
-        drawn++;
-        vis++;
-    }
-    /* Blank empty slots (short logs): card rows would survive in the
-     * undrawn blocks. */
-    for (; drawn < QUEST_WINDOW; drawn++) {
-        y = iq_slot_row(drawn);
-        IQ_DRAW_TEXT(0, y, "                    ", 20);
-        IQ_DRAW_TEXT(0, (uint8_t)(y + 1), "                    ", 20);
-        IQ_DRAW_TEXT(0, (uint8_t)(y + 2), "                    ", 20);
-    }
-    if (vis == 0) {
-        IQ_DRAW_TEXT(2, QUEST_ROW_TOP, "no quests yet", 13);
-    }
-    /* Quit hint: A anywhere on this tab opens the save & quit
-     * confirm (overworld only, where quitting cannot strand a
-     * battle).  Short footer needs its tail blanked (DECK footer
-     * runs 15+). */
     if (g->prev_screen == SCREEN_OVERWORLD) {
         IQ_DRAW_TEXT(0, 16, "SEL:INFO A:SAVE+QUIT", 20);
     } else {
-        IQ_DRAW_TEXT(0, 16, "SEL:INFO", 8);
-        IQ_DRAW_TEXT(8, 16, "            ", 12);
+        IQ_DRAW_TEXT(0, 16, "SEL:INFO", 20);
     }
-    /* Row 17 is DECK-footer territory; the quest tab owns nothing
-     * here. */
-    IQ_DRAW_TEXT(0, 17, "                    ", 20);
+    IQ_DRAW_TEXT(0, 17, NULL, 20);
 }
 
-/* ── Quest detail (SELECT on a quest row) ─────────────────────────
- *   row 3: quest name
- *   row 5: who gave it (giver)
- *   row 6: the condition (objective)
- *   row 7: where you stand (progress "v/t label", "DONE", or
- *           "ACTIVE" for counter-less quests)
- *   row 8: what the reward was ("GOT <reward>", completed quests only)
- *   row 15: bottom box border (same as every list tab)
- *   row 16: "B:BACK" */
 static void iq_draw_quest_detail(Game *g)
 {
     const QuestDefinition *q;
@@ -389,54 +364,36 @@ static void iq_draw_quest_detail(Game *g)
     char b[6];
     q = iq_visible_quest(g, g->item_menu_index, 0);
     if (!q) return;
-    /* Unpainted rows first (DECK card rows run full width here). */
-    IQ_DRAW_TEXT(0, 2, "                    ", 20);
-    IQ_DRAW_TEXT(0, 4, "                    ", 20);
-    IQ_DRAW_TEXT(0, 9, "                    ", 20);
-    IQ_DRAW_TEXT(0, 10, "                    ", 20);
-    IQ_DRAW_TEXT(0, 11, "                    ", 20);
-    IQ_DRAW_TEXT(0, 12, "                    ", 20);
-    IQ_DRAW_TEXT(0, 13, "                    ", 20);
-    IQ_DRAW_TEXT(0, 14, "                    ", 20);
-    IQ_DRAW_TEXT(0, 17, "                    ", 20);
-    IQ_DRAW_TEXT(0, 3, q->name, 14);
-    IQ_DRAW_TEXT(14, 3, "      ", 6);
-    IQ_DRAW_TEXT(0, 5, q->giver, 16);
-    IQ_DRAW_TEXT(16, 5, "    ", 4);
-    IQ_DRAW_TEXT(0, 6, q->objective, 19);
-    IQ_DRAW_TEXT(19, 6, " ", 1);
+    IQ_DRAW_TEXT(0, 2, NULL, 20);
+    IQ_DRAW_TEXT(0, 3, q->name, 20);
+    IQ_DRAW_TEXT(0, 4, NULL, 20);
+    IQ_DRAW_TEXT(0, 5, q->giver, 20);
+    IQ_DRAW_TEXT(0, 6, q->objective, 20);
     st = iq_quest_status(&g->state, q);
     if (st == QUEST_STATUS_COMPLETE) {
-        IQ_DRAW_TEXT(2, 7, "DONE", 4);
-        IQ_DRAW_TEXT(2, 8, "GOT ", 4);
-        IQ_DRAW_TEXT(6, 8, q->reward, 12);
-        IQ_DRAW_TEXT(0, 7, "  ", 2);
-        IQ_DRAW_TEXT(6, 7, "              ", 14);
-        IQ_DRAW_TEXT(0, 8, "  ", 2);
-        IQ_DRAW_TEXT(18, 8, "  ", 2);
+        IQ_DRAW_TEXT(0, 7, "  DONE", 20);
+        IQ_DRAW_TEXT(0, 8, "  GOT ", 6);
+        IQ_DRAW_TEXT(6, 8, q->reward, 14);
     } else if (q->progress_variable != 0) {
         val = (uint8_t)iq_variable_get(&g->state, q->progress_variable);
         b[0] = (char)('0' + val);
         b[1] = '/';
         b[2] = (char)('0' + (uint8_t)q->progress_target);
         b[3] = '\0';
-        IQ_DRAW_TEXT(0, 7, "  ", 2);
-        IQ_DRAW_TEXT(2, 7, b, 3);
-        IQ_DRAW_TEXT(6, 7, q->progress_label, 10);
-        IQ_DRAW_TEXT(16, 7, "    ", 4);
-        IQ_DRAW_TEXT(0, 8, "                    ", 20);
+        IQ_DRAW_TEXT(0, 7, NULL, 2);
+        IQ_DRAW_TEXT(2, 7, b, 4);
+        IQ_DRAW_TEXT(6, 7, q->progress_label, 14);
+        IQ_DRAW_TEXT(0, 8, NULL, 20);
     } else {
-        IQ_DRAW_TEXT(2, 7, "ACTIVE", 6);
-        IQ_DRAW_TEXT(0, 7, "  ", 2);
-        IQ_DRAW_TEXT(8, 7, "            ", 12);
-        IQ_DRAW_TEXT(0, 8, "                    ", 20);
+        IQ_DRAW_TEXT(0, 7, "  ACTIVE", 20);
+        IQ_DRAW_TEXT(0, 8, NULL, 20);
     }
-    /* Same bottom as the list tabs: full-width bottom border on row 15
-     * and the back hint on row 16 (B closes the detail everywhere). */
+    for (i = 9; i <= 14; i++)
+        IQ_DRAW_TEXT(0, i, NULL, 20);
     for (i = 0; i < 20; i++)
         menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
-    IQ_DRAW_TEXT(0, 16, "B:BACK", 6);
-    IQ_DRAW_TEXT(6, 16, "              ", 14);
+    IQ_DRAW_TEXT(0, 16, "B:BACK", 20);
+    IQ_DRAW_TEXT(0, 17, NULL, 20);
 }
 
 /* Quest-tab input behind the thin fixed dispatch in item_screen.c.
@@ -521,6 +478,8 @@ void item_quest_render_banked(void)
     /* Direct paint, no pre-blank: each draw path covers its rows in
      * one pass (see DECK list), so tab switches never show an
      * all-blank intermediate. */
+
+    menu_clear_content_attrs();
 
     /* Sweep the card rider entries: the DECK list paints element icons
      * per row (entries 1-12), and the quest tab must leave none behind.
