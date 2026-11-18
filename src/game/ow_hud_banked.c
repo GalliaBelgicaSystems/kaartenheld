@@ -21,9 +21,13 @@
  *          margin hearts  AP iconic  arrows  gold digits  spin
  *                        value      value   + G suffix   cell (white)
  *
- * - 3 hearts, 1 heart = 5 HP (full icon, 1-4 remainder half icon,
- *   empty = nothing, just the white background). Shown HP caps at 3
- *   hearts (15); level-up overflow stays 3 full.
+ * - 3 hearts, 1 heart = 5 HP.  Remainder 3-4 rounds UP to a full
+ *   heart once at least one heart is complete (8-10 -> 2 full,
+ *   4 -> 1 full); remainders 1-2 show a half (12 -> 2 full + half,
+ *   5-7 -> 1 full + half); exact multiples below max keep their half
+ *   (5 -> 1 full + half, but 10 -> 2 full, 15 -> 3 full); anything
+ *   under one full heart shows a half, never empty (0-3 -> half).
+ *   Shown HP caps at 3 hearts; level-up overflow stays 3 full.
  * - AP icon (menus-tile status cell) + ENERGY_POOL, 2-wide
  *   right-aligned (pool is uncapped by design; clamps at 99).
  * - Arrows icon (menus-tile status cell) + ARROWS currency, 2-wide
@@ -78,12 +82,14 @@ void ui_ow_hud_banked(void)
     uint8_t ones;
     uint8_t hundreds;
     uint8_t tmp;
+    uint8_t hp0;
     char line[20];
 
     w = (const World *)g_bk_ptr_a;
     if (!w) return;
 
     hp = g_game.state.party.members[0].hp;
+    hp0 = hp;
 
     /* Hearts: consume 5 HP per full heart, cap at 3 cells. */
     full = 0;
@@ -91,9 +97,24 @@ void ui_ow_hud_banked(void)
         hp = (uint8_t)(hp - 5);
         full++;
     }
-    /* Leftover 1-4 HP is one half heart (nothing when exactly spent,
-     * or when the bar is already full). */
-    half = (uint8_t)(full < 3 && hp > 0);
+    /* Remainder: 3-4 rounds up to a full heart once a heart is
+     * complete; 1-2 shows a half; exact multiples below max keep
+     * their half (0 and 5 show it, 10 and 15 do not); anything under
+     * one full heart shows a half, never empty. */
+    half = 0;
+    if (full < 3) {
+        if (hp >= 4 || (hp == 3 && full >= 1)) {
+            full++;
+            if (full >= 3) {
+                full = 3;
+                half = 0;
+            }
+        } else if (hp >= 1) {
+            half = 1;
+        } else {
+            half = (uint8_t)(hp0 < 10);
+        }
+    }
 
     ap = g_game.state.variables.values[VARIABLE_ID_ENERGY_POOL - 1];
     if (ap < 0) ap = 0;
