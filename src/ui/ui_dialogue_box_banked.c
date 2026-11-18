@@ -47,7 +47,9 @@ static const uint8_t s_dialogue_paper[8] = {
                  * shades 0+1; dialogue text/chevron use only 0+3, so
                  * this stays black-on-white here while the bar gets
                  * red hearts from the same bytes) */
-    0x4A, 0x29, /* RGB8(85,85,85) */
+    0x6D, 0x19, /* RGB8(111,90,52): icon gold (HUD AP/arrow icons use
+                 * shades 0+2; nothing on the dialogue box uses index
+                 * 2, so this is inert here) */
     0x00, 0x00  /* RGB8(0,0,0) */
 };
 

@@ -188,6 +188,17 @@ void ic_menu_riders_load(void);
 #define UI_TILE_STATUS_AP         210u
 #define UI_TILE_STATUS_ARROWS      211u
 
+/* Gold Glyph OAM entry (gold "G" suffix of the HUD gold field): the
+ * font 'G' tile (OAM block duplicate from ui_init) with OBJ slot 1
+ * (sprites5 gold-browns, repaired by the tail stream).  Entry 38 is
+ * clear in practice (actor cursor tops out at 1+7+10 = 18 with all
+ * 1x1 overworld sprites; markers own 30-37, spinner 39) and is covered
+ * by ui_sprite_hide_actors_below (< 39) on dialogue entry plus the
+ * transition hide on screen changes; the per-frame HUD repaint below
+ * repositions it.  DMG shows OBP0 gray (prop bit 4 clear). */
+#define HUD_GOLD_GLYPH_OAM_ENTRY 38u
+#define HUD_GOLD_GLYPH_OBJ_PROP 1u
+
 /* Menu AP pip tiles (gfx/ap_pip_tiles.h) stream inside the bank-2 item
  * render body on DECK-tab full redraws (same-bank data, LCD-off window).
  * No standalone loader: the fixed bank is full (AGENTS.md 52.18), so no
