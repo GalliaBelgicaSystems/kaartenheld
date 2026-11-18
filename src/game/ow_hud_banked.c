@@ -10,53 +10,41 @@
 
 /* ── Overworld status-bar HUD (ROM bank 8) ──────────────────────────
  * Bottom screen row (row 17) is a white status bar, repainted every
- * overworld frame by this body (dispatched from overworld_screen_render
- * through the thin fixed wrapper ui_draw_ow_hud). Bank 8: the body is
- * ~870 B of SDCC output (16-bit state reads + ring math), which does
- * not fit the thin banks (debug bank 5 has ~540 B free); bank 8 has
- * room in both builds:
+ * overworld frame (dispatched from overworld_screen_render through
+ * the thin fixed wrapper ui_draw_ow_hud). Bank 8: the body does not
+ * fit the thin banks (debug bank 5 has ~540 B free); bank 8 has room
+ * in both builds.
  *
  *   col: 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
  *   row17:" _ H H H _ _ A n n _ > n n _ d d d G _ _ "
  *          margin hearts  AP iconic arrows gold digits  spin
  *                        value    value  +G suffix   cells (white)
  *
- * - 3 hearts, 1 heart = 5 HP.  Remainder 3-4 rounds UP to a full
- *   heart once at least one heart is complete (8-10 -> 2 full,
- *   4 -> 1 full); remainders 1-2 show a half (12 -> 2 full + half,
- *   5-7 -> 1 full + half); exact multiples below max keep their half
- *   (5 -> 1 full + half, but 10 -> 2 full, 15 -> 3 full); anything
- *   under one full heart shows a half, never empty (0-3 -> half).
- *   Shown HP caps at 3 hearts; level-up overflow stays 3 full.
- * - AP icon (menus-tile status cell) + ENERGY_POOL, 2-wide
- *   zero-padded (pool is uncapped by design; clamps at 99).
- * - Arrows icon (menus-tile status cell) + ARROWS currency, 2-wide
- *   zero-padded (quiver max 30).
- * - Gold 3-wide zero-padded (font digits) + bronze "G" suffix
- *   (font tile on the paper ramp: the same brown as battle numbers).
- * - Icons stream to VRAM 208-211 on every overworld full redraw
- *   (bank-11 status body from ui_world_tail, time-shared with the
- *   menu chrome singles); digits/spaces are font tiles.  Every HUD
- *   cell carries the paper attr (slot 4 = paper-white ramp, programmed
- *   by the same stream): opaque white bar on every tileset, DMG-safe.
- * - Col 19 is hard white background too (space tile + paper attr, no
- *   content): the autosave spinner OAM (entry 39 at 152,136) draws over
- *   it, but the bar reads unbroken when the spinner is idle.
- * - The semantic buffer keeps plain letters ('H'/'h'/'A'/digits/
- *   '>'/'G'), so harness screen_row asserts are stable across art
- *   changes; VRAM holds the real tiles (vram_row decodes icons as
- *   '.', same as all art tiles).
+ * - 3 hearts, 1 heart = 5 HP.  Remainder 3-4 rounds UP once a heart
+ *   is complete (8-10 -> 2 full, 4 -> 1 full); remainders 1-2 show a
+ *   half (12 -> 2 full + half, 5-7 -> 1 full + half); exact multiples
+ *   below max keep their half (0 and 5 show it, 10 and 15 do not);
+ *   anything under one full heart shows a half, never empty (0-3 ->
+ *   half). Caps at 3 full hearts.
+ * - AP/arrows icons + zero-padded values (pool/quiver, clamp 99);
+ *   gold 3-wide zero-padded (clamps 999) + 'G' suffix.
+ * - Icons stamp the streamed status tiles (VRAM 208-211, bank-11
+ *   stream from ui_world_tail, time-shared with the menu chrome);
+ *   everything else is a font tile on the fight3 paper ramp (slot 4):
+ *   white bar, red hearts, bronze icons/digits/suffix on every
+ *   tileset. Cols 18-19 stay blank white under the spinner OAM.
+ * - The buffer keeps plain letters, so harness screen_row asserts
+ *   are stable across art changes.
  *
  * Unconditional repaint (no skip-optimization, no scroll cache): the
  * bar is screen-anchored but lives in the scrolling 32x32 ring, so a
  * camera move changes every cell's ring address even when the content
- * is identical.  ~40 bounded mode-gated writes/frame is ~1k T-states
- * typical and needs no extra WRAM (stack-gap budget, AGENTS.md 52.24).
- *
- * Self-contained (AGENTS.md §52.11.1): WRAM game state + same-bank code
- * only, no fixed-bank calls, no div/mod (repeated subtraction: the
- * SDCC div library would land in fixed _CODE, AGENTS.md 52.18).
- * No di/ei anywhere (AGENTS.md §52.11.3): BANKED_VRAM_WRITE only. */
+ * is identical. Needs no extra WRAM (stack-gap budget, AGENTS.md
+ * §52.24). Self-contained (AGENTS.md §52.11.1): WRAM game state +
+ * same-bank code only, no fixed-bank calls, no div/mod (repeated
+ * subtraction: the SDCC div library would land in fixed _CODE,
+ * AGENTS.md 52.18). No di/ei anywhere (AGENTS.md §52.11.3):
+ * BANKED_VRAM_WRITE only. */
 
 #ifdef DEBUG_BUILD
 extern uint8_t g_tilemap_mirror[32 * 32];
@@ -66,23 +54,71 @@ extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
 #define OW_HUD_ROW 17u
 #define OW_HUD_COLS 20u
 
+/* Zero-padded 2-wide decimal, no div/mod. */
+static void hud_num2(uint8_t v, char *dst)
+{
+    uint8_t tens = 0;
+    while (v >= 10) {
+        v = (uint8_t)(v - 10);
+        tens++;
+    }
+    dst[0] = (char)('0' + tens);
+    dst[1] = (char)('0' + v);
+}
+
+/* Clamp a display value into [0, hi]. */
+static int16_t hud_clamp(int16_t v, int16_t hi)
+{
+    if (v < 0) return 0;
+    if (v > hi) return hi;
+    return v;
+}
+
+/* HUD letter -> VRAM tile: streamed status icons for the four icon
+ * cells, font tiles otherwise. */
+static uint8_t hud_tile(char ch)
+{
+    if (ch == 'H') return UI_TILE_STATUS_HEART_FULL;
+    if (ch == 'h') return UI_TILE_STATUS_HEART_HALF;
+    if (ch == 'A') return UI_TILE_STATUS_AP;
+    if (ch == '>') return UI_TILE_STATUS_ARROWS;
+    return (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
+}
+
+/* Paint one bar cell: tilemap tile + paper attr (+ DEBUG mirrors)
+ * and the semantic buffer letter. */
+static void hud_cell(uint8_t col, char ch, uint8_t ring_row, uint8_t sx)
+{
+    uint8_t ring_col = (uint8_t)((sx + col) & 31);
+    uint16_t idx = (uint16_t)((uint16_t)(ring_row << 5) + ring_col);
+    uint8_t tile = hud_tile(ch);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), tile);
+    VBK_REG = 1;
+    BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), UI_COLOR_PAPER);
+    VBK_REG = 0;
+#ifdef DEBUG_BUILD
+    g_tilemap_mirror[idx] = tile;
+    g_tilemap_attr_mirror[idx] = UI_COLOR_PAPER;
+#endif
+    g_ui_screen_buf[OW_HUD_ROW][col] = ch;
+}
+
 void ui_ow_hud_banked(void)
 {
     const World *w;
     uint8_t hp;
+    uint8_t hp0;
     uint8_t full;
     uint8_t half;
+    uint8_t hundreds;
     int16_t ap;
     int16_t arrows;
     int16_t gold;
     uint8_t ring_row;
     uint8_t sx;
     uint8_t col;
-    uint8_t tens;
-    uint8_t ones;
-    uint8_t hundreds;
-    uint8_t tmp;
-    uint8_t hp0;
+    uint8_t cell;
     char line[20];
 
     w = (const World *)g_bk_ptr_a;
@@ -90,6 +126,9 @@ void ui_ow_hud_banked(void)
 
     hp = g_game.state.party.members[0].hp;
     hp0 = hp;
+    ap = hud_clamp(g_game.state.variables.values[VARIABLE_ID_ENERGY_POOL - 1], 99);
+    arrows = hud_clamp(g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1], 99);
+    gold = hud_clamp(g_game.state.currency.amount[CURRENCY_ID_GOLD - 1], 999);
 
     /* Hearts: consume 5 HP per full heart, cap at 3 cells. */
     full = 0;
@@ -97,10 +136,6 @@ void ui_ow_hud_banked(void)
         hp = (uint8_t)(hp - 5);
         full++;
     }
-    /* Remainder: 3-4 rounds up to a full heart once a heart is
-     * complete; 1-2 shows a half; exact multiples below max keep
-     * their half (0 and 5 show it, 10 and 15 do not); anything under
-     * one full heart shows a half, never empty. */
     half = 0;
     if (full < 3) {
         if (hp >= 4 || (hp == 3 && full >= 1)) {
@@ -116,106 +151,40 @@ void ui_ow_hud_banked(void)
         }
     }
 
-    ap = g_game.state.variables.values[VARIABLE_ID_ENERGY_POOL - 1];
-    if (ap < 0) ap = 0;
-    if (ap > 99) ap = 99;
-    arrows = g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1];
-    if (arrows < 0) arrows = 0;
-    if (arrows > 99) arrows = 99;
-    gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
-    if (gold < 0) gold = 0;
-    if (gold > 999) gold = 999;
-
-    /* Hearts (cols 1-3; col 0 is the left margin). */
+    /* Bar content (col 0 margin, cols 18-19 spinner margin). */
     line[0] = ' ';
     for (col = 0; col < 3; col++) {
+        cell = (uint8_t)(col + 1);
         if (col < full) {
-            line[(uint8_t)(col + 1)] = 'H';
+            line[cell] = 'H';
         } else if (col == full && half) {
-            line[(uint8_t)(col + 1)] = 'h';
+            line[cell] = 'h';
         } else {
-            line[(uint8_t)(col + 1)] = ' ';
+            line[cell] = ' ';
         }
     }
     line[4] = ' ';
     line[5] = ' ';
-    /* AP: icon + 2-wide zero-padded value (no div/mod: the SDCC
-     * div library would land in fixed _CODE, AGENTS.md 52.18). */
     line[6] = 'A';
-    tens = 0;
-    tmp = (uint8_t)ap;
-    while (tmp >= 10) {
-        tmp = (uint8_t)(tmp - 10);
-        tens++;
-    }
-    ones = tmp;
-    line[7] = (char)('0' + tens);
-    line[8] = (char)('0' + ones);
+    hud_num2((uint8_t)ap, &line[7]);
     line[9] = ' ';
-    /* Arrows: icon + 2-wide zero-padded value. */
     line[10] = '>';
-    tens = 0;
-    tmp = (uint8_t)arrows;
-    while (tmp >= 10) {
-        tmp = (uint8_t)(tmp - 10);
-        tens++;
-    }
-    ones = tmp;
-    line[11] = (char)('0' + tens);
-    line[12] = (char)('0' + ones);
+    hud_num2((uint8_t)arrows, &line[11]);
     line[13] = ' ';
-    /* Gold: 3-wide zero-padded + 'G' (int16 range: subtraction
-     * loops on the clamped value, still no div/mod). */
     hundreds = 0;
     while (gold >= 100) {
         gold = (int16_t)(gold - 100);
         hundreds++;
     }
-    tens = 0;
-    while (gold >= 10) {
-        gold = (int16_t)(gold - 10);
-        tens++;
-    }
-    ones = (uint8_t)gold;
     line[14] = (char)('0' + hundreds);
-    line[15] = (char)('0' + tens);
-    line[16] = (char)('0' + ones);
+    hud_num2((uint8_t)gold, &line[15]);
     line[17] = 'G';
-    /* Spinner cells: hard white background, no content (the OAM spinner
-     * draws over col 19 when an autosave flushes). */
     line[18] = ' ';
     line[19] = ' ';
 
     ring_row = (uint8_t)((w->scroll_y + OW_HUD_ROW) & 31);
     sx = w->scroll_x;
     for (col = 0; col < OW_HUD_COLS; col++) {
-        uint8_t ring_col = (uint8_t)((sx + col) & 31);
-        uint16_t idx = (uint16_t)((uint16_t)(ring_row << 5) + ring_col);
-        char ch = line[col];
-        uint8_t tile;
-        /* Icon cells stamp the streamed status tiles (VRAM 208-211);
-         * everything else is a font tile.  The buffer always keeps the
-         * letter, so harness asserts never see tile ids. */
-        if (ch == 'H') {
-            tile = UI_TILE_STATUS_HEART_FULL;
-        } else if (ch == 'h') {
-            tile = UI_TILE_STATUS_HEART_HALF;
-        } else if (ch == 'A') {
-            tile = UI_TILE_STATUS_AP;
-        } else if (ch == '>') {
-            tile = UI_TILE_STATUS_ARROWS;
-        } else {
-            tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
-        }
-        VBK_REG = 0;
-        BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), tile);
-        VBK_REG = 1;
-        BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + idx), UI_COLOR_PAPER);
-        VBK_REG = 0;
-#ifdef DEBUG_BUILD
-        g_tilemap_mirror[idx] = tile;
-        g_tilemap_attr_mirror[idx] = UI_COLOR_PAPER;
-#endif
-        g_ui_screen_buf[OW_HUD_ROW][col] = ch;
+        hud_cell(col, line[col], ring_row, sx);
     }
 }
