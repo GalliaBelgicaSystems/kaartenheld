@@ -17,9 +17,9 @@
  * room in both builds:
  *
  *   col: 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
- *   row17:" H H H _ _ A n n _ _ > n n _ _ d d d G _ "
- *          hearts  AP iconic  arrows   gold digits  spin
- *                  value      value    + G suffix   cell (white)
+ *   row17:" _ H H H _ _ A n n _ _ > n n _ d d d G _ "
+ *          margin hearts  AP iconic  arrows  gold digits  spin
+ *                        value      value   + G suffix   cell (white)
  *
  * - 3 hearts, 1 heart = 5 HP (full icon, 1-4 remainder half icon,
  *   empty = nothing, just the white background). Shown HP caps at 3
@@ -105,21 +105,22 @@ void ui_ow_hud_banked(void)
     if (gold < 0) gold = 0;
     if (gold > 999) gold = 999;
 
-    /* Hearts. */
+    /* Hearts (cols 1-3; col 0 is the left margin). */
+    line[0] = ' ';
     for (col = 0; col < 3; col++) {
         if (col < full) {
-            line[col] = 'H';
+            line[(uint8_t)(col + 1)] = 'H';
         } else if (col == full && half) {
-            line[col] = 'h';
+            line[(uint8_t)(col + 1)] = 'h';
         } else {
-            line[col] = ' ';
+            line[(uint8_t)(col + 1)] = ' ';
         }
     }
-    line[3] = ' ';
     line[4] = ' ';
+    line[5] = ' ';
     /* AP: icon + 2-wide right-aligned value (no div/mod: the SDCC
      * div library would land in fixed _CODE, AGENTS.md 52.18). */
-    line[5] = 'A';
+    line[6] = 'A';
     tens = 0;
     tmp = (uint8_t)ap;
     while (tmp >= 10) {
@@ -127,12 +128,12 @@ void ui_ow_hud_banked(void)
         tens++;
     }
     ones = tmp;
-    line[6] = (tens == 0) ? ' ' : (char)('0' + tens);
-    line[7] = (char)('0' + ones);
-    line[8] = ' ';
+    line[7] = (tens == 0) ? ' ' : (char)('0' + tens);
+    line[8] = (char)('0' + ones);
     line[9] = ' ';
+    line[10] = ' ';
     /* Arrows: icon + 2-wide right-aligned value. */
-    line[10] = '>';
+    line[11] = '>';
     tens = 0;
     tmp = (uint8_t)arrows;
     while (tmp >= 10) {
@@ -140,9 +141,8 @@ void ui_ow_hud_banked(void)
         tens++;
     }
     ones = tmp;
-    line[11] = (tens == 0) ? ' ' : (char)('0' + tens);
-    line[12] = (char)('0' + ones);
-    line[13] = ' ';
+    line[12] = (tens == 0) ? ' ' : (char)('0' + tens);
+    line[13] = (char)('0' + ones);
     line[14] = ' ';
     /* Gold: 3-wide right-aligned + 'G' (int16 range: subtraction
      * loops on the clamped value, still no div/mod). */
