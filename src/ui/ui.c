@@ -995,6 +995,21 @@ void ui_draw_battle_timer(const Battle *battle)
     banked_call_run();
 }
 
+/* Thin fixed-bank wrapper: the overworld status-bar body lives in
+ * ROM bank 8 (src/game/ow_hud_banked.c, AGENTS.md 52.18 -- the fixed
+ * bank is hard against 0x8000, and debug bank 5 has no room for the
+ * ~870 B body). Dispatched once per overworld frame
+ * from overworld_screen_render. Stages the World pointer; the body
+ * reads live party/AP/arrow/gold state from WRAM itself. */
+void ui_draw_ow_hud(const World *world)
+{
+    if (!world) return;
+    g_bk_ptr_a = (void *)world;
+    g_bk_call_bank = 8;
+    g_bk_call_target = (uint16_t)&ui_ow_hud_banked;
+    banked_call_run();
+}
+
 void ui_draw_battle_full(const Battle *battle)
 {
     if (!battle) return;

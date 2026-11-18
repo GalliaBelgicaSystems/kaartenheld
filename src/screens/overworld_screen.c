@@ -221,6 +221,11 @@ void overworld_screen_render(Game *g)
     py = (uint8_t)(world_player_py(w) - w->camera_px_y);
     ui_sprite_move(px, py);
     ui_draw_actors_sprites(w);
+    /* Bottom-row status bar (row 17, cols 0-18; col 19 untouched for
+     * the spinner): repainted every frame -- it is screen-anchored but
+     * lives in the scrolling ring, so a camera move changes every
+     * cell's ring address even when the values are identical. */
+    ui_draw_ow_hud(w);
     rc->prev_player_x = px;
     rc->prev_player_y = py;
 }

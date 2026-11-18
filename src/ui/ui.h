@@ -440,6 +440,12 @@ void ui_draw_dialogue_page(const DialogueState *dialogue,
                            uint8_t scroll_x, uint8_t scroll_y);
 void ui_draw_dialogue_line(uint8_t x, uint8_t y, const char *text,
                            uint8_t max_chars, uint8_t ox, uint8_t oy);
+/* Bank-8 no-arg body behind ui_draw_ow_hud(): repaints the overworld
+ * status bar (row 17, cols 0-18; col 19 is the spinner cell, untouched)
+ * from live party/AP/arrow/gold state every overworld frame. */
+void ui_ow_hud_banked(void);
+void ui_draw_ow_hud(const World *world);
+
 void ui_draw_battle_full(const Battle *battle);
 void ui_update_battle(const Battle *battle);
 void ui_update_battle_banked(void);
