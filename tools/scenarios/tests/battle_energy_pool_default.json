@@ -96,19 +96,19 @@
   },
   {
    "type": "screen_row",
-   "row": 8,
+   "row": 7,
    "contains": "0 /1"
   },
   {
    "type": "tilemap_cell",
-   "col": 16,
-   "row": 8,
+   "col": 14,
+   "row": 7,
    "expected": 111
   },
   {
    "type": "tilemap_cell",
-   "col": 19,
-   "row": 8,
+   "col": 17,
+   "row": 7,
    "expected": 111
   },
   {
