@@ -28,11 +28,8 @@
  *   right-aligned (pool is uncapped by design; clamps at 99).
  * - Arrows icon (menus-tile status cell) + ARROWS currency, 2-wide
  *   right-aligned (quiver max 30).
- * - Gold 3-wide right-aligned (font digits, black ink) + gold "G"
- *   suffix: the G is an OAM glyph (entry 38, font tile + OBJ slot 1
- *   gold, repaired by the tail stream) over a white BG cell, so the
- *   suffix matches the menu gold while digits stay dark like battle
- *   numbers.
+ * - Gold 3-wide right-aligned (font digits) + bronze "G" suffix
+ *   (font tile on the paper ramp: the same brown as battle numbers).
  * - Icons stream to VRAM 208-211 on every overworld full redraw
  *   (bank-11 status body from ui_world_tail, time-shared with the
  *   menu chrome singles); digits/spaces are font tiles.  Every HUD
@@ -176,10 +173,8 @@ void ui_ow_hud_banked(void)
         char ch = line[col];
         uint8_t tile;
         /* Icon cells stamp the streamed status tiles (VRAM 208-211);
-         * the gold suffix cell stays white BG (its gold Glyph rides
-         * OAM entry 38 below); everything else is a font tile.  The
-         * buffer always keeps the letter, so harness asserts never
-         * see tile ids. */
+         * everything else is a font tile.  The buffer always keeps the
+         * letter, so harness asserts never see tile ids. */
         if (ch == 'H') {
             tile = UI_TILE_STATUS_HEART_FULL;
         } else if (ch == 'h') {
@@ -188,8 +183,6 @@ void ui_ow_hud_banked(void)
             tile = UI_TILE_STATUS_AP;
         } else if (ch == '>') {
             tile = UI_TILE_STATUS_ARROWS;
-        } else if (col == 18) {
-            tile = ui_font_tile_base;
         } else {
             tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
         }
@@ -203,18 +196,5 @@ void ui_ow_hud_banked(void)
         g_tilemap_attr_mirror[idx] = UI_COLOR_PAPER;
 #endif
         g_ui_screen_buf[OW_HUD_ROW][col] = ch;
-    }
-    /* Gold Glyph: OAM gold "G" over the white suffix cell (font tile
-     * from the OAM duplicate block + OBJ slot-1 gold).  WRAM shadow
-     * writes only (always mapped); screen-anchored, so no scroll math.
-     * Hidden by the transition/dialogue hides like every other entry;
-     * this same-frame repaint repositions it. */
-    {
-        volatile uint8_t *e = (volatile uint8_t *)(0xC000u +
-            ((uint16_t)HUD_GOLD_GLYPH_OAM_ENTRY << 2));
-        e[0] = (uint8_t)(((uint8_t)(OW_HUD_ROW << 3)) + 16);
-        e[1] = (uint8_t)((18 << 3) + 8);
-        e[2] = (uint8_t)(ui_font_tile_base + (uint8_t)('G' - ' '));
-        e[3] = HUD_GOLD_GLYPH_OBJ_PROP;
     }
 }

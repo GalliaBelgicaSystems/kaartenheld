@@ -53,31 +53,19 @@ static const uint8_t s_menus_hero_slots[16] = {
  * Appended-last so the chrome indices above never move. */
 #define MENUS_STATUS_CELL_BASE 28u
 
-/* Paper-white document ramp (CRAM slot 4): pure white box, black font
- * ink, artist heart-red at index 1 (RGB8(139,27,27), the menus-tile
- * status hearts' own ink), bronze gold at index 2 (RGB8(111,90,52),
- * the menu value-gold family).  The bar + dialogue text + status icons
- * use only shades 0+3 (white/black); the status hearts use shades 0+1;
- * the status AP/arrow icons use shades 0+2, so each colored index
- * serves exactly one element.  Same bytes as the dialogue paper
- * (ui_dialogue_box_banked.c); slot 4 is free in every world tileset. */
+/* Paper-white document ramp (CRAM slot 4): byte-identical to the
+ * battle fight3 ramp (white, tan, dark red, dark bronze).  The HUD
+ * status art uses one ink shade each: hearts shade 2 (red), AP/arrow
+ * icons shade 3 (brown), so each colored index serves exactly one
+ * element; font text/digits/chevron use shades 0+3 (white bg, bronze
+ * ink -- the same colour as battle numbers).  Same bytes in the
+ * dialogue paper (ui_dialogue_box_banked.c); slot 4 is free in every
+ * world tileset. */
 static const uint8_t s_status_paper[8] = {
     0xFF, 0x7F, /* RGB8(255,255,255) */
+    0x56, 0x32, /* RGB8(176,146,102) tan (fight3 spare) */
     0x71, 0x0C, /* RGB8(139,27,27) heart red */
-    0x6D, 0x19, /* RGB8(111,90,52) icon gold */
-    0x00, 0x00  /* RGB8(0,0,0) */
-};
-
-/* OBJ slot-1 gold ramp (sprites5) for the HUD gold Glyph.  Same bytes
- * the boot OBJ load programs (cgb_obj_palettes.inc slot 1); the tail
- * repair above keeps them after menu visits.  Must stay byte-identical
- * to sprites5: mimic maps use slot 1 for sprites (exact), and any
- * drift would tint them. */
-static const uint8_t s_status_obj_gold[8] = {
-    0xBE, 0x03, /* RGB8(241,235,3) */
-    0x75, 0x12, /* RGB8(172,157,35) */
-    0xD1, 0x25, /* RGB8(141,117,74) */
-    0x6D, 0x19  /* RGB8(111,90,52) glyph gold */
+    0x6E, 0x19  /* RGB8(117,89,48) icon bronze */
 };
 
 /* Bit-reverse one byte (horizontal mirror for the 180-degree rotation
@@ -171,17 +159,6 @@ void menus_status_stream_banked(void)
         BCPS_REG = (uint8_t)(0x80u | (UI_COLOR_PAPER << 3));
         for (i = 0; i < 8; i++) {
             BANKED_VRAM_WRITE(&BCPD_REG, s_status_paper[i]);
-        }
-        /* OBJ slot 1 (sprites5 gold-browns) for the HUD's gold Glyph
-         * (entry 38, painted per-frame by the HUD body): slot 1 is the
-         * mimic-map sprite slot (sprites5 exact by design) and is
-         * unused on every other overworld map, while menus reprogram
-         * it (material iron) and battle scratches 6/7 only -- so the
-         * tail repair keeps the G gold after any menu visit without
-         * touching live actors. DMG-safe (OCPS/OCPD unmapped no-ops). */
-        OCPS_REG = (uint8_t)(0x80u | (1 << 3));
-        for (i = 0; i < 8; i++) {
-            BANKED_VRAM_WRITE(&OCPD_REG, s_status_obj_gold[i]);
         }
     }
 }

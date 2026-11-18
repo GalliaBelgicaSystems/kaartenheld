@@ -43,14 +43,13 @@ static uint8_t s_fade_stage;
  * scrolled cells -- without this the box shifts right and clips. */
 static const uint8_t s_dialogue_paper[8] = {
     0xFF, 0x7F, /* RGB8(255,255,255) */
+    0x56, 0x32, /* RGB8(176,146,102) tan (fight3 spare) */
     0x71, 0x0C, /* RGB8(139,27,27): heart red (HUD status hearts use
-                 * shades 0+1; dialogue text/chevron use only 0+3, so
-                 * this stays black-on-white here while the bar gets
+                 * shades 0+2; dialogue text/chevron use only 0+3, so
+                 * this stays bronze-on-white here while the bar gets
                  * red hearts from the same bytes) */
-    0x6D, 0x19, /* RGB8(111,90,52): icon gold (HUD AP/arrow icons use
-                 * shades 0+2; nothing on the dialogue box uses index
-                 * 2, so this is inert here) */
-    0x00, 0x00  /* RGB8(0,0,0) */
+    0x6E, 0x19  /* RGB8(117,89,48): icon bronze (HUD AP/arrow icons
+                 * use shades 0+3; unused by dialogue text) */
 };
 
 void ui_dialogue_box_banked(void)
