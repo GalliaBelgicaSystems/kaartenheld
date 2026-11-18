@@ -17,9 +17,9 @@
  * room in both builds:
  *
  *   col: 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9
- *   row17:" H H H _ _ A n n _ _ > n n _ _ d d d G X "
+ *   row17:" H H H _ _ A n n _ _ > n n _ _ d d d G _ "
  *          hearts  AP iconic  arrows   gold digits  spin
- *                  value      value    + G suffix    cell
+ *                  value      value    + G suffix   cell (white)
  *
  * - 3 hearts, 1 heart = 5 HP (full icon, 1-4 remainder half icon,
  *   empty = nothing, just the white background). Shown HP caps at 3
@@ -35,8 +35,9 @@
  *   menu chrome singles); digits/spaces are font tiles.  Every HUD
  *   cell carries the paper attr (slot 4 = paper-white ramp, programmed
  *   by the same stream): opaque white bar on every tileset, DMG-safe.
- * - Col 19 is NEVER written (tile, attr, mirror, or buffer): the
- *   autosave spinner OAM (entry 39 at 152,136) owns that cell.
+ * - Col 19 is hard white background too (space tile + paper attr, no
+ *   content): the autosave spinner OAM (entry 39 at 152,136) draws over
+ *   it, but the bar reads unbroken when the spinner is idle.
  * - The semantic buffer keeps plain letters ('H'/'h'/'A'/digits/
  *   '>'/'G'), so harness screen_row asserts are stable across art
  *   changes; VRAM holds the real tiles (vram_row decodes icons as
@@ -45,7 +46,7 @@
  * Unconditional repaint (no skip-optimization, no scroll cache): the
  * bar is screen-anchored but lives in the scrolling 32x32 ring, so a
  * camera move changes every cell's ring address even when the content
- * is identical.  ~46 bounded mode-gated writes/frame is ~1k T-states
+ * is identical.  ~40 bounded mode-gated writes/frame is ~1k T-states
  * typical and needs no extra WRAM (stack-gap budget, AGENTS.md 52.24).
  *
  * Self-contained (AGENTS.md §52.11.1): WRAM game state + same-bank code
@@ -59,7 +60,7 @@ extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
 #endif
 
 #define OW_HUD_ROW 17u
-#define OW_HUD_COLS 19u
+#define OW_HUD_COLS 20u
 
 void ui_ow_hud_banked(void)
 {
@@ -77,7 +78,7 @@ void ui_ow_hud_banked(void)
     uint8_t ones;
     uint8_t hundreds;
     uint8_t tmp;
-    char line[19];
+    char line[20];
 
     w = (const World *)g_bk_ptr_a;
     if (!w) return;
@@ -160,6 +161,9 @@ void ui_ow_hud_banked(void)
     line[16] = (hundreds == 0 && tens == 0) ? ' ' : (char)('0' + tens);
     line[17] = (char)('0' + ones);
     line[18] = 'G';
+    /* Spinner cell: hard white background, no content (the OAM spinner
+     * draws over it when an autosave flushes). */
+    line[19] = ' ';
 
     ring_row = (uint8_t)((w->scroll_y + OW_HUD_ROW) & 31);
     sx = w->scroll_x;

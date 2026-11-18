@@ -53,12 +53,15 @@ static const uint8_t s_menus_hero_slots[16] = {
  * Appended-last so the chrome indices above never move. */
 #define MENUS_STATUS_CELL_BASE 28u
 
-/* Paper-white document ramp (CRAM slot 4): pure white box, black ink in
- * every tileset.  Same bytes as the dialogue paper (ui_dialogue_box_
- * banked.c); slot 4 is free in every world tileset. */
+/* Paper-white document ramp (CRAM slot 4): pure white box, black font
+ * ink, artist heart-red at index 1 (RGB8(139,27,27), the menus-tile
+ * status hearts' own ink).  The bar + dialogue text + status icons use
+ * only shades 0+3 (white/black); the status hearts use shades 0+1, so
+ * index 1 serves nothing but hearts.  Same bytes as the dialogue paper
+ * (ui_dialogue_box_banked.c); slot 4 is free in every world tileset. */
 static const uint8_t s_status_paper[8] = {
     0xFF, 0x7F, /* RGB8(255,255,255) */
-    0x39, 0x67, /* RGB8(200,200,200) */
+    0x71, 0x0C, /* RGB8(139,27,27) heart red */
     0x4A, 0x29, /* RGB8(85,85,85) */
     0x00, 0x00  /* RGB8(0,0,0) */
 };

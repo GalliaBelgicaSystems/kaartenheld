@@ -43,7 +43,10 @@ static uint8_t s_fade_stage;
  * scrolled cells -- without this the box shifts right and clips. */
 static const uint8_t s_dialogue_paper[8] = {
     0xFF, 0x7F, /* RGB8(255,255,255) */
-    0x39, 0x67, /* RGB8(200,200,200) */
+    0x71, 0x0C, /* RGB8(139,27,27): heart red (HUD status hearts use
+                 * shades 0+1; dialogue text/chevron use only 0+3, so
+                 * this stays black-on-white here while the bar gets
+                 * red hearts from the same bytes) */
     0x4A, 0x29, /* RGB8(85,85,85) */
     0x00, 0x00  /* RGB8(0,0,0) */
 };
