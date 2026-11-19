@@ -1,7 +1,7 @@
 {
  "name": "battle_hand_tiles_pair",
  "test": true,
- "description": "Staged pair (SW3+BO3) shows the centered PAIR hand-name tiles on row 10 (cols 8-11, word slots 229/230/231/247, green), while the row-7/8 forecast trios stay blank on the player turn.",
+ "description": "Staged pair (SW3+BO3) shows the centered PAIR hand-name tiles on row 10 (cols 9-10, word slots 229/230, FIELD), the player-turn attack trio on row 7 (S7^, tiles 104/110, FIELD), and blank row-8 forecast.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -72,21 +72,38 @@
    "expected": "BATTLE"
   },
   {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "S7^"
+  },
+  {
    "type": "tilemap_cell",
    "row": 7,
-   "col": 8,
-   "expected": 0
+   "col": 9,
+   "expected": 104
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 11,
+   "expected": 110
   },
   {
    "type": "tilemap_attr",
    "row": 7,
-   "col": 8,
+   "col": 9,
+   "expected": 3
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 9,
    "expected": 0
   },
   {
    "type": "tilemap_attr",
    "row": 8,
-   "col": 8,
+   "col": 9,
    "expected": 0
   },
   {

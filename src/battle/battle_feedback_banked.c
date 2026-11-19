@@ -114,6 +114,7 @@ void battle_feedback_tick_banked(void)
          * whole flash), so greyed cards and the boss stamp keep their
          * own ramps except during the pulses themselves. */
         g_battle_heal_flash = 50;
+        b->dirty |= BATTLE_DIRTY_HERO;
     }
     g_battle_fx_php = b->player.hp;
     /* Fresh judder replaces the old mask (a previous shake always
@@ -158,8 +159,8 @@ void battle_feedback_tick_banked(void)
         if (np != g_battle_heal_phase) {
             battle_heal_cram(np);
             g_battle_heal_phase = np;
+            b->dirty |= BATTLE_DIRTY_HERO;
         }
-        b->dirty |= BATTLE_DIRTY_HERO;
     }
     /* The deck timer only runs outside a victory result (see the arming
      * gate): freezing it on the loot reveal leaves nothing to strand,

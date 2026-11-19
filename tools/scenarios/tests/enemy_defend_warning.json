@@ -80,7 +80,7 @@
    "type": "tilemap_cell",
    "row": 8,
    "col": 11,
-   "expected": 96
+   "expected": 110
   },
   {
    "type": "tilemap_attr",

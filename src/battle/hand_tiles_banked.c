@@ -41,26 +41,23 @@ uint8_t g_hand_cells_wram[8];
 uint8_t g_hand_cell_len;
 
 /* Tier -> sheet cells (HAND_* in combo.h, 1..10; 0xFF = word space,
- * stamped as the font blank by the renderer).  14 columns: the longest
- * words (STRAIGHT FLUSH, SHORT STRAIGHT) use every slot; shorter words
- * pad with 0xFF (an 8-wide table silently read the NEXT tier's row for
- * positions 8+, painting garbage art the harness cannot see -- it only
- * asserts stamped ids and buffer letters, never VRAM bytes).  Kept in
- * sync with the letter words in ui_battle_content.c (same order, same
- * spaces) -- content and letters can never drift without both tables
- * changing. */
-static const uint8_t s_hand_cells[11][14] = {
-    { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }, /* NONE */
-    { 3, 4, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },       /* PAIR */
-    { 1, 2, 0xFF, 3, 4, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },             /* TWO PAIR */
-    { 15, 16, 17, 0xFF, 18, 19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },          /* THREE KIND */
-    { 8, 9, 10, 11, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },          /* STRAIGHT */
-    { 12, 13, 14, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },      /* FLUSH */
-    { 12, 24, 25, 26, 27, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },         /* FULL HOUSE */
-    { 20, 21, 0xFF, 18, 19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },        /* FOUR KIND */
-    { 8, 9, 10, 11, 0xFF, 12, 13, 14, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },               /* STRAIGHT FLUSH */
-    { 22, 23, 0xFF, 18, 19, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },        /* FIVE KIND */
-    { 5, 6, 7, 0xFF, 8, 9, 10, 11, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },                  /* SHORT STRAIGHT */
+ * stamped as the font blank by the renderer).  8 columns: the longest
+ * words (STRAIGHT FLUSH, SHORT STRAIGHT) use all 8 cells; shorter words
+ * pad with 0xFF.  Kept in sync with the letter words in
+ * ui_battle_content.c (same order, same spaces) -- content and letters
+ * can never drift without both tables changing. */
+static const uint8_t s_hand_cells[11][8] = {
+    { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }, /* NONE */
+    { 3, 4, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },       /* PAIR */
+    { 1, 2, 0xFF, 3, 4, 0xFF, 0xFF, 0xFF },             /* TWO PAIR */
+    { 15, 16, 17, 0xFF, 18, 19, 0xFF, 0xFF },           /* THREE KIND */
+    { 8, 9, 10, 11, 0xFF, 0xFF, 0xFF, 0xFF },           /* STRAIGHT */
+    { 12, 13, 14, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },       /* FLUSH */
+    { 12, 24, 25, 26, 27, 0xFF, 0xFF, 0xFF },           /* FULL HOUSE */
+    { 20, 21, 0xFF, 18, 19, 0xFF, 0xFF, 0xFF },         /* FOUR KIND */
+    { 8, 9, 10, 11, 0xFF, 12, 13, 14 },                 /* STRAIGHT FLUSH */
+    { 22, 23, 0xFF, 18, 19, 0xFF, 0xFF, 0xFF },         /* FIVE KIND */
+    { 5, 6, 7, 0xFF, 8, 9, 10, 11 },                    /* SHORT STRAIGHT */
 };
 
 /* Word lengths in CELLS (including the separating blank cell):
@@ -78,9 +75,9 @@ static const uint8_t s_hand_len[11] = {
 
 /* Window slots (BG, UI_TILE_HAND_SLOTS in ui.h): slot 0 is the down
  * arrow, slots 1-8 the word cells.  Split across the rider tail and
- * the dice tail (see ui.h): battle needs neither, and every screen
- * that clobbers them re-arms g_hand_shown_tier. */
-static const uint8_t s_hand_slots[15] = UI_TILE_HAND_SLOTS;
+ * hero-portrait cells (see ui.h): battle needs neither, and every
+ * screen that clobbers them re-arms g_hand_shown_tier. */
+static const uint8_t s_hand_slots[9] = UI_TILE_HAND_SLOTS;
 
 /* The heal cross rides with the down arrow: every stream (word or
  * arrow-only) refreshes both singletons, so the row-7 heal trio never
@@ -150,13 +147,12 @@ void hand_tiles_sync_banked(void)
         b->dirty |= BATTLE_DIRTY_COMBO;
         return;
     }
-    /* No staged word: the enemy forecast still needs its down arrow
-     * (row 7, cols 9-11) while a strike is incoming.  The cross rides
-     * along: a later heal staging must never read a stale cross. */
-    if ((b->phase == BATTLE_PHASE_PLAYER_DEFEND ||
-         b->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) &&
-        b->enemy_incoming_dmg != 0) {
-        if (g_hand_shown_tier == 0xFE) return;
+    /* No staged word: stream the down arrow (row-7 enemy forecast) and
+     * heal cross (row-7 lone-ring heal forecast, even when tier is
+     * HAND_NONE on Turn 1 or after returning from SCREEN_ITEM) whenever
+     * the window is cold (0xFF).  Once resident (0xFE or any tier 1..10),
+     * nothing in battle overwrites them. */
+    if (g_hand_shown_tier == 0xFF) {
         hand_stream_slot(s_hand_slots[0], 0);
         hand_stream_slot(UI_TILE_HAND_CROSS, 28);
         g_hand_shown_tier = 0xFE;

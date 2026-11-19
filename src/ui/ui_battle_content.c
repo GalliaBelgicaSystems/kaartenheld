@@ -646,8 +646,8 @@ static uint8_t battle_energy_display(const volatile Battle *b);
 /* Defined below the hero row (bank-local preview resolvers); the hero
  * row's block forecast reads them. */
 static uint8_t battle_defend_counter_preview(const volatile Battle *battle);
-static const char *battle_combo_pending_preview(const volatile Battle *battle,
-                                                uint8_t *dmg, uint8_t *is_heal);
+static void battle_combo_pending_preview(const volatile Battle *battle,
+                                         uint8_t *dmg, uint8_t *is_heal);
 
 /* Unconditional HUD cell stamp (52.25: removing icons across phases
  * must blank VRAM even when the buffer already holds spaces, so no
@@ -673,7 +673,7 @@ static void battle_stamp_blank(uint8_t x, uint8_t y)
 
 /* Poker-hand window slots (BG, UI_TILE_HAND_SLOTS in ui.h): slot 0
  * is the down arrow, slots 1-8 the word cells. */
-static const uint8_t s_hand_slots[15] = UI_TILE_HAND_SLOTS;
+static const uint8_t s_hand_slots[9] = UI_TILE_HAND_SLOTS;
 
 /* Poker-hand words (row 10, tiles from col 6 -- col 4 for STRAIGHT
  * FLUSH).  Index HAND_* tier 1..10; kept in sync with the sheet-cell
@@ -721,40 +721,43 @@ static uint8_t battle_stamp_num(uint8_t x, uint8_t y, uint8_t val)
 }
 
 /* Stamp one forecast trio (row 7 enemy power / staged attack, row 8
- * block/counter): icon + compact number + trailing icon, blanking the
- * 4-cell span first so a phase change never strands art.  The trio
- * sits at cols 9-11 (12 for a 2-digit number).  Colors ride the
- * caller's span (red enemy set, green player set, brown-on-white
- * shield set). */
+ * block/counter): icon + compact number + trailing icon, without
+ * pre-blanking the live cells so active-display redraws never flicker.
+ * The trio sits at cols 9-11 (12 for a 2-digit number, 13 for 3-digit);
+ * any unused trailing cells through col 13 are blanked and reset to
+ * UI_COLOR_NONE so a shrinking value never strands art or tint. */
 static void battle_draw_forecast_trio(uint8_t row, char icon_ch, uint8_t icon_tile,
                                       uint8_t val, char trail_ch, uint8_t trail_tile,
                                       uint8_t color)
 {
     uint8_t n;
     uint8_t x;
+    uint8_t c;
 
-    battle_stamp_blank(9, row);
-    battle_stamp_blank(10, row);
-    battle_stamp_blank(11, row);
-    battle_stamp_blank(12, row);
     battle_stamp_cell(9, row, icon_ch, icon_tile);
     n = battle_stamp_num(10, row, val);
     x = (uint8_t)(10 + n);
-    if (x < 13) {
+    if (x < 14) {
         battle_stamp_cell(x, row, trail_ch, trail_tile);
         battle_color_span(9, row, (uint8_t)(x - 9 + 1), color);
+        for (c = (uint8_t)(x + 1); c < 14; c++) {
+            battle_stamp_blank(c, row);
+        }
+        if (x < 13) {
+            battle_color_span((uint8_t)(x + 1), row, (uint8_t)(13 - x), UI_COLOR_NONE);
+        }
     } else {
-        battle_color_span(9, row, 4, color);
+        battle_color_span(9, row, 5, color);
     }
 }
 
 static void battle_blank_forecast(uint8_t row)
 {
-    battle_stamp_blank(9, row);
-    battle_stamp_blank(10, row);
-    battle_stamp_blank(11, row);
-    battle_stamp_blank(12, row);
-    battle_color_span(8, row, 4, UI_COLOR_NONE);
+    uint8_t c;
+    for (c = 9; c < 14; c++) {
+        battle_stamp_blank(c, row);
+    }
+    battle_color_span(9, row, 5, UI_COLOR_NONE);
 }
 
 static void battle_draw_hero_row(const volatile Battle *battle)
@@ -788,14 +791,10 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     if (ap_col < 2) ap_col = 2;
     if (deck_col < 2) deck_col = 2;
 
-    /* Clear first, draw second: all blocks share the rows, and the
-     * blank pass would otherwise erase the sprite. */
-    battle_draw_text_line(0, label_row, NULL, 20);
-    if (hp_row != label_row) battle_draw_text_line(0, hp_row, NULL, 20);
-    if (ap_row != label_row && ap_row != hp_row)
-        battle_draw_text_line(0, ap_row, NULL, 20);
-    if (deck_row != label_row && deck_row != hp_row && deck_row != ap_row)
-        battle_draw_text_line(0, deck_row, NULL, 20);
+    /* No full-row blank pass: every element on rows 7-8 sits at a fixed
+     * column and unused gaps stay blank from ui_clear_screen().  Wiping
+     * the whole rows while the LCD is on caused rows 7-8 to flicker
+     * mid-scanout during active-display redraws (notably the heal flash). */
 
     /* Hero sprite badge (OW idle frame, streamed at entry): VRAM gets
      * the tile unconditionally (skip-guards cannot clear art tiles,
@@ -867,7 +866,7 @@ static void battle_draw_hero_row(const volatile Battle *battle)
             } else {
                 battle_draw_forecast_trio(label_row, 'S',
                                           battle_card_weapon_tile(BATTLE_CARD_TYPE_SWORD, 0),
-                                          block, '^', UI_TILE_SELECT_ARROW,
+                                          block, '^', UI_TILE_SELECT_ARROW_DARK,
                                           UI_COLOR_FIELD);
             }
         } else {
@@ -918,14 +917,14 @@ static void battle_draw_hero_row(const volatile Battle *battle)
         if (counter != 0) {
             battle_draw_forecast_trio(ap_row, 'd',
                                       battle_card_weapon_tile(BATTLE_CARD_TYPE_DAGGER, 0),
-                                      counter, '^', UI_TILE_SELECT_ARROW,
+                                      counter, '^', UI_TILE_SELECT_ARROW_DARK,
                                       UI_COLOR_FIRE);
         } else {
             battle_combo_pending_preview(battle, &block, &heal_ignored);
             (void)heal_ignored;
             battle_draw_forecast_trio(ap_row, 'D',
                                       battle_card_weapon_tile(BATTLE_CARD_TYPE_SHIELD, 0),
-                                      block, '^', UI_TILE_SELECT_ARROW,
+                                      block, '^', UI_TILE_SELECT_ARROW_DARK,
                                       UI_COLOR_FIELD);
         }
     } else {
@@ -963,39 +962,18 @@ static uint8_t battle_energy_display(const volatile Battle *b)
     return (uint8_t)(b->energy - reserved);
 }
 
-/* Tier display names (docs/combo-system.md hand table).  Rows live in
- * bank-local literals; the classifier itself is the single source of
- * truth in combo_content.c -- this only renders ComboResult.tier. */
-static const char *battle_combo_tier_name(uint8_t tier)
-{
-    switch (tier) {
-        case HAND_PAIR:           return "PAIR";
-        case HAND_TWO_PAIR:       return "TWO PAIR";
-        case HAND_THREE_KIND:     return "THREE KIND";
-        case HAND_STRAIGHT:       return "STRAIGHT";
-        case HAND_FLUSH:          return "FLUSH";
-        case HAND_FULL_HOUSE:     return "FULL HOUSE";
-        case HAND_FOUR_KIND:      return "FOUR KIND";
-        case HAND_STRAIGHT_FLUSH: return "STR FLUSH";
-        case HAND_FIVE_KIND:      return "FIVE KIND";
-        case HAND_SHORT_STRAIGHT: return "SHORT STR";
-        case HAND_NONE:           return "HCARD";
-        default:                  return "";
-    }
-}
-
 /* Selection-marker scratch: file-static to survive timer ISR re-entrancy
  * on real hardware (the ISR runs on the main stack). */
 static char s_sel_marker;
 
-static const char *battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg,
-                                                uint8_t *is_heal)
+static void battle_combo_pending_preview(const volatile Battle *battle, uint8_t *dmg,
+                                         uint8_t *is_heal)
 {
     uint8_t save_type;
     uint8_t save_amount;
     *dmg = 0;
     *is_heal = 0;
-    if (battle->combo_count == 0) return "";
+    if (battle->combo_count == 0) return;
     /* Side-effect-free rendering: the dispatch below overwrites the
      * shared g_effect_last scratch (a later apply reads it as the burn
      * basis), so save and restore it around the call -- staging previews
@@ -1025,9 +1003,6 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
     if (g_effect_last.type == CARD_EFFECT_HEAL_HP) *is_heal = 1;
     g_effect_last.type = save_type;
     g_effect_last.amount = save_amount;
-    if (battle->last_combo.eff_count == 0) return "";
-    if (battle->last_combo.tier == HAND_NONE && *dmg == 0) return "";
-    return battle_combo_tier_name(battle->last_combo.tier);
 }
 
 /* Dagger-counter preview: pending-selection damage for a daggers-only
@@ -1184,7 +1159,7 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
 #ifdef DEBUG_BUILD
         g_tilemap_mirror[(uint16_t)combo_row * 32 + r] = ui_font_tile_base;
 #endif
-        g_ui_screen_buf[combo_row][r] = '\0';
+        g_ui_screen_buf[combo_row][r] = ' ';
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
     /* Default want: no word (message states and empty previews return
@@ -1294,9 +1269,6 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     if (tlen > 8) tlen = 8;
     tstart = (uint8_t)((20 - tlen) >> 1);
     start = (uint8_t)((20 - len) >> 1);
-    for (i = 3; i < 18; i++) {
-        battle_stamp_blank(i, combo_row);
-    }
     if (tier == g_hand_shown_tier) {
         for (i = 0; i < tlen; i++) {
             cell = g_hand_cells_wram[i];

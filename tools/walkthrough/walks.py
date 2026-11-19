@@ -46,7 +46,7 @@ from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY,
                                       CHARACTER_STATE_MAX_HP, ENTITY_SIZE,
                                       BATTLE_HAND, CARD_SIZE, CARD_TYPE,
                                       CARD_VALUE, CARD_COST, BATTLE_ENERGY,
-                                      MUSIC_UNDERGROUND,
+                                      BATTLE_INCOMING_DMG, MUSIC_UNDERGROUND,
                                       OFF_VARIABLES)
 # collision lives in tools/level_compiler; set the path here rather than
 # borrowing route.py's namespace, so a future refactor of route.py's import
@@ -570,7 +570,7 @@ def _poke_incoming(s, dmg):
     (reset to 0 before the real execute so the spar stays harmless)."""
     r = s.reader
     rbase = r._resolve_battle_base()
-    s.pb.memory[rbase + 493] = dmg
+    s.pb.memory[rbase + BATTLE_INCOMING_DMG] = dmg
 
 
 def _select_all(s):
@@ -605,29 +605,6 @@ def _handbook_shot(s, name, milestone):
             s.reader.battle_combo_count() == 5,
             expected="combo_count 5", actual=str(s.reader.battle_combo_count()))
     s.shoot(milestone)
-    import os as _vd
-    if _vd.environ.get("VRAMDUMP") and name == "four":
-        slots = [228,229,230,231,232,233,234,235,242,243,244,247,252,253,254]
-        vram = [s.pb.memory[0x8000 + sl * 16 + j] for sl in slots for j in range(16)]
-        tmap = [s.pb.memory[0x9800 + 10 * 32 + c] for c in range(20)]
-        buf = s.bg_text()[10]
-        print("VRAMSLOTS:", slots)
-        print("TILEMAP10:", tmap)
-        print("BUF10:", repr(buf))
-        from PIL import Image as _I
-        hn = _I.open("assets/hand_names.png").convert("RGB")
-        exp = []
-        for ci in [20,21,18,19]:
-            t = hn.crop((ci * 8, 0, ci * 8 + 8, 8))
-            exp.append(list(t.tobytes()))
-        got = []
-        for sl in [229,230,231,232]:
-            got.append(bytes(s.pb.memory[0x8000 + sl * 16 + j] for j in range(16)))
-        # compare as RGB565-ish? just compare raw byte equality of tile patterns via hashes
-        import hashlib as _h
-        print("EXP hashes:", [_h.md5(bytes(e)).hexdigest()[:6] for e in exp])
-        # vram bytes are 2bpp planar; sheet is RGB. compare structure only:
-        print("GOT distinct:", len(set(bytes(g) for g in got)))
     _clear_combo(s)
     s.check("handbook %s cleared" % name,
             s.reader.battle_combo_count() == 0,
@@ -1229,7 +1206,7 @@ def walk_b(planner, checks):
     # Poker-hand handbook: stage each named hand in the opening SELECT
     # (no executes, so the spar never advances) and capture its row-10
     # name tiles.  The pair shot doubles as the player-attacking icon
-    # set (SELECT phase: the forecast trios stay blank on rows 7-8).
+    # set (row 7 shows the staged attack trio; row 8 stays blank).
     for _name, _mark in (("pair", "10-hand-pair"),
                          ("twopair", "10-hand-twopair"),
                          ("three", "10-hand-three"),

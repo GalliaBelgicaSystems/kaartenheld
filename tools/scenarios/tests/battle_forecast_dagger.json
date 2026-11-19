@@ -1,7 +1,7 @@
 {
  "name": "battle_forecast_dagger",
  "test": true,
- "description": "Enemy turn with daggers staged: row 7 shows the red attack trio (down arrow 228 + incoming power + sword 104), row 8 the red counter trio (dagger 107 + counter + up arrow 96); row 10 shows the centered PAIR tiles.",
+ "description": "Enemy turn with daggers staged: row 7 shows the red attack trio (down arrow 228 + incoming power + sword 104), row 8 the red counter trio (dagger 107 + counter + up arrow 110); row 10 shows the centered PAIR tiles.",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {
@@ -146,7 +146,7 @@
    "type": "tilemap_cell",
    "row": 8,
    "col": 11,
-   "expected": 96
+   "expected": 110
   },
   {
    "type": "tilemap_attr",
