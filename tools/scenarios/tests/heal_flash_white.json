@@ -52,7 +52,7 @@
   {
    "type": "tilemap_attr",
    "row": 7,
-   "col": 4,
+   "col": 2,
    "expected": 3
   }
  ],

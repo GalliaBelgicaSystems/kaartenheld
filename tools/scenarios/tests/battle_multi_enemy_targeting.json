@@ -61,31 +61,31 @@
   },
   {
    "type": "screen_row",
-   "row": 7,
+   "row": 8,
    "contains": " 1 "
   },
   {
    "type": "tilemap_cell",
    "row": 7,
-   "col": 3,
+   "col": 4,
    "expected": 248
   },
   {
    "type": "tilemap_cell",
-   "row": 7,
-   "col": 8,
+   "row": 8,
+   "col": 4,
    "expected": 250
   },
   {
    "type": "tilemap_cell",
-   "row": 7,
-   "col": 12,
+   "row": 8,
+   "col": 15,
    "expected": 116
   },
   {
    "type": "tilemap_cell",
    "row": 7,
-   "col": 16,
+   "col": 15,
    "expected": 251
   },
   {

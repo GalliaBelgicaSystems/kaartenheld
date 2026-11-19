@@ -95,8 +95,8 @@
   },
   {
    "type": "tilemap_attr",
-   "row": 7,
-   "col": 14,
+   "row": 8,
+   "col": 16,
    "expected": 3
   },
   {

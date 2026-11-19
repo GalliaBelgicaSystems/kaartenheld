@@ -56,6 +56,7 @@ SHEETS = {
     "hero_ow": ("hero_sprites.png", "obj"),
     "card_frames": ("card_frames.png", "base"),
     "dice": ("dice.png", "base"),
+    "hands": ("hand_names.png", "base"),
     "ap_pips": ("ap_pips_bg.png", "base"),
     "menu_riders": ("menu_riders.png", "base"),
     "menu_cursor": ("menu_cursor.png", "base"),
@@ -664,6 +665,16 @@ def main():
     # cell encodes with the wood ramp (brown on tan, like the arrow
     # counters).  Base slot 5 is wood (fight2) per palette_slots.json.
     compile_sheet("dice", { (x, 0): "fight2" for x in range(10) },
+                  require_slot=False)
+    # Battle poker-hand names (hand_names.png, 29x1: down arrow + the
+    # row-6/7 letter fragments + heal cross): brown numbers_icons ink on
+    # white paper is exactly the fight3 ramp (white/card_outline/dark-red/
+    # brown), while cell 28 (combat_health_icon_menu) uses #77e331 green
+    # (fighthealth shade 3, exact like menu_riders cell 3), so the encode
+    # is mismatch-free.  require_slot=False like dice: the declared ramp
+    # is the encode side, the row-7/10 spans paint the slot.
+    compile_sheet("hands",
+                  {(x, 0): "fight3" for x in range(28)} | {(28, 0): "fighthealth"},
                   require_slot=False)
     # Menu AP pips (ap_pips_bg.png, 5x1 cells, cost order 1-5): every
     # cell encodes with the fightspider ramp (menu text black-on-white,

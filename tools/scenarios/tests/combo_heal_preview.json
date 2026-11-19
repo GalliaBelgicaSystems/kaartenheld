@@ -81,7 +81,30 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "PAIR HEAL12"
+   "contains": "PAIR"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "R12+"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 9,
+   "expected": 108
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 12,
+   "expected": 255
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 9,
+   "expected": 3
   }
  ]
 }

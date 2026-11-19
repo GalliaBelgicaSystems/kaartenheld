@@ -481,6 +481,8 @@ extern volatile uint8_t g_harness_mode;
 
 extern void jingle_full_banked(void);
 
+extern void hand_tiles_sync_banked(void);
+
 void game_frame_tick_banked(void)
 {
     /* RNG priming (AGENTS.md 52.x: the custom CRT0 clears WRAM but never
@@ -531,6 +533,13 @@ void game_frame_tick_banked(void)
      * own bank-10 dispatch from the fixed wrapper above -- a banked body
      * can never nest another trampoline call.) */
     marks_refresh();
+    /* Poker-hand tile sync (bank 8, same-bank plain call): streams the
+     * staged word + forecast arrow on demand (see hand_tiles_banked.c).
+     * Runs after screen_update's render, so last_combo already holds
+     * this tick's preview; the renderer gates on g_hand_shown_tier, so
+     * a just-changed selection blanks one frame instead of tearing.
+     * Also re-arms the window off-battle. */
+    hand_tiles_sync_banked();
     jingle_full_banked();
     /* Chuck-a-luck: the table's whole frame body (entry paint, input,
      * dice, gold, OAM) plus its audio request live in bank 8 too, so

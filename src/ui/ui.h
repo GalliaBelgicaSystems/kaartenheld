@@ -80,6 +80,27 @@ extern uint8_t g_is_cgb;
 #define UI_TILE_DICE_BASE        246u
 #define UI_TILE_DICE_COUNT       10u
 
+/* Battle poker-hand name tiles (assets/hand_names.png via
+ * tools/compose_hand_names.py: down arrow + 28 letter fragments).
+ * Streamed on demand by the bank-8 hand body
+ * (src/battle/hand_tiles_banked.c).  No 15 contiguous BG slots are free
+ * in battle (208-246 menu chrome/hero/pips, 248-251 chrome status
+ * icons the hero row stamps every frame), so the window splits across
+ * battle-inert tails: the rider tail (228-231, BG riders stream only
+ * in ITEM/SHOP renders), hero-portrait cells (232-235, 242-244,
+ * restreamed on every ITEM/SHOP entry like the chrome) and the dice
+ * tail (247, 252-255; dice stream only on gamble entry).  Battle needs
+ * none of these; every screen that clobbers them (ITEM, SHOP,
+ * DIALOGUE, overworld) re-arms g_hand_shown_tier through the sync's
+ * off-battle branch, so the next battle tick restreams before the
+ * renderer stops blanking (it gates on the same byte).
+ * Slot 0 carries the down arrow (row-7 forecast); slots 1-8 carry the
+ * staged word (max 8 cells: SHORT STRAIGHT / STRAIGHT FLUSH);
+ * UI_TILE_HAND_CROSS (255) carries the heal cross (row-7 heal trio,
+ * streamed with the same bundle). */
+#define UI_TILE_HAND_SLOTS { 228u, 229u, 230u, 231u, 232u, 233u, 234u, 235u, 242u }
+#define UI_TILE_HAND_CROSS 255u
+
 /* Bank-8 body streaming gfx/dice_tiles.h (assets/dice.png, digit order
  * 0-9) to UI_TILE_DICE_BASE (246-255).  Same-bank data; called by the
  * gamble entry body while the LCD is off (plain same-bank call, no

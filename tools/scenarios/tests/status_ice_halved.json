@@ -154,8 +154,32 @@
   },
   {
    "type": "screen_row",
+   "row": 7,
+   "contains": "v2S"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 9,
+   "expected": 228
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 11,
+   "expected": 104
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 9,
+   "expected": 1
+  },
+  {
+   "type": "tilemap_cell",
    "row": 10,
-   "contains": "DMG 2"
+   "col": 8,
+   "expected": 0
   }
  ]
 }

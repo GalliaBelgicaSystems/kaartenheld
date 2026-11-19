@@ -177,8 +177,15 @@ class Session:
     def bg_text(self):
         """Visible BG tilemap as 18 rows x 20 chars (font tiles read as
         ASCII; terrain tiles become '?').  SCX/SCY-aware (the same read
-        the old walkthrough used, AGENTS.md §56.2)."""
+        the old walkthrough used, AGENTS.md §56.2).  Forces the VRAM
+        bank latch to 0 first: tilemaps live in bank 0, and a stale
+        bank-1 select (any attr span runs with VBK=1; PyBoy exposes
+        the latch to CPU-side reads) would decode palettes as text."""
         pb = self.pb
+        try:
+            pb.memory[0xFF4F] = 0
+        except Exception:
+            pass
         scx = pb.memory[0xFF43]
         scy = pb.memory[0xFF42]
         rows = []

@@ -112,6 +112,10 @@ BATTLE_SELECTED = BATTLE_HAND + 5 * CARD_SIZE
 BATTLE_COMBO = BATTLE_SELECTED + 5          # selected_indices[5], then count
 BATTLE_CURSOR = BATTLE_COMBO + 1
 BATTLE_ENERGY = BATTLE_CURSOR + 1
+# timer_ticks (2) + timer_max (2) + phase (1) + turn (1) + result (1) +
+# delay_timer (1) + msg_id (1) + msg_ttl (1) + battle_over (1) +
+# ComboResult last_combo (5*8 + 1 + 1 + 1 + 1 + 2 + 2 = 48) -> enemy_incoming_dmg
+BATTLE_INCOMING_DMG = BATTLE_ENERGY + 1 + 11 + 48   # 493
 
 # BattleCardType (src/battle/card.h)
 BT_SWORD = 0
