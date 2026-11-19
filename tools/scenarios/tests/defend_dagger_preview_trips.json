@@ -165,61 +165,43 @@
   {
    "type": "tilemap_cell",
    "row": 10,
-   "col": 5,
+   "col": 7,
    "expected": 229
   },
   {
    "type": "tilemap_cell",
    "row": 10,
-   "col": 6,
+   "col": 8,
    "expected": 230
   },
   {
    "type": "tilemap_cell",
    "row": 10,
-   "col": 7,
+   "col": 9,
    "expected": 231
   },
   {
    "type": "tilemap_cell",
    "row": 10,
-   "col": 8,
-   "expected": 232
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
-   "col": 9,
-   "expected": 233
+   "col": 10,
+   "expected": 0
   },
   {
    "type": "tilemap_cell",
    "row": 10,
    "col": 11,
-   "expected": 235
+   "expected": 233
   },
   {
    "type": "tilemap_cell",
    "row": 10,
    "col": 12,
-   "expected": 242
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
-   "col": 13,
-   "expected": 243
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
-   "col": 14,
-   "expected": 244
+   "expected": 234
   },
   {
    "type": "tilemap_attr",
    "row": 10,
-   "col": 5,
+   "col": 7,
    "expected": 3
   }
  ],

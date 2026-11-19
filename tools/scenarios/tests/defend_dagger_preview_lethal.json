@@ -151,31 +151,19 @@
   {
    "type": "tilemap_cell",
    "row": 10,
-   "col": 8,
+   "col": 9,
    "expected": 229
   },
   {
    "type": "tilemap_cell",
    "row": 10,
-   "col": 9,
-   "expected": 230
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
    "col": 10,
-   "expected": 231
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
-   "col": 11,
-   "expected": 232
+   "expected": 230
   },
   {
    "type": "tilemap_attr",
    "row": 10,
-   "col": 8,
+   "col": 9,
    "expected": 3
   }
  ],

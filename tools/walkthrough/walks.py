@@ -563,6 +563,16 @@ def _poke_hand(s, cards):
     _topup_timer(s)
 
 
+def _poke_incoming(s, dmg):
+    """Stage the telegraphed enemy power (throwaway spar session only):
+    Carl's practice deck hits for 0, which blanks the forecast trios,
+    so the defend icon shots stage a nonzero incoming for the render
+    (reset to 0 before the real execute so the spar stays harmless)."""
+    r = s.reader
+    rbase = r._resolve_battle_base()
+    s.pb.memory[rbase + 493] = dmg
+
+
 def _select_all(s):
     """Select hand slots 0-4 (verified per press, like _select_cards)."""
     for idx in range(5):
@@ -1274,6 +1284,7 @@ def walk_b(planner, checks):
     # then shields (brown block trio).  Both are staged and cleared
     # without executing, so the choreography below re-selects fresh.
     _poke_hand(s, [(4, 3), (4, 3), (4, 3), (4, 3), (4, 3)])
+    _poke_incoming(s, 9)
     s.tick(10)
     _select_cards(s, (BT_DAGGER,), max_cards=2)
     s.tick(20)
@@ -1285,6 +1296,7 @@ def walk_b(planner, checks):
     s.tick(20)
     s.shoot("10-defend-shield", need="DEFEND")
     _clear_combo(s)
+    _poke_incoming(s, 0)
     _select_cards(s, (BT_SHIELD,), max_cards=2)
     s.press("select", settle=40)     # execute defense
     # The way back to SELECT raises the poker-hands box, then the flee

@@ -2337,11 +2337,13 @@ invalid; composed in the bank-3 file-static `s_banner_text[24]`, names
 cap at 11 chars so all banners fit 20 cols), `2` enemy HP (the former
 name row; HP moved here when the name row was removed), `3-4` enemies
 (art/caret), `7` hero (badge col 0, HP digits cols 2-3 + heart col 4,
-arrow count cols 16-17 + status arrow col 15, enemy forecast cols 8-10:
-down arrow + incoming power + sword, red, enemy-turn only), `8` AP
-digit col 3 + AP tile col 4, block forecast cols 8-10 (shield/dagger +
-block/counter + up arrow, brown/red, enemy-turn only), deck icon col 15
-+ deck count cols 16-17, drawn with the hero row on BATTLE_DIRTY_HERO),
+arrow icon col 15 + count cols 16-17, forecast trio cols 9-11:
+down arrow + incoming power + sword (red, enemy turn), sword/dagger/ring +
+staged damage/heal + up-arrow or green cross (green set, player turn)),
+`8` AP digit col 3 + AP tile col 4, block forecast cols 9-11
+(shield/dagger + block/counter + up arrow, brown-on-white shield set /
+red dagger set, enemy turn only), deck icon col 15 + deck count
+cols 16-17, drawn with the hero row on BATTLE_DIRTY_HERO),
 `9` transient gameplay messages
 (`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` staged
 hand-name tiles (centered poker-hand word from the shared classifier,
