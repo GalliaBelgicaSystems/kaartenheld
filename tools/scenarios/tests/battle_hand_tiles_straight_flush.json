@@ -1,7 +1,7 @@
 {
  "name": "battle_hand_tiles_straight_flush",
  "test": true,
- "description": "Straight flush (SW1-5 suited run) shows the STRAIGHT FLUSH tiles starting at row-10 col 4 (word slots 229/230/231/247/252/253/254/255, green) with no DMG number.",
+ "description": "Straight flush (SW1-5 suited run) shows the centered STRAIGHT FLUSH tiles on row 10 (cols 3-16, word slots in order, green) with no damage number.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -156,6 +156,10 @@
    "expected": "BATTLE"
   },
   {
+   "type": "event_not_occurred",
+   "event": "DAMAGE_DEALT"
+  },
+  {
    "type": "screen_row",
    "row": 10,
    "contains": "STRAIGHT FLUSH"
@@ -163,36 +167,86 @@
   {
    "type": "tilemap_cell",
    "row": 10,
-   "col": 4,
+   "col": 3,
    "expected": 229
   },
   {
    "type": "tilemap_cell",
    "row": 10,
+   "col": 4,
+   "expected": 230
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 5,
+   "expected": 231
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 6,
+   "expected": 232
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
    "col": 7,
-   "expected": 247
+   "expected": 233
   },
   {
    "type": "tilemap_cell",
    "row": 10,
    "col": 8,
+   "expected": 234
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 9,
+   "expected": 235
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 10,
+   "expected": 242
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 12,
+   "expected": 244
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 13,
+   "expected": 247
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 14,
    "expected": 252
   },
   {
    "type": "tilemap_cell",
    "row": 10,
-   "col": 11,
-   "expected": 255
+   "col": 15,
+   "expected": 253
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 16,
+   "expected": 254
   },
   {
    "type": "tilemap_attr",
    "row": 10,
-   "col": 4,
+   "col": 3,
    "expected": 3
-  },
-  {
-   "type": "event_not_occurred",
-   "event": "DAMAGE_DEALT"
   }
  ]
 }

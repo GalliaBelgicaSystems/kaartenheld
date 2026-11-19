@@ -63,9 +63,10 @@
    "expected": "BATTLE"
   },
   {
-   "type": "screen_row",
+   "type": "tilemap_cell",
    "row": 10,
-   "contains": "HCARD DMG5"
+   "col": 8,
+   "expected": 0
   },
   {
    "type": "event_not_occurred",

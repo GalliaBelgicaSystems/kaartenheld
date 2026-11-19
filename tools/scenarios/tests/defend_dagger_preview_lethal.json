@@ -99,18 +99,84 @@
   },
   {
    "type": "screen_row",
-   "row": 10,
-   "contains": "DMG 3"
+   "row": 7,
+   "contains": "v3S"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 8,
+   "expected": 228
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 10,
+   "expected": 104
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 8,
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "d9^"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 8,
+   "expected": 107
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 10,
+   "expected": 96
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 8,
+   "col": 8,
+   "expected": 1
   },
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "CNT 9"
+   "contains": "PAIR"
   },
   {
-   "type": "vram_row",
+   "type": "tilemap_cell",
    "row": 10,
-   "contains": "CNT 9"
+   "col": 8,
+   "expected": 229
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 9,
+   "expected": 230
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 10,
+   "expected": 231
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 11,
+   "expected": 232
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 10,
+   "col": 8,
+   "expected": 3
   }
  ],
  "initial_state": {

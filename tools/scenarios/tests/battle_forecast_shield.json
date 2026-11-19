@@ -1,7 +1,7 @@
 {
  "name": "battle_forecast_shield",
  "test": true,
- "description": "Enemy turn with one staged shield: row 7 shows the red attack trio (down arrow 228 + incoming power + sword 104), row 8 the brown block trio (shield 105 + block + up arrow 96).",
+ "description": "Enemy turn with one staged shield: row 7 shows the red attack trio (down arrow 228 + incoming power + sword 104), row 8 the brown block trio (shield 105 + block + up arrow 96); row 10 keeps only staged-hand tiles (blank here).",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -120,16 +120,6 @@
   },
   {
    "type": "screen_row",
-   "row": 10,
-   "contains": "DMG 2"
-  },
-  {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "DEF 3"
-  },
-  {
-   "type": "screen_row",
    "row": 7,
    "contains": "v2S"
   },
@@ -173,6 +163,12 @@
    "row": 8,
    "col": 8,
    "expected": 5
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 8,
+   "expected": 0
   }
  ]
 }

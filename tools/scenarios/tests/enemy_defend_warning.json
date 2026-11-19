@@ -44,25 +44,55 @@
   },
   {
    "type": "screen_row",
-   "row": 10,
-   "contains": "DMG 2"
+   "row": 7,
+   "contains": "v2S"
   },
   {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "DEF 0"
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 8,
+   "expected": 228
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 10,
+   "expected": 104
   },
   {
    "type": "tilemap_attr",
-   "row": 10,
-   "col": 0,
+   "row": 7,
+   "col": 8,
    "expected": 1
   },
   {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "D0^"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 8,
+   "expected": 105
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 10,
+   "expected": 96
+  },
+  {
    "type": "tilemap_attr",
+   "row": 8,
+   "col": 8,
+   "expected": 5
+  },
+  {
+   "type": "tilemap_cell",
    "row": 10,
-   "col": 19,
-   "expected": 3
+   "col": 8,
+   "expected": 0
   }
  ]
 }

@@ -673,7 +673,7 @@ static void battle_stamp_blank(uint8_t x, uint8_t y)
 
 /* Poker-hand window slots (BG, UI_TILE_HAND_SLOTS in ui.h): slot 0
  * is the down arrow, slots 1-8 the word cells. */
-static const uint8_t s_hand_slots[9] = UI_TILE_HAND_SLOTS;
+static const uint8_t s_hand_slots[15] = UI_TILE_HAND_SLOTS;
 
 /* Poker-hand words (row 10, tiles from col 6 -- col 4 for STRAIGHT
  * FLUSH).  Index HAND_* tier 1..10; kept in sync with the sheet-cell
@@ -1022,6 +1022,15 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
  * If scoring ever changes, change BOTH here and combo_resolve_banked:
  * the CNT preview scenario (pair+suited 9, trips+suited 12) and the
  * counter scenarios pin their agreement. */
+/* Poker meaning of a daggers-only staging for the row-10 tiles: the
+ * defend resolve reports HAND_NONE (daggers counter instead of
+ * blocking), so without this the name area would stay blank while the
+ * counter number shows on row 8.  Written by
+ * battle_defend_counter_preview below on every call (HAND_NONE when it
+ * returns 0), read by the combo painter.  Same-bank file-static, no
+ * WRAM cost. */
+static uint8_t s_defend_display_tier = HAND_NONE;
+
 static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
 {
     const Battle *nb = (const Battle *)battle;
@@ -1030,6 +1039,7 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
     uint8_t idx[BATTLE_HAND_SIZE];
     uint8_t i, w, h, t, tier, suited, q;
     uint16_t base, mult, prod;
+    s_defend_display_tier = HAND_NONE;
     if (!nb || nb->combo_count == 0) return 0;
     /* No lethal-swing guard: the counter lands BEFORE the swing, so a
      * daggers-only hand still hits back even when the incoming would
@@ -1055,6 +1065,7 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
     }
     if (w == 0) return 0;
     tier = combo_classify_loot(hand, idx, w, 0);
+    s_defend_display_tier = tier;
     /* The map holds daggers only (rings are excluded above, exactly
      * like the prep's compaction), so every effective card shares one
      * symbol: suited is 1 for any real tier, 0 for high card.  This is
@@ -1107,13 +1118,12 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     /* Real-time preview: the row tracks the PENDING selection as cards
      * are added/removed and blanks once the hand resolves -- executed
      * results announce via the banner instead of sticking around.
-     * Format "<tier> DMG<n>" (no COMBO: label: longest tier is 10
-     * ("FULL HOUSE", "THREE KIND"; SHORT reads "SHORT STR"), so even
-     * a 3-digit amount fits 20 cols.  With no poker tier the row shows
-     * the inflicted damage as bare "DMG<n>" (face-value sum, same math
-     * the resolver applies).  Attack ring hands convert to healing:
-     * same layout with "HEAL" ("<tier> HEAL<n>", bare "HEAL<n>"), so
-     * preview and result agree. */
+     * The row shows NOTHING but the staged hand's name, centered, as
+     * graphic tiles (bank-8 stream window + word letters in the buffer):
+     * blank for high card / nothing staged / confused turns.  Damage
+     * and block numbers live on rows 7-8 now.  Dagger-counter staging
+     * classifies through the counter path (its poker meaning, e.g.
+     * PAIR) via s_defend_display_tier below. */
     const char *word;
     uint8_t dmg = 0;
     uint8_t heal = 0;
@@ -1124,6 +1134,9 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     uint8_t i;
     uint8_t start;
     uint8_t len;
+    uint8_t tstart;
+    uint8_t tlen;
+    uint8_t cell;
 
     /* Blank the whole row first -- UNCONDITIONAL direct writes (the
      * battle_draw_text_line skip-guard would skip cells whose semantic
@@ -1149,6 +1162,10 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         g_ui_screen_buf[combo_row][r] = '\0';
     }
     battle_color_span(0, combo_row, 20, UI_COLOR_NONE);
+    /* Default want: no word (message states and empty previews return
+     * below without staging anything else).  Refreshed every combo
+     * render so the bank-8 sync never streams a stale tier. */
+    g_hand_want_tier = HAND_NONE;
     /* Desperation telegraph (unwinnable final boss): the combo line
      * carries the sentence's second half (staged game text; row 9 shows
      * the first half while the hold lasts).  Drawn unconditionally
@@ -1217,26 +1234,56 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     (void)dmg;
     (void)heal;
     tier = battle->last_combo.tier;
+    if ((tier < HAND_PAIR || tier > HAND_SHORT_STRAIGHT) &&
+        battle->phase == BATTLE_PHASE_PLAYER_DEFEND &&
+        battle->enemy_incoming_dmg != 0) {
+        /* Daggers-only staging counterattacks instead of blocking, so
+         * the defend resolve reports HAND_NONE: fall back to the
+         * counter path's poker meaning (PAIR, THREE_KIND, ...) for the
+         * display.  The counter preview runs anyway in the hero-row
+         * forecast above, refreshing s_defend_display_tier first; the
+         * call here covers forecast-less paths defensively. */
+        if (battle_defend_counter_preview(battle) != 0) {
+            tier = s_defend_display_tier;
+        }
+    }
     if (tier < HAND_PAIR || tier > HAND_SHORT_STRAIGHT) {
         return;
     }
+    g_hand_want_tier = tier;
     word = s_hand_words + s_hand_word_off[tier];
     len = 0;
     while (word[len] != '\0') len++;
-    /* Centered: every word fits (max 14 cells, cols 3-16), so one
-     * pre-blank span covers all previous words. */
+    /* Tiles center on their own cell count (a sheet cell renders 1-2
+     * letters, so the pixel word is narrower than the letter word);
+     * letters center on their own length.  Both spans land inside the
+     * pre-blank below, so one span covers all previous words. */
+    tlen = g_hand_cell_len;
+    if (tlen > 8) tlen = 8;
+    tstart = (uint8_t)((20 - tlen) >> 1);
     start = (uint8_t)((20 - len) >> 1);
     for (i = 3; i < 18; i++) {
         battle_stamp_blank(i, combo_row);
     }
     if (tier == g_hand_shown_tier) {
-        for (i = 0; i < len; i++) {
-            if (word[i] != ' ') {
-                battle_stamp_cell((uint8_t)(start + i), combo_row, word[i],
-                                  s_hand_slots[(uint8_t)(i + 1)]);
-            }
+        for (i = 0; i < tlen; i++) {
+            cell = g_hand_cells_wram[i];
+            battle_stamp_cell((uint8_t)(tstart + i), combo_row,
+                              (cell == 0xFF) ? ' ' : word[i],
+                              (cell == 0xFF) ? ui_font_tile_base
+                                             : s_hand_slots[(uint8_t)(i + 1)]);
         }
-        battle_color_span(start, combo_row, len, UI_COLOR_FIELD);
+        battle_color_span(tstart, combo_row, tlen, UI_COLOR_FIELD);
+        for (i = 0; i < len; i++) {
+            if (word[i] == ' ') continue;
+            /* Letters ride the buffer only (VRAM already stamped
+             * above with the tile art): the semantic buffer spells
+             * the word for text assertions while VRAM shows the
+             * tiles.  The mirror keeps the stamped tile ids, never
+             * font tiles for letters, so tilemap_cell asserts pin
+             * art. */
+            g_ui_screen_buf[combo_row][(uint8_t)(start + i)] = word[i];
+        }
     }
 }
 

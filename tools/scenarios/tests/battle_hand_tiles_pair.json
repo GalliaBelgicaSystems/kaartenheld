@@ -1,7 +1,7 @@
 {
  "name": "battle_hand_tiles_pair",
  "test": true,
- "description": "Staged pair (SW3+BO3) shows the PAIR hand-name tiles on row 10 (word slots 229/230/231/247, green) next to the DMG number, while the row-7/8 forecast trios stay blank on the player's own turn.",
+ "description": "Staged pair (SW3+BO3) shows the centered PAIR hand-name tiles on row 10 (cols 8-11, word slots 229/230/231/247, green), while the row-7/8 forecast trios stay blank on the player turn.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -72,46 +72,6 @@
    "expected": "BATTLE"
   },
   {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "PAIR"
-  },
-  {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "DMG"
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
-   "col": 6,
-   "expected": 229
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
-   "col": 7,
-   "expected": 230
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
-   "col": 8,
-   "expected": 231
-  },
-  {
-   "type": "tilemap_cell",
-   "row": 10,
-   "col": 9,
-   "expected": 247
-  },
-  {
-   "type": "tilemap_attr",
-   "row": 10,
-   "col": 6,
-   "expected": 3
-  },
-  {
    "type": "tilemap_cell",
    "row": 7,
    "col": 8,
@@ -132,6 +92,41 @@
   {
    "type": "event_not_occurred",
    "event": "DAMAGE_DEALT"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "PAIR"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 8,
+   "expected": 229
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 9,
+   "expected": 230
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 10,
+   "expected": 231
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 11,
+   "expected": 232
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 10,
+   "col": 8,
+   "expected": 3
   }
  ]
 }

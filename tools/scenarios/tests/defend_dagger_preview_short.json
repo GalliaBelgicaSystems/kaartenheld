@@ -130,24 +130,121 @@
    "expected": "BATTLE"
   },
   {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "DMG 3"
-  },
-  {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "CNT 14"
-  },
-  {
    "type": "screen_row_not_contains",
    "row": 10,
    "contains": "DEF"
   },
   {
-   "type": "vram_row",
+   "type": "screen_row",
+   "row": 7,
+   "contains": "v3S"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 8,
+   "expected": 228
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 10,
+   "expected": 104
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 8,
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
    "row": 10,
-   "contains": "CNT 14"
+   "contains": "SHORT STRAIGHT"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 3,
+   "expected": 229
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 4,
+   "expected": 230
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 5,
+   "expected": 231
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 6,
+   "expected": 232
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 7,
+   "expected": 233
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 9,
+   "expected": 235
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 10,
+   "expected": 242
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 11,
+   "expected": 243
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 12,
+   "expected": 244
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 13,
+   "expected": 247
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 14,
+   "expected": 252
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 15,
+   "expected": 253
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 16,
+   "expected": 254
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 10,
+   "col": 3,
+   "expected": 3
   }
  ],
  "initial_state": {

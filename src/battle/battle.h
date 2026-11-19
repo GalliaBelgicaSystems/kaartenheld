@@ -160,6 +160,22 @@ extern uint8_t g_battle_hero_tile;
  * tiles only while its preview tier matches this (otherwise it blanks,
  * so a just-changed selection never tears). */
 extern uint8_t g_hand_shown_tier;
+/* Staged combo-row want (bank-8 BSS in hand_tiles_banked.c, written by
+ * the bank-3 renderer, read by the bank-8 sync): HAND_* tier whose art
+ * to stream, NONE for no word.  The renderer -- not last_combo -- owns
+ * this because dagger-counter staging resolves HAND_NONE while its
+ * display tier comes from the counter path. */
+extern uint8_t g_hand_want_tier;
+/* Staged word cells (bank-8 BSS, same file): the sheet-cell sequence
+ * for the shown tier (0xFF = blank column) plus its width in cells,
+ * copied here by the sync on every stream.  The renderer stamps VRAM
+ * from this staging -- never from a second bank-3 copy of the word
+ * table (one source of truth).  Cells, not letters: a sheet cell
+ * renders 1-2 letters ("pa" shows PA), so the pixel word is
+ * cell-count columns wide while the buffer word below stays
+ * letter-per-column; both are centered independently. */
+extern uint8_t g_hand_cells_wram[8];
+extern uint8_t g_hand_cell_len;
 /* Live energy-pool max for the HUD "/max" badge (bank-3 renderer cannot
  * run the pool read itself, so the bank-4 battle-entry body stages it here
  * beside b->energy; same uninitialized-WRAM pattern as the art arrays

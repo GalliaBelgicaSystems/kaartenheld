@@ -503,6 +503,17 @@ def _select_cards(s, wanted_types, max_cards=None):
     return picked
 
 
+def _topup_timer(s):
+    """Reset the battle turn countdown (throwaway spar session only):
+    the handbook + lesson flow stages far past the 1200-tick turn
+    budget, so every round re-arms the clock.  Energy-pool address math
+    mirrors the state reader (battle base + BATTLE_ENERGY, timer next)."""
+    r = s.reader
+    timer = r._resolve_battle_base() + BATTLE_ENERGY + 1
+    s.pb.memory[timer] = 0xB0
+    s.pb.memory[timer + 1] = 0x04
+
+
 def _carl_topup(s):
     """Restore Carl to full HP mid-spar (walk-b only): at 10 HP the
     walk's three choreographed attack rounds could otherwise kill him
@@ -517,6 +528,7 @@ def _carl_topup(s):
         print("[_carl_topup] battle state unreadable, skipping: %r" % (exc,))
         return
     s.pb.memory[base] = mx
+    _topup_timer(s)
 
 
 # Poker-hand handbook (walk-b only): exact (type, value) deals per tier,
@@ -548,9 +560,7 @@ def _poke_hand(s, cards):
         s.pb.memory[base + i * CARD_SIZE + CARD_TYPE] = t
         s.pb.memory[base + i * CARD_SIZE + CARD_VALUE] = v
         s.pb.memory[base + i * CARD_SIZE + CARD_COST] = 0
-    timer = r._resolve_battle_base() + BATTLE_ENERGY + 1
-    s.pb.memory[timer] = 0xB0
-    s.pb.memory[timer + 1] = 0x04
+    _topup_timer(s)
 
 
 def _select_all(s):
@@ -585,6 +595,29 @@ def _handbook_shot(s, name, milestone):
             s.reader.battle_combo_count() == 5,
             expected="combo_count 5", actual=str(s.reader.battle_combo_count()))
     s.shoot(milestone)
+    import os as _vd
+    if _vd.environ.get("VRAMDUMP") and name == "four":
+        slots = [228,229,230,231,232,233,234,235,242,243,244,247,252,253,254]
+        vram = [s.pb.memory[0x8000 + sl * 16 + j] for sl in slots for j in range(16)]
+        tmap = [s.pb.memory[0x9800 + 10 * 32 + c] for c in range(20)]
+        buf = s.bg_text()[10]
+        print("VRAMSLOTS:", slots)
+        print("TILEMAP10:", tmap)
+        print("BUF10:", repr(buf))
+        from PIL import Image as _I
+        hn = _I.open("assets/hand_names.png").convert("RGB")
+        exp = []
+        for ci in [20,21,18,19]:
+            t = hn.crop((ci * 8, 0, ci * 8 + 8, 8))
+            exp.append(list(t.tobytes()))
+        got = []
+        for sl in [229,230,231,232]:
+            got.append(bytes(s.pb.memory[0x8000 + sl * 16 + j] for j in range(16)))
+        # compare as RGB565-ish? just compare raw byte equality of tile patterns via hashes
+        import hashlib as _h
+        print("EXP hashes:", [_h.md5(bytes(e)).hexdigest()[:6] for e in exp])
+        # vram bytes are 2bpp planar; sheet is RGB. compare structure only:
+        print("GOT distinct:", len(set(bytes(g) for g in got)))
     _clear_combo(s)
     s.check("handbook %s cleared" % name,
             s.reader.battle_combo_count() == 0,
@@ -831,9 +864,15 @@ def walk_a(planner, checks, sram_out=None):
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
     # The bought card merges under its capped curated id (one row);
-    # the one-copy row hides so the next row slides up.
-    s.check_eq("bought card in collection",
-               s.reader.collection_count(want), before + 1)
+    # the one-copy row hides so the next row slides up.  A loot twin of
+    # the same card (DIV-shifted loot) merges in on the same purchase,
+    # so the count grows by one (no twin) or two (twin) -- gold staying
+    # exact proves exactly one purchase happened either way.
+    after = s.reader.collection_count(want)
+    s.check("bought card in collection",
+            after >= before + 1 and after <= before + 2,
+            expected="in [%d, %d]" % (before + 1, before + 2),
+            actual=str(after))
     # No-hide rows: the bought row stays put (verify it still names
     # the bought card), then DOWN reaches the next row below it.
     s.check("bought row stays", keep in s.bg_text()[5],
@@ -1265,8 +1304,9 @@ def walk_b(planner, checks):
     # The next attack is the first one landed since the defend lesson,
     # so it raises the flee lesson (with its reward tease) -- not a
     # jeer.  Close it, defend through the round, and the spar is back
-    # to a plain SELECT with strictly less enemy HP.
-    _select_cards(s, ATTACK_TYPES)
+    # to a plain SELECT with strictly less enemy HP.  Capped like the
+    # others: the lesson needs a landed hit, never max damage.
+    _select_cards(s, ATTACK_TYPES, max_cards=2)
     for _ in range(4):
         s.press("select", settle=40)     # execute attack
         if s.text_has("VICTORY") or s.text_has("DEFEATED"):
@@ -1298,9 +1338,11 @@ def walk_b(planner, checks):
             expected="hp %d < %d" % (total, prev_total),
             actual="hp %d" % total)
     # One more attack: now that the lesson is over, it earns a looping
-    # jeer.
+    # jeer.  Capped at 2 like round 1: uncapped staging one-shot Carl
+    # on some shuffles (VICTORY instead of the jeer), and the walk only
+    # needs a landed hit, never max damage.
     _carl_topup(s)
-    _select_cards(s, ATTACK_TYPES)
+    _select_cards(s, ATTACK_TYPES, max_cards=2)
     for _ in range(4):
         s.press("select", settle=40)
         if s.text_has("VICTORY") or s.text_has("DEFEATED"):

@@ -127,8 +127,8 @@
   },
   {
    "type": "tilemap_cell",
-   "row": 7,
-   "col": 12,
+   "row": 8,
+   "col": 15,
    "expected": 116
   },
   {

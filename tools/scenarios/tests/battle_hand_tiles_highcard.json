@@ -1,7 +1,7 @@
 {
  "name": "battle_hand_tiles_highcard",
  "test": true,
- "description": "High card (no poker tier) shows bare DMG with no name tiles: the row-10 word span stays blank in VRAM, buffer and palette.",
+ "description": "High card (no poker tier) leaves row 10 blank: no name tiles in VRAM, buffer or palette.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -98,11 +98,6 @@
   {
    "type": "game_state",
    "expected": "BATTLE"
-  },
-  {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "DMG"
   },
   {
    "type": "screen_row_not_contains",

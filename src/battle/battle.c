@@ -1,4 +1,5 @@
 #include "battle.h"
+#include "combo.h"
 #include "telemetry.h"
 #include "audio.h"
 #include "banked.h"
@@ -234,6 +235,7 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
      * (fixed-bank budget, 52.18). */
     g_battle_fx_epoch++;
     g_hand_shown_tier = 0xFF;
+    g_hand_want_tier = HAND_NONE;
     g_bk_byte_a = b->enemy_battle_id;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;
