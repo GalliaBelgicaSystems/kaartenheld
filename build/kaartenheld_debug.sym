@@ -28,7 +28,7 @@
 00:C4000 000015E4
 00:B4000 00001E6B
 00:D4000 000025F4
-00:F4000 00002DD2
+00:F4000 00002E6D
 00:94000 00002EDB
 00:84000 000031F7
 00:44000 000039DF
@@ -37,7 +37,7 @@
 00:54000 00003DE3
 00:A4000 00003E50
 00:74000 00003E56
-00:24000 00004000
+00:24000 00003FD0
 00:0200 0000782C
 00:FF30 AUD3WAVE
 00:FF69 BCPD_REG
@@ -898,9 +898,9 @@
 00:C941 _is_GBA
 00:2633D _item_car
 00:2633D _item_card_refresh_banked
-00:F63F6 _item_dec
+00:F6491 _item_dec
 00:F5FBE _item_deck_nav_banked
-00:F63F6 _item_deck_update_banked
+00:F6491 _item_deck_update_banked
 00:D4A6A _item_gem
 00:D47B3 _item_gem_nav_banked
 00:D4A6A _item_gem_render_banked
@@ -911,8 +911,8 @@
 00:F6345 _item_men
 00:F6345 _item_menu_cycle_banked
 00:F5F71 _item_menu_step_banked
-00:F6B52 _item_pic
-00:F6B52 _item_picker_render_banked
+00:F6BED _item_pic
+00:F6BED _item_picker_render_banked
 00:D5D7F _item_que
 00:D5C1D _item_quest_nav_banked
 00:D5D7F _item_quest_render_banked
@@ -1294,8 +1294,8 @@
 00:86D88 _world_anim_swap_banked
 00:7124 _world_ch
 00:7124 _world_change_map
-00:F6C8E _world_ga
-00:F6C8E _world_gate_check_banked
+00:F6D29 _world_ga
+00:F6D29 _world_gate_check_banked
 00:70D6 _world_in
 00:70D6 _world_init
 00:6FB7 _world_lo
@@ -1966,9 +1966,9 @@
 00:433F intro_screen_update
 00:2633D item_car
 00:2633D item_card_refresh_banked
-00:F63F6 item_dec
+00:F6491 item_dec
 00:F5FBE item_deck_nav_banked
-00:F63F6 item_deck_update_banked
+00:F6491 item_deck_update_banked
 00:D4A6A item_gem
 00:D47B3 item_gem_nav_banked
 00:D4A6A item_gem_render_banked
@@ -1979,8 +1979,8 @@
 00:F6345 item_men
 00:F6345 item_menu_cycle_banked
 00:F5F71 item_menu_step_banked
-00:F6B52 item_pic
-00:F6B52 item_picker_render_banked
+00:F6BED item_pic
+00:F6BED item_picker_render_banked
 00:D5D7F item_que
 00:D5C1D item_quest_nav_banked
 00:D5D7F item_quest_render_banked
@@ -2006,8 +2006,8 @@
 00:15E4 l__CODE_12
 00:25F4 l__CODE_13
 00:0489 l__CODE_14
-00:2DD2 l__CODE_15
-00:4000 l__CODE_2
+00:2E6D l__CODE_15
+00:3FD0 l__CODE_2
 00:3AEC l__CODE_3
 00:39DF l__CODE_4
 00:3DE3 l__CODE_5
@@ -2426,8 +2426,8 @@
 00:86D88 world_anim_swap_banked
 00:7124 world_ch
 00:7124 world_change_map
-00:F6C8E world_ga
-00:F6C8E world_gate_check_banked
+00:F6D29 world_ga
+00:F6D29 world_gate_check_banked
 00:70D6 world_in
 00:70D6 world_init
 00:6FB7 world_lo

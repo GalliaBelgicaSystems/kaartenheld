@@ -1022,11 +1022,20 @@ void item_menu_cycle_banked(void)
             g->item_menu_filter = CARD_TYPE_UTILITY;
         else
             g->item_menu_filter = CYC_FILTER_ALL;
+        /* Fresh order, fresh windows on both sides (same as a tab
+         * switch and the sort cycle below). */
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
     } else if (mode == CYC_SORT) {
         /* Wrap instead of % -- SM83 has no hardware divide and the SDCC
          * int-mod library would land in the tight fixed bank. */
         g->item_menu_sort = (g->item_menu_sort >= CYC_SORT_COST_DESC) ?
             CYC_SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
+        /* Fresh order, fresh windows on both sides (same as a tab
+         * switch): a stale per-side scroll would show a middle slice
+         * of the new order. */
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
     } else {
         /* RIGHT advances, LEFT goes back (DECK <-> QUEST <-> HERO <->
          * GEM).  Directional: with four tabs a forward-only cycle would
