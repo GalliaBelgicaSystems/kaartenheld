@@ -180,6 +180,12 @@ void ui_init(void)
         OCPD_REG = ((const uint8_t *)cgb_obj_palettes)[p];
     }
 
+    /* Window layer: tilemap 0x9C00 (bit 6), positioned at row 17 (WY=136,
+     * WX=7), kept disabled (bit 5 clear) outside the overworld. */
+    LCDC_REG = (uint8_t)((LCDC_REG & ~0x20u) | 0x40u);
+    WX_REG = 7;
+    WY_REG = 136;
+
     SHOW_BKG;
 
     ui_sprite_init();
@@ -827,6 +833,14 @@ void ui_draw_world_map(const World *world)
 static void ui_world_tail(const World *world)
 {
     uint8_t y;
+    /* Overworld status-bar icons + paper ramp (bank 11, same-bank tile
+     * data): the icon slots time-share with the menu chrome, so every
+     * full redraw restores them first (gate crossings run LCD-on --
+     * the body is mode-gated).  The per-frame HUD repaint later in the
+     * frame only writes tilemap ids + attrs. */
+    g_bk_call_bank = 11;
+    g_bk_call_target = (uint16_t)&menus_status_stream_banked;
+    banked_call_run();
     /* Re-record animation-frame ring cells (fire/water) for the bank-7
      * swap pass: the ring is static until the next full redraw, so one
      * scan here replaces every per-frame scan.  No staging: the body
@@ -992,6 +1006,18 @@ void ui_draw_battle_timer(const Battle *battle)
     g_bk_call_bank = 3;
     g_bk_call_target = (uint16_t)&ui_draw_battle_timer_banked;
     g_bk_byte_a = ui_calc_timer_bar(battle->timer_ticks);
+    banked_call_run();
+}
+
+/* Thin fixed-bank wrapper: the overworld status-bar body lives in
+ * ROM bank 8 (src/game/ow_hud_banked.c, AGENTS.md 52.18 -- the fixed
+ * bank is hard against 0x8000, and debug bank 5 has no room for the
+ * body). Dispatched on overworld transitions from overworld_screen_render;
+ * the body reads live party/AP/arrow/gold state from WRAM itself. */
+void ui_draw_ow_hud(void)
+{
+    g_bk_call_bank = 8;
+    g_bk_call_target = (uint16_t)&ui_ow_hud_banked;
     banked_call_run();
 }
 

@@ -334,6 +334,9 @@ void scenario_check_and_load(void)
     if (g_debug_action_pending) {
         g_debug_action_pending = 0;
         debug_run_action();
+        if (g_game.screen == SCREEN_OVERWORLD && g_game.render_cache.valid) {
+            ui_draw_ow_hud();
+        }
     }
     g_scen_load = 0;
 }

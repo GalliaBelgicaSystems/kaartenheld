@@ -202,6 +202,10 @@ void overworld_screen_render(Game *g)
              * redraw fallback inside, same end state). */
             ui_draw_world_transition(w);
         }
+        /* Bottom-row status bar on the Window layer (0x9C00, WY=136):
+         * painted only on transitions (boot, map change, battle/shop/
+         * menu/dialogue returns) so steady frames do zero VRAM work. */
+        ui_draw_ow_hud();
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_OVERWORLD, 0,
                        (uint8_t)w->map_id, 0);
         rc->valid = true;

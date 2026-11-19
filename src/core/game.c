@@ -32,6 +32,9 @@ void game_render_reset(Game *g)
     g->render_cache.prev_screen = g->prev_screen;
     g->render_cache.prev_map_id = g->world.map_id;
     g->battle.dirty = BATTLE_DIRTY_ALL;
+    /* Hide the overworld HUD window on screen switches / resets;
+     * overworld_screen_render re-enables it after painting 0x9C00. */
+    LCDC_REG &= (uint8_t)~0x20u;
 }
 
 /* Reset the world to a fresh new-game state: canonical state, the runtime
