@@ -672,7 +672,7 @@ def main():
     # so the encode is mismatch-free.  require_slot=False like dice:
     # the declared ramp is the encode side, the row-10 span paints the
     # slot.
-    compile_sheet("hands", { (x, 0): "fight3" for x in range(28) },
+    compile_sheet("hands", { (x, 0): "fight3" for x in range(29) },
                   require_slot=False)
     # Menu AP pips (ap_pips_bg.png, 5x1 cells, cost order 1-5): every
     # cell encodes with the fightspider ramp (menu text black-on-white,

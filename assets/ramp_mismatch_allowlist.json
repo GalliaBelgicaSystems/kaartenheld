@@ -1142,6 +1142,19 @@
       "off_colors": [
         "#b59263"
       ]
+    },
+    {
+      "sheet": "hands",
+      "tile": [
+        28,
+        0
+      ],
+      "declared": "fight3",
+      "used_ramp": "fight3",
+      "reason": "tagged ramp stands; off-ramp pixels use nearest shade",
+      "off_colors": [
+        "#77e331"
+      ]
     }
   ]
 }

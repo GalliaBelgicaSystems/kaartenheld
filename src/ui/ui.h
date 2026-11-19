@@ -95,8 +95,11 @@ extern uint8_t g_is_cgb;
  * off-battle branch, so the next battle tick restreams before the
  * renderer stops blanking (it gates on the same byte).
  * Slot 0 carries the down arrow (row-7 forecast); slots 1-14 carry the
- * staged word (max 14 cells: SHORT STRAIGHT / STRAIGHT FLUSH). */
+ * staged word (max 14 cells: SHORT STRAIGHT / STRAIGHT FLUSH); slot 15
+ * carries the heal cross (row-7 heal trio, streamed with the same
+ * bundle). */
 #define UI_TILE_HAND_SLOTS { 228u, 229u, 230u, 231u, 232u, 233u, 234u, 235u, 242u, 243u, 244u, 247u, 252u, 253u, 254u }
+#define UI_TILE_HAND_CROSS 255u
 
 /* Bank-8 body streaming gfx/dice_tiles.h (assets/dice.png, digit order
  * 0-9) to UI_TILE_DICE_BASE (246-255).  Same-bank data; called by the

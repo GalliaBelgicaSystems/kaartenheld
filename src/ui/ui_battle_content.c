@@ -720,10 +720,12 @@ static uint8_t battle_stamp_num(uint8_t x, uint8_t y, uint8_t val)
     return n;
 }
 
-/* Stamp one forecast trio (row 7 enemy power, row 8 block/counter):
- * icon + compact number + trailing icon, blanking the 4-cell span
- * first so a phase change never strands art.  Colors ride the
- * caller's span (red attack set, brown shield set). */
+/* Stamp one forecast trio (row 7 enemy power / staged attack, row 8
+ * block/counter): icon + compact number + trailing icon, blanking the
+ * 4-cell span first so a phase change never strands art.  The trio
+ * sits at cols 9-11 (12 for a 2-digit number).  Colors ride the
+ * caller's span (red enemy set, green player set, brown-on-white
+ * shield set). */
 static void battle_draw_forecast_trio(uint8_t row, char icon_ch, uint8_t icon_tile,
                                       uint8_t val, char trail_ch, uint8_t trail_tile,
                                       uint8_t color)
@@ -731,27 +733,27 @@ static void battle_draw_forecast_trio(uint8_t row, char icon_ch, uint8_t icon_ti
     uint8_t n;
     uint8_t x;
 
-    battle_stamp_blank(8, row);
     battle_stamp_blank(9, row);
     battle_stamp_blank(10, row);
     battle_stamp_blank(11, row);
-    battle_stamp_cell(8, row, icon_ch, icon_tile);
-    n = battle_stamp_num(9, row, val);
-    x = (uint8_t)(9 + n);
-    if (x < 12) {
+    battle_stamp_blank(12, row);
+    battle_stamp_cell(9, row, icon_ch, icon_tile);
+    n = battle_stamp_num(10, row, val);
+    x = (uint8_t)(10 + n);
+    if (x < 13) {
         battle_stamp_cell(x, row, trail_ch, trail_tile);
-        battle_color_span(8, row, (uint8_t)(x - 8 + 1), color);
+        battle_color_span(9, row, (uint8_t)(x - 9 + 1), color);
     } else {
-        battle_color_span(8, row, 4, color);
+        battle_color_span(9, row, 4, color);
     }
 }
 
 static void battle_blank_forecast(uint8_t row)
 {
-    battle_stamp_blank(8, row);
     battle_stamp_blank(9, row);
     battle_stamp_blank(10, row);
     battle_stamp_blank(11, row);
+    battle_stamp_blank(12, row);
     battle_color_span(8, row, 4, UI_COLOR_NONE);
 }
 
@@ -839,13 +841,14 @@ static void battle_draw_hero_row(const volatile Battle *battle)
 #endif
     battle_color_span((uint8_t)(hp_col + 2), hp_row, 1, g_hud_skin_wram.hp_icon_color);
 
-    /* Row-7 forecast trios (cols 8-10).  Enemy turn: down arrow +
+    /* Row-7 forecast trios (cols 9-11).  Enemy turn: down arrow +
      * incoming power + sword while a strike is incoming (telegraph +
      * defend).  Red set (UI_COLOR_FIRE).  Player turn: the staged
      * attack's own trio -- sword + pending damage + up arrow (ring +
-     * heal amount for a converting ring hand) -- so the player sees
-     * what the staged hand will do, mirroring the enemy forecast.
-     * Green set (UI_COLOR_FIELD).  Blank with nothing staged. */
+     * heal amount + green cross for a converting ring hand) -- so the
+     * player sees what the staged hand will do, mirroring the enemy
+     * forecast.  Green set (UI_COLOR_FIELD).  Blank with nothing
+     * staged. */
     if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
          battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) &&
         battle->enemy_incoming_dmg != 0) {
@@ -859,7 +862,7 @@ static void battle_draw_hero_row(const volatile Battle *battle)
             if (heal_ignored) {
                 battle_draw_forecast_trio(label_row, 'R',
                                           battle_card_weapon_tile(BATTLE_CARD_TYPE_HEAL, 1),
-                                          block, '^', UI_TILE_SELECT_ARROW,
+                                          block, '+', UI_TILE_HAND_CROSS,
                                           UI_COLOR_FIELD);
             } else {
                 battle_draw_forecast_trio(label_row, 'S',
@@ -903,10 +906,11 @@ static void battle_draw_hero_row(const volatile Battle *battle)
 #endif
     battle_color_span((uint8_t)(ap_col + 1), ap_row, 1, g_hud_skin_wram.ap_icon_color);
 
-    /* Row-8 block forecast (cols 8-10): shield/dagger + staged
+    /* Row-8 block forecast (cols 9-11): shield/dagger + staged
      * block/counter + up arrow while a strike is incoming; blank on
      * the player's own turn.  Daggers-only staging counters instead
-     * of blocking (red set); anything else blocks (brown set). */
+     * of blocking (red set); anything else blocks (brown icons on a
+     * white set so the background matches the attack trios). */
     if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
          battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) &&
         battle->enemy_incoming_dmg != 0) {
@@ -922,7 +926,7 @@ static void battle_draw_hero_row(const volatile Battle *battle)
             battle_draw_forecast_trio(ap_row, 'D',
                                       battle_card_weapon_tile(BATTLE_CARD_TYPE_SHIELD, 0),
                                       block, '^', UI_TILE_SELECT_ARROW,
-                                      UI_COLOR_WOOD);
+                                      UI_COLOR_FIELD);
         }
     } else {
         battle_blank_forecast(ap_row);
@@ -1251,6 +1255,13 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
      * s_hand_slots[1+i]; the buffer keeps the word letters so text
      * assertions are unchanged; the mirror keeps tile ids for
      * tilemap_cell asserts. */
+    /* Nothing staged (or the hand just resolved): flush the name.
+     * last_combo still holds the executed/result tier, which must NOT
+     * linger on the row until a new hand is staged.  The top clear
+     * already blanked VRAM/buffer/mirror, and want is already NONE. */
+    if (battle->combo_count == 0) {
+        return;
+    }
     battle_combo_pending_preview(battle, &dmg, &heal);
     (void)dmg;
     (void)heal;
@@ -1289,8 +1300,10 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
     if (tier == g_hand_shown_tier) {
         for (i = 0; i < tlen; i++) {
             cell = g_hand_cells_wram[i];
-            battle_stamp_cell((uint8_t)(tstart + i), combo_row,
-                              (cell == 0xFF) ? ' ' : word[i],
+            /* Buffer stays blank here; the letter pass below spells
+             * the word (its span differs: tiles are per-cell, letters
+             * per-letter).  Mirror keeps the stamped art ids. */
+            battle_stamp_cell((uint8_t)(tstart + i), combo_row, ' ',
                               (cell == 0xFF) ? ui_font_tile_base
                                              : s_hand_slots[(uint8_t)(i + 1)]);
         }

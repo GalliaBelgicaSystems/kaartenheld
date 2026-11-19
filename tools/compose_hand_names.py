@@ -6,10 +6,11 @@ assets/combat-tileset-description.csv labels like reload_boss_tiles.py)
 plus the down arrow (combat_arrow_pointing_up_dark rotated 180 degrees,
 per the HUD spec -- no down-arrow cell exists in the sheet).
 
-Layout: 28x1 cells in sheet order (index = tile order):
+Layout: 29x1 cells in sheet order (index = tile order):
   0: down arrow (rotated dark up-arrow)
   1-14: row-6 cells cols 1-14 (tw o pa ir sh hor rt st ra ig ht f lu sh)
   15-27: row-7 cells cols 0-12 (t hr ee ki nd fo ur fiv ve ul lh ou se)
+  28: heal cross (menu health icon, green cross, row 7 heal trio)
 
 The two "sh" cells (row 6, cols 5 and 14) are genuinely different art
 (SHORT's SH vs FLUSH's SH): both are kept as distinct tiles.
@@ -60,7 +61,7 @@ def norm(im):
 def main():
     rows = list(csv.reader(open(CSV)))
     sheet = Image.open(SHEET).convert("RGB")
-    out = Image.new("RGB", (28 * 8, 8), (255, 255, 255))
+    out = Image.new("RGB", (29 * 8, 8), (255, 255, 255))
     for i, (c, r, want) in enumerate(CELLS):
         label = rows[r][c].strip()
         if label != want:
@@ -71,6 +72,12 @@ def main():
     arrow = Image.open("%s/combat_arrow_pointing_up_dark.png" % PUB)
     arrow = arrow.convert("RGB").resize((8, 8), Image.NEAREST)
     out.paste(norm(arrow.transpose(Image.ROTATE_180)), (0, 0))
+    # Heal cross (menu health icon): the row-7 heal trio stamps this
+    # instead of the up arrow.  The curated menu PNG carries its own
+    # near-white key; normalize it like the combat cells.
+    cross = Image.open("%s/combat_health_icon_menu.png" % PUB)
+    cross = cross.convert("RGB").resize((8, 8), Image.NEAREST)
+    out.paste(norm(cross), (28 * 8, 0))
     out.save(REPO + "/assets/hand_names.png")
     print("wrote assets/hand_names.png")
 

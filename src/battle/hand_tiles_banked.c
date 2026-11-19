@@ -82,6 +82,11 @@ static const uint8_t s_hand_len[11] = {
  * that clobbers them re-arms g_hand_shown_tier. */
 static const uint8_t s_hand_slots[15] = UI_TILE_HAND_SLOTS;
 
+/* The heal cross rides with the down arrow: every stream (word or
+ * arrow-only) refreshes both singletons, so the row-7 heal trio never
+ * reads a stale cross after an ITEM/SHOP/overworld stay clobbered the
+ * window (same re-arm contract as the arrow). */
+
 /* LCD-safe BG stream (BANKED_VRAM_WRITE per byte: the 256 Hz timer ISR
  * can otherwise eclipse the wait->store window and drop the write
  * into Mode 3, AGENTS.md 52.11.3).  Ids >= 128 fetch from the 0x8800
@@ -131,6 +136,7 @@ void hand_tiles_sync_banked(void)
          * One extra combo redraw on the change tick only. */
         if (tier == g_hand_shown_tier) return;
         hand_stream_slot(s_hand_slots[0], 0);
+        hand_stream_slot(UI_TILE_HAND_CROSS, 28);
         len = s_hand_len[tier];
         g_hand_cell_len = len;
         for (i = 0; i < len; i++) {
@@ -145,12 +151,14 @@ void hand_tiles_sync_banked(void)
         return;
     }
     /* No staged word: the enemy forecast still needs its down arrow
-     * (row 7, cols 8-10) while a strike is incoming. */
+     * (row 7, cols 9-11) while a strike is incoming.  The cross rides
+     * along: a later heal staging must never read a stale cross. */
     if ((b->phase == BATTLE_PHASE_PLAYER_DEFEND ||
          b->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) &&
         b->enemy_incoming_dmg != 0) {
         if (g_hand_shown_tier == 0xFE) return;
         hand_stream_slot(s_hand_slots[0], 0);
+        hand_stream_slot(UI_TILE_HAND_CROSS, 28);
         g_hand_shown_tier = 0xFE;
     }
 }

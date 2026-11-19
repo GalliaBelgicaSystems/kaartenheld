@@ -110,19 +110,19 @@
   {
    "type": "tilemap_cell",
    "row": 7,
-   "col": 8,
+   "col": 9,
    "expected": 228
   },
   {
    "type": "tilemap_cell",
    "row": 7,
-   "col": 10,
+   "col": 11,
    "expected": 104
   },
   {
    "type": "tilemap_attr",
    "row": 7,
-   "col": 8,
+   "col": 9,
    "expected": 1
   },
   {
@@ -133,19 +133,19 @@
   {
    "type": "tilemap_cell",
    "row": 8,
-   "col": 8,
+   "col": 9,
    "expected": 107
   },
   {
    "type": "tilemap_cell",
    "row": 8,
-   "col": 10,
+   "col": 11,
    "expected": 96
   },
   {
    "type": "tilemap_attr",
    "row": 8,
-   "col": 8,
+   "col": 9,
    "expected": 1
   },
   {

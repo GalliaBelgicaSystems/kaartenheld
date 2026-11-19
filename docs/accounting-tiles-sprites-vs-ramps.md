@@ -157,6 +157,7 @@ Frame borders use slot 0 (fight1); the select arrow slot 3 (fight3).  Weapon + u
 | enemy_ow | [0, 10] | sprites7 | #000000 |
 | enemy_ow | [1, 10] | sprites7 | #000000 |
 | enemy_ow | [3, 5] | sprites7 | #b6b6b6 |
+| hands | [28, 0] | fight3 | #77e331 |
 | menu_riders | [1, 0] | fight6 | #b6b6b6 |
 | menus_tile | [0, 0] | fight1 | #b59263 |
 | menus_tile | [1, 0] | fight1 | #b59263 |
