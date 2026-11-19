@@ -839,9 +839,13 @@ static void battle_draw_hero_row(const volatile Battle *battle)
 #endif
     battle_color_span((uint8_t)(hp_col + 2), hp_row, 1, g_hud_skin_wram.hp_icon_color);
 
-    /* Row-7 enemy forecast (cols 8-10): down arrow + incoming power +
-     * sword while a strike is incoming (telegraph + defend); blank on
-     * the player's own turn.  Red set (UI_COLOR_FIRE). */
+    /* Row-7 forecast trios (cols 8-10).  Enemy turn: down arrow +
+     * incoming power + sword while a strike is incoming (telegraph +
+     * defend).  Red set (UI_COLOR_FIRE).  Player turn: the staged
+     * attack's own trio -- sword + pending damage + up arrow (ring +
+     * heal amount for a converting ring hand) -- so the player sees
+     * what the staged hand will do, mirroring the enemy forecast.
+     * Green set (UI_COLOR_FIELD).  Blank with nothing staged. */
     if ((battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
          battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH) &&
         battle->enemy_incoming_dmg != 0) {
@@ -849,6 +853,23 @@ static void battle_draw_hero_row(const volatile Battle *battle)
                                   battle->enemy_incoming_dmg,
                                   'S', battle_card_weapon_tile(BATTLE_CARD_TYPE_SWORD, 0),
                                   UI_COLOR_FIRE);
+    } else if (battle->phase == BATTLE_PHASE_PLAYER_SELECT) {
+        battle_combo_pending_preview(battle, &block, &heal_ignored);
+        if (block != 0) {
+            if (heal_ignored) {
+                battle_draw_forecast_trio(label_row, 'R',
+                                          battle_card_weapon_tile(BATTLE_CARD_TYPE_HEAL, 1),
+                                          block, '^', UI_TILE_SELECT_ARROW,
+                                          UI_COLOR_FIELD);
+            } else {
+                battle_draw_forecast_trio(label_row, 'S',
+                                          battle_card_weapon_tile(BATTLE_CARD_TYPE_SWORD, 0),
+                                          block, '^', UI_TILE_SELECT_ARROW,
+                                          UI_COLOR_FIELD);
+            }
+        } else {
+            battle_blank_forecast(label_row);
+        }
     } else {
         battle_blank_forecast(label_row);
     }
