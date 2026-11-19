@@ -310,8 +310,8 @@ void ui_wipe_black_banked(void);
 /* Per-tile background palette indices (CGB VRAM bank-1 attributes):
  * 0 = default grayscale, 1 = fire, 2 = iron (steel blue), 3 = field green
  * (forest ground/foliage; repurposed from the unused heal slot), 4 = poison
- * (emerald), 5 = wood (brown), 6 = gold (mythril), 7 = dim (ice grey-out
- * and desolate wasteland ground). */
+ * (emerald), 5 = wood (brown), 6 = gold (mythril), 7 = dim (spent-use
+ * cards and desolate wasteland ground). */
 #define UI_COLOR_NONE   0
 #define UI_COLOR_FIRE   1
 #define UI_COLOR_IRON   2
@@ -331,11 +331,12 @@ void ui_wipe_black_banked(void);
 #define UI_COLOR_GOLD   6
 #define UI_COLOR_DIM    7
 /* Health-rider green: BG slot 7 (DIM) carries it while the card menu is
- * up.  No menu screen paints DIM (the battle grey-out is its only user),
- * and the bank-2 menu bodies program slot 7 with the fighthealth ramp
- * (white paper + COMBAT/slime_light, generated menu_palette_generated.h)
- * right after the UI CRAM load.  Battle and overworld full redraws
- * program their own set again, so the grey-out is untouched. */
+ * up.  No menu screen paints DIM (spent-use dimming is its only battle
+ * user), and the bank-2 menu bodies program slot 7 with the fighthealth
+ * ramp (white paper + COMBAT/slime_light, generated
+ * menu_palette_generated.h) right after the UI CRAM load.  Battle and
+ * overworld full redraws program their own set again, so the dimming is
+ * untouched. */
 #define UI_COLOR_HEALTH 7
 
 /* Select-arrow cell (enemy target caret + card cursor marker).  The arrow

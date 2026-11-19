@@ -25,17 +25,16 @@
 #define FIRST_CARD  1
 /* Row 3 is the CARD + deck-icon /OWN column header, row 4 carries the
  * scroll-up carets (blank when at the top); grouped card rows run
- * 5-12 (VISIBLE_CARDS rows: 8 rows x 4 OAM sprites = 32 entries,
- * inside the 40-entry OAM budget); row 13 is a blank gap, row 14 the
- * scroll-down carets (blank when at the bottom), row 15 a blank gap
- * before the row-16 message/footer. */
+ * 5-13 (VISIBLE_CARDS rows: 9 rows x 4 OAM sprites = 36 entries,
+ * inside the 40-entry OAM budget); row 14 the scroll-down carets
+ * (blank when at the bottom), row 15 a blank gap before the
+ * row-16 message/footer. */
 #define ROW_FILTER  2
 #define ROW_COL_HEAD 3
 #define ROW_SEP 4
 #define ROW_CARDS_TOP 5
-#define VISIBLE_CARDS 8
+#define VISIBLE_CARDS 9
 #define ROW_SCROLL_UP 4
-#define ROW_GAP_TOP 13
 #define ROW_SCROLL_DOWN 14
 #define ROW_GAP_BOT 15
 
@@ -752,9 +751,8 @@ static void ic_stamp_icons(uint8_t y, uint8_t wx, uint8_t rx,
  *   col 7-8/17-18: side count, 2-wide (" 4"): left = owned - decked,
  *     right = decked
  * Row 3 is the fixed column header (PILE / DECK labels).  Row 4
- * carries the scroll-up carets, cards run rows 5-12 (VISIBLE_CARDS
- * rows), rows 13/15 are blank gaps around the row-14 scroll-down
- * carets (ic_draw_scroll_rows).
+ * carries the scroll-up carets, cards run rows 5-13 (VISIBLE_CARDS
+ * rows), row 14 the scroll-down carets and row 15 a blank gap.
  * VRAM shows the icon tiles; the buffer keeps weapon letters, digits
  * and counts for harness asserts (material/rider cells stay blank,
  * OAM art).  Display cost/rider/color read the primary (first)
@@ -774,8 +772,8 @@ static void ic_draw_card_cell(Game *g, uint8_t y, uint8_t vpos, uint8_t side, ui
     uint8_t wxx = side ? 12 : 2;
     uint8_t apx = side ? 15 : 5;
     uint8_t cntx = side ? 17 : 7;
-    uint8_t csum = (uint8_t)((side ? 8 : 0) + slot);
-    uint8_t ment = (uint8_t)((side ? 25 : 17) + slot);
+    uint8_t csum = (uint8_t)((side ? 9 : 0) + slot);
+    uint8_t ment = (uint8_t)((side ? 26 : 17) + slot);
     uint8_t avail;
     /* Grouped row: the view holds the primary collection index. */
     s_ic_id = ic_view_card_id(g, vpos);
@@ -942,12 +940,10 @@ static void ic_draw_cards_list(Game *g)
     }
     for (s_ic_lst_pos = s_ic_end_r;
          s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++) {
-        ic_mat_hide((uint8_t)(9 + s_ic_lst_pos));
-        ic_mat_hide((uint8_t)(25 + s_ic_lst_pos));
+        ic_mat_hide((uint8_t)(10 + s_ic_lst_pos));
+        ic_mat_hide((uint8_t)(26 + s_ic_lst_pos));
     }
 
-    ic_blank_row(ROW_GAP_TOP);
-    menu_stamp_chrome(ROW_GAP_TOP, 9, UI_TILE_MENUS_INV_SEPARATOR);
     ic_blank_row(ROW_SCROLL_DOWN);
     ic_draw_scroll_rows(g);
     menu_stamp_chrome(ROW_SCROLL_DOWN, 9, UI_TILE_MENUS_INV_SEPARATOR);
@@ -1018,7 +1014,7 @@ void item_card_refresh_banked(void)
      * buffer, and redrawn cells re-stamp their constant icon tiles
      * (rider cell tile 0, chrome AP icon) over identical VRAM.
      * Still-dead slots stay blank. */
-    for (k = 0; k < 8; k++) {
+    for (k = 0; k < 9; k++) {
         vL = s_ic_draw_pos[k];
         vR = s_ic_draw_pos_r[k];
         y = (uint8_t)(ROW_CARDS_TOP + k);
@@ -1205,7 +1201,7 @@ void item_screen_render_banked(void)
         ic_mat_stream();
     }
 
-    for (e = 1; e <= 32; e++) {
+    for (e = 1; e <= 34; e++) {
         ic_mat_hide(e);
     }
 

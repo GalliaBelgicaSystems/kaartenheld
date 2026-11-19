@@ -36,9 +36,9 @@ extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
 
 /* Item menu navigation layout constants (mirror item_screen.c). */
 #define CUR_FIRST_CARD 1
-/* Visible DECK rows (5-12): 8 rows x 4 OAM sprites (rider+ingot, both
- * sides) = 32 entries, inside the 40-entry OAM budget. */
-#define CUR_VISIBLE_CARD 8
+/* Visible DECK rows (5-13): 9 rows x 4 OAM sprites (rider+ingot, both
+ * sides) = 36 entries, inside the 40-entry OAM budget. */
+#define CUR_VISIBLE_CARD 9
 /* First card row (mirror item_content_banked.c ROW_CARDS_TOP -- keep in
  * sync): the diff-clear below addresses rows by slot. */
 #define CUR_CARDS_TOP 5
@@ -217,7 +217,15 @@ static uint8_t cu_sort_value(CardId id, uint8_t sort)
     uint8_t power = 0;
     uint8_t cost = 0;
     uint8_t type = cu_grp_type(id, &power, &cost);
-    if (sort == 1) return type;      /* SORT_TYPE */
+    if (sort == 1) {
+        /* SORT_TYPE is the WEAPON (all swords together, shields
+         * together, then bows, daggers, rings -- same WPN order as
+         * the group key), not the combat role: role is already the
+         * FILTER axis, so sorting by it would be redundant. */
+        uint8_t sm = 0, sw = 0, sr = 0;
+        if (cu_grp_key(id, &sm, &sw, &sr)) return sw;
+        return type;
+    }
     if (sort == 2 || sort == 4) return power;  /* SORT_POWER(+/-) */
     return cost;                     /* SORT_COST(+/-) */
 }
@@ -234,10 +242,10 @@ extern uint8_t s_view_count;
 
 /* Per-row sums for the render (bank 2 cannot re-resolve group keys: its
  * switchable area is full and the scan it needs duplicates ~300 B of
- * key logic).  Per side, drawn-indexed: slots 0-7 hold the left
- * (pile) block's rows, slots 8-15 the right (deck) block's; detail
+ * key logic).  Per side, drawn-indexed: slots 0-8 hold the left
+ * (pile) block's rows, slots 9-17 the right (deck) block's; detail
  * mode uses slot 0 for the selected row. */
-#define ROW_SUMS 16
+#define ROW_SUMS 18
 uint8_t s_row_owned[ROW_SUMS];
 uint8_t s_row_decked[ROW_SUMS];
 
@@ -250,14 +258,14 @@ uint8_t s_row_decked[ROW_SUMS];
 uint8_t s_grp_owned[MAX_CARD_COLLECTION];
 uint8_t s_grp_decked[MAX_CARD_COLLECTION];
 
-/* Per-side packed draw maps: the first 8 view positions visible on
+/* Per-side packed draw maps: the first 9 view positions visible on
  * that side (left: owned - decked > 0; right: decked > 0) at/after
  * item_menu_scroll, 0xFF past the end.  A zero count hides that side's
  * cell -- an emptied side shows blank rows -- and the cursor never
  * parks on a hidden cell.  Built here (same bank as the group tables)
  * on every DECK render; read by the bank-2 row painter. */
-uint8_t s_ic_draw_pos[8];
-uint8_t s_ic_draw_pos_r[8];
+uint8_t s_ic_draw_pos[9];
+uint8_t s_ic_draw_pos_r[9];
 
 /* DECK scroll-overflow flags for the bank-2 row painter (plain WRAM,
  * bank-independent): bit 0 up-pile, 1 up-deck, 2 down-pile, 3
@@ -271,8 +279,8 @@ uint8_t s_ic_scroll_flags;
  * renders that consume them): bank 2's switchable area is full, and
  * every op here is bank-independent (WRAM maps/buffer, direct VRAM/OAM
  * writes), needing no bank-2 ROM tables (AGENTS.md 52.11.1). */
-static uint8_t s_cu_prev_pos[8];
-static uint8_t s_cu_prev_pos_r[8];
+static uint8_t s_cu_prev_pos[9];
+static uint8_t s_cu_prev_pos_r[9];
 
 extern uint8_t g_is_cgb;
 #ifdef DEBUG_BUILD
@@ -311,14 +319,14 @@ static void cu_blank_span(uint8_t y, uint8_t x, uint8_t n)
 }
 
 /* Hide one side's OAM pair for a slot (rider + material entries live in
- * WRAM shadow OAM: side 0 = entries 1/17 + k, side 1 = 9/25 + k). */
+ * WRAM shadow OAM: side 0 = entries 1/17 + k, side 1 = 10/26 + k). */
 static void cu_hide_side(uint8_t k, uint8_t side)
 {
     volatile uint8_t *re;
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 9 : 1) + k) << 2));
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 10 : 1) + k) << 2));
     re[0] = 0;
     re[2] = 0;
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 25 : 17) + k) << 2));
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 26 : 17) + k) << 2));
     re[0] = 0;
     re[2] = 0;
 }
@@ -539,7 +547,7 @@ static void item_window_build(Game *g)
     /* Snapshot the maps before rebuilding: the diff-clear at the end
      * erases slots/sides that lose their row (BSS zeros read as vpos 0
      * on the very first build -- harmless, a full draw follows). */
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < 9; i++) {
         s_cu_prev_pos[i] = s_ic_draw_pos[i];
         s_cu_prev_pos_r[i] = s_ic_draw_pos_r[i];
     }
@@ -554,8 +562,8 @@ static void item_window_build(Game *g)
         if (n < start_l) {
             if (owned > decked) s_ic_scroll_flags |= 0x01;
         } else {
-            if (k >= 8 && owned > decked) s_ic_scroll_flags |= 0x04;
-            if (owned > decked && k < 8) {
+            if (k >= 9 && owned > decked) s_ic_scroll_flags |= 0x04;
+            if (owned > decked && k < 9) {
                 s_ic_draw_pos[k] = n;
                 s_row_owned[k] = owned;
                 s_row_decked[k] = decked;
@@ -565,11 +573,11 @@ static void item_window_build(Game *g)
         if (n < start_r) {
             if (decked > 0) s_ic_scroll_flags |= 0x02;
         } else {
-            if (kr >= 8 && decked > 0) s_ic_scroll_flags |= 0x08;
-            if (decked > 0 && kr < 8) {
+            if (kr >= 9 && decked > 0) s_ic_scroll_flags |= 0x08;
+            if (decked > 0 && kr < 9) {
                 s_ic_draw_pos_r[kr] = n;
-                s_row_owned[8 + kr] = owned;
-                s_row_decked[8 + kr] = decked;
+                s_row_owned[9 + kr] = owned;
+                s_row_decked[9 + kr] = decked;
                 kr++;
             }
         }
@@ -581,15 +589,15 @@ static void item_window_build(Game *g)
      * them), so emptiness is a cheap local test. */
     if (k == 0) s_ic_scroll_flags &= (uint8_t)~0x05;
     if (kr == 0) s_ic_scroll_flags &= (uint8_t)~0x0A;
-    for (; k < 8; k++) {
+    for (; k < 9; k++) {
         s_ic_draw_pos[k] = 0xFF;
         s_row_owned[k] = 0;
         s_row_decked[k] = 0;
     }
-    for (; kr < 8; kr++) {
+    for (; kr < 9; kr++) {
         s_ic_draw_pos_r[kr] = 0xFF;
-        s_row_owned[8 + kr] = 0;
-        s_row_decked[8 + kr] = 0;
+        s_row_owned[9 + kr] = 0;
+        s_row_decked[9 + kr] = 0;
     }
     /* Erase what the rebuild just emptied: a slot/side that held a row
      * before and holds none now is blanked unconditionally (VRAM +
@@ -600,7 +608,7 @@ static void item_window_build(Game *g)
         uint8_t y;
         uint8_t oL;
         uint8_t oR;
-        for (k = 0; k < 8; k++) {
+        for (k = 0; k < 9; k++) {
             oL = s_cu_prev_pos[k];
             oR = s_cu_prev_pos_r[k];
             y = (uint8_t)(CUR_CARDS_TOP + k);
@@ -1397,10 +1405,10 @@ void item_picker_render_banked(void)
     uint8_t r;
     uint8_t k;
     if (!g) return;
-    /* Sweep the list/detail OAM (riders 1-16 + ingots 17-32): the
+    /* Sweep the list/detail OAM (riders 1-18 + ingots 17-34): the
      * picker paints text only, so stale card icons would survive
      * without this (bank-2 body swept for itself before the move). */
-    for (k = 0; k < 8; k++) {
+    for (k = 0; k < 9; k++) {
         cu_hide_side(k, 0);
         cu_hide_side(k, 1);
     }

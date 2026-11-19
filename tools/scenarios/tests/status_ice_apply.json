@@ -1,7 +1,7 @@
 {
  "name": "status_ice_apply",
  "test": true,
- "description": "On-hit status rider (ice): a SW1 hand card carrying ICE (chance 255=guaranteed) applies ICE to the slime and greys 2 of its deck positions; ice deals no damage (control-only: grey-out), lasts 2 rounds, then expires -- STATUS_APPLIED plus CARDS_GREYED plus STATUS_EXPIRED. (The old freeze skip is gone: iced combatants act, just with a locked deck.)",
+ "description": "On-hit status rider (ice): a SW1 hand card carrying ICE (chance 255=guaranteed) applies ICE to the slime; ice deals no tick damage (control-only: halved outgoing damage, never a skip), lasts 2 rounds, then expires -- STATUS_APPLIED plus STATUS_EXPIRED. No cards grey out and no swing ever fizzles (no CARDS_GREYED, no TURN_SKIPPED).",
  "actions": [
   {
    "type": "wait",
@@ -159,8 +159,16 @@
    "value": 3
   },
   {
-   "type": "event_occurred",
+   "type": "event_not_occurred",
    "event": "CARDS_GREYED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARDS_UNGREYED"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "TURN_SKIPPED"
   },
   {
    "type": "event_occurred",

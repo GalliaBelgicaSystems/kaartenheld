@@ -1,0 +1,103 @@
+{
+  "name": "status_ice_player_halved",
+  "test": true,
+  "description": "Iced hero deals halved damage (rounded up): DBG_APPLY_STATUS ices the PLAYER (slot 0) up front, then a lone SW3 swing lands for 2 instead of 3 (DAMAGE_DEALT d0=2 while EFFECT_RESOLVED keeps the full 3, mirroring the enemy telegraph softening). Healing is untouched; no cards grey out and no turn is skipped.",
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "party": {
+      "HERO": {
+        "hp": 60,
+        "max_hp": 60
+      }
+    },
+    "seed": 8409,
+    "start_battle": true
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 0,
+      "status": 3,
+      "duration": 5
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "SW",
+      "value": 3
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 1,
+      "uses": 255
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 70
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "event_occurred",
+      "event": "STATUS_APPLIED"
+    },
+    {
+      "type": "event_arg",
+      "event": "STATUS_APPLIED",
+      "index": 0,
+      "value": 3
+    },
+    {
+      "type": "event_occurred",
+      "event": "DAMAGE_DEALT"
+    },
+    {
+      "type": "event_arg",
+      "event": "DAMAGE_DEALT",
+      "index": 0,
+      "value": 2
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "TURN_SKIPPED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "CARDS_GREYED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "CARDS_UNGREYED"
+    }
+  ]
+}

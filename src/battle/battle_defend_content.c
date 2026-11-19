@@ -225,8 +225,7 @@ void battle_defend_resolve_banked(void)
      * succeeds; g_bk_byte_c = status id to apply through the fixed wrapper
      * (0 = none).  The roll inlines the xorshift step of rng_next() -- a
      * banked body must not call fixed-bank functions (AGENTS.md §52.11.1);
-     * the wrapper applies via the real status_apply + status_grey_apply,
-     * so ice also greys the victim's pool. */
+     * the wrapper applies via the real status_apply. */
     if (net > 0 && b->enemy_played_card.status_id != STATUS_NONE &&
         b->enemy_played_card.status_chance != 0) {
         g_rng_state ^= (uint16_t)(g_rng_state << 7);

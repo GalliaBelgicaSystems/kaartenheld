@@ -178,7 +178,7 @@ A rider is an extra effect bolted onto a card:
 - **Poison** cards add **poison** — 1 damage a round
   until the fight ends.
 - **Ice** cards can **freeze**, and a frozen fighter
-  misses their whole turn.
+  deals half damage (rounded up).
 
 Wood cards are always plain. Riders start at bronze.
 
@@ -326,11 +326,11 @@ over-block heals you instead.
 |---|---|
 | **Poison** | 1 HP a round, greys out two of your cards |
 | **Burn** | 1 HP a round |
-| **Freeze** | You miss your whole turn |
+| **Freeze** | Your attacks deal half damage |
 
 Greyed cards cannot be picked until the poison wears
-off. A frozen hero skips both the attack and the block,
-so a freeze at the wrong moment really hurts.
+off. A frozen hero's attacks (and dagger counters) land
+soft, so a freeze at the wrong moment really hurts.
 
 ## Running out of cards
 

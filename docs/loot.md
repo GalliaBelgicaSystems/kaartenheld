@@ -1684,7 +1684,7 @@ wood is always plain.
   (fire/ice/poison) keep precedence wherever both could apply.
 * Fire/ice rows are LIVE (Phase D): fire bows carry a BURN rider
   (10% of the inflicting hit per round, min 1, 3-round duration) and
-  ice bows a FREEZE rider (the target's cards grey out for 2 rounds);
+  ice bows a FREEZE rider (the target deals halved damage for 2 rounds);
   chances ride the per-effect table in 1/255 units (poison/fire 208,
   ice 176 -- riders are meant to land, not to lottery).  Adding future
   effects later = filling in their table rows.
@@ -1796,10 +1796,10 @@ Illegal combinations are unrepresentable: the generator only rolls legal
   9+10, no input that turn).  Confusion lasts 2 rounds.  Burn rider:
   fire bows burn for 10% of the hit per round (min 1), scaled per
   application.  IMPLEMENTED.
-* Ice rider: ice-effect bows carry the on-hit status rider; ice greys
-  out ICE_GREY_CARDS of the victim's cards for ICE_GREY_TURNS rounds
-  (the old freeze-skip is gone -- iced combatants act normally except
-  for their locked cards).  IMPLEMENTED.
+* Ice rider: ice-effect bows carry the on-hit status rider; iced
+  combatants deal halved damage (rounded up, both sides) for 2 rounds
+  (the old freeze-skip and grey-out lock are gone -- iced combatants
+  act normally, just soft).  IMPLEMENTED.
 
 ## 34.5 Generation (Phase 2, implemented)
 

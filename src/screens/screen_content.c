@@ -196,6 +196,29 @@ static void sc_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
     VBK_REG = 0;
 }
 
+/* x + zero-padded 3-digit count (cols x..x+3, e.g. x003, x025):
+ * the BUY ARROWS quiver readout and the SELL owned counts.  No
+ * division (bank 2): repeated subtraction only.  Counts above 999
+ * saturate (quiver caps at 30, collection stacks at 255). */
+static void sc_draw_xddd(uint8_t x, uint8_t y, uint16_t v)
+{
+    uint8_t h = 0;
+    uint8_t t = 0;
+    if (v > 999) v = 999;
+    while (v >= 100) {
+        v = (uint8_t)(v - 100);
+        h++;
+    }
+    while (v >= 10) {
+        v = (uint8_t)(v - 10);
+        t++;
+    }
+    sc_put_char(x, y, 'x');
+    sc_put_char((uint8_t)(x + 1), y, (char)('0' + h));
+    sc_put_char((uint8_t)(x + 2), y, (char)('0' + t));
+    sc_put_char((uint8_t)(x + 3), y, (char)('0' + (uint8_t)v));
+}
+
 static const ShopDefinition *sc_shop_active(const Game *g)
 {
     for (s_sc_shop_i = 0; s_sc_shop_i < g_shop_count; s_sc_shop_i++) {
@@ -298,7 +321,7 @@ static uint8_t sc_nm_wpn;
 static uint8_t sc_nm_special;
 static uint8_t sc_nm_wlen;
 
-/* Draw the weapon name at (x, y) in a 14-wide field (cols x..x+13),
+/* Draw the weapon name at (x, y) in a w-wide field (cols x..x+w-1),
  * element-colored like the CARDS list.  The material shows as the OAM
  * ingot over the col-x cell (entries 13-22, tinted per material via
  * the inventory ramps; steel shares iron's) instead of a word, so the
@@ -306,7 +329,7 @@ static uint8_t sc_nm_wlen;
  * the short battle code with no icon (those never appear in shop stock
  * or the loot-only SELL list; the fallback keeps the row readable). */
 static void sc_draw_full_name(uint8_t x, uint8_t y,
-                              const CardDefinition *def)
+                              const CardDefinition *def, uint8_t w)
 {
     const char *ws;
     uint8_t total;
@@ -316,11 +339,11 @@ static void sc_draw_full_name(uint8_t x, uint8_t y,
         sc_draw_text(x, y, " ", 1);
         ws = sc_wpn_str(sc_nm_wpn, &sc_nm_wlen);
         sc_draw_text((uint8_t)(x + 2), y, ws, sc_nm_wlen);
-        /* Blank the rest of the 14-wide name field (a shorter name must
+        /* Blank the rest of the w-wide name field (a shorter name must
          * not leave a longer previous row's tail). */
         total = (uint8_t)(2 + sc_nm_wlen);
-        if (total < 14)
-            sc_draw_text((uint8_t)(x + total), y, NULL, (uint8_t)(14 - total));
+        if (total < w)
+            sc_draw_text((uint8_t)(x + total), y, NULL, (uint8_t)(w - total));
         if (def->battle_type == BATTLE_CARD_TYPE_HEAL ||
             def->effect == CARD_EFFECT_HEAL_HP)
             sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_FIELD);
@@ -333,7 +356,7 @@ static void sc_draw_full_name(uint8_t x, uint8_t y,
         return;
     }
     sc_card_code_str(def->battle_type, def->power, s_sc_code);
-    sc_draw_text(x, y, s_sc_code, 14);
+    sc_draw_text(x, y, s_sc_code, w);
 }
 
 /* Shared cursor repaint moved to bank 11 (src/screens/menu_cursor_banked.c):
@@ -712,22 +735,23 @@ void shop_content_render(void)
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
         /* Limited-arrows virtual row (BUY only; the SELL remap never
          * emits the sentinel): owned-count readout with a flat 1G
-         * price, no card icons.  Checked BEFORE indexing s_sc_shop_def->items
+         * price.  Status-bar arrow icon at col 1 (card-icon column),
+         * label from col 3 like card names, xDDD count at cols
+         * 12-15.  Checked BEFORE indexing s_sc_shop_def->items
          * so the 0xFE sentinel never reads past the 50-item stock array. */
         if (s_sc_game->item_menu_tab != SHOP_TAB_SELL &&
             s_sc_stock_pos == SHOP_ARROW_ROW) {
             int16_t raw = s_sc_game->state.currency.amount[CURRENCY_ID_ARROWS - 1];
             if (raw < 0) raw = 0;
             if (raw > ARROWS_MAX) raw = ARROWS_MAX;
-            sc_draw_text(1, s_sc_y, "  ARROWS x", 10);
-            sc_format_uint((uint16_t)raw, s_sc_str);
-            if (raw < 10) {
-                sc_put_char(11, s_sc_y, ' ');
-                sc_put_char(12, s_sc_y, s_sc_str[0]);
-            } else {
-                sc_draw_text(11, s_sc_y, s_sc_str, 2);
-            }
-            sc_draw_text(13, s_sc_y, "     1G", 7);
+            sc_draw_text(1, s_sc_y, " ", 1);
+            s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 1);
+            VBK_REG = 0;
+            sc_vram_sync_write(s_sc_dst, UI_TILE_MENUS_STATUS_ARROW);
+            sc_color_span(1, s_sc_y, 1, UI_COLOR_NONE);
+            sc_draw_text(2, s_sc_y, " ARROWS   ", 9);
+            sc_draw_xddd(12, s_sc_y, (uint16_t)raw);
+            sc_draw_text(16, s_sc_y, "  1G", 4);
             continue;
         }
         /* SELL rows resolve through the owned collection (loot ids
@@ -760,10 +784,19 @@ void shop_content_render(void)
             else
                 s_sc_tile_wpn = UI_TILE_CARD_SWORD;
 
-            /* Full "<MAT> <WPN>" name in cols 3..16 (docs/loot.md
-             * §34.1), same as the CARDS list -- the old 3-letter code
-             * is gone. */
-            sc_draw_full_name(3, s_sc_y, s_sc_card_def);
+            /* Full "<MAT> <WPN>" name (docs/loot.md §34.1), same as
+             * the CARDS list -- the old 3-letter code is gone.  BUY
+             * keeps the 14-wide name (cols 3-16); SELL shortens to 9
+             * (cols 3-11) and shows the owned count as xDDD at
+             * cols 12-15 instead. */
+            if (s_sc_game->item_menu_tab == SHOP_TAB_SELL) {
+                sc_draw_full_name(3, s_sc_y, s_sc_card_def, 9);
+                sc_draw_xddd(12, s_sc_y,
+                    (uint16_t)s_sc_game->state.cards.collection.entries[
+                        s_sc_stock_pos].count);
+            } else {
+                sc_draw_full_name(3, s_sc_y, s_sc_card_def, 14);
+            }
 
             s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 1);
             VBK_REG = 0;
@@ -804,7 +837,7 @@ void shop_content_render(void)
             s_sc_pos = s_sc_card_def ? s_sc_market_quote(s_sc_card_def->price, s_sc_card_def->price_bias, s_sc_idx) : 0;
         if (s_sc_pos == 0 &&
             s_sc_game->item_menu_tab == SHOP_TAB_BUY) {
-            sc_draw_text(16, s_sc_y, "FREE", 4);
+            sc_draw_text(16, s_sc_y, "  0G", 4);
         } else {
             sc_format_uint((uint16_t)s_sc_pos, s_sc_str);
             s_sc_pos = 0;

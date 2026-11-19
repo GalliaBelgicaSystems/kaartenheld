@@ -34,6 +34,9 @@ extern uint8_t s_ic_arg_x;
 extern uint8_t s_ic_arg_y;
 extern uint8_t s_ic_arg_len;
 extern const char *s_ic_arg_text;
+#ifdef DEBUG_BUILD
+extern uint8_t g_tilemap_mirror[32 * 32];
+#endif
 
 static void st_draw_text_fast(void)
 {
@@ -151,7 +154,7 @@ static const uint8_t s_st_hero_slots[16] = {
     232u, 233u, 234u, 235u, 242u, 243u, 244u, 246u
 };
 
-/* OAM sweep for the HERO tab (entries 1-32): the DECK list paints
+/* OAM sweep for the HERO tab (entries 1-34): the DECK list paints
  * element icons over per-row cells, so entering this tab must hide
  * them (same as the QUEST/GEMS tabs).  WRAM shadow OAM only. */
 static void st_actor_hide(uint8_t entry)
@@ -173,7 +176,7 @@ void item_status_render_banked(void)
     menu_clear_content_attrs();
 
     /* Hide any card art OAM inherited from the DECK list. */
-    for (e = 1; e <= 32; e++) {
+    for (e = 1; e <= 34; e++) {
         st_actor_hide(e);
     }
 
@@ -232,7 +235,14 @@ void item_status_render_banked(void)
         ST_DRAW_TEXT(0, 7, "ARROWS", 6);
         st_draw_rjust(7, 6, 8,
             (uint16_t)(arrows < 0 ? 0 : arrows));
-        ST_DRAW_TEXT(9, 7, NULL, 11);
+        st_stamp_icon(7, 9, UI_TILE_MENUS_STATUS_ARROW);
+#ifdef DEBUG_BUILD
+        /* ITEM painters do not maintain the tile mirror; pin this one
+         * cell (same pattern as the battle quiver) so the harness can
+         * assert the arrow icon id. */
+        g_tilemap_mirror[7 * 32 + 9] = UI_TILE_MENUS_STATUS_ARROW;
+#endif
+        ST_DRAW_TEXT(10, 7, NULL, 10);
     }
 
     for (hy = 8; hy <= 14; hy++)

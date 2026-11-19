@@ -12,7 +12,7 @@
  * ink), so the green MUST live in entry 3 -- entries 0-2 stay
  * fightspider.  #77E331 -> RGB555 (14,28,6) -> 0x1B8E, little-endian
  * 8E 1B.  Programmed ONLY during green pulse frames (see the tick):
- * greyed cards (DIM) and the boss stamp (DIM/fightboss) keep their own
+ * spent-use dimmed cards (DIM) and the boss stamp (DIM/fightboss) keep their own
  * ramps the whole time, so only the hero HP block -- the flash's one
  * GOLD user -- ever flashes green.  The restore twin below is a
  * hardcoded copy because bank 9 cannot read the bank-5 ROM table --
@@ -27,7 +27,7 @@ static const uint8_t s_heal_flash_restore[8] = { 0xFF, 0x7F, 0x31, 0x46, 0x2B, 0
  * per-store pattern as ui_load_cram_banked (BANKED_VRAM_WRITE); a
  * no-op on DMG, where BCPS/BCPD are unmapped.  GOLD (fightspider) is
  * otherwise unused by battle BG spans, so the flash never tints enemy
- * art, greyed cards, or the boss stamp. */
+ * art, spent-use dimmed cards, or the boss stamp. */
 static void battle_heal_cram(uint8_t flash_on)
 {
     const uint8_t *ramp;
@@ -111,7 +111,7 @@ void battle_feedback_tick_banked(void)
          * (10 frames each), spanning the 47-tick heal jingle: green
          * appears twice instead of vanishing twice.  The GOLD slot is
          * programmed only on green-pulse frames below (never for the
-         * whole flash), so greyed cards and the boss stamp keep their
+         * whole flash), so spent-use dimmed cards and the boss stamp keep their
          * own ramps except during the pulses themselves. */
         g_battle_heal_flash = 50;
         b->dirty |= BATTLE_DIRTY_HERO;
@@ -150,7 +150,7 @@ void battle_feedback_tick_banked(void)
          * the heal jingle, snapping back to steady green at the end).
          * The CRAM program follows the phase edges, not the flash:
          * GOLD holds the flash ramp only while a green pulse is on
-         * screen (greyed cards and the boss stamp read their own ramps
+         * screen (spent-use dimmed cards and the boss stamp read their own ramps
          * the whole time).  Thresholds live here, not in the painter:
          * release bank 3 has no room for the math. */
         np = (uint8_t)(((g_battle_heal_flash <= 40 &&

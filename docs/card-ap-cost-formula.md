@@ -667,7 +667,7 @@ cannot fail is not a check (AGENTS.md §52.16).
 
 1. **Ice at weight 16?**  (Asked when ice still skipped whole enemy
    attacks, worth more than burn damage and the only non-flat status.)
-   Ice is a grey-out now, flat like the rest (2 cards for 2 rounds), so
+   Ice is halved outgoing damage now, flat like the rest, so
    the question is closed: keep rider weight 8.
 2. **Does the bow deserve a reach premium?**  A bow already takes the
    high-power band, so it matches a same-material sword.  A +1 role step is

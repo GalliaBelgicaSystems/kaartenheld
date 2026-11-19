@@ -137,13 +137,11 @@ void battle_screen_update(Game *g)
                 battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
             } else if (input_pressed(INPUT_A) &&
                        vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND &&
-                       vg->battle.msg_id >= BATTLE_MSG_ICED_FOE &&
+                       vg->battle.msg_id >= BATTLE_MSG_CONFUSED_FOE &&
                        vg->battle.msg_id <= BATTLE_MSG_CONFUSED_OUTCOME) {
-                /* Acknowledgement beats (msg ids 5-7 are contiguous).
-                 * Iced (5): nothing staged, nothing incoming -- resolve
-                 * the no-op through the shared combo path.  Confused:
-                 * the FIRST A reveals who takes the redirected swing
-                 * (6 -> 7), the SECOND resolves it.  SELECT and the
+                /* Acknowledgement beats (msg ids 6-7 are contiguous).
+                 * Confused: the FIRST A reveals who takes the redirected
+                 * swing (6 -> 7), the SECOND resolves it.  SELECT and the
                  * timer resolve through the same shared combo call
                  * (the banked resolve promotes a beat-1 msg itself),
                  * so no path strands on stale text.  The hero stages

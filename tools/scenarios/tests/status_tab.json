@@ -87,6 +87,12 @@
    "type": "screen_row",
    "row": 7,
    "contains": "3"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 9,
+   "expected": 251
   }
  ],
  "initial_state": {
