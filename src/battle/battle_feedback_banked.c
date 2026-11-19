@@ -68,6 +68,7 @@ void battle_feedback_tick_banked(void)
     uint8_t k;
     uint8_t np;
 
+
     if (g_battle_fx_seen != g_battle_fx_epoch) {
         g_battle_fx_seen = g_battle_fx_epoch;
         g_battle_shake_mask = 0;

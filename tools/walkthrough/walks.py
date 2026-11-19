@@ -41,11 +41,13 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY,
-                                      BATTLE_ENEMIES,
+                                      BT_DAGGER, BATTLE_ENEMIES,
                                       OFF_PARTY, CHARACTER_STATE_HP,
                                       CHARACTER_STATE_MAX_HP, ENTITY_SIZE,
                                       BATTLE_HAND, CARD_SIZE, CARD_TYPE,
-                                      CARD_VALUE, MUSIC_UNDERGROUND)
+                                      CARD_VALUE, CARD_COST, BATTLE_ENERGY,
+                                      MUSIC_UNDERGROUND,
+                                      OFF_VARIABLES)
 # collision lives in tools/level_compiler; set the path here rather than
 # borrowing route.py's namespace, so a future refactor of route.py's import
 # list cannot silently break this module.
@@ -515,6 +517,78 @@ def _carl_topup(s):
         print("[_carl_topup] battle state unreadable, skipping: %r" % (exc,))
         return
     s.pb.memory[base] = mx
+
+
+# Poker-hand handbook (walk-b only): exact (type, value) deals per tier,
+# staged through PyBoy memory exactly like the debug harness's
+# set_hand_card (cost 0 so every card stages).  Junk cards stay tier-free
+# (distinct values, mixed types, no 5-run) so each hand reads its tier.
+_HANDS = [
+    ("pair", [(0, 3), (2, 3), (0, 1), (2, 4), (4, 5)]),
+    ("twopair", [(0, 3), (2, 3), (0, 5), (4, 5), (2, 1)]),
+    ("three", [(0, 3), (2, 3), (4, 3), (0, 1), (2, 2)]),
+    ("straight", [(0, 1), (2, 2), (0, 3), (2, 4), (0, 5)]),
+    ("flush", [(0, 1), (0, 2), (0, 4), (0, 5), (0, 9)]),
+    ("fullhouse", [(0, 3), (2, 3), (4, 3), (0, 5), (2, 5)]),
+    ("four", [(0, 3), (2, 3), (4, 3), (1, 3), (0, 1)]),
+    ("straightflush", [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]),
+    ("five", [(0, 7), (2, 7), (4, 7), (1, 7), (0, 7)]),
+    ("short", [(0, 1), (2, 2), (0, 3), (4, 7), (1, 9)]),
+]
+
+
+def _poke_hand(s, cards):
+    """Rewrite the live 5-card battle hand (type/value/cost) in place,
+    and top up the turn timer: the handbook stages ten full hands in
+    one SELECT phase, far past the 1200-tick turn budget, so every
+    poke also resets the countdown (throwaway spar session only)."""
+    r = s.reader
+    base = r._resolve_battle_base() + BATTLE_HAND
+    for i, (t, v) in enumerate(cards):
+        s.pb.memory[base + i * CARD_SIZE + CARD_TYPE] = t
+        s.pb.memory[base + i * CARD_SIZE + CARD_VALUE] = v
+        s.pb.memory[base + i * CARD_SIZE + CARD_COST] = 0
+    timer = r._resolve_battle_base() + BATTLE_ENERGY + 1
+    s.pb.memory[timer] = 0xB0
+    s.pb.memory[timer + 1] = 0x04
+
+
+def _select_all(s):
+    """Select hand slots 0-4 (verified per press, like _select_cards)."""
+    for idx in range(5):
+        if not _cursor_to(s, idx):
+            continue
+        for _attempt in range(3):
+            before = s.reader.battle_combo_count()
+            s.press("a", settle=12)
+            if s.reader.battle_combo_count() > before:
+                break
+            s.tick(2)
+
+
+def _clear_combo(s):
+    """B-press until nothing is staged (bounded, like the flee drain)."""
+    for _ in range(8):
+        if s.reader.battle_combo_count() == 0:
+            break
+        s.press("b", settle=12)
+
+
+def _handbook_shot(s, name, milestone):
+    """Stage one handbook hand, shoot its row-10 name tiles, clear."""
+    hand = next(h for h in _HANDS if h[0] == name)[1]
+    _poke_hand(s, hand)
+    s.tick(10)
+    _select_all(s)
+    s.tick(20)
+    s.check("handbook %s staged" % name,
+            s.reader.battle_combo_count() == 5,
+            expected="combo_count 5", actual=str(s.reader.battle_combo_count()))
+    s.shoot(milestone)
+    _clear_combo(s)
+    s.check("handbook %s cleared" % name,
+            s.reader.battle_combo_count() == 0,
+            expected="combo_count 0", actual=str(s.reader.battle_combo_count()))
 
 
 def engage_hostile(s, planner, scene_name, hostile_xy):
@@ -1103,6 +1177,29 @@ def walk_b(planner, checks):
     # Select-stage banner is up while choosing the attack.
     s.check("select banner", s.text_has("TARGET CARL"),
             expected="TARGET CARL", actual="none")
+    # Poker-hand handbook: stage each named hand in the opening SELECT
+    # (no executes, so the spar never advances) and capture its row-10
+    # name tiles.  The pair shot doubles as the player-attacking icon
+    # set (SELECT phase: the forecast trios stay blank on rows 7-8).
+    for _name, _mark in (("pair", "10-hand-pair"),
+                         ("twopair", "10-hand-twopair"),
+                         ("three", "10-hand-three"),
+                         ("straight", "10-hand-straight"),
+                         ("flush", "10-hand-flush"),
+                         ("fullhouse", "10-hand-fullhouse"),
+                         ("four", "10-hand-four"),
+                         ("straightflush", "10-hand-straightflush"),
+                         ("five", "10-hand-five")):
+        _handbook_shot(s, _name, _mark)
+    # Short straight is gem-gated (GEM_STRAIGHT = bit 0 of
+    # VARIABLE_ID_GEM_EQUIPPED = 8, game_ids.h): set the bit for the
+    # shot, clear it right after so later choreography is unaffected.
+    _gem_addr = s.reader.state + OFF_VARIABLES + 2 * (8 - 1)
+    s.pb.memory[_gem_addr] = 1
+    s.pb.memory[_gem_addr + 1] = 0
+    _handbook_shot(s, "short", "10-hand-short")
+    s.pb.memory[_gem_addr] = 0
+    s.pb.memory[_gem_addr + 1] = 0
     # Two cards per phase (capped, not the full affordable set): an
     # uncapped round stages deeper into the 10-card starter draw pile and
     # risks a RESHUFFLE turn that consumes the round-2 PLAYER_SELECT,
@@ -1134,6 +1231,21 @@ def walk_b(planner, checks):
             s.wait_for(lambda: s.text_has("DEFEND"), ticks=180),
             expected="DEFEND", actual="none")
     s.shoot("10-battle-defend", need="DEFEND")
+    # Enemy-attacking icon sets: daggers first (red counter trio),
+    # then shields (brown block trio).  Both are staged and cleared
+    # without executing, so the choreography below re-selects fresh.
+    _poke_hand(s, [(4, 3), (4, 3), (4, 3), (4, 3), (4, 3)])
+    s.tick(10)
+    _select_cards(s, (BT_DAGGER,), max_cards=2)
+    s.tick(20)
+    s.shoot("10-defend-dagger", need="DEFEND")
+    _clear_combo(s)
+    _poke_hand(s, [(1, 3), (1, 3), (1, 3), (1, 3), (1, 3)])
+    s.tick(10)
+    _select_cards(s, (BT_SHIELD,), max_cards=2)
+    s.tick(20)
+    s.shoot("10-defend-shield", need="DEFEND")
+    _clear_combo(s)
     _select_cards(s, (BT_SHIELD,), max_cards=2)
     s.press("select", settle=40)     # execute defense
     # The way back to SELECT raises the poker-hands box, then the flee

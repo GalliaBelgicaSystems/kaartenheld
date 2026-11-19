@@ -261,6 +261,14 @@ gfx: manifest
 	# L C R / BL BM BR); loaded to VRAM at UI_TILE_CARD_FRAME_BASE (118).
 	@python3 tools/png2gb.py assets/card_frames.png --name card_frame_tiles \
 		--shade-map generated/tiles/shades/card_frames.json -o $(GFX_OUT_DIR)/card_frame_tiles.h
+	# ── Battle poker-hand name tiles (assets/hand_names.png, 28x1) ──
+	# Brown-on-white letter fragments for the row-10 hand names plus the
+	# down arrow (dark up-arrow rotated 180 at compose time).  Composed by
+	# the manifest prerequisite (compose_hand_names.py); the bank-9 hand
+	# body streams the staged word on demand to UI_TILE_HAND_BASE
+	# (247-255, the dice window battle never needs).
+	@python3 tools/png2gb.py assets/hand_names.png --name hand_name_tiles \
+		--shade-map generated/tiles/shades/hands.json -o $(GFX_OUT_DIR)/hand_name_tiles.h
 	# ── Chuck-a-luck dice digits (assets/dice.png, 10x1, digit order 0-9) ──
 	# The sheet is composed by the manifest prerequisite (compose_dice.py);
 	# palette_compiler.py writes the shade map.  Only the encode belongs here.
@@ -541,6 +549,7 @@ manifest: tools/level_editor/tilesets/forest.json tools/level_editor/tilesets/ca
 	@python3 tools/compose_enemy_sprites.py
 	@python3 tools/compose_hero_sprites.py
 	@python3 tools/compose_card_frames.py
+	@python3 tools/compose_hand_names.py
 	@python3 tools/compose_dice.py
 	@python3 tools/compose_ap_pips.py
 	@python3 tools/compose_menu_icons.py

@@ -3397,6 +3397,18 @@ the commit/PR without booting anything.
 09-battle            Carl spar opens (plain solo screen, TARGET CARL)
 10-battle-attack     after a player attack (damage dealt)
 10-battle-defend     Carl's DEFEND phase (shield lesson closed)
+10-hand-pair         PAIR name tiles (also the player-attacking icon set)
+10-hand-twopair      TWO PAIR name tiles
+10-hand-three        THREE KIND name tiles
+10-hand-straight     STRAIGHT name tiles
+10-hand-flush        FLUSH name tiles
+10-hand-fullhouse    FULL HOUSE name tiles
+10-hand-four         FOUR KIND name tiles
+10-hand-straightflush STRAIGHT FLUSH name tiles (starts col 4)
+10-hand-five         FIVE KIND name tiles
+10-hand-short        SHORT STRAIGHT name tiles
+10-defend-dagger     enemy attacking, daggers staged (red counter trio)
+10-defend-shield     enemy attacking, shields staged (brown block trio)
 11-battle-fled       FLED! result after fleeing the spar (no reward)
 11-farewell-speech   Carl's farewell box (no AP for fleeing)
 11-battle-aftermath  overworld after leaving the fight (VRAM restore)

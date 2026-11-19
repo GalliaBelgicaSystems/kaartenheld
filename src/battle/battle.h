@@ -153,6 +153,13 @@ extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
  * frame into the first free slot past enemy art at every battle entry and
  * caches the id here for the bank-3 hero-row stamper.  BSS zero-init. */
 extern uint8_t g_battle_hero_tile;
+/* Poker-hand tile window state (src/battle/hand_tiles_banked.c, bank 8):
+ * HAND_* tier with resident word art (+arrow), 0xFE = arrow-only
+ * (enemy forecast, no staged word), 0xFF = nothing usable.  Re-armed
+ * off-battle.  Read by the bank-3 renderer: the row-10 name area shows
+ * tiles only while its preview tier matches this (otherwise it blanks,
+ * so a just-changed selection never tears). */
+extern uint8_t g_hand_shown_tier;
 /* Live energy-pool max for the HUD "/max" badge (bank-3 renderer cannot
  * run the pool read itself, so the bank-4 battle-entry body stages it here
  * beside b->energy; same uninitialized-WRAM pattern as the art arrays
