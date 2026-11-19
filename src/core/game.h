@@ -48,14 +48,16 @@ typedef struct Game {
                                    pile side on the DECK tab, whole list on
                                    every single-list screen (deck side has
                                    item_menu_scroll_deck below) */
-    uint8_t item_menu_filter;  /* 0xFF = ALL, else a CardType value */
-    uint8_t item_menu_sort;    /* 0 = none, 1 = type, 2 = power, 3 = cost,
+    uint8_t item_menu_filter;  /* 0xFF = ALL, else a weapon value
+                                    (WPN_SWORD/SHIELD/BOW/DAGGER/RING) */
+    uint8_t item_menu_sort;    /* 0 = none, 1 = weapon, 2 = power,
                                   4 = power desc, 5 = cost desc */
     uint8_t item_menu_mode;      /* 0 = list, 1 = card detail, 2 = quest
                                     detail, 3 = filter/sort picker */
     uint8_t item_menu_message;   /* 0 = none, 1 = deck full, 2 = max copies */
     uint8_t item_menu_msg_ttl;   /* frames until the message clears */
-    uint8_t item_menu_pick_row;  /* picker row: 0 = filter, 1 = sort */
+    uint8_t item_menu_pick_row;  /* picker row: 0 = weapon, 1 = material,
+                                     2 = sort */
     uint8_t item_menu_prev_filter; /* picker cancel restore */
     uint8_t item_menu_prev_sort;   /* picker cancel restore */
     uint8_t shop_message;      /* low nibble: 0 = none, 1 = bought, 2 = not
@@ -90,6 +92,10 @@ typedef struct Game {
                                    windows move independently and each side
                                    remembers its own.  TAIL FIELD (same
                                    no-shift rule as above). */
+    uint8_t item_menu_filter_mat;  /* 0xFF = ALL, else a material value
+                                    (MAT_WOOD/BRONZE/IRON/STEEL/MYTHRIL).
+                                    TAIL FIELD (same no-shift rule). */
+    uint8_t item_menu_prev_filter_mat; /* picker cancel restore (TAIL). */
 } Game;
 
 extern Game g_game;

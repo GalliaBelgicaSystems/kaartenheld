@@ -452,11 +452,16 @@ void item_view_build_banked(void)
         id = g->state.cards.collection.entries[i].id;
         type = cu_grp_type(id, &power, &cost);
         if (type == 0xFF) continue;
-        if (g->item_menu_filter != 0xFF && type != g->item_menu_filter)
+        /* WEAPON filter (0xFF = ALL, else WPN_*), MATERIAL filter
+         * (0xFF = ALL, else MAT_*) -- both from the picker's two
+         * filter rows. */
+        if (!cu_grp_key(id, &mat, &wpn, &rdr)) continue;
+        if (g->item_menu_filter != 0xFF && wpn != g->item_menu_filter)
+            continue;
+        if (g->item_menu_filter_mat != 0xFF && mat != g->item_menu_filter_mat)
             continue;
         /* Fold into the first row with the same (mat, wpn, rider):
          * that row's earliest collection entry stays the primary. */
-        if (!cu_grp_key(id, &mat, &wpn, &rdr)) continue;
         for (k = 0; k < s_view_count; k++) {
             if (!cu_grp_key(g->state.cards.collection.entries[
                     s_view_indices[k]].id, &m2, &w2, &r2)) continue;
@@ -989,20 +994,22 @@ void item_group_remove_one_banked(void)
     }
     g_bk_byte_c = 0xFF;
 }
-/* DECK nav mutations: filter cycle / sort cycle / tab switch (bank 15).
- * Moved out of the fixed bank (AGENTS.md §52.18): the card-group +
- * boss-dialogue merge overflowed Bank 1, and these three are pure WRAM
- * state machines -- no ROM tables, no fixed calls -- so they run
- * verbatim here.  Staging: g_bk_ptr_a = Game*, g_bk_byte_a = mode
- * (0 filter, 1 sort, 2 tab), g_bk_byte_b = tab direction (0 back,
- * 1 forward; ignored by modes 0/1, which take no direction input).  The
- * direction is staged by the fixed caller: a banked body must never
- * call input_pressed (AGENTS.md §52.11.1).  Mirror constants live in
- * item_screen.c (TAB_DECK/TAB_GEM/ROW_TOP, FILTER_ALL,
- * SORT_NONE/SORT_COST_DESC) -- keep in sync. */
+/* DECK nav mutations: weapon cycle / material cycle / sort cycle /
+ * tab switch (bank 15).  Moved out of the fixed bank (AGENTS.md
+ * §52.18): the card-group + boss-dialogue merge overflowed Bank 1,
+ * and these are pure WRAM state machines -- no ROM tables, no fixed
+ * calls -- so they run verbatim here.  Staging: g_bk_ptr_a = Game*,
+ * g_bk_byte_a = mode (0 weapon, 1 sort, 2 tab, 3 material),
+ * g_bk_byte_b = tab direction (0 back, 1 forward; ignored by modes
+ * 0/1/3, which take no direction input).  The direction is staged by
+ * the fixed caller: a banked body must never call input_pressed
+ * (AGENTS.md §52.11.1).  Mirror constants live in item_screen.c
+ * (TAB_DECK/TAB_GEM/ROW_TOP, FILTER_ALL, SORT_NONE/SORT_COST_DESC)
+ * -- keep in sync. */
 #define CYC_FILTER 0
 #define CYC_SORT   1
 #define CYC_TAB    2
+#define CYC_MATERIAL 3
 void item_menu_cycle_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -1010,20 +1017,37 @@ void item_menu_cycle_banked(void)
     if (!g) return;
     mode = g_bk_byte_a;
     if (mode == CYC_FILTER) {
+        /* WEAPON row: ALL -> SWORD -> DAGGER -> SHIELD -> BOW ->
+         * RING -> ALL (stored WPN_* ids, 0xFF = ALL). */
         if (g->item_menu_filter == CYC_FILTER_ALL)
-            g->item_menu_filter = CARD_TYPE_ATTACK;
-        else if (g->item_menu_filter == CARD_TYPE_ATTACK)
-            g->item_menu_filter = CARD_TYPE_DEFENSE;
-        else if (g->item_menu_filter == CARD_TYPE_DEFENSE)
-            g->item_menu_filter = CARD_TYPE_HEAL;
-        else if (g->item_menu_filter == CARD_TYPE_HEAL)
-            g->item_menu_filter = CARD_TYPE_STATUS;
-        else if (g->item_menu_filter == CARD_TYPE_STATUS)
-            g->item_menu_filter = CARD_TYPE_UTILITY;
+            g->item_menu_filter = WPN_SWORD;
+        else if (g->item_menu_filter == WPN_SWORD)
+            g->item_menu_filter = WPN_DAGGER;
+        else if (g->item_menu_filter == WPN_DAGGER)
+            g->item_menu_filter = WPN_SHIELD;
+        else if (g->item_menu_filter == WPN_SHIELD)
+            g->item_menu_filter = WPN_BOW;
+        else if (g->item_menu_filter == WPN_BOW)
+            g->item_menu_filter = WPN_RING;
         else
             g->item_menu_filter = CYC_FILTER_ALL;
-        /* Fresh order, fresh windows on both sides (same as a tab
-         * switch and the sort cycle below). */
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
+    } else if (mode == CYC_MATERIAL) {
+        /* MATERIAL row: ALL -> WOOD -> BRONZE -> IRON -> STEEL ->
+         * MYTHRIL -> ALL (stored MAT_* ids, 0xFF = ALL). */
+        if (g->item_menu_filter_mat == CYC_FILTER_ALL)
+            g->item_menu_filter_mat = MAT_WOOD;
+        else if (g->item_menu_filter_mat == MAT_WOOD)
+            g->item_menu_filter_mat = MAT_BRONZE;
+        else if (g->item_menu_filter_mat == MAT_BRONZE)
+            g->item_menu_filter_mat = MAT_IRON;
+        else if (g->item_menu_filter_mat == MAT_IRON)
+            g->item_menu_filter_mat = MAT_STEEL;
+        else if (g->item_menu_filter_mat == MAT_STEEL)
+            g->item_menu_filter_mat = MAT_MYTHRIL;
+        else
+            g->item_menu_filter_mat = CYC_FILTER_ALL;
         g->item_menu_scroll = 0;
         g->item_menu_scroll_deck = 0;
     } else if (mode == CYC_SORT) {
@@ -1114,8 +1138,15 @@ void item_deck_update_banked(void)
         case DCK_MODE_PICKER:
             if ((edges & (uint8_t)(1u << INPUT_UP)) ||
                 (edges & (uint8_t)(1u << INPUT_DOWN))) {
-                g->item_menu_pick_row =
-                    (uint8_t)(g->item_menu_pick_row == 0 ? 1 : 0);
+                if (edges & (uint8_t)(1u << INPUT_DOWN)) {
+                    g->item_menu_pick_row =
+                        (uint8_t)(g->item_menu_pick_row >= 2 ? 0 :
+                                 (uint8_t)(g->item_menu_pick_row + 1));
+                } else {
+                    g->item_menu_pick_row =
+                        (uint8_t)(g->item_menu_pick_row == 0 ? 2 :
+                                 (uint8_t)(g->item_menu_pick_row - 1));
+                }
                 pk_draw_rows(g);
                 g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
             } else if ((edges & (uint8_t)(1u << INPUT_LEFT)) ||
@@ -1123,6 +1154,8 @@ void item_deck_update_banked(void)
                 g_bk_ptr_a = (void *)g;
                 if (g->item_menu_pick_row == 0) {
                     g_bk_byte_a = 0;
+                } else if (g->item_menu_pick_row == 1) {
+                    g_bk_byte_a = 3;
                 } else {
                     g_bk_byte_a = 1;
                 }
@@ -1177,6 +1210,7 @@ void item_deck_update_banked(void)
             g->item_menu_mode = DCK_MODE_PICKER;
             g->item_menu_pick_row = 0;
             g->item_menu_prev_filter = g->item_menu_filter;
+            g->item_menu_prev_filter_mat = g->item_menu_filter_mat;
             g->item_menu_prev_sort = g->item_menu_sort;
             g->render_cache.valid = false;
             return;
@@ -1377,13 +1411,24 @@ static void pk_blank_row(uint8_t y)
     }
 }
 
-static const char *const s_pk_type_names[6] = {
-    "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
-};
-
-static const char *pk_filter_name(uint8_t f)
+static const char *pk_weapon_name(uint8_t w)
 {
-    return (f <= 4) ? s_pk_type_names[f] : "ALL";
+    if (w == WPN_SWORD) return "SWORD";
+    if (w == WPN_DAGGER) return "DAGGER";
+    if (w == WPN_SHIELD) return "SHIELD";
+    if (w == WPN_BOW) return "BOW";
+    if (w == WPN_RING) return "RING";
+    return "ALL";
+}
+
+static const char *pk_mat_name(uint8_t m)
+{
+    if (m == MAT_WOOD) return "WOOD";
+    if (m == MAT_BRONZE) return "BRONZE";
+    if (m == MAT_IRON) return "IRON";
+    if (m == MAT_STEEL) return "STEEL";
+    if (m == MAT_MYTHRIL) return "MYTHRIL";
+    return "ALL";
 }
 
 static const char *pk_sort_name(uint8_t s)
@@ -1401,9 +1446,12 @@ static const char *pk_sort_name(uint8_t s)
 static void pk_draw_rows(Game *g)
 {
     pk_draw_text(0, 7, (g->item_menu_pick_row == 0) ? ">" : " ", 2);
-    pk_draw_text(2, 7, "FILTER", 10);
-    pk_draw_text(12, 7, pk_filter_name(g->item_menu_filter), 8);
-    pk_draw_text(0, 9, (g->item_menu_pick_row != 0) ? ">" : " ", 2);
+    pk_draw_text(2, 7, "WEAPON", 10);
+    pk_draw_text(12, 7, pk_weapon_name(g->item_menu_filter), 8);
+    pk_draw_text(0, 8, (g->item_menu_pick_row == 1) ? ">" : " ", 2);
+    pk_draw_text(2, 8, "MATERIAL", 10);
+    pk_draw_text(12, 8, pk_mat_name(g->item_menu_filter_mat), 8);
+    pk_draw_text(0, 9, (g->item_menu_pick_row == 2) ? ">" : " ", 2);
     pk_draw_text(2, 9, "SORT", 10);
     pk_draw_text(12, 9, pk_sort_name(g->item_menu_sort), 8);
 }
@@ -1424,7 +1472,6 @@ void item_picker_render_banked(void)
     for (r = 2; r <= 6; r++)
         pk_blank_row(r);
     pk_draw_rows(g);
-    pk_blank_row(8);
     for (r = 10; r <= 13; r++)
         pk_blank_row(r);
     pk_draw_text(0, 14, "LR CYCLE  A:OK B:NO", 20);

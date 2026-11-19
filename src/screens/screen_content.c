@@ -734,20 +734,20 @@ void shop_content_render(void)
         s_sc_y = (uint8_t)(5 + (uint8_t)(s_sc_shop_pos - s_sc_shop_scroll));
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
         /* Limited-arrows virtual row (BUY only; the SELL remap never
-         * emits the sentinel): status-bar arrow icon at col 1
-         * (card-icon column), label from col 3 like card names,
-         * flat 1G price.  No count here (BUY shows no counts).
-         * Checked BEFORE indexing s_sc_shop_def->items
-         * so the 0xFE sentinel never reads past the 50-item stock array. */
+         * emits the sentinel): status-bar arrow icon at col 2,
+         * ARROW label from col 5, flat 1G price.  No count here
+         * (BUY shows no counts).  Checked BEFORE indexing
+         * s_sc_shop_def->items so the 0xFE sentinel never reads
+         * past the 50-item stock array. */
         if (s_sc_game->item_menu_tab != SHOP_TAB_SELL &&
             s_sc_stock_pos == SHOP_ARROW_ROW) {
-            sc_draw_text(1, s_sc_y, " ", 1);
-            s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 1);
+            sc_draw_text(1, s_sc_y, " ", 2);
+            s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 2);
             VBK_REG = 0;
             sc_vram_sync_write(s_sc_dst, UI_TILE_MENUS_STATUS_ARROW);
-            sc_color_span(1, s_sc_y, 1, UI_COLOR_NONE);
-            sc_draw_text(2, s_sc_y, " ARROWS", 7);
-            sc_draw_text(9, s_sc_y, NULL, 7);
+            sc_color_span(2, s_sc_y, 1, UI_COLOR_NONE);
+            sc_draw_text(3, s_sc_y, "  ARROW", 7);
+            sc_draw_text(10, s_sc_y, NULL, 6);
             sc_draw_text(16, s_sc_y, "  1G", 4);
             continue;
         }
