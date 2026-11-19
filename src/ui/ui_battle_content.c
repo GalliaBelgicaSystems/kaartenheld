@@ -853,21 +853,21 @@ static void battle_draw_hero_row(const volatile Battle *battle)
         battle_blank_forecast(label_row);
     }
 
-    /* Quiver: arrow count digits (row 7, cols 15-16) + status-bar
-     * arrow (col 17).  Reads the live shared arrow pool (bows consume
-     * mid-battle), clamped at zero like the shop/HERO displays; num2
-     * clamps at 99. */
+    /* Quiver: status-bar arrow (col 15) + arrow count digits (cols
+     * 16-17, same [icon][digits] order as the deck block below).
+     * Reads the live shared arrow pool (bows consume mid-battle),
+     * clamped at zero like the shop/HERO displays; num2 clamps at 99. */
     quiver = g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1];
     arrows = (quiver < 0) ? 0 : (uint8_t)quiver;
-    battle_draw_num2(15, label_row, arrows);
-    battle_color_span(15, label_row, 2, UI_COLOR_FIELD);
+    battle_draw_num2(16, label_row, arrows);
+    battle_color_span(16, label_row, 2, UI_COLOR_FIELD);
     VBK_REG = 0;
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)label_row << 5) + 17);
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)label_row << 5) + 15);
     battle_vram_sync_write(dst, UI_TILE_MENUS_STATUS_ARROW);
 #ifdef DEBUG_BUILD
-    g_tilemap_mirror[label_row * 32 + 17] = UI_TILE_MENUS_STATUS_ARROW;
+    g_tilemap_mirror[label_row * 32 + 15] = UI_TILE_MENUS_STATUS_ARROW;
 #endif
-    battle_color_span(17, label_row, 1, g_hud_skin_wram.deck_icon_color);
+    battle_color_span(15, label_row, 1, g_hud_skin_wram.deck_icon_color);
 
     /* AP badge (row 8): current pool digit (col 3) + status-bar AP
      * tile (col 4).  Single digit, pool never exceeds 9 -- no slash,
@@ -1005,45 +1005,6 @@ static const char *battle_combo_pending_preview(const volatile Battle *battle, u
     return battle_combo_tier_name(battle->last_combo.tier);
 }
 
-/* Compact decimal without padding (DMG5, DMG12, DMG191):
- * battle_draw_num2 space-pads to two cells, which would leave gaps
- * after DMG.  Buffer, VRAM and mirror all stay truthful.  Returns the
- * digit count so callers can blank the row tail. */
-static uint8_t battle_draw_num_compact(uint8_t x, uint8_t y, uint8_t val)
-{
-    char digit[4];
-    uint8_t n = 0;
-    uint8_t h = 0;
-    uint8_t d = 0;
-#ifdef DEBUG_BUILD
-    uint8_t i;
-#endif
-    while (val >= 100) { val -= 100; h++; }
-    while (val >= 10) { val -= 10; d++; }
-    if (h != 0) {
-        digit[0] = (char)('0' + h);
-        digit[1] = (char)('0' + d);
-        digit[2] = (char)('0' + val);
-        n = 3;
-    } else if (d != 0) {
-        digit[0] = (char)('0' + d);
-        digit[1] = (char)('0' + val);
-        n = 2;
-    } else {
-        digit[0] = (char)('0' + val);
-        n = 1;
-    }
-    digit[n] = '\0';
-    battle_draw_text_line(x, y, digit, n);
-#ifdef DEBUG_BUILD
-    for (i = 0; i < n; i++) {
-        g_tilemap_mirror[(uint16_t)y * 32 + x + i] =
-            (uint8_t)(ui_font_tile_base + (uint8_t)(digit[i] - ' '));
-    }
-#endif
-    return n;
-}
-
 /* Dagger-counter preview: pending-selection damage for a daggers-only
  * defend (rings allowed; anything else aborts, mirroring the prep
  * whitelist in battle_counter_banked.c).  This deliberately does NOT
@@ -1125,65 +1086,6 @@ static uint8_t battle_defend_counter_preview(const volatile Battle *battle)
     return q;
 }
 
-/* Enemy-strike forecast: left "DMG <incoming>" in red, right "DEF <block>"
- * in green, so the player sees the incoming hit next to what the staged
- * shields block.  <block> is the defend-mode preview over the staged
- * shields (0 while none are staged).  A daggers-only selection instead
- * shows the pending counter ("CNT <n>") on the right -- the block there
- * is always 0, and the counter damage is what matters.  Text path
- * throughout, so buffer, mirror and VRAM stay truthful for asserts;
- * colors ride attribute spans (attr mirror included). */
-static uint8_t battle_num_width(uint8_t val)
-{
-    if (val >= 100) return 3;
-    if (val >= 10) return 2;
-    return 1;
-}
-
-static void battle_combo_warn_text(const volatile Battle *battle)
-{
-    uint8_t combo_row = g_battle_hud.combo_row;
-    uint8_t dmg_n;
-    uint8_t block = 0;
-    uint8_t bw;
-    uint8_t dx;
-    /* Warn path shows staged block value, not heal: the pending preview's
-     * is_heal flag is discarded here (naming it no_heal hid that it
-     * actually receives is_heal). */
-    uint8_t heal_ignored;
-
-    battle_combo_pending_preview(battle, &block, &heal_ignored);
-    (void)heal_ignored;
-    battle_draw_text_line(0, combo_row, "DMG ", 4);
-    dmg_n = battle_draw_num_compact(4, combo_row, battle->enemy_incoming_dmg);
-    /* Right side: "DEF <n>" ending at col 19 (measured first so 1-3
-     * digit blocks all right-align; worst case DMG191 + DEF191 = 13
-     * cols, never overlapping the left side).  Daggers-only selections
-     * show the pending counter ("CNT <n>") instead -- same width class,
-     * same right alignment; the block there is always 0. */
-    bw = battle_num_width(block);
-    dx = (uint8_t)(20 - 4 - bw);
-    {
-        uint8_t counter = battle_defend_counter_preview(battle);
-        if (counter != 0) {
-            bw = battle_num_width(counter);
-            dx = (uint8_t)(20 - 4 - bw);
-            battle_draw_text_line(dx, combo_row, "CNT ", 4);
-            battle_draw_num_compact((uint8_t)(dx + 4), combo_row, counter);
-        } else {
-            battle_draw_text_line(dx, combo_row, "DEF ", 4);
-            battle_draw_num_compact((uint8_t)(dx + 4), combo_row, block);
-        }
-    }
-    /* Middle gap keeps stale buffer text while the top clear wiped VRAM:
-     * blank the buffer gap explicitly (same skip-guard hazard as the
-     * preview tail). */
-    battle_draw_text_line((uint8_t)(4 + dmg_n), combo_row, NULL,
-                          (uint8_t)(dx - (4 + dmg_n)));
-    battle_color_span(0, combo_row, (uint8_t)(4 + dmg_n), UI_COLOR_FIRE);
-    battle_color_span(dx, combo_row, (uint8_t)(4 + bw), UI_COLOR_FIELD);
-}
-
 /* Poison check for the confused-hero painters below: slot 0 (the hero)
  * carries STATUS_POISON.  Reads WRAM directly (bank-3 code runs with
  * WRAM always live); the fixed screen update stages the random hand
@@ -1212,19 +1114,16 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
      * the resolver applies).  Attack ring hands convert to healing:
      * same layout with "HEAL" ("<tier> HEAL<n>", bare "HEAL<n>"), so
      * preview and result agree. */
-    const char *name;
+    const char *word;
     uint8_t dmg = 0;
     uint8_t heal = 0;
     /* Staged row (WRAM copy of the active BattleScreenDef). */
     uint8_t combo_row = g_battle_hud.combo_row;
     uint8_t r;
-    uint8_t n;
     uint8_t tier;
     uint8_t i;
     uint8_t start;
     uint8_t len;
-    uint8_t tail;
-    const char *word;
 
     /* Blank the whole row first -- UNCONDITIONAL direct writes (the
      * battle_draw_text_line skip-guard would skip cells whose semantic
@@ -1305,72 +1204,32 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_draw_text_line(18, combo_row, NULL, 2);
         return;
     }
-    /* Enemy forecast text stays on the row while a strike is incoming
-     * (defend phase, telegraphed damage): "DMG <n>" red on the left,
-     * "DEF <m>" / "CNT <n>" green on the right (warn text paints its
-     * own spans).  The staged hand's name tiles follow in the middle
-     * (below).  The same numbers now also live on rows 7-8 as icon
-     * trios (down arrow + power + sword / shield + block + up arrow). */
-    if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND && battle->enemy_incoming_dmg > 0) {
-        battle_combo_warn_text(battle);
-    } else {
-        name = battle_combo_pending_preview(battle, &dmg, &heal);
-        if (name[0] == '\0') {
-            /* No tier: pending cards still inflict face value, so show it
-             * bare ("DMG<n>", or "HEAL<n>" for a lone converting ring).
-             * Zero effective damage (nothing staged, or only inert fodder)
-             * keeps the row blank instead of "DMG0" noise. */
-            if (dmg == 0) {
-                battle_draw_text_line(0, combo_row, NULL, 20);
-                return;
-            }
-            if (heal) {
-                battle_draw_text_line(0, combo_row, "HEAL", 4);
-                n = (uint8_t)(4 + battle_draw_num_compact(4, combo_row, dmg));
-            } else {
-                battle_draw_text_line(0, combo_row, "DMG", 3);
-                n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
-            }
-            battle_color_span(0, combo_row, n, UI_COLOR_FIELD);
-            battle_draw_text_line(n, combo_row, NULL, (uint8_t)(20 - n));
-            return;
-        }
-        /* Tier names moved to tiles (below); the row keeps the damage
-         * number ("DMG<n>" / "HEAL<n>") on the left.  STRAIGHT FLUSH
-         * skips the number (its name starts at col 4, overlapping the
-         * digit cells; the power is duplicated on row 7 while
-         * defending). */
-        tier = battle->last_combo.tier;
-        if (tier != HAND_STRAIGHT_FLUSH) {
-            if (heal) {
-                battle_draw_text_line(0, combo_row, "HEAL", 4);
-                n = (uint8_t)(4 + battle_draw_num_compact(4, combo_row, dmg));
-            } else {
-                battle_draw_text_line(0, combo_row, "DMG", 3);
-                n = (uint8_t)(3 + battle_draw_num_compact(3, combo_row, dmg));
-            }
-            battle_color_span(0, combo_row, n, UI_COLOR_FIELD);
-        }
-    }
-    /* Hand-name tiles (middle of row 10, col 6+; col 4+ for STRAIGHT
-     * FLUSH): stamped only while the bank-9 sync holds this tier's art
-     * (g_hand_shown_tier) -- a just-changed selection blanks instead of
-     * tearing (the span is pre-blanked below).  VRAM ids are the fixed
-     * window slots s_hand_slots[1+i]; the buffer keeps the word letters so
-     * text assertions are unchanged; the mirror keeps tile ids for
+    /* Hand-name tiles, centered: the row shows nothing but the staged
+     * hand's name (blank for high card / no stage).  The old DMG / DEF
+     * / CNT text is gone -- damage and block numbers live on rows 7-8
+     * as icon trios now.  Tiles stamp only while the bank-8 sync holds
+     * this tier's art (g_hand_shown_tier); a just-changed selection
+     * blanks instead of tearing.  VRAM ids are the fixed window slots
+     * s_hand_slots[1+i]; the buffer keeps the word letters so text
+     * assertions are unchanged; the mirror keeps tile ids for
      * tilemap_cell asserts. */
+    battle_combo_pending_preview(battle, &dmg, &heal);
+    (void)dmg;
+    (void)heal;
     tier = battle->last_combo.tier;
     if (tier < HAND_PAIR || tier > HAND_SHORT_STRAIGHT) {
         return;
     }
-    for (i = 4; i < 14; i++) {
+    word = s_hand_words + s_hand_word_off[tier];
+    len = 0;
+    while (word[len] != '\0') len++;
+    /* Centered: every word fits (max 14 cells, cols 3-16), so one
+     * pre-blank span covers all previous words. */
+    start = (uint8_t)((20 - len) >> 1);
+    for (i = 3; i < 18; i++) {
         battle_stamp_blank(i, combo_row);
     }
     if (tier == g_hand_shown_tier) {
-        word = s_hand_words + s_hand_word_off[tier];
-        start = (tier == HAND_STRAIGHT_FLUSH) ? 4 : 6;
-        len = 0;
-        while (word[len] != '\0') len++;
         for (i = 0; i < len; i++) {
             if (word[i] != ' ') {
                 battle_stamp_cell((uint8_t)(start + i), combo_row, word[i],
@@ -1378,13 +1237,6 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
             }
         }
         battle_color_span(start, combo_row, len, UI_COLOR_FIELD);
-    }
-    if (battle->phase != BATTLE_PHASE_PLAYER_DEFEND ||
-        battle->enemy_incoming_dmg == 0) {
-        /* Select-phase tail (defend owns its full row via the warn
-         * text above). */
-        tail = (tier == HAND_STRAIGHT_FLUSH) ? 12 : 14;
-        battle_draw_text_line(tail, combo_row, NULL, (uint8_t)(20 - tail));
     }
 }
 

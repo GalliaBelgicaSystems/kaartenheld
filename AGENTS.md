@@ -2336,18 +2336,20 @@ ENEMY ATTACK!/DEFENSE TURN keep every phase readable if a name slot is
 invalid; composed in the bank-3 file-static `s_banner_text[24]`, names
 cap at 11 chars so all banners fit 20 cols), `2` enemy HP (the former
 name row; HP moved here when the name row was removed), `3-4` enemies
-(art/caret), `7` hero, `8` deck counter (`DECK:` +
-draw-pile count at columns 13-19, `battle_draw_deck_line`, drawn with the
-hero row on BATTLE_DIRTY_HERO) + AP, `9` transient gameplay messages
-(`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` pending
-combo preview (`<tier> DMG<n>`, e.g. `PAIR DMG5`: tier name from the shared
-classifier plus the resolve-mirror damage, no `COMBO:` label; with no poker
-tier the row still shows the inflicted face value as bare `DMG<n>`, blank
-only when nothing effective is staged; during a telegraphed enemy strike
-the row splits into a forecast -- `DMG <n>` red on the left (incoming)
-plus `DEF <m>` green right-aligned (current staged block, 0 while none
-staged), no `ENEMY` prefix; drawn with a full 20-col row clear -- the combo
-draw owns the row the old blank band above the hand occupied), `11-14`
+(art/caret), `7` hero (badge col 0, HP digits cols 2-3 + heart col 4,
+arrow count cols 16-17 + status arrow col 15, enemy forecast cols 8-10:
+down arrow + incoming power + sword, red, enemy-turn only), `8` AP
+digit col 3 + AP tile col 4, block forecast cols 8-10 (shield/dagger +
+block/counter + up arrow, brown/red, enemy-turn only), deck icon col 15
++ deck count cols 16-17, drawn with the hero row on BATTLE_DIRTY_HERO),
+`9` transient gameplay messages
+(`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` staged
+hand-name tiles (centered poker-hand word from the shared classifier,
+e.g. `PAIR`, `STRAIGHT FLUSH`: hand-art tiles stamped from the bank-8
+stream window plus the word letters in the semantic buffer, no text
+label and no DMG number -- damage/block numbers live on rows 7-8 now;
+blank for high card / nothing staged; drawn with a full 20-col row
+clear), `11-14`
 boxed hand cards (`cards_row`=14 is the BOTTOM
 row; each card is a 3-wide x `box_h`-tall frame from the compiled
 `card_frame_tiles` at VRAM `UI_TILE_CARD_FRAME_BASE` 118, weapon icon on
