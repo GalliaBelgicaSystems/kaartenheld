@@ -44,6 +44,21 @@ static bool battle_player_iced(void)
     return false;
 }
 
+/* Confused hero (poison): the auto-staged random hand is game-validated
+ * (no input exists), so the unvalidated-timeout rule below never
+ * applies while this is true.  Same live-status read as the banked
+ * confuse gate (nav_confuse_auto). */
+static bool battle_player_confused(void)
+{
+    StatusSlots *slots = status_slots(0);
+    uint8_t i;
+    if (!slots) return false;
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) return true;
+    }
+    return false;
+}
+
 /* Per-enemy battle art (see battle.h): uninitialized WRAM arrays (bss, so
  * no _INITIALIZER cost); written by the bank-4 battle art loader at every
  * battle entry, read by the bank-3 stamper. */
@@ -774,11 +789,13 @@ void battle_execute_combo(Battle *b)
     if (b->phase == BATTLE_PHASE_PLAYER_SELECT) {
         /* Empty explicit SELECT still auto-plays the highlighted card
          * (quick-attack convenience; status_ice_reshuffle and the burn
-         * kill in victory_music_once ride it).  An empty TIMER expiry
-         * never reaches here -- battle_update turns it into a MISSED!
-         * whiff instead (Florent: unvalidated highlight must not
-         * attack).  combo_count == 0 also proves nothing is selected,
-         * so the first-playable search needs no is_selected guard. */
+         * kill in victory_music_once ride it).  A TIMER expiry never
+         * reaches here with anything staged -- battle_update unstages
+         * unvalidated combos first and turns the empty select into a
+         * MISSED! whiff instead (Florent: unvalidated highlight must
+         * not attack).  combo_count == 0 also proves nothing is
+         * selected, so the first-playable search needs no is_selected
+         * guard. */
         if (b->combo_count == 0) {
             if (!hand_card_playable(b, b->cursor_pos)) {
                 uint8_t s;
@@ -1072,11 +1089,18 @@ void battle_update(Battle *b)
                 vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
             }
         } else {
-            /* Empty timer expiry is a miss, not an auto-play: without
-             * a staged combo the hero whiffs the attack turn (the
-             * ANIM banner keys MISSED! off the empty victim snapshot,
-             * so no msg_id store is needed here).  A staged combo
-             * still resolves normally through the shared call below. */
+            /* Unvalidated timeout is a miss even with a staged combo:
+             * selection only counts once SELECT validates it.  Unstage
+             * (combo_count = 0, nothing discarded, no energy spent) and
+             * take the exact empty path below -- MISSED! on attack, an
+             * empty block on defend.  The confused hero is exempt: its
+             * auto-staged hand is game-validated (no input exists), and
+             * its hold beat resolves before the timer can expire anyway.
+             * (The ANIM banner keys MISSED! off the empty victim
+             * snapshot, so no msg_id store is needed here.) */
+            if (!battle_player_confused()) {
+                vb->combo_count = 0;
+            }
             if (vb->combo_count == 0 &&
                 vb->phase == BATTLE_PHASE_PLAYER_SELECT) {
                 vb->phase = BATTLE_PHASE_PLAYER_ANIM;

@@ -1,0 +1,56 @@
+{
+  "name": "battle_timer_staged_miss",
+  "test": true,
+  "description": "Timeout with a staged-but-unvalidated combo is a miss like an empty one: after staging one card with A and waiting 1210 frames with no SELECT, the banner reads MISSED! and no COMBO_RESOLVED / DAMAGE_DEALT / CARD_PLAYED occurred (validation happens only through SELECT; the staging is dropped, nothing is spent).",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "wait",
+      "frames": 1210
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 0,
+      "contains": "MISSED!"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "COMBO_RESOLVED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "DAMAGE_DEALT"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "CARD_PLAYED"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "seed": 3000,
+    "start_battle": true
+  }
+}

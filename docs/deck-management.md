@@ -142,9 +142,11 @@ so the semantics were redesigned around the visible count digit.)
 
 The first list entry is `* FILTER/SORT *`. Reach it with UP from the first
 card (or B's step-1 jump followed by UP). A opens a small picker (hint line
-`LR CYCLE  A:OK B:NO`) where LEFT/RIGHT cycle the existing filter
-(ALL/ATK/DEF/HEL/STS/UTL) and sort (OFF/TYPE/PWR+/PWR-/CST+/CST-)
-values; A validates and applies them to the list; B backs out unchanged.
+`LR CYCLE  A:OK B:NO`) where LEFT/RIGHT cycle the existing weapon filter
+(ALL/SWORD/DAGGER/SHIELD/BOW/RING), material filter
+(ALL/WOOD/BRONZE/IRON/STEEL/MYTHRIL) and sort
+(OFF/TYPE/PWR+/PWR-/CST+/CST-) values; A validates and applies them to
+the list; B backs out unchanged.
 
 ## 5. Detail submenu (SELECT)
 

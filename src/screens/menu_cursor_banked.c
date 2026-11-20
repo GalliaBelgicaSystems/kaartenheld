@@ -318,12 +318,16 @@ static void cu_blank_span(uint8_t y, uint8_t x, uint8_t n)
     }
 }
 
-/* Hide one side's OAM pair for a slot (rider + material entries live in
- * WRAM shadow OAM: side 0 = entries 1/17 + k, side 1 = 10/26 + k). */
+/* Hide one side's OAM pair for a slot (WRAM shadow OAM): mat entries
+ * are per-side (side 0: 17 + k, side 1: 26 + k); rider entries are
+ * SHARED (1 + k both sides) because deck-list riders are BG art and
+ * these entries are never stamped here -- the hides only clear stale
+ * battle-rider OAM, so sharing is safe and keeps every entry below
+ * the 32-slot battle budget. */
 static void cu_hide_side(uint8_t k, uint8_t side)
 {
     volatile uint8_t *re;
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 10 : 1) + k) << 2));
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)(1 + k) << 2));
     re[0] = 0;
     re[2] = 0;
     re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 26 : 17) + k) << 2));
@@ -1462,9 +1466,11 @@ void item_picker_render_banked(void)
     uint8_t r;
     uint8_t k;
     if (!g) return;
-    /* Sweep the list/detail OAM (riders 1-18 + ingots 17-34): the
-     * picker paints text only, so stale card icons would survive
-     * without this (bank-2 body swept for itself before the move). */
+    /* Sweep the list/detail OAM (riders 1-9 shared by both sides --
+     * deck-list riders are BG art so these entries are never stamped
+     * here -- plus ingots 17-25 pile / 26-34 deck): the picker paints
+     * text only, so stale card icons would survive without this
+     * (bank-2 body swept for itself before the move). */
     for (k = 0; k < 9; k++) {
         cu_hide_side(k, 0);
         cu_hide_side(k, 1);

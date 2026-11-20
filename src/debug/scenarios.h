@@ -44,7 +44,10 @@ enum {
     /* Pin the market index mid-scenario (docs/economy.md §5.1 arbitrage
      * test): a0 = index in 1/32 units, clamped to 24..48 (else 32).
      * Pure WRAM write, handled by the bank-5 leaf body. */
-    DBG_ACT_SET_MARKET_INDEX = 24
+    DBG_ACT_SET_MARKET_INDEX = 24,
+    /* Pin the material filter mid-scenario (WEAPON/MATERIAL picker):
+     * a0 = material id (MAT_*, 0xFF = ALL).  Pure WRAM write. */
+    DBG_ACT_SET_FILTER_MAT = 25
 };
 
 #endif /* SCENARIOS_H */

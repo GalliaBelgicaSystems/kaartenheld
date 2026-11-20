@@ -152,6 +152,10 @@ void debug_action_leaf_banked(void)
             g_game.item_menu_filter = a0;
             g_game.render_cache.valid = false;
             break;
+        case DBG_ACT_SET_FILTER_MAT:
+            g_game.item_menu_filter_mat = a0;
+            g_game.render_cache.valid = false;
+            break;
         case DBG_ACT_SET_SORT:
             g_game.item_menu_sort = a0;
             g_game.render_cache.valid = false;

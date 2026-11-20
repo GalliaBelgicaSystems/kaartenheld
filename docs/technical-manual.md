@@ -417,10 +417,12 @@ An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
   whose cost exceeds the energy you have left (`battle_nav_banked.c`).
 * **Timer**: **20 seconds** per player decision phase, shown as a bar
   (1200 frames).  It runs in the attack *and* defend decision phases.
-  When it expires, your current selection is auto-executed — a timer-out
-  with no selection auto-picks the hovered card (or the first playable
-  one) and executes that; only a hand with nothing playable commits an
-  empty combo (`battle.c`).
+  Only SELECT commits a hand: if the timer expires first, anything you
+  staged but never validated is dropped and the turn is a miss
+  (`MISSED!` on attack, an unblocked swing on defend) -- exactly as if
+  nothing had been staged, with nothing discarded and no energy spent.
+  (A poisoned hero's auto-played hand still resolves: it is
+  game-validated, no input exists.)
 
 ### 6.3 Battle phases
 
@@ -556,7 +558,7 @@ Four tabs, switched with `LEFT`/`RIGHT` from the FILTER/SORT row
 flips the owned/deck side instead.
 Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 
-**DECK tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the ` PILE     |  DECK` column header, cards follow one per row (8 visible):
+**DECK tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the ` PILE     |  DECK` column header, cards follow one per row (9 visible):
 
 * Each card is one row drawn twice: owned pool (left) and deck (right),
   each with material ingot (OAM, tinted per material), element rider,
@@ -577,11 +579,15 @@ Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 * `B` backs out (two-step on the cards list: first `B` jumps to the top
   row, `B` again closes the menu).  `START` closes from the list.
 
-The **FILTER/SORT picker**: `UP`/`DOWN` moves between the FILTER and SORT
-rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
+The **FILTER/SORT picker**: `UP`/`DOWN` moves between the WEAPON,
+MATERIAL and SORT rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B`
+cancels.
 
-* Filter cycles `ALL → ATK → DEF → HEL → STS → UTL → ALL`.
-* Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−`.
+* WEAPON cycles `ALL → SWORD → DAGGER → SHIELD → BOW → RING → ALL`
+  (all swords together, and so on).
+* MATERIAL cycles `ALL → WOOD → BRONZE → IRON → STEEL → MYTHRIL → ALL`.
+* Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−` (weapons group
+  by weapon type first).
 
 **QUEST tab** — the tracked-quest list (first block from row 3). Only accepted
 quests appear: entries with status `not started` stay hidden, so the tab

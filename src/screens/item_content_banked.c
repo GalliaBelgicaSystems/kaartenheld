@@ -60,10 +60,10 @@
 extern uint8_t s_view_indices[MAX_CARD_COLLECTION];
 extern uint8_t s_view_count;
 /* Compacted per-side draw maps (menu_cursor_banked.c, same bank-2-readable
- * WRAM): the first 8 view positions visible on each side at/after the
+ * WRAM): the first 9 view positions visible on each side at/after the
  * scroll position, 0xFF past the end. */
-extern uint8_t s_ic_draw_pos[8];
-extern uint8_t s_ic_draw_pos_r[8];
+extern uint8_t s_ic_draw_pos[9];
+extern uint8_t s_ic_draw_pos_r[9];
 /* Per-side scroll-overflow flags (same file, built by the view build
  * on every DECK render): bit 0 up-pile, 1 up-deck, 2
  * down-pile, 3 down-deck. */
@@ -125,7 +125,7 @@ uint8_t ic_rider_menu_tile(const CardDefinition *def)
     return 0;
 }
 
-/* Material icon OAM for the DECK list (entries 17-24 owned, 25-32
+/* Material icon OAM for the DECK list (entries 17-25 owned, 26-34
  * deck) and the detail page (entry 12): the card's material ingot over
  * the col-1/col-10 cells (list) or the col-3 gap (detail), tinted per
  * material (inventory1-5 OBJ ramps programmed by the render/stream
@@ -646,8 +646,8 @@ static uint8_t ic_card_deckable(const CardDefinition *def)
  * the visible window, and slot 0 for the selected row in detail mode.
  * Keeping the scan out of this bank is what paid for the row redesign
  * (bank 2 sits at its ceiling, AGENTS.md 52.18). */
-extern uint8_t s_row_owned[16];
-extern uint8_t s_row_decked[16];
+extern uint8_t s_row_owned[18];
+extern uint8_t s_row_decked[18];
 
 /* Live energy pool for the equip gate (docs/enemies_ranking.md §4.8):
  * an unset variable means the default pool (same normalization as the
@@ -940,7 +940,7 @@ static void ic_draw_cards_list(Game *g)
     }
     for (s_ic_lst_pos = s_ic_end_r;
          s_ic_lst_pos < VISIBLE_CARDS; s_ic_lst_pos++) {
-        ic_mat_hide((uint8_t)(10 + s_ic_lst_pos));
+        ic_mat_hide((uint8_t)(1 + s_ic_lst_pos));
         ic_mat_hide((uint8_t)(26 + s_ic_lst_pos));
     }
 

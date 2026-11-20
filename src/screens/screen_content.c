@@ -671,15 +671,15 @@ void shop_content_render(void)
      * ramps for the row ingots below (same
      * time-share as the DECK list; idempotent per redraw).  Sweep the
      * OAM entries the shop can inherit first: entries 1-12 held the
-     * rider sprites (now BG art, so they simply stay hidden) and 13-22
-     * the row ingots -- tab flips and emptied rows must not keep a
-     * stale icon. */
+     * rider sprites (now BG art, so they simply stay hidden) and 13-34
+     * the row ingots plus any DECK-list material leftovers (9 rows) --
+     * tab flips and emptied rows must not keep a stale icon. */
     if (!g_menu_riders_loaded) {
         ic_menu_cram();
         ic_menu_riders_load();
         ic_mat_stream();
     }
-    for (e = 1; e <= 22; e++) {
+    for (e = 1; e <= 34; e++) {
         ic_mat_hide(e);
     }
     /* Live market index, read once: every row's quote shares it
