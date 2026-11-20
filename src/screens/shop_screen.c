@@ -55,9 +55,21 @@ static void shop_row_quote(Game *g)
 /* Full shop content draw lives in the bank-2 body (screen_content.c) so the
  * fixed _CODE/_HOME area stays under 0x8000 (AGENTS.md 52.11.1). */
 void shop_content_render(void);
-/* Shared caret repaint (bank 11: bank 2 is full, and the cursor is pure
- * WRAM math needing no ROM tables). */
+/* Shared caret repaint + incremental shop refresh / tail cleanup
+ * (menu_cursor_banked.c, bank 15: bank 2 is full, and these are pure
+ * WRAM + VRAM writes needing no catalog tables). */
 void item_menu_step_banked(void);
+void shop_refresh_in_place_banked(void);
+void shop_clean_tail_banked(void);
+
+static void shop_refresh_in_place(Game *g, uint8_t sell_count)
+{
+    g_bk_call_bank = 15;
+    g_bk_call_target = (uint16_t)&shop_refresh_in_place_banked;
+    g_bk_ptr_a = (void *)g;
+    g_bk_byte_a = sell_count;
+    banked_call_run();
+}
 
 /* Direction nav (AGENTS.md 36): stage old index + direction + visible
  * count; the bank-11 body clamps, sets g->item_menu_index and repaints
@@ -100,7 +112,10 @@ static void shop_sell(Game *g)
     telemetry_emit(EVENT_CARD_SOLD, sold_id, sold_price,
                    sold_left, 0);
     audio_play_sfx(SFX_CASH);
-    g->render_cache.valid = false;
+    if (sold_left > 0)
+        shop_refresh_in_place(g, sold_left);
+    else
+        g->render_cache.valid = false;
 }
 
 /* A-handler split out of shop_screen_update (fixed-bank cascade:
@@ -139,7 +154,7 @@ static void shop_confirm(Game *g)
         /* Arrow purchase already applied in shop_row_quote_banked. */
         audio_play_sfx(SFX_CASH);
     }
-    g->render_cache.valid = false;
+    shop_refresh_in_place(g, 0);
 }
 
 /* B/START exit split out of shop_screen_update (same cascade reason).
@@ -223,18 +238,27 @@ void shop_screen_render(Game *g)
     rc = &g->render_cache;
 
     if (!rc->valid || rc->prev_screen != SCREEN_SHOP) {
-        menu_draw_frame("SHOP");
-        /* UI-mode CRAM (base set): the card icons stamped below are
-         * encoded with the battle display ramps (card_display_slots.json).
-         * Without this they would inherit the world tileset's CRAM and
-         * show village/forest colors.  The overworld/battle full redraws
-         * restore their own CRAM on exit, so no restore is needed here.
-         * The bank-2 render body then programs slot 7 with the heal-rider
-         * green (UI_COLOR_HEALTH). */
-        ui_set_cram_palette(0);
+        uint8_t same_screen = (rc->prev_screen == SCREEN_SHOP);
+        if (!same_screen) {
+            menu_draw_frame("SHOP");
+            /* UI-mode CRAM (base set): the card icons stamped below are
+             * encoded with the battle display ramps (card_display_slots.json).
+             * Without this they would inherit the world tileset's CRAM and
+             * show village/forest colors.  The overworld/battle full redraws
+             * restore their own CRAM on exit, so no restore is needed here.
+             * The bank-2 render body then programs slot 7 with the heal-rider
+             * green (UI_COLOR_HEALTH).  Same-screen tab/scroll/sell redraws
+             * skip the wipe and CRAM reset so the shop never flashes. */
+            ui_set_cram_palette(0);
+        }
         g_bk_call_bank = 2;
         g_bk_call_target = (uint16_t)&shop_content_render;
         g_bk_ptr_a = (void *)g;
+        banked_call_run();
+        g_bk_call_bank = 15;
+        g_bk_call_target = (uint16_t)&shop_clean_tail_banked;
+        g_bk_ptr_a = (void *)g;
+        g_bk_byte_a = same_screen;
         banked_call_run();
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_SHOP, 0, 0, 0);
         rc->valid = true;

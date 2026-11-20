@@ -89,7 +89,6 @@ static uint8_t s_sc_y;
 static uint8_t s_sc_pos;
 static uint8_t s_sc_tile_elem;
 static uint8_t s_sc_tile_wpn;
-static uint16_t s_sc_gold;
 static const ShopDefinition *s_sc_shop_def;
 static const CardDefinition *s_sc_card_def;
 static char s_sc_str[8];
@@ -336,7 +335,7 @@ static void sc_draw_full_name(uint8_t x, uint8_t y,
     ic_card_mat_wpn_pub(def->id, &sc_nm_mat, &sc_nm_wpn, &sc_nm_special);
     if (!sc_nm_special) {
         ic_mat_show((uint8_t)(13 + (y - 5)), x, y, sc_nm_mat);
-        sc_draw_text(x, y, " ", 1);
+        sc_draw_text(x, y, NULL, 2);
         ws = sc_wpn_str(sc_nm_wpn, &sc_nm_wlen);
         sc_draw_text((uint8_t)(x + 2), y, ws, sc_nm_wlen);
         /* Blank the rest of the w-wide name field (a shorter name must
@@ -346,13 +345,18 @@ static void sc_draw_full_name(uint8_t x, uint8_t y,
             sc_draw_text((uint8_t)(x + total), y, NULL, (uint8_t)(w - total));
         if (def->battle_type == BATTLE_CARD_TYPE_HEAL ||
             def->effect == CARD_EFFECT_HEAL_HP)
-            sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_FIELD);
+            total = UI_COLOR_FIELD;
         else if (def->status_id == STATUS_BURN)
-            sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_FIRE);
+            total = UI_COLOR_FIRE;
         else if (def->status_id == STATUS_POISON)
-            sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_POISON);
+            total = UI_COLOR_POISON;
         else if (def->status_id == STATUS_FREEZE)
-            sc_color_span((uint8_t)(x + 2), y, sc_nm_wlen, UI_COLOR_ICE);
+            total = UI_COLOR_ICE;
+        else
+            total = UI_COLOR_NONE;
+        /* Cover the full 6-col weapon name slot so a shorter neutral row
+         * (e.g. BOW) clears a longer colored row's tail on LCD-on redraw. */
+        sc_color_span((uint8_t)(x + 2), y, 6, total);
         return;
     }
     sc_card_code_str(def->battle_type, def->power, s_sc_code);
@@ -691,11 +695,10 @@ void shop_content_render(void)
         sc_shop_remap_sell();
     else
         sc_shop_remap_buy();
-    s_sc_gold = (uint16_t)s_sc_game->state.currency.amount[0];
 
-    sc_draw_text(0, 3, "  GOLD: ", 8);
-    sc_format_uint(s_sc_gold, s_sc_str);
-    sc_draw_text(8, 3, s_sc_str, 10);
+    /* Row 3 (GOLD) and row 17 (status message) are painted by the
+     * bank-15 post-pass (shop_clean_tail_banked / shop_refresh_in_place_banked)
+     * so bank 2 keeps no duplicate strings or format code. */
 
     /* Tab header (row 4): BUY | SELL with a '>' caret before the
      * active tab.  LEFT/RIGHT flips (fixed-side, caret repaint via
@@ -720,7 +723,7 @@ void shop_content_render(void)
         if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
             sc_draw_text(0, 5, "(nothing to sell)", 17);
         else
-            sc_draw_text(0, 5, "(out of stock)", 14);
+            sc_draw_text(0, 5, "(out of stock)", 17);
         sc_draw_text(0, 7, "[B] Leave", 9);
         return;
     }
@@ -741,11 +744,11 @@ void shop_content_render(void)
          * past the 50-item stock array. */
         if (s_sc_game->item_menu_tab != SHOP_TAB_SELL &&
             s_sc_stock_pos == SHOP_ARROW_ROW) {
-            sc_draw_text(1, s_sc_y, " ", 2);
-            s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 2);
+            s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 1);
             VBK_REG = 0;
-            sc_vram_sync_write(s_sc_dst, UI_TILE_MENUS_STATUS_ARROW);
-            sc_color_span(2, s_sc_y, 1, UI_COLOR_NONE);
+            sc_vram_sync_write(s_sc_dst, ui_font_tile_base);
+            sc_vram_sync_write(s_sc_dst + 1, UI_TILE_MENUS_STATUS_ARROW);
+            sc_color_span(1, s_sc_y, 9, UI_COLOR_NONE);
             sc_draw_text(3, s_sc_y, "  ARROW", 7);
             sc_draw_text(10, s_sc_y, NULL, 6);
             sc_draw_text(16, s_sc_y, "  1G", 4);
@@ -791,6 +794,7 @@ void shop_content_render(void)
                 sc_draw_xddd(12, s_sc_y,
                     (uint16_t)s_sc_game->state.cards.collection.entries[
                         s_sc_stock_pos].count);
+                sc_put_char(16, s_sc_y, ' ');
             } else {
                 sc_draw_full_name(3, s_sc_y, s_sc_card_def, 14);
             }
@@ -810,14 +814,17 @@ void shop_content_render(void)
              * so the skin mapping is mirrored here -- keep in sync
              * with cards_skin.json. */
             if (s_sc_card_def->status_id == STATUS_BURN)
-                sc_color_span(1, s_sc_y, 1, UI_COLOR_FIRE);
+                s_sc_pos = UI_COLOR_FIRE;
             else if (s_sc_card_def->status_id == STATUS_POISON)
-                sc_color_span(1, s_sc_y, 1, UI_COLOR_POISON);
+                s_sc_pos = UI_COLOR_POISON;
             else if (s_sc_card_def->status_id == STATUS_FREEZE)
-                sc_color_span(1, s_sc_y, 1, UI_COLOR_ICE);
+                s_sc_pos = UI_COLOR_ICE;
             else if (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL ||
                      s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)
-                sc_color_span(1, s_sc_y, 1, UI_COLOR_HEALTH);
+                s_sc_pos = UI_COLOR_HEALTH;
+            else
+                s_sc_pos = UI_COLOR_NONE;
+            sc_color_span(1, s_sc_y, 1, s_sc_pos);
             sc_color_span(2, s_sc_y, 1, UI_COLOR_FIELD);
         } else {
             sc_draw_text(1, s_sc_y, "???", 3);
@@ -853,22 +860,12 @@ void shop_content_render(void)
 
     /* Hints always show: the post-shop equip tip moved to a normal
      * dialogue box on exit (docs/loot.md §34.6), so buying no longer
-     * changes these lines.  Only failures print a message row: a buy
-     * or sell leaves it blank (the row vanishing + gold changing is
-     * the confirmation). */
+     * changes these lines.  Row 17 (failure message) is painted by the
+     * bank-15 post-pass. */
     if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
-        sc_draw_text(0, 16, "[A]Sell [B]Leave", 16);
+        sc_draw_text(0, 16, "[A]Sell [B]Leave", 18);
     else
         sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
-    if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_NO_GOLD) {
-        sc_draw_text(0, 17, "Not enough!", 12);
-    } else if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_ARROWS_FULL) {
-        sc_draw_text(0, 17, "Quiver full!", 12);
-    } else if ((s_sc_game->shop_message & SC_SHOP_MSG_MASK) == SC_SHOP_MSG_MAX_COPIES) {
-        sc_draw_text(0, 17, "Already owned!", 14);
-    } else {
-        sc_draw_text(0, 17, NULL, 12);
-    }
 }
 
 /* save_load_content_render now lives in save_load_banked.c (ROM bank 11);
