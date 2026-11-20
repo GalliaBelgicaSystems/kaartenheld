@@ -1878,7 +1878,7 @@ while iterating on act 2:
 * Scenarios (`tools/scenarios/tests/*.json`): `"act": 1` (154: proves
   demo-specific content — Carl/mayor/guard/dog/merchant/shopkeys/
   heal-mage/skeleton/gamble/wizard, act-1 map boots/gates/chests,
-  boss/mimic/throne) or `"act": "always"` (404: proves a shared
+  boss/mimic/throne) or `"act": "always"` (405: proves a shared
   engine/system rule, even when staged on an act-1 fixture as background
   — e.g. `arrows_shop_buy` stages `MERCHANT_QUEST: 2` but tests the
   generic shop).  Staging a flag as background is not testing it; only
