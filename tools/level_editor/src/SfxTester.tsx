@@ -18,6 +18,7 @@ const SFX_LIST: { id: string; blurb: string }[] = [
   { id: 'HURT', blurb: 'player takes damage' },
   { id: 'HEAL', blurb: 'ring-heal cue' },
   { id: 'EXPLOSION', blurb: 'slime-lord desperation spell' },
+  { id: 'CASH', blurb: 'merchant buy / sell' },
 ];
 
 type UgeFile = { path: string; name: string; dir: string };

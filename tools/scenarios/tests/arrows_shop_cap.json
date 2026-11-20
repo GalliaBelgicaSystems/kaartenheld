@@ -102,6 +102,10 @@
    "type": "screen_row",
    "row": 17,
    "contains": "Quiver full!"
+  },
+  {
+   "type": "sfx_last",
+   "expected": 0
   }
  ],
  "initial_state": {

@@ -34,7 +34,7 @@ TABLES_C = REPO_ROOT / "generated" / "sfx" / "sfx_tables.c"
 OUT_DIR = (REPO_ROOT / "tools" / "level_editor" / "public" / "audio" / "sfx")
 
 SFX_IDS = ["CURSOR", "CONFIRM", "SELECT", "BACK", "ATTACK", "HIT", "BLOCK", "ALERT",
-             "WIN", "HURT", "HEAL"]
+             "WIN", "HURT", "HEAL", "EXPLOSION", "CASH"]
 
 TAIL_TICKS = 8
 FADE_MS = 30
