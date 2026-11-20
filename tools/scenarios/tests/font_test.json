@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "font_test",
  "test": true,
  "description": "Render full ASCII charset and verify active GBDK font rendering. Screen assertions verified by dialogue_render_test.",

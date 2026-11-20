@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "arrows_victory_cap",
  "test": true,
  "description": "Victory arrows respect the quiver cap (limited-arrows): staged 29 plus a 1-3 drop always lands exactly 30, never above.",

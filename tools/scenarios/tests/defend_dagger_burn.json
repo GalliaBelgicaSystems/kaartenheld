@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_burn",
  "test": true,
  "description": "Curated burn dagger counter applies once via the immediate path (no double-roll/double-apply in the post-swing bank-11 rider body) and keeps fresh g_effect_last.amount as its burn tick basis: suited DA2 pair (chance 255, status 2 = BURN) counters for 6 (14->8), emits exactly one STATUS_APPLIED(2, stacks=1) and zero STATUS_RESISTED while enemy swings 3 (10->7), then end-of-round burn ticks 1 (8->7).",

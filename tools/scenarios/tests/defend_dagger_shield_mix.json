@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_shield_mix",
  "test": true,
  "description": "Mixed shields+daggers lose the daggers: defending the kobold's telegraphed 2 with SH3+DA2 blocks to net -1 (hero stays 10, no counter DAMAGE_DEALT from the defend -- exactly one DAMAGE_DEALT total, the opening SW3; kobold 15->12).",

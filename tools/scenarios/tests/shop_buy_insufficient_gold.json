@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_buy_insufficient_gold",
  "test": true,
  "description": "Buying without enough gold fails: nothing is purchased and the shop stays open",

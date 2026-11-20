@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "confuse_iced_redirect",
   "test": true,
   "description": "Ice does not suppress confusion: a foe that is both poisoned and iced still redirects its swing at the telegraph (FOE IS CONFUSED! on the combo line) instead of fizzling -- the halved swing turns on its own side, so the hero takes nothing (no DAMAGE_RECEIVED, HP stays 60).",

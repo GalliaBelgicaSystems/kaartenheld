@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_despair_floor",
  "test": true,
  "description": "Counter-first vs the unkillable Lord of Slimes: opener SW1 plus set_enemy_hp leave the boss at 27 (above the 20 hold threshold, so no hold opens mid-staging), then the DA9-trips counter (56, full) floors it to 0 -- the floor gives 1 HP back and the deckless flat-6 swing still lands (hero 10->4, DAMAGE_RECEIVED 6), never BATTLE_WON, never ENTITY_DEFEATED, and the hold opens afterwards (FOCUSING). Without the floor clamp the swing would be ghost-cancelled (hero stays 10).",

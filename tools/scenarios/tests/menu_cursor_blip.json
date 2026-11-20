@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "menu_cursor_blip",
  "test": true,
  "description": "Menu cursor moves play the battle-cursor blip: opening the item menu (START), stepping the DECK list down (DOWN, caret lands on the first card row) and back up (UP, caret returns to the filter row) leaves two CURSOR blips staged and played. Covers the staged-request path (banked nav bodies stage g_bk_sfx_req, game_update plays it the same frame).",

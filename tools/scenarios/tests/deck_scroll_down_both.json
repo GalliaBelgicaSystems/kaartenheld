@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_scroll_down_both",
  "test": true,
  "description": "DECK-tab scroll-down indicators on both sides with 10 distinct card groups (9 visible + 1 scrolled): both PILE and DECK fill their 9-row windows and row 9 triggers both down carets ('v' at cols 4 and 14) on row 14.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_spent_exile",
  "test": true,
  "description": "A finite-use card played down to 0 leaves combat instead of entering the discard pile: injected ring at 1 use resolves (CARD_PLAYED carries uses 0), draw pile stays 5 and discard stays 0, so it can never pop up again",

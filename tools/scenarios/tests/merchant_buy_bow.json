@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "merchant_buy_bow",
  "test": true,
  "description": "The Merchant sells the mythril bow (30 gold, second list row): moving down once and buying adds it to the collection and spends gold",

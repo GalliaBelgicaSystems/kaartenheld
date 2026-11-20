@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_rider_split_rows",
  "test": true,
  "description": "Loot bows with different on-hit riders list as separate DECK rows: an IRON FIRE BOW (loot 178) and an IRON ICE BOW (loot 186) pile on rows 5 and 6 (one copy each) instead of sharing one MATERIAL+WEAPON row that hides a rider.",

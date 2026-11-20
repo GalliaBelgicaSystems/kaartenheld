@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "game_over_cursor_toggle",
  "test": true,
  "description": "Game-over cursor moves cleanly both ways: DOWN flips NO (row 12 gains '>') and UP flips back to YES (row 11 regains '>', row 12 loses it) in buffer and real VRAM -- no duplicated cursor either direction (AGENTS.md 52.25 family). Each move plays the battle-cursor blip.",

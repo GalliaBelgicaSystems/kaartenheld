@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_enemy_art_centered",
  "test": true,
  "description": "Slime art renders as OAM centered on the 6-column name slot (BG footprint blank); catches caret/art centering drift.",

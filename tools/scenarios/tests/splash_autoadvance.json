@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "splash_autoadvance",
  "test": true,
  "description": "The boot studio splash auto-advances to the autosave notice after its ~150-frame hold without any input (the notice then advances to the title screen on its own).",

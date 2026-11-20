@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "dog_quest_appears",
  "test": true,
  "description": "Talking to the village dog the first time starts the DOG'S KEY quest: the hint event sets DOG_QUEST=1, so the QUEST tab lists it as active even before the bone is taken",

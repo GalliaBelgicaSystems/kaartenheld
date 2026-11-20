@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_combo_short",
   "test": true,
   "description": "Short straight basics (gem equipped): SW4 + BO5 + SW6 is a 3-run, base 15, tier SHORT STRAIGHT x130, damage 15*130/100=19 (also pins 130 over the 120 fallback, which would read 18). Kills Carl (staged HP; unkillable at 99 in real play).",

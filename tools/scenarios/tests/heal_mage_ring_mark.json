@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "heal_mage_ring_mark",
   "test": true,
   "description": "Owning the Iron Ring (lesson not yet heard) puts the quest bubble over the village Heal Mage: entry 30 shows QUESTION_TILE (127). Mayor/merchant marks are silenced via completed quests and Carl via pre-defeat so the mage's bubble is isolated.",

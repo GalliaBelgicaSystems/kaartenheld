@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "movement_floor_walkable",
  "test": true,
  "description": "Player walks across walkable . grass/floor and emits PLAYER_MOVED",

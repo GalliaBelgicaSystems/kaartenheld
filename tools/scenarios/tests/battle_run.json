@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "battle_run",
  "test": true,
  "description": "Running away flees without winning: fleeing Carl's spar on the first turn (empty combo) leaves him at full HP (30/30, never touched), no gold/defeat/quest progress and no farewell (the lesson was never taught). Carl is asserted ALIVE via his persistent lifecycle.",

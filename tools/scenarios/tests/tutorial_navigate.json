@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "tutorial_navigate",
  "test": true,
  "description": "From the tutorial, RIGHT advances to slide 1 (CARD TYPES), then B exits back to the title screen.",

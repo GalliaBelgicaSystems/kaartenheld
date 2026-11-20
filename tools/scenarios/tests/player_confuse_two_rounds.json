@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "player_confuse_two_rounds",
   "test": true,
   "description": "Hero poisoned organically in PLAYER_DEFEND (Bat bow card) stays confused for 2 full rounds (duration 2 with defend-phase grace skipping the landing defend-end tick, then Attack+Defend x2 = 4 auto-plays) before STATUS_EXPIRED(POISON, hero) fires and control returns normally.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_battle_combo",
  "test": true,
  "description": "Select multiple cards and execute combo to defeat enemy",

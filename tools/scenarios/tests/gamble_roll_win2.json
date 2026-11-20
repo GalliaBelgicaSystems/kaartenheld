@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_roll_win2",
   "test": true,
   "description": "Seeded 2:1 win: defaults NUM=1 BET=1, dice come up 1/4/1 (seed 21), two matches pay profit 2 (20 -> 22).",

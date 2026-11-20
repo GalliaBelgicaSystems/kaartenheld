@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_reveal_ring",
  "test": true,
  "description": "Loot reveal with a healing card (docs/loot.md 34.1, docs/enemies_ranking.md \u00a74.3): seed 2 on the R1 wall slime rolls a BRONZE PLAIN RING (derived id 0x84 = 132, rank 1; rings roll the same rank-centered material as everything else). The victory reveal must show YOU FOUND: on row 10, B RG on row 11, BRONZE RING on row 12, and the green '+' icon.",

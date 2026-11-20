@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "quest_tab_blip",
  "test": true,
  "description": "QUEST tab cursor moves play the battle-cursor blip: flipping DECK to QUEST (RIGHT, via the banked cycle body) then stepping the quest list (DOWN, via the banked quest nav) stages two requests played by game_update the same frame.",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "heal_mage_refused",
   "test": true,
   "description": "Village Heal Mage after the one free heal: talking again shows the 'another heal?' refusal with no heal and no jingle (HEAL_MAGE_USED stays set).",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_min_ui_message",
  "test": true,
  "description": "CARDS tab reaching the DECK_MIN_CARDS floor through real gameplay on the 10-card starter (all fully decked, so the pile starts empty): DOWN flips to the deck side (lazy flip) onto the first deck row; A removes that row one copy at a time (10 -> 6), the last removal follows the cursor back to the pile; DOWN steps to the next deck row; A removes once more (6 -> 5); one more A would drop 5 -> 4 and is rejected with a transient DECK MIN 5 message and no further deck telemetry.",

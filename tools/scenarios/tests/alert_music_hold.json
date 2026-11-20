@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "alert_music_hold",
  "test": true,
  "description": "Alert sequencing on a chaser map (TEST_FOREST kobold): the kobold spotting the hero keeps the track playing (music stays FOREST, no MUSIC_CHANGED -- a sting is not a track change), the ALERT sting fires on top once pursuers start moving, then the forest track keeps playing as the kobold approaches.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "chase_sight_sleeps",
  "test": true,
  "description": "A chaser whose hero is outside its line of sight sleeps: TEST_FOREST kobold at (4,10), hero at (17,3) (13 tiles on x, 7 on y -- outside AI_CHASE_SIGHT = 10). After 120 frames it is still on its spawn tile (4,10) -- no chase across the map -- the area track plays normally (FOREST, no alert hold), no alert sting fired (sfx_count == 0) and no pursuer ! bubble is drawn (entry 30 == 0).",

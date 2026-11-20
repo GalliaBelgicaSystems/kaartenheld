@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "quit_to_title",
  "test": true,
  "description": "QUEST-tab save & quit with an empty log: START opens the quick screen, RIGHT switches to QUEST, A opens the quit confirm, A on YES writes the active slot and lands on the title PRESS START.",

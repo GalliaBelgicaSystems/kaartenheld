@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_lethal_poison",
  "test": true,
  "description": "Poison dagger counter when the incoming swing kills the hero (2->0 HP): the counter hits first for 9 (kobold 14->5), the incoming 2 drops the hero to 0 (ENTITY_DEFEATED(0), BATTLE_LOST), and the deferred poison rider does not fire post-mortem telemetry (no STATUS_APPLIED, no STATUS_RESISTED).",

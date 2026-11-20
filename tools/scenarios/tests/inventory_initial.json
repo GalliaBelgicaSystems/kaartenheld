@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "inventory_initial",
  "test": true,
  "description": "Declarative initial_state injects card collection quantities into the canonical GameState; injected POISON_DAGGER x2 coexists with the new-game starter grant (WOOD_SWORD x4)",

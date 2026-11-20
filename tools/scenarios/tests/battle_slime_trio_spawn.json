@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_slime_trio_spawn",
  "test": true,
  "description": "After the armor breaks (KNIGHT_SPLIT dialogue closed), its tile holds a live slime trio: bumping it opens a regular 3-slime battle, and clearing it pays encounter rewards (20+12 knight, +5 trio encounter = 37 gold). Proves the dynamic spawn is a functional encounter, not a dummy. Hero HP staged to 30 (empty defends, tanked).",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "wizard_autosave",
  "test": true,
  "description": "Talking to the Wizard in Town explains autosaving instead of offering a save: A opens the WIZARD_AUTOSAVE dialogue, no SAVE_LOAD screen appears, and no GAME_SAVED is emitted.",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "shopkeys_open_sprite",
  "test": true,
  "description": "Picking up the forest shop keys leaves its floor cell plain (VRAM 190) while the chest OAM sprite flips to the open frame: the event sets MERCHANT_QUEST and the opened chest stays open",

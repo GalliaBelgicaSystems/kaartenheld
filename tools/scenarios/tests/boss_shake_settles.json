@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "boss_shake_settles",
  "test": true,
  "description": "BG-stamp shake settle: a SW9 hit drops the Lord of Slimes (staying above the 20 HP telegraph floor) and judders its 3-wide BG stamp. After the shake expires the one-shot enemy-band wipe must leave the fringe columns blank with no stranded tint, while the hero HP block on row 7 keeps its FIELD tint (the wipe covers rows 2-6 only).",

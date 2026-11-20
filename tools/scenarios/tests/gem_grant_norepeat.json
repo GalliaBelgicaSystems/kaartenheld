@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_grant_norepeat",
   "test": true,
   "description": "The gem prize is one-shot: a second 50-staked sitting with the gem already owned opens the ordinary farewell and leaves the owned bit at 1.",

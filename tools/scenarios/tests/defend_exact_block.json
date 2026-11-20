@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_exact_block",
  "test": true,
  "description": "Defend feedback contract: an exact block (SH3 vs the knight's telegraphed SWORD 3, net 0, hero stays 10/10) plays the BLOCK thump (sfx_last 6), not the hurt cue.",

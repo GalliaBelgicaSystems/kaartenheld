@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "cards_menu_loot_shift",
  "test": true,
  "description": "Loot cards must not shift CARDS menu mapping: with a loot drop plus bought dagger+bow owned, UP-wrap + A decks the bow under its own caret, and the next UP lands on the dagger row (regression: the bank-2 render used to rebuild the view loot-blind, shifting every selection at/after a loot card). Pool 5 is staged so the mythril bow (cost 5) stays deckable under the loot equip gate (docs/enemies_ranking.md \u00a74.8); the gate itself is covered by deck_equip_locked_loot.",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_two_rolls",
   "test": true,
   "description": "The RNG stream advances across rolls: first roll deals 2/6/3, second deals 5/5/4 (seed 12345). Regression for the zero-state xorshift stall (AGENTS.md 52.27).",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "game_over_reboot",
  "test": true,
  "description": "After a normal death, game-over NO shows the silent try-again Thanks screen; riding out its ~5 s hold reboots cleanly into a fresh overworld (fresh TEST_FIELD state, full HP, scene track back, no stuck defeat/actor state).",

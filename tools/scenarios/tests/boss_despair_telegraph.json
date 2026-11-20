@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "boss_despair_telegraph",
  "test": true,
  "description": "Dropping the Lord of Slimes to <=20 HP (pinned to 1, so the first hit would kill him) does NOT kill him and does NOT end the fight: he clamps to 1 HP, flashes, and holds a telegraph (banner L.OF SLIMES FOCUSING, combo rows THE LORD OF SLIMES / IS CONCENTRATING...) that waits for A instead of auto-advancing. Ignored blind inputs and a long wait prove the hold; no victory fires.",

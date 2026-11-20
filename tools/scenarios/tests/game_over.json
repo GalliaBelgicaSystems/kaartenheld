@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "game_over",
  "test": true,
  "description": "Hero is defeated in battle, confirming GAME_OVER state and the Continue? prompt. The defeat sting plays on the battle result screen, but the GAME_OVER screen itself is silent (MUSIC_NONE: the per-frame tick is gated off terminal screens, so no scene track or pursuer sting can restart behind it).",

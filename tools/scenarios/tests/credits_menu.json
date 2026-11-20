@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "credits_menu",
  "test": true,
  "description": "Boot into the title screen, open the menu (START), move down to the CREDITS entry (index 4, row 17), and press A to enter the credit screen. B returns to the title menu.",

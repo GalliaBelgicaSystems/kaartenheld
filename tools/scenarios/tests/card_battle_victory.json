@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_battle_victory",
  "test": true,
  "description": "Playing through Carl's solo practice spar with the real starter deck (attack and defend phases, exercising draw and reshuffle) ends in BATTLE_WON and returns to the overworld",

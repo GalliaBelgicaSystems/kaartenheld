@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_max_copies",
  "test": true,
  "description": "Ownership is uncapped: four POISON_DAGGER purchases all succeed (70-32=38g, owned 4), no CARD_PURCHASE_FAILED.",

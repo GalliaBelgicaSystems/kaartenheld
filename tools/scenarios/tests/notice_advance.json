@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "notice_advance",
  "test": true,
  "description": "The autosave notice auto-advances to the title screen after its hold with no input.",

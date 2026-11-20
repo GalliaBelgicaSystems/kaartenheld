@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_ap_cost_pips",
  "test": true,
  "description": "AP-cost OAM pips (top-left of each hand card): staging SW2/cost-1 and BO5/cost-2 shows the one-ap tile (96) on OAM entry 24 and the two-ap tile (97) on entry 25; a cost-0 third card shows no pip (entry 26 tile 0). No execute: pips render on the pending hand.",

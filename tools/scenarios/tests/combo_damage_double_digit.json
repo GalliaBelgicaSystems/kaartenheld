@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_damage_double_digit",
  "test": true,
  "description": "Two-digit pending damage previews fully: pair of SW5 (base 10, suited PAIR 120+30=150%) resolves 10x150/100 = 15, shown as PAIR DMG15 on the hand line",

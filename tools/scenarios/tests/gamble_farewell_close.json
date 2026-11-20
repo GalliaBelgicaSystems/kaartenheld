@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_farewell_close",
   "test": true,
   "description": "After Nis's goodbye, A closes the box and returns to the overworld beside him with the scene track (TOWN) playing again.",

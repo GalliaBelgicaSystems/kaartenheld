@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "carl_tutorial_poker_flee",
   "test": true,
   "description": "After the first defend resolves, Carl explains poker hands, then tells the hero to flee with B; pressing B on the empty attack hand flees the spar and earns his farewell speech (the lesson's +1 AP was already handed over at the spar start, so fleeing keeps it), closing back to the overworld",

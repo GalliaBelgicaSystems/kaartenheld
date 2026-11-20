@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_ident_total_fold",
  "test": true,
  "description": "LOOT_CARD_ADDED reports the identity-wide total after a fold (docs/loot.md \u00a734, AGENTS.md \u00a752.19): seed 7006 on the slime knight rolls a STEEL SHIELD (id 0xC1 = 193) while the curated STEEL SHIELD identity is already owned (count 1 of cap 2). The grant folds both copies onto the curated row, so d1 must report 2 -- not the loot row's own pre/post count (0 -> 1) that the deleted row would suggest. Pre-fix world_on_battle_end hoisted deck_collection_count(g_loot_id) and emitted 1.",

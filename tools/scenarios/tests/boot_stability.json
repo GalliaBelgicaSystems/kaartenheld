@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "boot_stability",
  "test": true,
  "description": "Minimal boot: survive 300 render iterations without crashing. Validates CRT0\u2192main\u2192game_render path.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_equip_max",
   "test": true,
   "description": "Equip cap (staged): with three foreign bits already equipped, equipping the owned STRAIGHT gem is refused with MAX 3 GEMS and the equipped mask is untouched.",

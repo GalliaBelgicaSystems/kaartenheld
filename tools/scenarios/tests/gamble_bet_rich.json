@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_bet_rich",
   "test": true,
   "description": "Bet steps are not truncated to 8 bits: with 260 gold (which wraps to 4 in a uint8_t) the bet still cycles 1 -> 5 -> 10 and stays there. Regression for the (uint8_t)gold clamp.",

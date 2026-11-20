@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "actor_collision_blocking",
  "test": true,
  "description": "Blocking World Actor (Mayor) stops movement and the player position is unchanged",

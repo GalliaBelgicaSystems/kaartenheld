@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "intro_slide_1",
  "test": true,
  "description": "NEW GAME intro slide 1: slot picker A, then advancing once from slide 0 shows The Lord of.../peaceful....",

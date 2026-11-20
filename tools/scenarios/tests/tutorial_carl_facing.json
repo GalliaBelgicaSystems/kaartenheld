@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "tutorial_carl_facing",
   "test": true,
   "description": "Pressing A while facing Carl (no bump) opens the spar offer and answering YES auto-starts the fight -- the facing-talk path syncs the stashed spar exactly like the bump path",

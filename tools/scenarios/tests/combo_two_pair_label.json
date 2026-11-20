@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_two_pair_label",
  "test": true,
  "description": "Two distinct pairs (SW3 BO3 + SW5 DA5) read TWO PAIR on the live COMBO row while pending, before execution.",

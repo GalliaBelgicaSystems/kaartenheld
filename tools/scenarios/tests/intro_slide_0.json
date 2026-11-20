@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "intro_slide_0",
  "test": true,
  "description": "NEW GAME intro slide 0 renders at columns 3-18: START opens the menu, A on NEW GAME opens the slot picker, A on the empty slot shows Mankind has.../fades away....",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "merchant_twin_shows_stock",
  "test": true,
  "description": "Uncapped ownership: owning an IRON RING loot twin (derived id 164) keeps the curated IRON RING row listed, and buying it succeeds (folds to owned 2 under the curated id) with CARD_PURCHASED and gold charged.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_cursor_blip",
  "test": true,
  "description": "Shop cursor moves play the battle-cursor blip: stepping the BUY list down then back up stages two requests through the banked step body (g_bk_sfx_req), played by game_update the same frame.",

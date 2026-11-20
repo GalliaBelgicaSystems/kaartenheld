@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_reveal_message",
  "test": true,
  "description": "First-victory loot grant, reveal side (docs/loot.md 34.5): the very first fight's drop is always a BRONZE SHIELD (id 0x81 = 129), so the victory reveal must show YOU FOUND: on row 10. Fought on a real slime (wall slime, R1) with zero kills so the grant applies; the grant fires regardless of the isolated loot RNG stream.",

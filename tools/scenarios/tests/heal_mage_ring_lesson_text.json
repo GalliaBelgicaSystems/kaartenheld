@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "heal_mage_ring_lesson_text",
   "test": true,
   "description": "The ring lesson's final page teaches the defense rule: a ring adds no block but converts over-block into healing. The ask takes one confirm first (talk, YES, then lesson pages), so this stops with page 3 open to assert the exact wording.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_ap_formula_rider",
  "test": true,
  "description": "AP formula rider step (docs/card-ap-cost-formula.md §3.3/§4.2): a real deck of five bronze poison daggers (power 2 + bronze + poison = 2 AP) dealt through deck_init draws pip tile 97 (AP_TILE_2) on all five hand slots. The strict +1 over the same card plain is what fusion pricing needs.",

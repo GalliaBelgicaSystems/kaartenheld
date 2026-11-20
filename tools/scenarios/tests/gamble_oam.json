@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_oam",
   "test": true,
   "description": "Nis renders as OAM sprites on entries 1-6 (tiles 128-133, the battle-art block base).",

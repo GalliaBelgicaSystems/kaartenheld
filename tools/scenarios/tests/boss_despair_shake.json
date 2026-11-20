@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "boss_despair_shake",
  "test": true,
  "description": "Reprisal-frame hand judder: 2 frames after the A press (99 damage, DEFEAT already set), gap cell (3,12) holds shifted card-frame tile 123 instead of blank -- the whole-hand 5-frame shake fires on the defeat path too, not just while undecided.",

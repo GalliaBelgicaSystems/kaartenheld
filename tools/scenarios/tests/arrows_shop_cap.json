@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "arrows_shop_cap",
  "test": true,
  "description": "A full quiver (30 arrows, limited-arrows) cannot buy more: the purchase is refused, gold and arrows are unchanged, and the row-17 message reads Quiver full!",

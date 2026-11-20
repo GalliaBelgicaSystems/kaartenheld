@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "shopkeys_pickup",
  "test": true,
   "description": "Interacting with the forest shop keys (floor debris visual) grants the SHOP KEYS item and starts the merchant quest",

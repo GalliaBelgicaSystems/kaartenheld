@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_ap_bronze3",
  "test": true,
  "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3): pool 3 is staged (the old AP-3 bronze profile) but the drop is unaffected -- seed 20 on the R3 kobold rolls a plain IRON SWORD (derived id 0xA0 = 160, rank 3).",

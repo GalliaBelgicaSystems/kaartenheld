@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "enemy_hero_both_confuse",
   "test": true,
   "description": "Hero poisoned during confused foe beat: when both attacker and hero carry poison into PLAYER_DEFEND, the foe's msg_id=6 beat owns the turn -- nav_confuse_auto must not auto-stage hero cards or skip the A prompt, row 10 keeps 'FOE IS CONFUSED!' in UI_COLOR_POISON, and row 9 omits the hero's 'Confused!' line.",

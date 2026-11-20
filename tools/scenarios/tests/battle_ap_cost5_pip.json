@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_ap_cost5_pip",
  "test": true,
  "description": "A cost-5 hand card (the mythril bow's energy cost) draws the five-ap OAM pip: hand slot 0 staged at cost 5 shows tile 122 (AP_TILE_5) in OBJ slot 1 on OAM entry 24, while a cost-1 card next to it keeps tile 96 (AP_TILE_1) on entry 25. Mixed pips coexist from their own VRAM slots. (Cursor moves force the dirty-gated OAM pass after staging.)",

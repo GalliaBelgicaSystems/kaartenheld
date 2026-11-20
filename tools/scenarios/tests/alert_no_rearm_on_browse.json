@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "alert_no_rearm_on_browse",
  "test": true,
  "description": "Browsing a menu without loading does NOT re-arm the alert: after the forest entry alert expires, opening the ITEM menu (START) and closing it (B) with no load leaves the entry scan cold -- no second sting (sfx_count stays 1).",
