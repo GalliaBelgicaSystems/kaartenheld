@@ -110,6 +110,10 @@
    "type": "screen_row_not_contains",
    "row": 16,
    "contains": "equip your cards"
+  },
+  {
+   "type": "sfx_last",
+   "expected": 12
   }
  ],
  "initial_state": {

@@ -116,6 +116,10 @@
    "type": "currency",
    "expected": 8,
    "currency": "GOLD"
+  },
+  {
+   "type": "sfx_last",
+   "expected": 12
   }
  ]
 }

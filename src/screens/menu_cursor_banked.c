@@ -1484,3 +1484,161 @@ void item_picker_render_banked(void)
     for (r = 15; r <= 17; r++)
         pk_blank_row(r);
 }
+
+/* ── Shop in-place refresh + LCD-on tail cleanup (bank 15) ──────────
+ * Buying (card/arrow/refusal) and selling with copies left only change
+ * GOLD (row 3), an optional SELL xDDD count (cols 12..15), and the
+ * row-17 status message -- pure WRAM reads, needing no bank-2 catalog
+ * tables and no full-screen redraw or LCD blank.  Tab flips, scrolls,
+ * and last-copy sells still run bank-2 shop_content_render with the
+ * LCD on (no menu_draw_frame wipe), then call shop_clean_tail_banked
+ * here to clear any trailing rows and stale CGB attributes. */
+extern uint8_t g_shop_vis_count;
+
+static const uint16_t s_sh_p10[4] = { 10000, 1000, 100, 10 };
+
+static void sh_draw_text_diff(uint8_t x, uint8_t y, const char *text, uint8_t w)
+{
+    uint8_t i;
+    uint8_t ended = (text == NULL);
+    for (i = 0; i < w; i++) {
+        char ch;
+        if (!ended) {
+            ch = text[i];
+            if (ch == '\0') {
+                ended = 1;
+                ch = ' ';
+            }
+        } else {
+            ch = ' ';
+        }
+        cu_put_char((uint8_t)(x + i), y, ch);
+    }
+}
+
+static void sh_clear_attrs(uint8_t y, uint8_t x, uint8_t n)
+{
+    uint8_t i;
+    volatile uint8_t *dst;
+    if (!g_is_cgb) return;
+    dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 1;
+    for (i = 0; i < n; i++) {
+        BANKED_VRAM_WRITE(dst, 0);
+#ifdef DEBUG_BUILD
+        g_tilemap_attr_mirror[((uint16_t)y << 5) + x + i] = 0;
+#endif
+        dst++;
+    }
+    VBK_REG = 0;
+}
+
+static void sh_draw_gold(Game *g)
+{
+    uint16_t uval;
+    uint8_t i;
+    uint8_t started = 0;
+    char gstr[8];
+    char *p = gstr;
+
+    sh_draw_text_diff(0, 3, "  GOLD: ", 8);
+    uval = (uint16_t)g->state.currency.amount[0];
+    for (i = 0; i < 4; i++) {
+        uint16_t pw = s_sh_p10[i];
+        uint8_t d = 0;
+        while (uval >= pw) {
+            uval -= pw;
+            d++;
+        }
+        if (d != 0 || started) {
+            *p++ = (char)('0' + d);
+            started = 1;
+        }
+    }
+    *p++ = (char)('0' + (uint8_t)uval);
+    *p = '\0';
+    sh_draw_text_diff(8, 3, gstr, 10);
+}
+
+static void sh_draw_msg(Game *g)
+{
+    uint8_t msg = (uint8_t)(g->shop_message & 0x0Fu);
+    const char *ms = NULL;
+    if (msg == 2) ms = "Not enough!";
+    else if (msg == 4) ms = "Quiver full!";
+    else if (msg == 3) ms = "Already owned!";
+    sh_draw_text_diff(0, 17, ms, 14);
+}
+
+/* Staging: g_bk_ptr_a = Game*, g_bk_byte_a = sell_count (0 on BUY;
+ * > 0 on SELL with copies remaining to repaint xDDD at cursor row). */
+void shop_refresh_in_place_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t sell_count = g_bk_byte_a;
+
+    if (!g) return;
+
+    sh_draw_gold(g);
+
+    if (sell_count > 0 && g->item_menu_index >= g->item_menu_scroll) {
+        uint8_t y = (uint8_t)(5u + (uint8_t)(g->item_menu_index - g->item_menu_scroll));
+        if (y < (uint8_t)(5u + SHOP_VISIBLE)) {
+            uint8_t v = sell_count;
+            uint8_t h = 0;
+            uint8_t t = 0;
+            while (v >= 100) { v = (uint8_t)(v - 100); h++; }
+            while (v >= 10)  { v = (uint8_t)(v - 10);  t++; }
+            cu_put_char(12, y, 'x');
+            cu_put_char(13, y, (char)('0' + h));
+            cu_put_char(14, y, (char)('0' + t));
+            cu_put_char(15, y, (char)('0' + v));
+        }
+    }
+
+    sh_draw_msg(g);
+}
+
+/* Staging: g_bk_ptr_a = Game*, g_bk_byte_a = same_screen (0 on entry,
+ * 1 on LCD-on same-screen redraw).  Always paints row 3 (GOLD) and,
+ * when rows are visible, row 17 (status message); on same-screen
+ * redraws also clears trailing rows/attrs after shop_content_render. */
+void shop_clean_tail_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t same_screen = g_bk_byte_a;
+    uint8_t y;
+    if (!g) return;
+
+    sh_draw_gold(g);
+
+    if (g_shop_vis_count == 0) {
+        if (same_screen) {
+            sh_clear_attrs(5, 0, 17);
+            cu_blank_span(5, 17, 3);
+            cu_blank_span(6, 0, 20);
+            sh_clear_attrs(7, 0, 9);
+            cu_blank_span(7, 9, 11);
+            for (y = 8; y <= 17; y++)
+                cu_blank_span(y, 0, 20);
+        }
+        return;
+    }
+
+    sh_draw_msg(g);
+
+    if (same_screen) {
+        uint8_t rem = (g_shop_vis_count > g->item_menu_scroll)
+            ? (uint8_t)(g_shop_vis_count - g->item_menu_scroll) : 0;
+        if (rem > SHOP_VISIBLE) rem = SHOP_VISIBLE;
+        /* Live rows stamped BG icon tiles at cols 1..2 directly to VRAM;
+         * keep the text mirror clean (e.g. after flipping back from an
+         * empty-tab "(nothing to sell)" message). */
+        for (y = 5u; y < (uint8_t)(5u + rem); y++) {
+            g_ui_screen_buf[y][1] = ' ';
+            g_ui_screen_buf[y][2] = ' ';
+        }
+        for (y = (uint8_t)(5u + rem); y < (uint8_t)(5u + SHOP_VISIBLE); y++)
+            cu_blank_span(y, 0, 20);
+    }
+}

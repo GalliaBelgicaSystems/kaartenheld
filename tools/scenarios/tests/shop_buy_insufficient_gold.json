@@ -35,6 +35,10 @@
   {
    "type": "event_not_occurred",
    "event": "CARD_PURCHASED"
+  },
+  {
+   "type": "sfx_count",
+   "expected": 0
   }
  ],
  "initial_state": {

@@ -1,0 +1,99 @@
+{
+ "name": "shop_in_place_refresh",
+ "test": true,
+ "description": "Buying and multi-copy selling repaint in-place without a full screen redraw: opening the shop, buying twice, flipping to SELL, and selling 1 of 2 copies updates row 3 GOLD and row 5 x001 with only 3 RENDER_SCREEN events total (initial overworld, shop entry, and tab flip) and plays SFX_CASH (12).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8520,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 139,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "GOLD: 16"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "x001"
+  },
+  {
+   "type": "event_count",
+   "event": "RENDER_SCREEN",
+   "count": 3
+  },
+  {
+   "type": "sfx_last",
+   "expected": 12
+  }
+ ]
+}
