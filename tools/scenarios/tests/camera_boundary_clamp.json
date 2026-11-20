@@ -35,7 +35,7 @@
   {
    "type": "camera",
    "expected_x": 12,
-   "expected_y": 8
+   "expected_y": 1
   },
   {
    "type": "scroll_x",

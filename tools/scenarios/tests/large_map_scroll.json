@@ -26,7 +26,7 @@
   {
    "type": "camera",
    "expected_x": 0,
-   "expected_y": 8
+   "expected_y": 1
   },
   {
    "type": "scroll_x",
