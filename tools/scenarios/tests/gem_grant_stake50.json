@@ -1,5 +1,5 @@
 {
- "act": "always",
+ "act": 1,
   "name": "gem_grant_stake50",
   "test": true,
   "description": "Chuck-a-luck prize: staking 50 in one sitting (5 x BET=10 rolls from 100 gold) wins the STRAIGHT gem once -- Nis's prize dialogue opens with the owned bit set.",

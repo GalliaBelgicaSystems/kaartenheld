@@ -1,5 +1,5 @@
 {
- "act": "always",
+ "act": 1,
   "name": "gem_no_grant",
   "test": true,
   "description": "Below the prize bar: staking only 1 in a sitting (single BET=1 loss, seed 12345 dice 2/6/3) opens the ordinary farewell with no gem owned.",

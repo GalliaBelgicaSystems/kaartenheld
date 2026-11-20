@@ -1875,10 +1875,10 @@ while iterating on act 2:
   levels use `"act": 2` with an `act2_` id prefix and an `Act 2 — ...`
   display name, so the editor's filter box isolates them with zero
   tooling.
-* Scenarios (`tools/scenarios/tests/*.json`): `"act": 1` (149: proves
+* Scenarios (`tools/scenarios/tests/*.json`): `"act": 1` (154: proves
   demo-specific content — Carl/mayor/guard/dog/merchant/shopkeys/
   heal-mage/skeleton/gamble/wizard, act-1 map boots/gates/chests,
-  boss/mimic/throne) or `"act": "always"` (409: proves a shared
+  boss/mimic/throne) or `"act": "always"` (404: proves a shared
   engine/system rule, even when staged on an act-1 fixture as background
   — e.g. `arrows_shop_buy` stages `MERCHANT_QUEST: 2` but tests the
   generic shop).  Staging a flag as background is not testing it; only
@@ -1887,18 +1887,19 @@ while iterating on act 2:
   named-actor state) mark a scenario act 1.
 * Recorded borderline calls: `south_knight_bump` is `always` (the only
   hostile-bump test); `actor_slime_combat`, `boss_despair_*`, and the
-  whole `gamble_*` family (including bet/roll mechanics) are act 1 for
+  whole `gamble_*` family (including bet/roll mechanics and the
+  `gem_grant_*` / `gem_no_grant` Nis prize triggers) are act 1 for
   now — move them to `always` if act 2 reuses the despair mechanic or
   the dice system.
 
-Current status: the key is inert data.  `compile.py --all`,
-`validate.py`, the editor `/api/levels`, and `run_all()` all ignore it,
+Current status: the key is inert for filtering (`compile.py --all`,
+`validate.py`, the editor `/api/levels`, and `run_all()` all ignore it),
 so the layout stays flat (`levels/*.json`, no subdirs — recursive globs
 need tooling changes first) and `make test-harness` still runs the full
-suite (CI gate).  Loading already accepts the key (level schema has no
-top-level `additionalProperties: false`; `validate_scenario()` only
-checks actions/assertions/initial_state).  Local fast loop while on act
-2 — run shared + act-2 scenarios only:
+suite (CI gate).  `validate_scenario()` requires a valid top-level `act`
+(`int >= 1` or `"always"`) on every scenario, and the level editor
+preserves `act` verbatim on load/save round-trips.  Local fast loop while
+on act 2 — run shared + act-2 scenarios only:
 
 ```bash
 for s in $(python3 -c "import json,glob; print(' '.join(d['name'] for f in sorted(glob.glob('tools/scenarios/tests/*.json')) for d in [json.load(open(f))] if d.get('act') in ('always',2)))"); do

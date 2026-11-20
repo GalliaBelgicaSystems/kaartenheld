@@ -5,6 +5,11 @@
   "type": "object",
   "required": ["id", "name", "map", "layers", "player"],
   "properties": {
+    "act": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Story act this level belongs to (1 = demo, 2+ = future acts; see AGENTS.md 42.4)."
+    },
     "id": {
       "type": "string",
       "description": "Unique identifier for the level/scene (e.g. forest, town, field)"
