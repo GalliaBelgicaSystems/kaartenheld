@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "patrol_enemy_bumps_player",
  "test": true,
  "description": "Hostile actor patrols into the player's tile, initiating an encounter (forest slime; the field slime is now Carl, a stationary practice dummy)",

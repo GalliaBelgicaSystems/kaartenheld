@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "ow_hud_bottom_row",
  "test": true,
  "description": "Walk south to the bottom of the Field (2,16); the 17-row world viewport scrolls one tile (scroll_y 1, camera_y 8) so the last map rows render above the Window HUD, which keeps showing hearts/AP/arrows/gold on row 17",

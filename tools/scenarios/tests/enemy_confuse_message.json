@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "enemy_confuse_message",
   "test": true,
   "description": "Confused foe beat 1 presentation: when the poisoned attacker telegraphs, row 10 shows 'FOE IS CONFUSED!' in UI_COLOR_POISON (attr 4) while row 0 keeps 'FOE ATTACKS! DEFEND!', before any A press.",

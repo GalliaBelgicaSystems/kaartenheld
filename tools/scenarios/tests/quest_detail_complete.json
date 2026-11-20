@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "quest_detail_complete",
  "test": true,
  "description": "SELECT on a completed quest row shows DONE plus what the reward was: MONSTER HUNT complete renders DONE and GOT +1 AP",

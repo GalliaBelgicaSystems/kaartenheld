@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "merchant_repeat",
  "test": true,
  "description": "Once the shop keys are delivered the Merchant opens his shop directly (no re-reward, no quest dialogue)",

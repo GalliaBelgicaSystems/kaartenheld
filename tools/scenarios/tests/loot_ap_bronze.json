@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_ap_bronze",
  "test": true,
  "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3): pool 2 is staged (the old AP-2 bronze profile) but the drop is unaffected -- seed 29 on the R3 kobold rolls a STEEL POISON DAGGER (derived id 0xCB = 203, rank 3) with a live poison rider. Riders still gate on bronze+ and the rank gate.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_flush_label",
  "test": true,
  "description": "Five same-symbol non-sequential cards (SW1 SW3 SW5 SW7 SW9) read FLUSH -- not STR FLUSH -- on the live COMBO row while pending, before execution.",

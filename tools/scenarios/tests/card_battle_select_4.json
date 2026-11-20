@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_battle_select_4",
  "test": true,
  "description": "Select 4 cards in battle and observe state and screen corruption",

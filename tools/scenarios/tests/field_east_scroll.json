@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "field_east_scroll",
  "test": true,
  "description": "Walk east across the Field (32x18 tiles); with a 17-row world viewport (physical row 17 is the Window HUD) the map fits vertically so scroll_y stays 0 while scroll_x advances and clamps at the east edge, proving horizontal camera scroll on a wide map",

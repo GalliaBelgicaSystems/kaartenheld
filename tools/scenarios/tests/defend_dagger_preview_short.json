@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_preview_short",
  "test": true,
  "description": "Counter forecast short straight (STRAIGHT gem equipped): staged DA2+DA3+DA4 run previews CNT 14 ((2+3+4)x160%), proving the preview walks the shared short-best path.",

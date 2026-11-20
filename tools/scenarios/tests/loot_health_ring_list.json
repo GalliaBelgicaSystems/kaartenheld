@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_health_ring_list",
  "test": true,
  "description": "Ringth-rider list icon (docs/loot.md 34.1): a bronze plain ring (id 132) shows the green '+' menu BG icon (tile 231) over the CARDS list elem cell. The detail page is pinned separately by loot_health_ring; this pins the list call site (including scroll-row repaint).",

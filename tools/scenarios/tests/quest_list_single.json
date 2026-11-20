@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "quest_list_single",
  "test": true,
  "description": "Single tracked quest: SHOP KEYS alone on the QUEST tab while MONSTER HUNT stays hidden; UP/DOWN wrap on the one entry without repainting",

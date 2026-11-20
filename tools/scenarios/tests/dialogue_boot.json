@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "dialogue_boot",
  "test": true,
  "description": "Boot directly into the dialogue screen with an active Mayor dialogue",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_cursor_ghost",
  "test": true,
  "description": "Regression guard for ghost battle cursors: stresses the hand and target cursors through many moves and asserts exactly one caret remains on the target row (5) and the hand row (15). Lives on the mountain trio: the field fight is Carl's solo spar with no enemy caret.",

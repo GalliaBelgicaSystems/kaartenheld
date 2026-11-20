@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_pile_at_cap",
  "test": true,
  "description": "Pressing A on a PILE row whose 5-per-identity deck cap is already full reports AT CAP cleanly: with 10 POISON_DAGGER owned and 5 decked, PILE still lists the remaining 5 copies and A shows AT CAP on row 16 without adding a 6th copy.",

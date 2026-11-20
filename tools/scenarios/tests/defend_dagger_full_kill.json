@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_full_kill",
  "test": true,
  "description": "Full counter kills where the halved counter did not: the DA3-pair counter deals the full 9, killing the 6-HP enemy0 outright -- ENTITY_DEFEATED(01) fires, the target steps (TARGET_CHANGED, probe reads the next enemy at 15), no BATTLE_WON, the swing never lands (no DAMAGE_RECEIVED, hero stays 10). The exact kill boundary the debuff removal moves. Negative-tested: the halving ROM leaves it at 2 with no kill.",

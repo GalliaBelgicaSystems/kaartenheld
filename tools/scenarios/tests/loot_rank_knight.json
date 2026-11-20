@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_rank_knight",
  "test": true,
  "description": "R4 veteran roll (docs/enemies_ranking.md \u00a74.2/\u00a74.7): seed 7001 on the slime knight rolls an IRON SWORD (id 0xA0 = 160, rank 4) -- knights live in iron/steel. The knight's own VICTORY screen is skipped (the split briefing opens instead), so the grant is asserted via LOOT_CARD_ADDED + rank, and the KNIGHT_SPLIT dialogue proves the chain handoff. The spawned trio's R1 roll is covered by loot_rank_knight_chain. The kill hands off to the spawned trio, which instantly re-engages (adjacent chase step), so the run ends in the trio fight: the split briefing's close (DIALOGUE_ENDED KNIGHT_SPLIT) and the trio ambush (the loader-driven first fight emits no ENCOUNTER_STARTED; the patrol bump re-engaging it emits the one) pins the handoff. The trio's own R1 roll is covered by loot_rank_knight_chain.",

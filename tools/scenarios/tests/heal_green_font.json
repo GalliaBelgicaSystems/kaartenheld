@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "heal_green_font",
  "test": true,
  "description": "Healing cards read menu green on the CARDS tab: the IRON RING row's rider cell carries the heal-rider green (palette 7, programmed over DIM for the menu) while the poison BRONZE DAGGER row keeps its element purple (4). Material words are gone (ingot OAM instead); the role color lives on the rider cell.",

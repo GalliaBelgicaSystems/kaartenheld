@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_battle_cursor",
  "test": true,
  "description": "Move cursor left and right in card battle hand",

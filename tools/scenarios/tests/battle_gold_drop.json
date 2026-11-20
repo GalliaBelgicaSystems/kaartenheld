@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_gold_drop",
  "test": true,
  "description": "Defeating the kobold grants its gold reward: 28 gold via CURRENCY_ADDED on victory (20 staged + 8 kobold purse). Rank-0 lesson fights (Carl's spar) pay nothing -- see loot_rank_carl_no_drop.",

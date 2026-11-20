@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "carl_remedial_lesson",
   "test": true,
   "description": "Post-victory statics stay interactable: with the spar already won, facing-talk toward Carl's tile reopens the spar offer, and confirming YES finds no live spar and returns to the overworld with no fight",

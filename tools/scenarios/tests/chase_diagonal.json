@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "chase_diagonal",
  "test": true,
  "description": "Kobold chaser at (4,10) with the hero off-axis at (6,11) takes the diagonal step to (5,11) (same corner rule as the hero), then closes onto the hero for an encounter",

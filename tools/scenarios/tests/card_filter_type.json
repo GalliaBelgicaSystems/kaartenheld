@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_filter_type",
  "test": true,
  "description": "Weapon filter SWORD shows only sword cards in the CARDS tab (wood + bronze swords, no shield/ring rows)",

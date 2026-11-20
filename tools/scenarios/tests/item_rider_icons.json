@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "item_rider_icons",
  "test": true,
  "description": "Item CARDS list stamps dedicated menu rider BG tiles (228-231) over each rider card's element cell on its pile side (POISON DAGGER row -> tile 230, bronze FIRE BOW loot row -> tile 228); rider OAM entries stay hidden (riders are BG art now -- the recycled enemy-sprite OAM art was cropped off-center) and the deck side stays blank. Material ingots ride alongside (entries 17/18 tile 118 wood/iron shared art, 25/26 wood). Swords never ride, so burn coverage moved to a loot bow (id 146).",

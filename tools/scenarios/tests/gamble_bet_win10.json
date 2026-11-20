@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_bet_win10",
   "test": true,
   "description": "High-stakes 1:1 win: BET=10 with NUM=2, dice 2/6/3 (seed 12345), one match pays profit 10 (20 -> 30).",

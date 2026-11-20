@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_heal_preview",
  "test": true,
  "description": "Ring attack converts to healing: SW5 + RING2 becomes a PAIR of fives, and the pending row previews PAIR HEAL12 (not PAIR DMG0) -- preview and resolver agree",

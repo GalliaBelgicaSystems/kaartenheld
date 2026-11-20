@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_equip_tip_no_purchase",
  "test": true,
  "description": "Browsing without buying shows no equip tip (docs/loot.md 34.6): leaving the merchant shop with no purchase goes straight back to the overworld with no dialogue. Guards the tip against firing on every shop exit.",

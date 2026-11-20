@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_ap_steel",
  "test": true,
  "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3): the pool is staged at 5 but no longer shapes the drop -- seed 76 on the R3 kobold rolls a plain STEEL SWORD (derived id 0xC0 = 192, rank 3). The same seed at pool 4 (loot_ap_iron_cap) yields the identical card: AP only unlocks equipping.",

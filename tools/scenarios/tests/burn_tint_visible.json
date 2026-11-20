@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "burn_tint_visible",
   "test": true,
   "description": "Burn visibility: the middle Mountain Pass slime carries BURN while alive, so its HP row (x=7..12, row 2) must carry the FIRE palette (1); the un-afflicted left slime HP row stays NONE (0). Locks the status-tint half of the burn-corpse report.",

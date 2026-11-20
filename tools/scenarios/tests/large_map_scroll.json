@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "large_map_scroll",
  "test": true,
  "description": "Walk south on the Field (32x18 tiles); with a 17-row world viewport (physical row 17 is the Window HUD) the 18-tall map scrolls one tile vertically, so scroll_y advances to 1 while the player moves to (2,16), proving the large-map data model works with a 17-row viewport",

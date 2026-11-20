@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_rider_detail_ice",
  "test": true,
  "description": "The split ice-bow row's detail page names its own rider: five DOWNs from the FILTER row land on the IRON ICE BOW pile row (loot 186, behind three starter groups and the fire bow) and SELECT shows ICE RIDER, matching what combat plays -- not the fire rider of the sibling row.",

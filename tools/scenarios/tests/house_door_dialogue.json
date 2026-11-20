@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "house_door_dialogue",
  "test": true,
  "description": "Bumping into an open house door shows the full-game joke dialogue",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_boot",
  "test": true,
  "description": "Boot directly into a battle against Carl",

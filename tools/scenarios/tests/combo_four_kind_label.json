@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_four_kind_label",
  "test": true,
  "description": "Four of a kind (SW3 BO3 HE3 DA3) reads FOUR KIND on the live COMBO row while pending, before execution.",

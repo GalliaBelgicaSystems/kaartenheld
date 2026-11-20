@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "enemy_confuse_ack_self_text",
   "test": true,
   "description": "Confused foe acknowledgement, lone attacker: with no allies standing, the first A reveals 'FOE HURTS ITSELF!' instead of 'FOE ATTACKS ALLIES!' -- the staged outcome flag picks the self-harm wording. The swing has not resolved yet.",

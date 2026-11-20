@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "economy_dampener_full",
  "test": true,
  "description": "Wallet dampener full band (docs/economy.md §3.1): with an empty wallet (0 < 1.5x expected 200 = 300) the kobold's 8g purse grants in full. Same proven victory choreography as battle_gold_drop; asserts the CURRENCY_ADDED grant payload alongside the final wallet.",

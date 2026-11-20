@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "carl_no_gate",
  "test": true,
  "description": "Bumping Carl with the field cache still locked opens the spar offer immediately (no chest gate): the key-locked chest no longer withholds the lesson, the pool stays base 1, and no battle starts before the answer",

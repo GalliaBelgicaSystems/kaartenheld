@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_sort_power",
  "test": true,
  "description": "Power-desc sort orders the granted starter collection by material band: BRONZE SWORD (3), WOOD SWORD (1), WOOD SHIELD (1); equal-power cards keep collection order",

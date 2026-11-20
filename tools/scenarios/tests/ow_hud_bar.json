@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "ow_hud_bar",
   "test": true,
   "description": "Overworld bottom-row status bar: white row 17 carries 3 hearts (12 HP = HHh), AP value (pool 2), arrows (12) and gold (125G); col 19 stays untouched for the spinner",

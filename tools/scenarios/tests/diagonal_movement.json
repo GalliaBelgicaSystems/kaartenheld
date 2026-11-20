@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "diagonal_movement",
  "test": true,
  "description": "Move one tile diagonally via DOWN+RIGHT from open floor on TEST_FIELD",

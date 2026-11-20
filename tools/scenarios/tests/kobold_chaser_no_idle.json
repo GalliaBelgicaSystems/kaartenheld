@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "kobold_chaser_no_idle",
  "test": true,
  "description": "Moving-capable kobold never shows the idle pose: the TEST_FOREST chaser (AI_CHASE, awake -- the hero is 6 tiles away) waiting far from the hero shows walk frames, not idle 124. Only AI_NONE statics idle (knight_idle_standing).",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "post_trampoline_state",
  "test": true,
  "description": "Post-trampoline integration: execute a banked 2-card combo that kills the slime, then ride out the full attack cycle including the post-kill reshuffle and a full defend timer expiry, landing back in a clean PLAYER_SELECT. Verifies bank restore, hand discard, phase advance, timer reset, and enemy attack resolution.",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "carl_tutorial_poker",
   "test": true,
   "description": "After the defend lesson resolves, Carl explains poker hands once (PAIRS HIT HARDER!, PAIR/TRIPS/STRAIGHT/FLUSH/FULL HOUSE/4 KIND, SUITED +30%) on the way back to SELECT",

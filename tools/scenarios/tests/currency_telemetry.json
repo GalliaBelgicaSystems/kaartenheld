@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "currency_telemetry",
  "test": true,
  "description": "add_currency mutates the GOLD currency and emits CURRENCY_ADDED",

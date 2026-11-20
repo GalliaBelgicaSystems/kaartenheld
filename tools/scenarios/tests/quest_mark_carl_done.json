@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_mark_carl_done",
  "test": true,
  "description": "No quest marker over Carl once the spar is won (Carl tutor actor defeated): entry 30 stays cleared (tile 0).",

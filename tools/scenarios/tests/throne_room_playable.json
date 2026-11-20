@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "throne_room_playable",
   "test": false,
   "description": "Manual playground: spawn next to the Slime Lord in TEST_CASTLE (throne-room fixture) with the mythril bow + strong deck, 120 HP and AP 5. No scripted inputs -- the player walks up (facing UP), presses A, and plays the final battle by hand.",

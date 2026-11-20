@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_straight_flush_label",
  "test": true,
  "description": "Five sequential same-symbol cards (SW1..SW5) read STR FLUSH (the 12-char row label for STRAIGHT FLUSH) on the live COMBO row while pending, before execution.",

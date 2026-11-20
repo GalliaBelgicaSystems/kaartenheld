@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_combo_ring_straight",
   "test": true,
   "description": "Rank-aware ring trials (ring + SW3 + SW4 + SW5 + SW6, gem equipped): the v=7 trial makes a 5-card STRAIGHT (25 x 210 = 52 healing) and must beat the v=1 trial's SHORT STRAIGHT (15 x 130 = 19). Catches enum-order max bugs.",

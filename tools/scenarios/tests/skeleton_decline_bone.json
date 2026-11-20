@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "skeleton_decline_bone",
  "test": true,
  "description": "Answering NO to the skeleton's bone offer closes plainly with no grant and no one-shot flag, so the skeleton asks again next bump",

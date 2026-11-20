@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "ring_uses_iron_detail",
  "test": true,
  "description": "The merchant's iron ring carries 3 uses per battle (material-band uses, docs/loot.md 34.1): its CARDS detail page shows USES 3 plus RINGTH RIDER and the green '+' menu BG icon (tile 231). The loot twin (derived id 164) is pinned by loot_ring_uses_iron.",

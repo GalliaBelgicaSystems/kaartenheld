@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "economy_market_skip",
  "test": true,
  "description": "Shop-hopping guard (docs/economy.md §6): entering and leaving the merchant shop with zero counters (no gold in, no spend, no battles) skips the market update -- no MARKET_UPDATED fires and a staged in-band index 35 is untouched (an unconditional update would drift it toward 32).",

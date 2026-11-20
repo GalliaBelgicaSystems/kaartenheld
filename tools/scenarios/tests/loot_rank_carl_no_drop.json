@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_rank_carl_no_drop",
  "test": true,
  "description": "Rank 0 means no drop (docs/enemies_ranking.md \u00a74.3/\u00a78.2 decided): winning Carl's spar grants no card (not even the first-victory bronze shield) and no gold -- a lesson is not a farm. The spar is staged with one prior kill so the natural path applies, proving rank 0 skips the grant rather than the kill counter.",

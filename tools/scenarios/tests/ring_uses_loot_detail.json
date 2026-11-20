@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "ring_uses_loot_detail",
  "test": true,
  "description": "Wild loot rings are single-use per battle: a plain wood loot ring (derived id 100, 0x64) shows USES 1 on its CARDS detail page. All heal rings carry the health rider regardless of material, so the same page must show RINGTH RIDER with the green '+' menu BG icon (tile 231): the wood counterpart to loot_health_ring.",

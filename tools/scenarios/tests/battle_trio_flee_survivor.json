@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_trio_flee_survivor",
  "test": true,
  "description": "Killing the slot-0 member of a Mountain Pass slime trio, then fleeing, writes the toughest survivor's HP back to the world actor (10), and re-engaging opens on three live slimes (slot 0 at 10 HP). Before the fix the fled actor kept enemies[0].hp = 0, so the next bump opened on three corpses and one attack won the fight.",

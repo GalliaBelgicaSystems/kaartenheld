@@ -1,4 +1,5 @@
 {
+  "act": 1,
   "name": "first_encounter_wrong_music",
   "test": false,
   "description": "Demonstrate diagnostic failure report on mismatched music assertion",

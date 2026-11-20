@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "menu_cursor_scroll_quest",
  "test": true,
  "description": "Targeted menu updates (AGENTS.md 36) on the QUEST tab: moving the cursor repaints only the caret cells (row y = 3 + 3*index), no full render-cache invalidate. Both quests are ACTIVE so the visible list has entries at rows 3, 6, ... with the caret at column 0.",
