@@ -7,7 +7,11 @@
  * Moved out of fixed to free _HOME headroom for the diagonal wall-hug
  * slide (AGENTS.md 52.18). Inlines the player-pixel interpolation
  * (tile*8 + walk progress) so it never calls fixed-bank code while
- * bank 12 is mapped (52.11.1). Pure WRAM reads/writes. */
+ * bank 12 is mapped (52.11.1). Pure WRAM reads/writes.
+ * Vertical centre is player_py - 72 (row 9): kept from the 18-row
+ * viewport so every above-bottom camera position is unchanged and only
+ * the bottom clamp ((height - 17) * 8) reveals one more row above the
+ * Window HUD. */
 void world_update_scroll_banked(void)
 {
     World *w = (World *)g_bk_ptr_a;

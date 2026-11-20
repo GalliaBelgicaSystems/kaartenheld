@@ -1,7 +1,7 @@
 {
  "name": "camera_boundary_clamp",
  "test": true,
- "description": "Walk the player to the far SE corner of the Field (30,16); with a full-screen 18-row viewport the 18-tall map fits exactly so scroll_y stays 0 while scroll_x clamps at 12 (width-20 tiles)",
+ "description": "Walk the player to the far SE corner of the Field (30,16); with a 17-row world viewport (physical row 17 is the Window HUD) the 18-tall map scrolls one tile vertically so scroll_y advances to 1 while scroll_x clamps at 12 (width-20 tiles)",
  "actions": [
   {
    "type": "hold",
@@ -35,7 +35,7 @@
   {
    "type": "camera",
    "expected_x": 12,
-   "expected_y": 0
+   "expected_y": 8
   },
   {
    "type": "scroll_x",
@@ -43,7 +43,7 @@
   },
   {
    "type": "scroll_y",
-   "expected": 0
+   "expected": 1
   }
  ],
  "initial_state": {

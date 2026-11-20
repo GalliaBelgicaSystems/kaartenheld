@@ -18,12 +18,15 @@ typedef enum {
 
 /* Hard caps for the tile buffer: a scene may be any size up to these.
  * The overworld camera windows a WORLD_VIEW_W x WORLD_VIEW_H view out of
- * the scene and scrolls it with the scroll offset.  The caps match the
- * renderer + hardware limits: ui_draw_world_map() draws a 32x32 window
- * once at map load and the 32x32 BG tilemap ring is 32 wide and 32 tall,
- * so a wider or taller scene would wrap/clobber VRAM instead of
- * displaying.  The 32-wide stride also keeps every map[y][x] lookup a
- * shift, not a multiply, on the multiply-less SM83. */
+ * the scene and scrolls it with the scroll offset.  The view is 20x17:
+ * physical screen row 17 is owned by the Window-layer status-bar HUD
+ * (see ow_hud_banked.c), so the world viewport stops above it and the
+ * last map row scrolls into view instead of hiding under the bar.
+ * The caps match the renderer + hardware limits: ui_draw_world_map()
+ * draws a 32x32 window once at map load and the 32x32 BG tilemap ring
+ * is 32 wide and 32 tall, so a wider or taller scene would wrap/clobber
+ * VRAM instead of displaying.  The 32-wide stride also keeps every
+ * map[y][x] lookup a shift, not a multiply, on the multiply-less SM83. */
 #define WORLD_WIDTH  32
 #define WORLD_HEIGHT 32
 
@@ -31,7 +34,7 @@ typedef enum {
  * keeps the player inside this window, scrolling as the player crosses its
  * edge and clamping at the scene bounds (world width/height). */
 #define WORLD_VIEW_W 20
-#define WORLD_VIEW_H 18
+#define WORLD_VIEW_H 17
 
 /* Maximum concurrent hostile actors in a scene (compile-time constant).
  * Raised 4 -> 7 for the south corridor overlap (south_ridge runs kobold
@@ -640,9 +643,13 @@ void world_change_map(World *w, MapId map_id, uint8_t spawn_x, uint8_t spawn_y,
 /* Overworld camera: keep the player centred in the WORLD_VIEW_W x
  * WORLD_VIEW_H view, clamped at the scene bounds (scenes smaller than the
  * view never scroll; near a scene edge the player moves off-centre while
- * the camera stays at the boundary).  The camera glides smoothly in pixels
- * (SCX/SCY); scroll_x/y (= camera_px/8) drive the tile window and the
- * snapshot.  Called once per overworld frame. */
+ * the camera stays at the boundary).  The vertical centre stays at
+ * player_py - 72 (row 9 of the 17-row view, one below exact centre):
+ * keeping the old offset leaves every above-bottom camera position
+ * bit-identical and only the bottom clamp reveals one more row.  The
+ * camera glides smoothly in pixels (SCX/SCY); scroll_x/y (= camera_px/8)
+ * drive the tile window and the snapshot.  Called once per overworld
+ * frame. */
 void world_update_scroll(World *w);
 
 /* Animated movement: world_try_begin_move validates the target and starts

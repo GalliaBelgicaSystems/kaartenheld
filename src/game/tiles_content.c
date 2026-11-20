@@ -323,7 +323,7 @@ void ui_wipe_black_banked(void)
     x1 = (uint8_t)(((ox_old < ox_new) ? ox_new : ox_old) + 20);
     y0 = (oy_old < oy_new) ? oy_old : oy_new;
     y1 = (uint8_t)(((oy_old < oy_new) ? oy_new : oy_old) + 18);
-    /* Clamp: the camera never parks past 12/14 (world <= 32x32), but a
+    /* Clamp: the camera never parks past 12/15 (world <= 32x32), but a
      * trashed SCX must bound the loop, not wrap it. */
     if (x1 > 32) x1 = 32;
     if (y1 > 32) y1 = 32;
