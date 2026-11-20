@@ -36,8 +36,9 @@ testable, save/load works, and the memory budget is understood.
 - **Camera / scroll — B3 + B4 DONE**: the overworld background scrolls
   smoothly with SCX/SCY (set every frame from the pixel camera; the tile
   window is redrawn only when the camera crosses a tile boundary).  The
-  viewport is full-screen (18 rows, no HUD overlay — the map occupies all
-  144px of vertical display).  B4 made the camera player-centred
+  viewport is 20x17 world rows plus the Window-layer status-bar HUD on
+  physical row 17 (the last map row scrolls into view instead of hiding
+  under the bar).  B4 made the camera player-centred
   (`camera_px = player_px - view/2`, clamped at the scene edges); covered by
   `large_map_scroll`, `field_east_scroll` and `camera_boundary_clamp`.
   Render verification: the overworld background uses a 32-column background ring

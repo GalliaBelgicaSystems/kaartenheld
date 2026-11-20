@@ -35,7 +35,7 @@ static void mark_draw(uint8_t px, uint8_t py, uint8_t kind, uint8_t *slot)
     if (kind == ACTOR_MARK_NONE || *slot > MARK_OAM_LAST) return;
     e = (volatile uint8_t *)(0xC000u + ((uint16_t)*slot << 2));
     (*slot)++;
-    if (px >= 160 || py < 8 || py >= 144) {
+    if (px >= 160 || py < 8 || py >= 136) {
         e[0] = 0;
         e[2] = 0;
         return;
@@ -305,7 +305,11 @@ void ui_actors_sprites_banked(void)
                 if (gw == 1 && gh == 1) {
                     volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
                                                                ((uint16_t)oam_slot << 2));
-                    if (px < 160 && py < 144) {
+                    /* Physical rows 0..16 only: row 17 (py 136..143) is
+                     * the Window status-bar HUD, so tile-aligned actors on
+                     * hidden rows are clipped (mid-step sprites at 129..135
+                     * can still overlap the bar by up to 7px without LYC). */
+                    if (px < 160 && py < 136) {
                         e[0] = (uint8_t)(py + 16);
                         e[1] = (uint8_t)(px + 8);
                         e[2] = tile;
@@ -323,7 +327,10 @@ void ui_actors_sprites_banked(void)
                                                                        ((uint16_t)(oam_slot + row + col) << 2));
                             uint8_t tx = (uint8_t)(px + (gx << 3));
                             uint8_t ty = (uint8_t)(py + (gy << 3));
-                            if (tx < 160 && ty < 144) {
+                            /* Per-cell clip against the HUD row (see above):
+                             * a partially covered multi-cell actor keeps
+                             * its visible cells. */
+                            if (tx < 160 && ty < 136) {
                                 e[0] = (uint8_t)(ty + 16);
                                 e[1] = (uint8_t)(tx + 8);
                                 e[2] = (uint8_t)(tile + row + col);
@@ -407,7 +414,8 @@ void ui_actors_sprites_banked(void)
             }
             px = (uint8_t)((uint8_t)(d->x << 3) - w->camera_px_x);
             py = (uint8_t)((uint8_t)(d->y << 3) - w->camera_px_y);
-            if (px < 160 && py < 144) {
+            /* Same HUD-row clip as the hostile pass above. */
+            if (px < 160 && py < 136) {
                 e[0] = (uint8_t)(py + 16);
                 e[1] = (uint8_t)(px + 8);
                 e[2] = tile;
@@ -451,11 +459,13 @@ void ui_actors_sprites_banked(void)
                 {
                     uint8_t sx = (uint8_t)(ox - w->scroll_x);
                     uint8_t sy = (uint8_t)(oy - w->scroll_y);
-                    if (sx < (uint8_t)(WORLD_VIEW_W - 1) && sy < (uint8_t)(WORLD_VIEW_H - 1)) {
+                    if (sx < (uint8_t)(WORLD_VIEW_W - 1) && sy < WORLD_VIEW_H) {
                         g_ui_screen_buf[sy][sx] = (char)a->visual;
                         g_ui_screen_buf[sy][sx + 1] = (char)a->visual;
-                        g_ui_screen_buf[sy + 1][sx] = (char)a->visual;
-                        g_ui_screen_buf[sy + 1][sx + 1] = (char)a->visual;
+                        if ((uint8_t)(sy + 1) < WORLD_VIEW_H) {
+                            g_ui_screen_buf[sy + 1][sx] = (char)a->visual;
+                            g_ui_screen_buf[sy + 1][sx + 1] = (char)a->visual;
+                        }
                     }
                 }
 #endif

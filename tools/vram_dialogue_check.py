@@ -308,9 +308,9 @@ def main():
     # (f77ec9b) is a gfx-branch change.  The box must still be present,
     # clean (no map tiles inside it), and the window must stay disabled
     # (HUD hidden during dialogue).  Read the scroll from the SCY/SCX
-    # registers: informational scroll readout (no current map can scroll
-    # vertically -- all maps are 18 tall = WORLD_VIEW_H, so world_update_scroll
-    # clamps max_y to 0; the box math below still runs at the live offset).
+    # registers: informational scroll readout (18-tall maps scroll one
+    # tile now that the world viewport is 17 rows + the Window HUD row;
+    # the box math below still runs at the live offset).
     scroll_y = pb.memory[0xFF42] >> 3
     scroll_x = pb.memory[0xFF43] >> 3
     print(f"dialogue camera: scroll=({scroll_x},{scroll_y})")

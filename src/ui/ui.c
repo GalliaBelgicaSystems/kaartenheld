@@ -932,7 +932,7 @@ void ui_commit_camera(const World *world)
 #ifdef DEBUG_BUILD
 void ui_update_camera(const World *world)
 {
-    /* Semantic refill (~43k T-states over the full 20x18 view): only the
+    /* Semantic refill (~43k T-states over the 20x17 world view): only the
      * harness reads g_ui_screen_buf on overworld frames, and only it
      * needs it exact every frame.  On hardware (even debug builds
      * running live) the buffer is stale-but-harmless, so skip the scan
@@ -978,10 +978,18 @@ void ui_draw_hline(uint8_t y, char ch)
  * overwrote VRAM, never the index list). */
 void ui_restore_dialogue_rows(const World *world)
 {
+    uint8_t r0 = (uint8_t)(world->scroll_y + 14);
+    uint8_t r1 = (uint8_t)(world->scroll_y + 18);
     /* No null guard (cf. ui_draw_world_rect): the overworld caller
-     * always passes a live world. */
-    ui_draw_world_rect(world, 0, 32, (uint8_t)(world->scroll_y + 14),
-                       (uint8_t)(world->scroll_y + 18));
+     * always passes a live world.  On a 32-tall map at scroll_y=15,
+     * row 17 of the dialogue box wraps onto ring row 0 (32 & 31); split
+     * the restore so ring row 0 gets real map row 0 instead of TILE_FLOOR. */
+    if (r1 > 32) {
+        ui_draw_world_rect(world, 0, 32, r0, 32);
+        ui_draw_world_rect(world, 0, 32, 0, (uint8_t)(r1 - 32));
+    } else {
+        ui_draw_world_rect(world, 0, 32, r0, r1);
+    }
 }
 
 uint8_t ui_calc_timer_bar(uint16_t t)
