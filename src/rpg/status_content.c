@@ -21,8 +21,8 @@
  * refresh duration.  Balance values are deliberately provisional (§26).
  * POISON is control-only (tick 0): it never deals damage, it confuses
  * the victim (enemies attack their allies, the hero plays random hands
- * -- see battle.c).  ICE carries the grey-out (ICE_GREY_CARDS cards for
- * ICE_GREY_TURNS rounds).  BURN is the
+ * -- see battle.c).  ICE is halved-damage-only (tick 0): an iced
+ * combatant's outgoing damage lands halved (rounded up).  BURN is the
  * damage-over-time status (10% of the inflicting hit per round, min 1,
  * scaled per instance at apply). */
 

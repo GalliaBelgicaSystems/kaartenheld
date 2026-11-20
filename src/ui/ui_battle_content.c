@@ -1180,21 +1180,15 @@ static void battle_draw_battle_combo(const volatile Battle *battle)
         battle_draw_text_line(19, combo_row, NULL, 1);
         return;
     }
-    /* Ice-locked / confused foe (msgs 5..7, staged by the telegraph body):
+    /* Confused foe (msgs 6..7, staged by the telegraph body):
      * gated to the enemy-attack phases so a carried msg_id never shadows
      * next turn's PLAYER_SELECT combo preview or the RESULT banner.
-     *  - msg 5: ice-locked fizzle (UI_COLOR_ICE), survives into resolve.
      *  - msg 6: confused foe beat 1 ("FOE IS CONFUSED!"), awaits A.
      *  - msg 7: confused foe outcome (g_battle_confuse_self picks
      *    self vs allies), revealed on first A and held across resolve. */
     if (battle->phase == BATTLE_PHASE_PLAYER_DEFEND ||
         battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
         battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) {
-        if (battle->msg_id == BATTLE_MSG_ICED_FOE) {
-            battle_draw_text_line(0, combo_row, "FOE IS ICED!", 20);
-            battle_color_span(0, combo_row, 12, UI_COLOR_ICE);
-            return;
-        }
         if (battle->msg_id == BATTLE_MSG_CONFUSED_FOE ||
             battle->msg_id == BATTLE_MSG_CONFUSED_OUTCOME) {
             if (battle->msg_id == BATTLE_MSG_CONFUSED_FOE) {
@@ -1440,14 +1434,11 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
         }
         /* No card tints: boxes stay paper (UI_COLOR_NONE), type reads
          * from the stamped weapon icon, element from the per-card OAM
-         * rider HUD. Ice grey-out
-         * (status.h): greyed player cards render dim. Finite-use cards
-         * of the arrow-counter type -- and rings, which share its floor
-         * counter -- grey out too once their uses are spent (matches
-         * the unplayable nav rule). */
+         * rider HUD.  Finite-use cards of the arrow-counter type -- and
+         * rings, which share its floor counter -- render dim once their
+         * uses are spent (matches the unplayable nav rule). */
         ccolor = UI_COLOR_NONE;
-        if ((s_grey_mask[0] & (uint8_t)(1u << i)) != 0 ||
-            ((ctype == g_card_skin_wram.uses_type ||
+        if (((ctype == g_card_skin_wram.uses_type ||
               ctype == BATTLE_CARD_TYPE_HEAL) && cuses == 0)) {
             ccolor = UI_COLOR_DIM;
         }
@@ -1455,10 +1446,10 @@ static void battle_draw_battle_hand(const volatile Battle *battle)
             battle_color_span(ccol, (uint8_t)(top + r), 3, ccolor);
         }
         /* Icon/digit cells stay on the weapon slot (encode ramp ==
-         * display ramp) even when greyed: painting them DIM (slot 7
+         * display ramp) even when dimmed: painting them DIM (slot 7
          * fightboss, which carries white) decodes the white-less fight2
          * bytes as white patches.  The DIM box + marker already
-         * communicate the grey-out; the icons keep their type colors. */
+         * communicate the spent state; the icons keep their type colors. */
         {
             uint8_t wt;
             uint8_t icell;
@@ -1656,20 +1647,17 @@ static const char *battle_banner_text(const volatile Battle *battle)
     }
     /* Enemy turn: one static banner across the telegraph + defend
      * phases (no per-enemy name): "FOE ATTACKS! DEFEND!" is exactly
-     * 20 chars, filling the centered row-0 banner in one screen.  The
-     * iced foe's failed swing is named on the combo row instead
-     * (never here), so the banner stays the standard enemy-turn text
-     * even when nothing is incoming. */
+     * 20 chars, filling the centered row-0 banner in one screen. */
     if (battle->phase == BATTLE_PHASE_ENEMY_TELEGRAPH ||
         battle->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         return "FOE ATTACKS! DEFEND!";
     }
     if (battle->phase == BATTLE_PHASE_DEFENSE_RESOLVE) {
-        /* Iced (5) / confused (6,7) resolves blocked nothing: the swing
-         * either never landed or landed on the foe's own side, so
-         * claiming "BLOCKED ATTACK!" would lie -- the beat stays quiet
-         * while the combo row below names what actually happened. */
-        if (battle->msg_id >= BATTLE_MSG_ICED_FOE &&
+        /* Confused (6,7) resolves blocked nothing: the swing landed on
+         * the foe's own side, so claiming "BLOCKED ATTACK!" would lie
+         * -- the beat stays quiet while the combo row below names what
+         * actually happened. */
+        if (battle->msg_id >= BATTLE_MSG_CONFUSED_FOE &&
             battle->msg_id <= BATTLE_MSG_CONFUSED_OUTCOME) return "";
         return "BLOCKED ATTACK!";
     }
@@ -1808,7 +1796,7 @@ void ui_update_battle_banked(void)
             } else if (battle_confused_paint(battle) &&
                        (battle->phase == BATTLE_PHASE_PLAYER_SELECT ||
                         (battle->phase == BATTLE_PHASE_PLAYER_DEFEND &&
-                         (battle->msg_id < BATTLE_MSG_ICED_FOE ||
+                         (battle->msg_id < BATTLE_MSG_CONFUSED_FOE ||
                           battle->msg_id > BATTLE_MSG_CONFUSED_OUTCOME)))) {
                 /* Confused hero (poison): the message row names the lost
                  * turn ("Confused!") while the combo row below names what

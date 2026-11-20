@@ -1,0 +1,102 @@
+{
+  "name": "confuse_iced_redirect",
+  "test": true,
+  "description": "Ice does not suppress confusion: a foe that is both poisoned and iced still redirects its swing at the telegraph (FOE IS CONFUSED! on the combo line) instead of fizzling -- the halved swing turns on its own side, so the hero takes nothing (no DAMAGE_RECEIVED, HP stays 60).",
+  "initial_state": {
+    "scene": "TEST_MOUNTAIN_PASS",
+    "player": {
+      "x": 13,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "party": {
+      "HERO": {
+        "hp": 60,
+        "max_hp": 60
+      }
+    },
+    "seed": 777,
+    "start_battle": true
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 1,
+      "status": 1,
+      "duration": 5
+    },
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 1,
+      "status": 3,
+      "duration": 5
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "SW",
+      "value": 3
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 1,
+      "uses": 255
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 150
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "battle_player_hp",
+      "expected": 60
+    },
+    {
+      "type": "event_occurred",
+      "event": "STATUS_APPLIED"
+    },
+    {
+      "type": "event_occurred",
+      "event": "ENEMY_CARD_PLAYED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "TURN_SKIPPED"
+    },
+    {
+      "type": "screen_row",
+      "row": 10,
+      "contains": "FOE IS CONFUSED!"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "DAMAGE_RECEIVED"
+    }
+  ]
+}

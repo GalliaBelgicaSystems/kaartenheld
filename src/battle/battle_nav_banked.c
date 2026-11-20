@@ -16,10 +16,9 @@
  * in g_bk_byte_c (booleans).
  *
  * Self-contained (AGENTS.md §52.11.1): reads/writes only WRAM structs
- * (the staged Battle*, the battle-scoped grey masks in status.h) and its
- * own bank-local helpers.  It must NOT call any fixed-bank function --
- * telemetry for target moves is emitted by the fixed wrapper after the
- * dispatch returns. */
+ * (the staged Battle*) and its own bank-local helpers.  It must NOT
+ * call any fixed-bank function -- telemetry for target moves is
+ * emitted by the fixed wrapper after the dispatch returns. */
 
 /* Dispatch opcodes (shared with src/battle/battle.c wrappers). */
 #define NAV_OP_CURSOR_MOVE      1
@@ -42,12 +41,11 @@ static uint8_t nav_combo_reserved_cost(const Battle *b)
     return sum;
 }
 
-/* A hand card can be added to the current combo only while it has uses left,
- * is not greyed out by ice, AND its cost fits in the phase energy not yet
- * reserved by the pending combo (deck.md Phase 10).  Greyed hand cards (bit
- * set in s_grey_mask[0]) are unplayable for the grey-out duration -- the
- * cursor skips them, selection rejects them, and the auto-play fallback in
- * battle_execute_combo ignores them.
+/* A hand card can be added to the current combo only while it has uses left
+ * AND its cost fits in the phase energy not yet reserved by the pending
+ * combo (deck.md Phase 10).  Unplayable cards reject with NO ENERGY --
+ * the cursor skips them, selection rejects them, and the auto-play
+ * fallback in battle_execute_combo ignores them.
  * Limited-arrows: a BOW also needs a staged bow in the pending combo to
  * stay under the shared arrow pool (g_bk_byte_d, staged by the fixed
  * wrapper; the engine body stays game-id-free).  uses_remaining == 0
@@ -69,7 +67,6 @@ static bool nav_hand_playable(const Battle *b, uint8_t hand_idx)
     if (b->hand[hand_idx].uses_remaining == 0) return false;
     if (b->hand[hand_idx].type == BATTLE_CARD_TYPE_BOW &&
         nav_staged_bows(b) >= g_bk_byte_d) return false;
-    if ((s_grey_mask[0] & (uint8_t)(1u << hand_idx)) != 0) return false;
     available = b->energy - nav_combo_reserved_cost(b);
     return b->hand[hand_idx].cost <= available;
 }
@@ -150,7 +147,7 @@ static void nav_card_select(Battle *b)
     if (!nav_hand_playable(b, b->cursor_pos)) {
         /* Depleted (uses == 0) keeps OUT OF USES; a bow that fails on
          * the arrows condition itself (staged bows at/over the pool)
-         * flashes NO ARROWS; everything else (energy, grey mask) says
+         * flashes NO ARROWS; everything else (energy) says
          * NO ENERGY. */
         if (b->hand[b->cursor_pos].uses_remaining == 0) {
             nav_msg(b, 2);
@@ -194,7 +191,7 @@ static void nav_card_select(Battle *b)
 /* Confused-hero auto-stage (poison, docs/loot.md §34.6): the hero plays
  * a random hand -- no input.  Stages a random subset of the currently
  * playable hand that fits the phase energy (nav_hand_playable already
- * accounts reserved cost, uses, grey-out; at most one ring, like manual
+ * accounts reserved cost and uses; at most one ring, like manual
  * staging) and reports through g_bk_byte_c: 0 = hero not confused,
  * 2 = staged this frame (the fixed hook starts the hold beat), 1 =
  * already staged (the fixed hook counts the hold down and executes at
@@ -210,7 +207,7 @@ static void nav_confuse_auto(Battle *b)
     uint8_t staged_ring = 0;
     g_bk_byte_c = 0;
     if (b->phase == BATTLE_PHASE_PLAYER_DEFEND &&
-        b->msg_id >= BATTLE_MSG_ICED_FOE &&
+        b->msg_id >= BATTLE_MSG_CONFUSED_FOE &&
         b->msg_id <= BATTLE_MSG_CONFUSED_OUTCOME) {
         return;
     }
@@ -250,7 +247,7 @@ static void nav_confuse_auto(Battle *b)
     b->dirty |= (uint8_t)(BATTLE_DIRTY_HAND | BATTLE_DIRTY_DESC |
                           BATTLE_DIRTY_COMBO | BATTLE_DIRTY_MSG);
     /* Staged something: hold the beat so the message reads.  Nothing
-     * playable (full grey-out, depleted bows, unaffordable hand):
+     * playable (depleted bows, unaffordable hand):
      * report "execute now" so the no-play path runs instead of idling
      * on this frame forever -- re-entering next frame would stage
      * nothing again, an infinite hold. */

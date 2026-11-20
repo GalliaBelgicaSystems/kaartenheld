@@ -1,7 +1,7 @@
 {
  "name": "status_ice_no_skip",
  "test": true,
- "description": "Enemy-side ice (no skip): icing the slime (slot 1) no longer skips anything -- it swings normally (ENEMY_CARD_PLAYED, DAMAGE_RECEIVED lands) -- and its HP row reads the ICE-blue slot (attr 2, like burn reads red). Ice locks decks (grey-out), never turns.",
+ "description": "Enemy-side ice (no skip): icing the slime (slot 1) no longer skips anything -- it swings normally at halved damage (ENEMY_CARD_PLAYED, DAMAGE_RECEIVED lands) -- and its HP row reads the ICE-blue slot (attr 2, like burn reads red). Ice halves damage, never turns.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {

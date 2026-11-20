@@ -1,0 +1,112 @@
+{
+  "name": "battle_ice_foe_halved",
+  "test": true,
+  "description": "Iced foe deals halved damage (rounded up, odd case): an iced slime telegraphs its lead SW2 (ENEMY_CARD_PLAYED keeps the full 2) but the resolved swing lands 1 (DAMAGE_RECEIVED d0=1, hero 60->59). No TURN_SKIPPED, no CARDS_GREYED, and the combo row never names a fizzle.",
+  "initial_state": {
+    "scene": "TEST_MOUNTAIN_PASS",
+    "player": {
+      "x": 13,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "party": {
+      "HERO": {
+        "hp": 60,
+        "max_hp": 60
+      }
+    },
+    "seed": 777,
+    "start_battle": true
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "apply_status",
+      "slot": 1,
+      "status": 3,
+      "duration": 5
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "SW",
+      "value": 3
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 1,
+      "uses": 255
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 6
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 70
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 100
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "battle_player_hp",
+      "expected": 59
+    },
+    {
+      "type": "event_occurred",
+      "event": "ENEMY_CARD_PLAYED"
+    },
+    {
+      "type": "event_arg",
+      "event": "ENEMY_CARD_PLAYED",
+      "index": 2,
+      "value": 2
+    },
+    {
+      "type": "event_occurred",
+      "event": "DAMAGE_RECEIVED"
+    },
+    {
+      "type": "event_arg",
+      "event": "DAMAGE_RECEIVED",
+      "index": 0,
+      "value": 1
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "TURN_SKIPPED"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "CARDS_GREYED"
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 10,
+      "contains": "FOE IS ICED!"
+    }
+  ]
+}

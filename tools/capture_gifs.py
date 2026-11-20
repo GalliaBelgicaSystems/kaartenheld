@@ -150,7 +150,7 @@ def capture_battle():
         # transit ambush itself (auto-win), leaving nothing to record.
         engaged = False
         for _ in range(14):
-            if s.text_has("DECK:"):
+            if s.battle_hud_up():
                 engaged = True
                 break
             s.press("left" if s.pos()[0] > kxy[0] else "right", settle=24)
@@ -230,7 +230,7 @@ def capture_heal():
         kxy = (kobold["position"]["x"], kobold["position"]["y"])
         engaged = False
         for _ in range(14):
-            if s.text_has("DECK:"):
+            if s.battle_hud_up():
                 engaged = True
                 break
             s.press("left" if s.pos()[0] > kxy[0] else "right", settle=24)
@@ -362,11 +362,11 @@ def capture_boss():
         if path:
             W._walk_path(s, path)
         s.settle_scene(expected_scene=throne_id)
-        if not s.text_has("DECK:"):
+        if not s.battle_hud_up():
             s.check("boss engaged",
-                    s.press_until("up", lambda: s.text_has("DECK:"),
+                    s.press_until("up", lambda: s.battle_hud_up(),
                                   tries=10, settle=24, label="bump boss"),
-                    expected="DECK:", actual="none")
+                    expected="battle HUD", actual="none")
         s.wait_for(lambda: s.text_has("TARGET ")
                    or s.text_has("PLAYER TURN"), ticks=300)
         s.tick(40)

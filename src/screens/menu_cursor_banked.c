@@ -36,9 +36,9 @@ extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
 
 /* Item menu navigation layout constants (mirror item_screen.c). */
 #define CUR_FIRST_CARD 1
-/* Visible DECK rows (5-12): 8 rows x 4 OAM sprites (rider+ingot, both
- * sides) = 32 entries, inside the 40-entry OAM budget. */
-#define CUR_VISIBLE_CARD 8
+/* Visible DECK rows (5-13): 9 rows x 4 OAM sprites (rider+ingot, both
+ * sides) = 36 entries, inside the 40-entry OAM budget. */
+#define CUR_VISIBLE_CARD 9
 /* First card row (mirror item_content_banked.c ROW_CARDS_TOP -- keep in
  * sync): the diff-clear below addresses rows by slot. */
 #define CUR_CARDS_TOP 5
@@ -217,7 +217,15 @@ static uint8_t cu_sort_value(CardId id, uint8_t sort)
     uint8_t power = 0;
     uint8_t cost = 0;
     uint8_t type = cu_grp_type(id, &power, &cost);
-    if (sort == 1) return type;      /* SORT_TYPE */
+    if (sort == 1) {
+        /* SORT_TYPE is the WEAPON (all swords together, shields
+         * together, then bows, daggers, rings -- same WPN order as
+         * the group key), not the combat role: role is already the
+         * FILTER axis, so sorting by it would be redundant. */
+        uint8_t sm = 0, sw = 0, sr = 0;
+        if (cu_grp_key(id, &sm, &sw, &sr)) return sw;
+        return type;
+    }
     if (sort == 2 || sort == 4) return power;  /* SORT_POWER(+/-) */
     return cost;                     /* SORT_COST(+/-) */
 }
@@ -234,10 +242,10 @@ extern uint8_t s_view_count;
 
 /* Per-row sums for the render (bank 2 cannot re-resolve group keys: its
  * switchable area is full and the scan it needs duplicates ~300 B of
- * key logic).  Per side, drawn-indexed: slots 0-7 hold the left
- * (pile) block's rows, slots 8-15 the right (deck) block's; detail
+ * key logic).  Per side, drawn-indexed: slots 0-8 hold the left
+ * (pile) block's rows, slots 9-17 the right (deck) block's; detail
  * mode uses slot 0 for the selected row. */
-#define ROW_SUMS 16
+#define ROW_SUMS 18
 uint8_t s_row_owned[ROW_SUMS];
 uint8_t s_row_decked[ROW_SUMS];
 
@@ -250,14 +258,14 @@ uint8_t s_row_decked[ROW_SUMS];
 uint8_t s_grp_owned[MAX_CARD_COLLECTION];
 uint8_t s_grp_decked[MAX_CARD_COLLECTION];
 
-/* Per-side packed draw maps: the first 8 view positions visible on
+/* Per-side packed draw maps: the first 9 view positions visible on
  * that side (left: owned - decked > 0; right: decked > 0) at/after
  * item_menu_scroll, 0xFF past the end.  A zero count hides that side's
  * cell -- an emptied side shows blank rows -- and the cursor never
  * parks on a hidden cell.  Built here (same bank as the group tables)
  * on every DECK render; read by the bank-2 row painter. */
-uint8_t s_ic_draw_pos[8];
-uint8_t s_ic_draw_pos_r[8];
+uint8_t s_ic_draw_pos[9];
+uint8_t s_ic_draw_pos_r[9];
 
 /* DECK scroll-overflow flags for the bank-2 row painter (plain WRAM,
  * bank-independent): bit 0 up-pile, 1 up-deck, 2 down-pile, 3
@@ -271,8 +279,8 @@ uint8_t s_ic_scroll_flags;
  * renders that consume them): bank 2's switchable area is full, and
  * every op here is bank-independent (WRAM maps/buffer, direct VRAM/OAM
  * writes), needing no bank-2 ROM tables (AGENTS.md 52.11.1). */
-static uint8_t s_cu_prev_pos[8];
-static uint8_t s_cu_prev_pos_r[8];
+static uint8_t s_cu_prev_pos[9];
+static uint8_t s_cu_prev_pos_r[9];
 
 extern uint8_t g_is_cgb;
 #ifdef DEBUG_BUILD
@@ -310,15 +318,19 @@ static void cu_blank_span(uint8_t y, uint8_t x, uint8_t n)
     }
 }
 
-/* Hide one side's OAM pair for a slot (rider + material entries live in
- * WRAM shadow OAM: side 0 = entries 1/17 + k, side 1 = 9/25 + k). */
+/* Hide one side's OAM pair for a slot (WRAM shadow OAM): mat entries
+ * are per-side (side 0: 17 + k, side 1: 26 + k); rider entries are
+ * SHARED (1 + k both sides) because deck-list riders are BG art and
+ * these entries are never stamped here -- the hides only clear stale
+ * battle-rider OAM, so sharing is safe and keeps every entry below
+ * the 32-slot battle budget. */
 static void cu_hide_side(uint8_t k, uint8_t side)
 {
     volatile uint8_t *re;
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 9 : 1) + k) << 2));
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)(1 + k) << 2));
     re[0] = 0;
     re[2] = 0;
-    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 25 : 17) + k) << 2));
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 26 : 17) + k) << 2));
     re[0] = 0;
     re[2] = 0;
 }
@@ -444,11 +456,16 @@ void item_view_build_banked(void)
         id = g->state.cards.collection.entries[i].id;
         type = cu_grp_type(id, &power, &cost);
         if (type == 0xFF) continue;
-        if (g->item_menu_filter != 0xFF && type != g->item_menu_filter)
+        /* WEAPON filter (0xFF = ALL, else WPN_*), MATERIAL filter
+         * (0xFF = ALL, else MAT_*) -- both from the picker's two
+         * filter rows. */
+        if (!cu_grp_key(id, &mat, &wpn, &rdr)) continue;
+        if (g->item_menu_filter != 0xFF && wpn != g->item_menu_filter)
+            continue;
+        if (g->item_menu_filter_mat != 0xFF && mat != g->item_menu_filter_mat)
             continue;
         /* Fold into the first row with the same (mat, wpn, rider):
          * that row's earliest collection entry stays the primary. */
-        if (!cu_grp_key(id, &mat, &wpn, &rdr)) continue;
         for (k = 0; k < s_view_count; k++) {
             if (!cu_grp_key(g->state.cards.collection.entries[
                     s_view_indices[k]].id, &m2, &w2, &r2)) continue;
@@ -539,7 +556,7 @@ static void item_window_build(Game *g)
     /* Snapshot the maps before rebuilding: the diff-clear at the end
      * erases slots/sides that lose their row (BSS zeros read as vpos 0
      * on the very first build -- harmless, a full draw follows). */
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < 9; i++) {
         s_cu_prev_pos[i] = s_ic_draw_pos[i];
         s_cu_prev_pos_r[i] = s_ic_draw_pos_r[i];
     }
@@ -554,8 +571,8 @@ static void item_window_build(Game *g)
         if (n < start_l) {
             if (owned > decked) s_ic_scroll_flags |= 0x01;
         } else {
-            if (k >= 8 && owned > decked) s_ic_scroll_flags |= 0x04;
-            if (owned > decked && k < 8) {
+            if (k >= 9 && owned > decked) s_ic_scroll_flags |= 0x04;
+            if (owned > decked && k < 9) {
                 s_ic_draw_pos[k] = n;
                 s_row_owned[k] = owned;
                 s_row_decked[k] = decked;
@@ -565,11 +582,11 @@ static void item_window_build(Game *g)
         if (n < start_r) {
             if (decked > 0) s_ic_scroll_flags |= 0x02;
         } else {
-            if (kr >= 8 && decked > 0) s_ic_scroll_flags |= 0x08;
-            if (decked > 0 && kr < 8) {
+            if (kr >= 9 && decked > 0) s_ic_scroll_flags |= 0x08;
+            if (decked > 0 && kr < 9) {
                 s_ic_draw_pos_r[kr] = n;
-                s_row_owned[8 + kr] = owned;
-                s_row_decked[8 + kr] = decked;
+                s_row_owned[9 + kr] = owned;
+                s_row_decked[9 + kr] = decked;
                 kr++;
             }
         }
@@ -581,15 +598,15 @@ static void item_window_build(Game *g)
      * them), so emptiness is a cheap local test. */
     if (k == 0) s_ic_scroll_flags &= (uint8_t)~0x05;
     if (kr == 0) s_ic_scroll_flags &= (uint8_t)~0x0A;
-    for (; k < 8; k++) {
+    for (; k < 9; k++) {
         s_ic_draw_pos[k] = 0xFF;
         s_row_owned[k] = 0;
         s_row_decked[k] = 0;
     }
-    for (; kr < 8; kr++) {
+    for (; kr < 9; kr++) {
         s_ic_draw_pos_r[kr] = 0xFF;
-        s_row_owned[8 + kr] = 0;
-        s_row_decked[8 + kr] = 0;
+        s_row_owned[9 + kr] = 0;
+        s_row_decked[9 + kr] = 0;
     }
     /* Erase what the rebuild just emptied: a slot/side that held a row
      * before and holds none now is blanked unconditionally (VRAM +
@@ -600,7 +617,7 @@ static void item_window_build(Game *g)
         uint8_t y;
         uint8_t oL;
         uint8_t oR;
-        for (k = 0; k < 8; k++) {
+        for (k = 0; k < 9; k++) {
             oL = s_cu_prev_pos[k];
             oR = s_cu_prev_pos_r[k];
             y = (uint8_t)(CUR_CARDS_TOP + k);
@@ -981,20 +998,22 @@ void item_group_remove_one_banked(void)
     }
     g_bk_byte_c = 0xFF;
 }
-/* DECK nav mutations: filter cycle / sort cycle / tab switch (bank 15).
- * Moved out of the fixed bank (AGENTS.md §52.18): the card-group +
- * boss-dialogue merge overflowed Bank 1, and these three are pure WRAM
- * state machines -- no ROM tables, no fixed calls -- so they run
- * verbatim here.  Staging: g_bk_ptr_a = Game*, g_bk_byte_a = mode
- * (0 filter, 1 sort, 2 tab), g_bk_byte_b = tab direction (0 back,
- * 1 forward; ignored by modes 0/1, which take no direction input).  The
- * direction is staged by the fixed caller: a banked body must never
- * call input_pressed (AGENTS.md §52.11.1).  Mirror constants live in
- * item_screen.c (TAB_DECK/TAB_GEM/ROW_TOP, FILTER_ALL,
- * SORT_NONE/SORT_COST_DESC) -- keep in sync. */
+/* DECK nav mutations: weapon cycle / material cycle / sort cycle /
+ * tab switch (bank 15).  Moved out of the fixed bank (AGENTS.md
+ * §52.18): the card-group + boss-dialogue merge overflowed Bank 1,
+ * and these are pure WRAM state machines -- no ROM tables, no fixed
+ * calls -- so they run verbatim here.  Staging: g_bk_ptr_a = Game*,
+ * g_bk_byte_a = mode (0 weapon, 1 sort, 2 tab, 3 material),
+ * g_bk_byte_b = tab direction (0 back, 1 forward; ignored by modes
+ * 0/1/3, which take no direction input).  The direction is staged by
+ * the fixed caller: a banked body must never call input_pressed
+ * (AGENTS.md §52.11.1).  Mirror constants live in item_screen.c
+ * (TAB_DECK/TAB_GEM/ROW_TOP, FILTER_ALL, SORT_NONE/SORT_COST_DESC)
+ * -- keep in sync. */
 #define CYC_FILTER 0
 #define CYC_SORT   1
 #define CYC_TAB    2
+#define CYC_MATERIAL 3
 void item_menu_cycle_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -1002,23 +1021,49 @@ void item_menu_cycle_banked(void)
     if (!g) return;
     mode = g_bk_byte_a;
     if (mode == CYC_FILTER) {
+        /* WEAPON row: ALL -> SWORD -> DAGGER -> SHIELD -> BOW ->
+         * RING -> ALL (stored WPN_* ids, 0xFF = ALL). */
         if (g->item_menu_filter == CYC_FILTER_ALL)
-            g->item_menu_filter = CARD_TYPE_ATTACK;
-        else if (g->item_menu_filter == CARD_TYPE_ATTACK)
-            g->item_menu_filter = CARD_TYPE_DEFENSE;
-        else if (g->item_menu_filter == CARD_TYPE_DEFENSE)
-            g->item_menu_filter = CARD_TYPE_HEAL;
-        else if (g->item_menu_filter == CARD_TYPE_HEAL)
-            g->item_menu_filter = CARD_TYPE_STATUS;
-        else if (g->item_menu_filter == CARD_TYPE_STATUS)
-            g->item_menu_filter = CARD_TYPE_UTILITY;
+            g->item_menu_filter = WPN_SWORD;
+        else if (g->item_menu_filter == WPN_SWORD)
+            g->item_menu_filter = WPN_DAGGER;
+        else if (g->item_menu_filter == WPN_DAGGER)
+            g->item_menu_filter = WPN_SHIELD;
+        else if (g->item_menu_filter == WPN_SHIELD)
+            g->item_menu_filter = WPN_BOW;
+        else if (g->item_menu_filter == WPN_BOW)
+            g->item_menu_filter = WPN_RING;
         else
             g->item_menu_filter = CYC_FILTER_ALL;
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
+    } else if (mode == CYC_MATERIAL) {
+        /* MATERIAL row: ALL -> WOOD -> BRONZE -> IRON -> STEEL ->
+         * MYTHRIL -> ALL (stored MAT_* ids, 0xFF = ALL). */
+        if (g->item_menu_filter_mat == CYC_FILTER_ALL)
+            g->item_menu_filter_mat = MAT_WOOD;
+        else if (g->item_menu_filter_mat == MAT_WOOD)
+            g->item_menu_filter_mat = MAT_BRONZE;
+        else if (g->item_menu_filter_mat == MAT_BRONZE)
+            g->item_menu_filter_mat = MAT_IRON;
+        else if (g->item_menu_filter_mat == MAT_IRON)
+            g->item_menu_filter_mat = MAT_STEEL;
+        else if (g->item_menu_filter_mat == MAT_STEEL)
+            g->item_menu_filter_mat = MAT_MYTHRIL;
+        else
+            g->item_menu_filter_mat = CYC_FILTER_ALL;
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
     } else if (mode == CYC_SORT) {
         /* Wrap instead of % -- SM83 has no hardware divide and the SDCC
          * int-mod library would land in the tight fixed bank. */
         g->item_menu_sort = (g->item_menu_sort >= CYC_SORT_COST_DESC) ?
             CYC_SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
+        /* Fresh order, fresh windows on both sides (same as a tab
+         * switch): a stale per-side scroll would show a middle slice
+         * of the new order. */
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
     } else {
         /* RIGHT advances, LEFT goes back (DECK <-> QUEST <-> HERO <->
          * GEM).  Directional: with four tabs a forward-only cycle would
@@ -1097,8 +1142,15 @@ void item_deck_update_banked(void)
         case DCK_MODE_PICKER:
             if ((edges & (uint8_t)(1u << INPUT_UP)) ||
                 (edges & (uint8_t)(1u << INPUT_DOWN))) {
-                g->item_menu_pick_row =
-                    (uint8_t)(g->item_menu_pick_row == 0 ? 1 : 0);
+                if (edges & (uint8_t)(1u << INPUT_DOWN)) {
+                    g->item_menu_pick_row =
+                        (uint8_t)(g->item_menu_pick_row >= 2 ? 0 :
+                                 (uint8_t)(g->item_menu_pick_row + 1));
+                } else {
+                    g->item_menu_pick_row =
+                        (uint8_t)(g->item_menu_pick_row == 0 ? 2 :
+                                 (uint8_t)(g->item_menu_pick_row - 1));
+                }
                 pk_draw_rows(g);
                 g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
             } else if ((edges & (uint8_t)(1u << INPUT_LEFT)) ||
@@ -1106,6 +1158,8 @@ void item_deck_update_banked(void)
                 g_bk_ptr_a = (void *)g;
                 if (g->item_menu_pick_row == 0) {
                     g_bk_byte_a = 0;
+                } else if (g->item_menu_pick_row == 1) {
+                    g_bk_byte_a = 3;
                 } else {
                     g_bk_byte_a = 1;
                 }
@@ -1160,6 +1214,7 @@ void item_deck_update_banked(void)
             g->item_menu_mode = DCK_MODE_PICKER;
             g->item_menu_pick_row = 0;
             g->item_menu_prev_filter = g->item_menu_filter;
+            g->item_menu_prev_filter_mat = g->item_menu_filter_mat;
             g->item_menu_prev_sort = g->item_menu_sort;
             g->render_cache.valid = false;
             return;
@@ -1360,13 +1415,24 @@ static void pk_blank_row(uint8_t y)
     }
 }
 
-static const char *const s_pk_type_names[6] = {
-    "ATK", "DEF", "HEL", "STS", "UTL", "SPL"
-};
-
-static const char *pk_filter_name(uint8_t f)
+static const char *pk_weapon_name(uint8_t w)
 {
-    return (f <= 4) ? s_pk_type_names[f] : "ALL";
+    if (w == WPN_SWORD) return "SWORD";
+    if (w == WPN_DAGGER) return "DAGGER";
+    if (w == WPN_SHIELD) return "SHIELD";
+    if (w == WPN_BOW) return "BOW";
+    if (w == WPN_RING) return "RING";
+    return "ALL";
+}
+
+static const char *pk_mat_name(uint8_t m)
+{
+    if (m == MAT_WOOD) return "WOOD";
+    if (m == MAT_BRONZE) return "BRONZE";
+    if (m == MAT_IRON) return "IRON";
+    if (m == MAT_STEEL) return "STEEL";
+    if (m == MAT_MYTHRIL) return "MYTHRIL";
+    return "ALL";
 }
 
 static const char *pk_sort_name(uint8_t s)
@@ -1384,9 +1450,12 @@ static const char *pk_sort_name(uint8_t s)
 static void pk_draw_rows(Game *g)
 {
     pk_draw_text(0, 7, (g->item_menu_pick_row == 0) ? ">" : " ", 2);
-    pk_draw_text(2, 7, "FILTER", 10);
-    pk_draw_text(12, 7, pk_filter_name(g->item_menu_filter), 8);
-    pk_draw_text(0, 9, (g->item_menu_pick_row != 0) ? ">" : " ", 2);
+    pk_draw_text(2, 7, "WEAPON", 10);
+    pk_draw_text(12, 7, pk_weapon_name(g->item_menu_filter), 8);
+    pk_draw_text(0, 8, (g->item_menu_pick_row == 1) ? ">" : " ", 2);
+    pk_draw_text(2, 8, "MATERIAL", 10);
+    pk_draw_text(12, 8, pk_mat_name(g->item_menu_filter_mat), 8);
+    pk_draw_text(0, 9, (g->item_menu_pick_row == 2) ? ">" : " ", 2);
     pk_draw_text(2, 9, "SORT", 10);
     pk_draw_text(12, 9, pk_sort_name(g->item_menu_sort), 8);
 }
@@ -1397,17 +1466,18 @@ void item_picker_render_banked(void)
     uint8_t r;
     uint8_t k;
     if (!g) return;
-    /* Sweep the list/detail OAM (riders 1-16 + ingots 17-32): the
-     * picker paints text only, so stale card icons would survive
-     * without this (bank-2 body swept for itself before the move). */
-    for (k = 0; k < 8; k++) {
+    /* Sweep the list/detail OAM (riders 1-9 shared by both sides --
+     * deck-list riders are BG art so these entries are never stamped
+     * here -- plus ingots 17-25 pile / 26-34 deck): the picker paints
+     * text only, so stale card icons would survive without this
+     * (bank-2 body swept for itself before the move). */
+    for (k = 0; k < 9; k++) {
         cu_hide_side(k, 0);
         cu_hide_side(k, 1);
     }
     for (r = 2; r <= 6; r++)
         pk_blank_row(r);
     pk_draw_rows(g);
-    pk_blank_row(8);
     for (r = 10; r <= 13; r++)
         pk_blank_row(r);
     pk_draw_text(0, 14, "LR CYCLE  A:OK B:NO", 20);

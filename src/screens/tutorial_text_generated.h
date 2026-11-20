@@ -42,7 +42,7 @@ static const char s_tut_5[4][20] = {
     "BURN POISON ICE",
     "Burn wounds you.",
     "Poison confuses.",
-    "Ice locks cards."
+    "Ice halves damage."
 };
 
 static const char s_tut_6[4][20] = {

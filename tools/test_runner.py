@@ -22,7 +22,7 @@ from emulator import (EmulatorSession, STORY_FLAG_ID_MAP, DIALOGUE_ID_MAP,
                       CHARACTER_ID_TO_NAME, ITEM_ID_TO_NAME, ACTOR_ID_TO_NAME,
                       CURRENCY_ID_MAP, PROGRESSION_TARGET_MAP,
                        CURRENCY_ID_TO_NAME, PROG_TYPE_HERO, CARD_TYPE_MAP,
-                      FILTER_TYPE_MAP, SORT_MODE_MAP)
+                      FILTER_TYPE_MAP, FILTER_MAT_MAP, SORT_MODE_MAP)
 
 VALID_ASSERTION_TYPES = {
     "game_state", "player_position", "player_facing", "player_hp", "music_track",
@@ -446,6 +446,9 @@ def run_scenario(scenario):
             elif act_type == "set_filter":
                 session.debug_action(session.DBG_ACT_SET_FILTER,
                                      FILTER_TYPE_MAP[act.get("filter", "ALL")] & 0xFF, 0, 0)
+            elif act_type == "set_filter_mat":
+                session.debug_action(session.DBG_ACT_SET_FILTER_MAT,
+                                     FILTER_MAT_MAP[act.get("filter", "ALL")] & 0xFF, 0, 0)
             elif act_type == "set_sort":
                 session.debug_action(session.DBG_ACT_SET_SORT,
                                      SORT_MODE_MAP[act.get("mode", "OFF")] & 0xFF, 0, 0)

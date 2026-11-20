@@ -1475,34 +1475,16 @@ STATUS_RESISTED
   data[0] = status id whose roll failed
   data[1] = target slot
 
-TURN_SKIPPED (docs/combo-system.md §12, Phase D)
-  data[0] = combatant slot whose turn was skipped (0 = player,
-            1..n = enemy index)
-  data[1] = cause StatusId (STATUS_FREEZE for a greyed-draw skip)
-```
+TURN_SKIPPED -- RETIRED with the ice grey-out (never emitted; kept
+for wire/event-id stability).
 
-Ice grey-out events (Phase D, docs/combo-system.md §12/§16):
+Ice grey-out events -- RETIRED (never emitted; kept for wire/event-id
+stability):
 
 ```text
-CARDS_GREYED
-  data[0] = actor slot (0 = player, 1..n = enemy); for an enemy the
-            grey applies to the party's SHARED battle deck
-  data[1] = first greyed pool position (deck position / hand index)
-  data[2] = second greyed pool position
-  data[3] = grey duration in rounds (ICE_GREY_TURNS)
-
-CARDS_UNGREYED
-  data[0] = actor slot
-  data[1] = first previously-greyed pool position
-  data[2] = second previously-greyed pool position
+CARDS_GREYED (retired)
+CARDS_UNGREYED (retired)
 ```
-
-The enemy grey gate tests only the ACTIVE attacker's own slot mask
-against the shared deck's current draw position (per-attacker lock:
-poisoning one foe never blocks the other attackers, though they all
-rotate through the one shared draw position).  The skip emits
-`TURN_SKIPPED` with `data[1] = STATUS_POISON` and still consumes the
-spent card (the draw position advances with wrap) so the deck cycles.
 
 ---
 

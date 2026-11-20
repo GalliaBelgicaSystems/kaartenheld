@@ -138,12 +138,12 @@
     },
     {
       "type": "oam_tile",
-      "entry": 25,
+      "entry": 26,
       "expected": 121
     },
     {
       "type": "oam_attr",
-      "entry": 25,
+      "entry": 26,
       "expected": 5
     }
   ]

@@ -27,9 +27,11 @@ StatusSlots s_battle_status[STATUS_ROUND_SLOTS];
 /* Defend-phase poison grace bitmask (status.h); cleared at battle start. */
 uint8_t g_poison_grace_mask;
 
-/* Ice grey-out (status.h): mask/duration per actor slot.  Battle-scoped
- * runtime state, cleared at battle start; written by status_grey_apply
- * (wrapper + bank-10 pick body), read by battle gating and the bank-3 HUD. */
+/* Ice grey-out (status.h): RETIRED.  Ice no longer locks cards -- iced
+ * combatants deal halved damage instead (telegraph softening for
+ * enemies, attack/counter softening for the hero).  The mask/duration
+ * arrays stay (WRAM layout stability, zeroed at battle start) but are
+ * never written: every read below observes zero. */
 uint8_t s_grey_mask[STATUS_ROUND_SLOTS];
 uint8_t s_grey_dur[STATUS_ROUND_SLOTS];
 
@@ -105,36 +107,14 @@ uint8_t status_tick(StatusSlots *slots, uint8_t actor_slot)
 
 void status_grey_apply(uint8_t actor_slot, uint8_t pool_size)
 {
-    if (actor_slot >= STATUS_ROUND_SLOTS) return;
-
-    g_bk_call_bank = 10;
-    g_bk_call_target = (uint16_t)&status_grey_apply_banked;
-    g_bk_byte_a = actor_slot;
-    g_bk_byte_b = pool_size;
-    banked_call_run();
-
-#ifdef DEBUG_BUILD
-    /* An empty pool or a bad slot leaves the mask untouched (no event). */
-    if (s_grey_mask[actor_slot] == 0) return;
-
-    telemetry_emit(EVENT_CARDS_GREYED, actor_slot, g_bk_byte_b, g_bk_byte_c,
-                   ICE_GREY_TURNS);
-#endif
+    /* Retired (ice is halved-damage-only): keep the symbol for layout
+     * and header compatibility, never write the masks. */
+    (void)actor_slot;
+    (void)pool_size;
 }
 
 void status_grey_tick(uint8_t actor_slot)
 {
-    if (actor_slot >= STATUS_ROUND_SLOTS) return;
-    if (s_grey_dur[actor_slot] == 0) return;
-
-    g_bk_call_bank = 10;
-    g_bk_call_target = (uint16_t)&status_grey_tick_banked;
-    g_bk_byte_a = actor_slot;
-    banked_call_run();
-
-#ifdef DEBUG_BUILD
-    if (g_bk_byte_a != 0) {
-        telemetry_emit(EVENT_CARDS_UNGREYED, actor_slot, g_bk_byte_b, g_bk_byte_c, 0);
-    }
-#endif
+    /* Retired: nothing drains, nothing emits. */
+    (void)actor_slot;
 }

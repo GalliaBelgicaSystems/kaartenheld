@@ -31,7 +31,7 @@
   },
   {
    "type": "set_filter",
-   "filter": "ATTACK"
+   "filter": "BOW"
   },
   {
    "type": "wait",
@@ -46,48 +46,24 @@
    "frames": 3
   },
   {
-   "type": "press",
-   "button": "DOWN"
+   "type": "wait",
+   "frames": 3
   },
   {
    "type": "wait",
    "frames": 3
   },
   {
-   "type": "press",
-   "button": "DOWN"
+   "type": "wait",
+   "frames": 3
   },
   {
    "type": "wait",
    "frames": 3
   },
   {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
    "type": "wait",
    "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
   },
   {
    "type": "wait",

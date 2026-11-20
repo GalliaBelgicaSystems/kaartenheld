@@ -1,7 +1,7 @@
 {
  "name": "status_ice_halved",
  "test": true,
- "description": "Iced enemies deal halved damage (rounded up): the castle-bat trio rotates attackers, so all three slots are iced -- every fixed-order swing that goes through a non-greyed draw lands soft. The defend-phase forecast for the telegraphed 4-damage sword reads DMG 2, not DMG 4. Grey lock, fizzle messaging and player-side grey-out are unchanged.",
+ "description": "Iced enemies deal halved damage (rounded up): the castle-bat trio rotates attackers, so all three slots are iced -- every fixed-order swing lands soft. The defend-phase forecast for the telegraphed 4-damage sword reads DMG 2, not DMG 4.",
  "initial_state": {
   "scene": "TEST_CASTLE",
   "player": {

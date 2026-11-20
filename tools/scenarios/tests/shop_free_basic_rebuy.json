@@ -133,7 +133,7 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "FREE"
+   "contains": "0G"
   },
   {
    "type": "event_occurred",

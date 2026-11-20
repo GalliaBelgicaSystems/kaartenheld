@@ -417,10 +417,12 @@ An ASCII-converted view of the "YOU FOUND:" loot reveal flips onto rows
   whose cost exceeds the energy you have left (`battle_nav_banked.c`).
 * **Timer**: **20 seconds** per player decision phase, shown as a bar
   (1200 frames).  It runs in the attack *and* defend decision phases.
-  When it expires, your current selection is auto-executed — a timer-out
-  with no selection auto-picks the hovered card (or the first playable
-  one) and executes that; only a hand with nothing playable commits an
-  empty combo (`battle.c`).
+  Only SELECT commits a hand: if the timer expires first, anything you
+  staged but never validated is dropped and the turn is a miss
+  (`MISSED!` on attack, an unblocked swing on defend) -- exactly as if
+  nothing had been staged, with nothing discarded and no energy spent.
+  (A poisoned hero's auto-played hand still resolves: it is
+  game-validated, no input exists.)
 
 ### 6.3 Battle phases
 
@@ -504,7 +506,7 @@ After the enemy telegraphs (`ENEMY ATTACK!`), you defend:
     carries a poison rider (70/255).
   * **Team slimes** (the trio encounter) hit for 2–3 each round.
 * When the enemy deck is exhausted it **reshuffles** and keeps going.
-* Ice / grey-out can make the enemy fizzle (see §8.5/§8.7).
+* An iced enemy deals halved damage (see §8.5/§8.7).
 * The boss (no deck) simply telegraphs a flat 6-damage swing (raised
   from 4, docs/enemies_ranking.md §8.4): three bronze shields block
   it exactly.
@@ -556,7 +558,7 @@ Four tabs, switched with `LEFT`/`RIGHT` from the FILTER/SORT row
 flips the owned/deck side instead.
 Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 
-**DECK tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the ` PILE     |  DECK` column header, cards follow one per row (8 visible):
+**DECK tab** — the collection/deck manager; row 2 is the FILTER/SORT row, row 3 the ` PILE     |  DECK` column header, cards follow one per row (9 visible):
 
 * Each card is one row drawn twice: owned pool (left) and deck (right),
   each with material ingot (OAM, tinted per material), element rider,
@@ -577,11 +579,15 @@ Row 0 holds the tab labels; row 1 the `^` caret under the active tab.
 * `B` backs out (two-step on the cards list: first `B` jumps to the top
   row, `B` again closes the menu).  `START` closes from the list.
 
-The **FILTER/SORT picker**: `UP`/`DOWN` moves between the FILTER and SORT
-rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B` cancels.
+The **FILTER/SORT picker**: `UP`/`DOWN` moves between the WEAPON,
+MATERIAL and SORT rows, `LEFT`/`RIGHT` cycles, `A` confirms, `B`
+cancels.
 
-* Filter cycles `ALL → ATK → DEF → HEL → STS → UTL → ALL`.
-* Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−`.
+* WEAPON cycles `ALL → SWORD → DAGGER → SHIELD → BOW → RING → ALL`
+  (all swords together, and so on).
+* MATERIAL cycles `ALL → WOOD → BRONZE → IRON → STEEL → MYTHRIL → ALL`.
+* Sort cycles `OFF → TYPE → PWR+ → CST+ → PWR− → CST−` (weapons group
+  by weapon type first).
 
 **QUEST tab** — the tracked-quest list (first block from row 3). Only accepted
 quests appear: entries with status `not started` stay hidden, so the tab
@@ -600,7 +606,8 @@ counter-less quests).
 
 **HERO tab** — read-only hero summary: `HP <hp>/<max>` + heart icon,
 `AP <pool>` (battle energy pool) + star icon, `GOLD <n>G`, `DECK <n>`
-(decked copies) + deck icon, `ARROWS <n>` (shared bow-ammo pool), plus
+(decked copies) + deck icon, `ARROWS <n>` (shared bow-ammo pool) + the
+status-bar arrow icon (same column as the HP/AP/DECK icons), plus
 the 4x4 hero-status portrait.
 
 **GEM tab** — owned gems with the QUEST tab's geometry (3-row blocks:
@@ -706,7 +713,7 @@ Statuses (`src/rpg/status_content.c`):
 |---|---|---|---|---|
 | POISON | 0 | 5 | 2 rounds | Control-only: no damage. **Confuses** the victim: enemies attack their allies (or themselves when alone); the hero plays a random hand (§8.7). |
 | BURN | 10% of the inflicting hit (min 1) | 3 | 3 rounds | Scales with the hit that lands it; re-applied burns keep the stronger tick. |
-| FREEZE | 0 | 5 | 2 rounds | Control-only: no damage. **Greys out** the victim's cards (§8.7). |
+| FREEZE | 0 | 5 | 2 rounds | Control-only: no damage. **Halves** the victim's outgoing damage (rounded up, both sides; healing untouched). |
 
 The tick is **flat per status** regardless of stack count; extra
 applications refresh the duration and deepen the stack counter (visible in
@@ -732,20 +739,21 @@ alone); a poisoned hero's decision phases auto-play a random affordable
 hand with no input (`Confused! / You play randomly!` on rows 9+10).
 Poison never stacks meaningfully past its 2-round duration.
 
-### 8.7 Ice grey-out
+### 8.7 Ice halved damage
 
-Ice's special penalty: while a combatant is iced,
-`ICE_GREY_CARDS` **2** random cards in its pool become **unplayable**
-for `ICE_GREY_TURNS` **2** rounds (`status.h`):
+Ice's special penalty: while a combatant is iced, its outgoing damage
+lands **halved** (rounded up, min 1) -- both sides, including the hero's
+dagger counters; healing is untouched.
 
-* **Player**: 2 cards from your 5-card hand grey out — you cannot select
-  them.
-* **Enemy**: 2 positions in its **shared deck** grey out — that
-  attacker's swings on those positions are skipped (the spent card is
-  still consumed, so the shared deck keeps cycling; unpoisoned
-  attackers are never blocked by another foe's grey).
+* **Player**: attack combos and defend-phase dagger counters deal half.
+  The `EFFECT_RESOLVED` announcement keeps the full value, only the
+  `DAMAGE_DEALT` softens (mirroring the enemy side).
+* **Enemy**: the telegraphed swing lands half.  The `ENEMY_CARD_PLAYED`
+  announcement keeps the full card value, only the incoming damage (and
+  the defend forecast) softens.
 
-Re-icing refreshes the grey without re-rolling which cards are greyed.
+Re-icing refreshes the duration.  (The old grey-out lock and its
+`FOE IS ICED!` fizzle are retired.)
 
 ---
 
@@ -907,8 +915,8 @@ The debug protocol (`docs/DEBUG_PROTOCOL.md`) exposes `PRESS/WAIT/STEP`,
 `INSPECT`, `SNAPSHOT`, `EVENTS`, `SET_RNG`, `SET_FLAG`, `TELEPORT`,
 `ASSERT`, and scenario loading.  Key telemetry events: `PLAYER_MOVED`,
 `COLLISION`, `ENCOUNTER_STARTED`, `BATTLE_STARTED`, `COMBO_RESOLVED`,
-`EFFECT_RESOLVED`, `STATUS_APPLIED`, `STATUS_RESISTED`, `CARDS_GREYED`,
-`TURN_SKIPPED`, `DAMAGE_DEALT/RECEIVED`, `ENTITY_DEFEATED`,
+`EFFECT_RESOLVED`, `STATUS_APPLIED`, `STATUS_RESISTED`,
+`DAMAGE_DEALT/RECEIVED`, `ENTITY_DEFEATED`,
 `LOOT_CARD_ADDED`, `CURRENCY_ADDED`, `GAME_STATE_CHANGED`, `SCREEN_CHANGED`,
 `MAP_CHANGED`, `MUSIC_CHANGED`, `SCRIPT_TRIGGERED`.
 
@@ -925,8 +933,8 @@ scripted scenario page (`docs/dev-harness.md`, `docs/LLM_AGENT_GUIDE.md`).
 * Enemies: trios for normal monsters; the Mimic and the boss are solo.
   HP/gold per §9.2.
 * Statuses: POISON tick 0 (control-only confusion, 2 rounds) / BURN 10%-of-hit
-  (min 1) × 3 rounds (5/3 max stacks), FREEZE tick 0 (control-only grey-out, 2 rounds); ice
-  greys 2 cards for 2 rounds.
+  (min 1) × 3 rounds (5/3 max stacks), FREEZE tick 0 (halved outgoing
+  damage, 2 rounds).
 * Combos: 10 poker tiers, 100–400%, +30% if suited.
 
 > Source of truth for every number above: the code tree (`src/`).  Where

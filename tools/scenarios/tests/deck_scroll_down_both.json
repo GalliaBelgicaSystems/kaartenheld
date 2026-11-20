@@ -1,7 +1,7 @@
 {
  "name": "deck_scroll_down_both",
  "test": true,
- "description": "DECK-tab scroll-down indicators on both sides: with 9 distinct card groups each having 2 owned and 1 decked copy, both PILE and DECK fill their 8-row windows (k==8 and kr==8 at n==7) and row 8 triggers both down carets ('v' at cols 4 and 14) on row 14.",
+ "description": "DECK-tab scroll-down indicators on both sides with 10 distinct card groups (9 visible + 1 scrolled): both PILE and DECK fill their 9-row windows and row 9 triggers both down carets ('v' at cols 4 and 14) on row 14.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -77,6 +77,23 @@
   {
    "type": "deck_add",
    "card_id": 192
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "collection_add",
+   "card_id": 195,
+   "quantity": 2
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card_id": 195
   },
   {
    "type": "wait",

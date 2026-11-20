@@ -21,8 +21,9 @@ typedef enum {
     STATUS_POISON = 1,
     STATUS_BURN = 2,
     /* Named FREEZE for historic id stability (wire/telemetry/save
-     * compatible); it means ICE -- greys out cards, never skips turns
-     * (docs/loot.md §34.6).  Do not add skip semantics here. */
+     * compatible); it means ICE -- iced combatants deal halved damage,
+     * never skip turns (docs/loot.md §34.6).  Do not add skip or
+     * grey-out semantics here. */
     STATUS_FREEZE = 3
 } StatusId;
 
@@ -81,8 +82,8 @@ typedef struct {
 extern StatusTickResult g_status_tick;
 
 /* Frozen-combatant bitmask (UNUSED since the freeze-skip removal --
- * ice now greys out instead of skipping turns, and poison confuses
- * instead of greying; see the grey mask below).  Kept as a flat WRAM
+ * ice now halves damage instead of skipping turns or greying cards,
+ * and poison confuses instead of greying).  Kept as a flat WRAM
  * byte (and its descriptor byte) so the WRAM layout and the host
  * transport never shift -- do not remove, do not read. */
 extern uint8_t g_status_frozen_mask;
@@ -99,48 +100,28 @@ extern StatusInstance g_status_applied;
  * battle_start via status_reset_battle(). */
 #define STATUS_ROUND_SLOTS 4
 
-/* ── Ice grey-out (battle-scoped) ────────────────────────────────
- * When a combatant is iced, ICE_GREY_CARDS random cards in its pool
- * become unplayable for ICE_GREY_TURNS future player-decision rounds.
- * For the player (slot 0) the pool is the 5-card battle hand
- * (position bit = hand idx); for an enemy (slot 1..n) it is that enemy's
- * deck position (bit = the shared battle deck's draw position).
- * Battle-scoped runtime state like the statuses themselves -- never
- * GameState/save; cleared at battle start via status_reset_battle(). */
+/* ── Ice grey-out: RETIRED ─────────────────────────────────────────
+ * Ice no longer locks cards -- iced combatants (both sides) deal halved
+ * damage instead.  The constants, masks and entry points below stay for
+ * header/WRAM-layout compatibility but are never written: masks observe
+ * zero, the wrappers are no-ops, the bank-10 bodies are dead. */
 #define ICE_GREY_CARDS 2
 #define ICE_GREY_TURNS 2
 
-/* Bit p set = pool position p is greyed for actor slot (0 = player,
- * 1..n = enemy).  Duration drains at each enter-select round boundary
- * in lockstep with the STATUS_FREEZE instance, so tint and grey-out
- * expire together after ICE_GREY_TURNS rounds (0 = not greyed).
- * Effective coverage for a mid-round application: the victim's current
- * round is still ahead for an enemy (same-round swing fizzles) and its
- * defend select is still ahead for the hero, so both sides feel two
- * affected rounds (enemy swings N/N+1, hero defends N/N+1 plus select
- * N+1) -- a single shared counter can never cover more without
- * outliving the tint (the old +1 desync). */
+/* Masks stay zero (see status.c); retained for layout stability. */
 extern uint8_t s_grey_mask[STATUS_ROUND_SLOTS];
 extern uint8_t s_grey_dur[STATUS_ROUND_SLOTS];
 
-/* Re-apply an iced victim's grey-out.  pool_size is the victim's card
- * pool (BATTLE_HAND_SIZE for the player, the enemy battle deck's count for
- * an enemy).  On a fresh grey the bank-10 body picks ICE_GREY_CARDS
- * distinct indices from the deterministic RNG; an already-active grey is
- * only refreshed (same cards, same duration).  Emits EVENT_CARDS_GREYED.
- * Fixed-bank wrapper around the ROM-bank-10 body; see banked.h. */
+/* Retired no-ops (see status.c). */
 void status_grey_apply(uint8_t actor_slot, uint8_t pool_size);
 
-/* Bank-10 body dispatched by status_grey_apply(). */
+/* Bank-10 body (dead -- never dispatched). */
 void status_grey_apply_banked(void);
 
-/* One round boundary for a greyed combatant: decrement the duration and,
- * when it hits zero, clear the mask and emit EVENT_CARDS_UNGREYED.  Called
- * by the battle tick loop alongside status_tick().  Fixed wrapper around
- * the ROM-bank-10 body; see banked.h. */
+/* Retired no-op (see status.c). */
 void status_grey_tick(uint8_t actor_slot);
 
-/* Bank-10 body dispatched by status_grey_tick(). */
+/* Bank-10 body (dead -- never dispatched). */
 void status_grey_tick_banked(void);
 
 /* Decode the two set-bit positions of a grey mask into out-a/out-b

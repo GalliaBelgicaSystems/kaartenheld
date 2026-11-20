@@ -109,6 +109,7 @@ void item_screen_reset(Game *g)
     g->item_menu_scroll_deck = 0;
     g->item_menu_side = 0;
     g->item_menu_filter = FILTER_ALL;
+    g->item_menu_filter_mat = FILTER_ALL;
     g->item_menu_sort = SORT_NONE;
     g->item_menu_mode = MODE_LIST;
     g->item_menu_message = MSG_NONE;
@@ -156,6 +157,7 @@ void item_screen_update(Game *g)
             case MODE_PICKER:
                 if (g->item_menu_mode == MODE_PICKER) {
                     g->item_menu_filter = g->item_menu_prev_filter;
+                    g->item_menu_filter_mat = g->item_menu_prev_filter_mat;
                     g->item_menu_sort = g->item_menu_prev_sort;
                 }
                 g->item_menu_mode = MODE_LIST;

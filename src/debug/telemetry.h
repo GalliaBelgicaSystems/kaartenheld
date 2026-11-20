@@ -222,7 +222,7 @@ typedef enum {
     EVENT_LOOT_CARD_ADDED,  /* d0=derived id d1=count after d2=enemy rank R0-R6 */
     EVENT_LOOT_GENERATED,   /* reserved (kept for wire stability) */
     EVENT_CARD_SOLD,        /* d0=CardId d1=gold received d2=count after */
-    EVENT_TURN_SKIPPED,     /* d0=enemy slot (1..n) d1=cause StatusId */
+    EVENT_TURN_SKIPPED,     /* retired with the ice grey-out (never emitted) */
     EVENT_STATUS_RESISTED,  /* d0=status id d1=target slot (roll failed) */
     /* Title / presentation (append-only wire contract). */
     EVENT_NEW_GAME_STARTED, /* NEW GAME chosen on the title menu */
@@ -230,12 +230,10 @@ typedef enum {
     EVENT_SOUND_TOGGLED,    /* d0 = g_sound_enabled (1 = ON, 0 = OFF) */
     EVENT_TARGET_CHANGED,   /* d0 = old enemy slot (0..n-1) d1 = new enemy slot
                                (battle target caret moved or auto-advanced) */
-    /* Ice grey-out (status.h): ice makes 2 random pool cards
-     * unplayable for 2 rounds.  d0 = actor slot (0 = player, 1..n = enemy),
-     * d1 = first greyed pool position, d2 = second = position, d3 = rounds. */
+    /* Ice grey-out: RETIRED (never emitted -- ice is halved-damage-only).
+     * Kept for wire/event-id stability. */
     EVENT_CARDS_GREYED,
-    /* Cleared after ICE_GREY_TURNS: d0 = actor slot, d1/d2 = the
-     * previously-greyed pool positions. */
+    /* Retired with the grey-out above. */
     EVENT_CARDS_UNGREYED,
     /* Patrol step commit (world.c): d0 = EntityId, d1 = x, d2 = y,
      * d3 = facing.  Split out of EVENT_ACTOR_STATE_CHANGE, which carries

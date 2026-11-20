@@ -78,9 +78,8 @@ typedef enum {
 /* Transient battle message ids (Battle.msg_id; row 9 unless noted):
  * 0 = none, 1 = NO ENERGY, 2 = OUT OF USES, 3 = ONE RING (nav rejections,
  * 45-frame TTL), 4 = loot reveal (result screen, never expires), 5 =
- * poisoned-foe skip (telegraph stages it with TTL 0 so it survives the
- * whole TELEGRAPH/DEFEND beat; the DEFEND resolve or the A-press gate
- * consumes it; the combo row + banner read it, never row 9), 8 = NO
+ * RETIRED ice-fizzle id (never staged: ice is halved-damage-only, so no
+ * defend beat owns it; kept for numeric stability), 8 = NO
  * ARROWS (limited-arrows bow refusal: the shared arrow pool is empty;
  * nav rejection, 45-frame TTL like the other rejections), 9 = Carl
  * tutorial speech, 10 = slime-lord despair telegraph.  A whiffed attack
@@ -88,7 +87,7 @@ typedef enum {
  * keys MISSED! off the empty victim snapshot instead (fixed-bank budget;
  * see battle_update).  An explicit empty SELECT keeps the historic
  * auto-play of the highlighted card (see battle_execute_combo). */
-#define BATTLE_MSG_ICED_FOE 5
+#define BATTLE_MSG_ICED_FOE 5 /* retired: never staged (ice halves damage) */
 /* Limited-arrows bow refusal (see the msg_id table above): staged by the
  * banked nav body when a bow is selected with the shared arrow pool
  * empty.  Id 8 is the first free slot (1-7, 9, 10 are taken). */
@@ -210,7 +209,7 @@ extern uint8_t g_battle_multiframe;
  * (g_battle_heal_phase stages the current pulse so the bank-3 painter
  * stays branch-light: release bank 3 has ~40 B left and cannot afford
  * threshold math; the GOLD slot holds the flash ramp only during the
- * pulses, so greyed cards and the boss stamp read their own ramps the
+ * pulses, so spent-use dimming and the boss stamp read their own ramps the
  * rest of the time). Status ticks, counters, overblock heals and debug HP pokes all funnel
  * through HP, so every present and future source feeds the same feedback
  * with no per-source wiring.  g_battle_fx_epoch (bumped by

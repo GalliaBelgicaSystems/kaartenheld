@@ -1659,7 +1659,11 @@ three layout-sensitive sentinels (§52.19) instead of the full suite:
 make test-sentinels
 ```
 
-and reserve the full `make test-harness` for the end.  For tracker-song
+and reserve the full `make test-harness` for the end.  When the full
+suite runs, capture failing scenario NAMES and the totals count in
+that same single invocation (e.g. grep both `SCENARIO:` and `STATUS:`
+lines) — never run the suite once to see how many failed and again
+to see which failed.  For tracker-song
 work, answer bank-fit and duration questions without a full build:
 
 ```bash

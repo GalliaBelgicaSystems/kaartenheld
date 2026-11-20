@@ -271,9 +271,14 @@ STATUS_ID_MAP = {"NONE": 0, "POISON": 1, "BURN": 2, "FREEZE": 3}
 # Card type names -> CardType enum (src/battle/card.h):
 # SW=SWORD 0, SH=SHIELD 1, BO=BOW 2, HE=HEAL 3, DA=DAGGER 4.
 CARD_TYPE_MAP = {"SW": 0, "SH": 1, "BO": 2, "HE": 3, "DA": 4}
-# Deck-builder filter names -> CardType (src/rpg/cards.h), plus ALL.
-FILTER_TYPE_MAP = {"ALL": 0xFF, "ATTACK": 0, "DEFENSE": 1, "HEAL": 2,
-                   "STATUS": 3, "UTILITY": 4}
+# Deck-builder filter names.  WEAPON/MATERIAL picker rows (bank 13):
+# SWORD/SHIELD/BOW/DAGGER/RING are WPN_* ids, WOOD/BRONZE/IRON/STEEL/
+# MYTHRIL are MAT_* ids, ALL is 0xFF for either axis.  (The old
+# role-based ATTACK/DEFENSE/... set is retired with the picker.)
+FILTER_TYPE_MAP = {"ALL": 0xFF, "SWORD": 0, "SHIELD": 1, "BOW": 2,
+                   "DAGGER": 3, "RING": 4}
+FILTER_MAT_MAP = {"ALL": 0xFF, "WOOD": 0, "BRONZE": 1, "IRON": 2,
+                  "STEEL": 3, "MYTHRIL": 4}
 # Deck-builder sort modes (src/screens/item_screen.c).
 SORT_MODE_MAP = {"OFF": 0, "TYPE": 1, "POWER": 2, "COST": 3,
                  "POWER_DESC": 4, "COST_DESC": 5}
@@ -1121,6 +1126,7 @@ class EmulatorSession:
     DBG_ACT_SET_DECK_STATE = 22
     DBG_ACT_SET_DECK_RING = 23
     DBG_ACT_SET_MARKET_INDEX = 24
+    DBG_ACT_SET_FILTER_MAT = 25
 
     def debug_action(self, action, a0=0, a1=0, a2=0):
         """Run a debug action through the ROM's real mechanic functions."""

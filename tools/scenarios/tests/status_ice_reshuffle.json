@@ -1,7 +1,7 @@
 {
  "name": "status_ice_reshuffle",
  "test": true,
- "description": "Status riders survive deck reshuffle (regression for card_copy_banked/card_swap_banked dropping status_id/status_chance). A 5-card wood-sword deck deals out fully so the first draw triggers the SHUFFLE TURN; every hand slot carries a guaranteed ice rider, so each reshuffled draw that gets auto-played reapplies -- visible as STATUS_APPLIED stack count climbing to the 5 max (ice itself deals no damage; its grey-out fizzles swings).",
+ "description": "Status riders survive deck reshuffle (regression for card_copy_banked/card_swap_banked dropping status_id/status_chance). A 5-card wood-sword deck deals out fully so the first draw triggers the SHUFFLE TURN; every hand slot carries a guaranteed ice rider, so each reshuffled draw that gets auto-played reapplies -- visible as STATUS_APPLIED stack count climbing to the 5 max. Iced combatants act normally at halved damage (no CARDS_GREYED, no TURN_SKIPPED).",
  "initial_state": {
   "scene": "TEST_MOUNTAIN_PASS",
   "player": {
@@ -333,11 +333,11 @@
    "value": 5
   },
   {
-   "type": "event_occurred",
+   "type": "event_not_occurred",
    "event": "CARDS_GREYED"
   },
   {
-   "type": "event_occurred",
+   "type": "event_not_occurred",
    "event": "TURN_SKIPPED"
   }
  ]
