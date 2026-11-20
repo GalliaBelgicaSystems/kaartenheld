@@ -33,6 +33,19 @@
    "expected": 1
   },
   {
+   "type": "camera_px_y",
+   "expected": 8
+  },
+  {
+   "type": "scy",
+   "expected": 8
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "############.#######"
+  },
+  {
    "type": "screen_row",
    "row": 17,
    "contains": "HHh"

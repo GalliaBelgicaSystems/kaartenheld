@@ -35,7 +35,7 @@ static void mark_draw(uint8_t px, uint8_t py, uint8_t kind, uint8_t *slot)
     if (kind == ACTOR_MARK_NONE || *slot > MARK_OAM_LAST) return;
     e = (volatile uint8_t *)(0xC000u + ((uint16_t)*slot << 2));
     (*slot)++;
-    if (px >= 160 || py < 8 || py >= 144) {
+    if (px >= 160 || py < 8 || py >= 136) {
         e[0] = 0;
         e[2] = 0;
         return;
@@ -306,8 +306,9 @@ void ui_actors_sprites_banked(void)
                     volatile uint8_t *e = (volatile uint8_t *)(SHADOW_OAM_BASE +
                                                                ((uint16_t)oam_slot << 2));
                     /* Physical rows 0..16 only: row 17 (py 136..143) is
-                     * the Window status-bar HUD, so a hidden-row actor
-                     * must never paint over it. */
+                     * the Window status-bar HUD, so tile-aligned actors on
+                     * hidden rows are clipped (mid-step sprites at 129..135
+                     * can still overlap the bar by up to 7px without LYC). */
                     if (px < 160 && py < 136) {
                         e[0] = (uint8_t)(py + 16);
                         e[1] = (uint8_t)(px + 8);
@@ -458,11 +459,13 @@ void ui_actors_sprites_banked(void)
                 {
                     uint8_t sx = (uint8_t)(ox - w->scroll_x);
                     uint8_t sy = (uint8_t)(oy - w->scroll_y);
-                    if (sx < (uint8_t)(WORLD_VIEW_W - 1) && sy < (uint8_t)(WORLD_VIEW_H - 1)) {
+                    if (sx < (uint8_t)(WORLD_VIEW_W - 1) && sy < WORLD_VIEW_H) {
                         g_ui_screen_buf[sy][sx] = (char)a->visual;
                         g_ui_screen_buf[sy][sx + 1] = (char)a->visual;
-                        g_ui_screen_buf[sy + 1][sx] = (char)a->visual;
-                        g_ui_screen_buf[sy + 1][sx + 1] = (char)a->visual;
+                        if ((uint8_t)(sy + 1) < WORLD_VIEW_H) {
+                            g_ui_screen_buf[sy + 1][sx] = (char)a->visual;
+                            g_ui_screen_buf[sy + 1][sx + 1] = (char)a->visual;
+                        }
                     }
                 }
 #endif
