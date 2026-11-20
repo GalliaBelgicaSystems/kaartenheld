@@ -99,6 +99,7 @@ static void shop_sell(Game *g)
     currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)sold_price);
     telemetry_emit(EVENT_CARD_SOLD, sold_id, sold_price,
                    sold_left, 0);
+    audio_play_sfx(SFX_CASH);
     g->render_cache.valid = false;
 }
 
@@ -132,7 +133,11 @@ static void shop_confirm(Game *g)
             economy_note_spent(&g->state, paid_price);
             telemetry_emit(EVENT_CARD_PURCHASED, paid_id, paid_price, 0, 0);
             g->shop_message = (uint8_t)(SHOP_MSG_BOUGHT_BIT | SHOP_MSG_BOUGHT);
+            audio_play_sfx(SFX_CASH);
         }
+    } else if (g_bk_byte_d == 3) {
+        /* Arrow purchase already applied in shop_row_quote_banked. */
+        audio_play_sfx(SFX_CASH);
     }
     g->render_cache.valid = false;
 }

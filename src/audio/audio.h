@@ -95,9 +95,12 @@ enum {
     SFX_HEAL = 10,
     /* Desperation-move cue (assets/sfx/explosion.uge): played when the
      * Lord of Slimes casts his scripted reprisal (POWERFUL SPELL) on the
-     * A press during the SLIME_DESPAIR telegraph hold.  Must stay the
-     * LAST id: audio.c range-checks against it. */
-    SFX_EXPLOSION = 11
+     * A press during the SLIME_DESPAIR telegraph hold. */
+    SFX_EXPLOSION = 11,
+    /* Cash-register cue (assets/sfx/cash_register.uge): played when
+     * buying from or selling to the merchant.  Must stay the LAST id:
+     * audio.c range-checks against it. */
+    SFX_CASH = 12
 };
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);

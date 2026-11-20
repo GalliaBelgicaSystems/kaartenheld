@@ -10,5 +10,6 @@
   "WIN": "assets/music/chest opening.uge",
   "HURT": "assets/sfx/sfx hurt.uge",
   "HEAL": "assets/sfx/sfx heal.uge",
-  "EXPLOSION": "assets/sfx/explosion.uge"
+  "EXPLOSION": "assets/sfx/explosion.uge",
+  "CASH": "assets/sfx/cash_register.uge"
 }

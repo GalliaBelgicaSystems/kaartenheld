@@ -68,7 +68,8 @@ SFX_UGE = assets/sfx/sfx\ accept.uge assets/sfx/sfx\ back.uge \
           assets/sfx/sfx\ block.uge assets/sfx/sfx\ cursor.uge \
           assets/sfx/sfx\ heal.uge assets/sfx/sfx\ hurt.uge \
           assets/sfx/sfx\ hit.uge assets/sfx/sfx\ hit2.uge \
-          assets/sfx/alert.uge assets/sfx/explosion.uge
+          assets/sfx/alert.uge assets/sfx/explosion.uge \
+          assets/sfx/cash_register.uge
 # screens/sfx.json may map any SFX id to any .uge (assets/sfx or
 # assets/music), so the tables depend on the registry plus both pools.
 SFX_REGISTRY = screens/sfx.json
