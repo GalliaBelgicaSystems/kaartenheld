@@ -31,7 +31,7 @@
 00:84000 00003145
 00:F4000 000031B8
 00:34000 0000367A
-00:44000 00003CAD
+00:44000 00003CA4
 00:54000 00003CB0
 00:94000 00003CD5
 00:A4000 00003D16
@@ -254,9 +254,9 @@
 00:6012 _actor_fi
 00:6012 _actor_find_at
 00:5F53 _actor_find_hostile_slot
-00:478EE _actor_lo
+00:478E5 _actor_lo
 00:6077 _actor_load_scene
-00:478EE _actor_load_scene_banked
+00:478E5 _actor_load_scene_banked
 00:5F47 _actor_re
 00:5F47 _actor_register_tables
 00:024F _add_VBL
@@ -1302,9 +1302,9 @@
 00:6012 actor_fi
 00:6012 actor_find_at
 00:5F53 actor_find_hostile_slot
-00:478EE actor_lo
+00:478E5 actor_lo
 00:6077 actor_load_scene
-00:478EE actor_load_scene_banked
+00:478E5 actor_load_scene_banked
 00:5F47 actor_re
 00:5F47 actor_register_tables
 00:024F add_VBL
@@ -1948,7 +1948,7 @@
 00:31B8 l__CODE_15
 00:3D7A l__CODE_2
 00:367A l__CODE_3
-00:3CAD l__CODE_4
+00:3CA4 l__CODE_4
 00:3CB0 l__CODE_5
 00:3FE7 l__CODE_6
 00:3E56 l__CODE_7

@@ -261,9 +261,10 @@ void ic_menu_riders_load(void);
 #define SPIN_PX                  152u
 #define SPIN_PY                  136u
 
-/* Max shadow-OAM entries the actor pipeline can touch: player (entry 0),
- * hostile actors up to MAX_WORLD_ACTORS each a w*h sprite (max 2x2 = 4),
- * then static actors.  Used by the transition-hide sweep. */
+/* Max shadow-OAM entries the actor pipeline can touch: hostile actors
+ * up to MAX_WORLD_ACTORS each a w*h sprite (max 2x2 = 4), then static
+ * actors capped at entry 37; the player owns entry 38, the save spinner
+ * entry 39.  Used by the transition-hide sweep. */
 #define OAM_MAX_ACTOR_ENTRIES     (1u + (MAX_WORLD_ACTORS * 4u) + MAX_STATIC_ACTORS)
 
 /* Bank-4 no-arg body behind ui_draw_actors_sprites(): writes each active
