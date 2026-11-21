@@ -322,6 +322,106 @@
       "ascii": "#",
       "image_url": "/tiles/menus/menus_status_bar_arrow.png",
       "category": "ui"
+    },
+    {
+      "id": "menus_a_button",
+      "label": "a button",
+      "gb_constant": "TILE_MENUS_A_BUTTON",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_a_button.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_b_button",
+      "label": "b button",
+      "gb_constant": "TILE_MENUS_B_BUTTON",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_b_button.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_start_1",
+      "label": "start 1",
+      "gb_constant": "TILE_MENUS_START_1",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_start_1.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_start_2",
+      "label": "start 2",
+      "gb_constant": "TILE_MENUS_START_2",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_start_2.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_start_3",
+      "label": "start 3",
+      "gb_constant": "TILE_MENUS_START_3",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_start_3.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_dpad_up_down",
+      "label": "dpad up-down",
+      "gb_constant": "TILE_MENUS_DPAD_UP_DOWN",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_dpad_up_down.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_dpad_left_right",
+      "label": "dpad left-right",
+      "gb_constant": "TILE_MENUS_DPAD_LEFT_RIGHT",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_dpad_left_right.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_select_1",
+      "label": "select 1",
+      "gb_constant": "TILE_MENUS_SELECT_1",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_select_1.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_select_2",
+      "label": "select 2",
+      "gb_constant": "TILE_MENUS_SELECT_2",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_select_2.png",
+      "category": "ui"
+    },
+    {
+      "id": "menus_select_3",
+      "label": "select 3",
+      "gb_constant": "TILE_MENUS_SELECT_3",
+      "walkable": false,
+      "color": "#b59263",
+      "ascii": "#",
+      "image_url": "/tiles/menus/menus_select_3.png",
+      "category": "ui"
     }
   ]
 }

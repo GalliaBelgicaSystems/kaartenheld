@@ -65,7 +65,7 @@
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "SEL:INFO"
+   "contains": "INFO"
   },
   {
    "type": "screen_row",

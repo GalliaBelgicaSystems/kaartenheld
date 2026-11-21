@@ -710,7 +710,9 @@ def main():
     compile_sheet("menus_tile",
                   {(x, 0): "fight1" for x in range(12)} |
                   {(x, y): "fight1" for y in range(4) for x in
-                   range(12, 16)},
+                   range(12, 16)} |
+                  {(x, 1): "fight1" for x in range(11)} |
+                  {(x, 2): "fight1" for x in range(3)},
                   require_slot=False)
     # Card-menu material OAM icons (material_tiles.png, 5x1 cells: steel,
     # bronze, iron, mythril icon art in that order, then the wood icon):

@@ -122,7 +122,8 @@ void screen_change(Game *g, ScreenId screen)
      * not clear the flag.  Same-frame guarantee: screen_update runs
      * before the tick, which runs before the render. */
     if (screen == SCREEN_BATTLE || screen == SCREEN_ITEM ||
-        screen == SCREEN_SHOP) {
+        screen == SCREEN_SHOP || screen == SCREEN_TITLE ||
+        screen == SCREEN_SAVE_LOAD) {
         g_bk_call_bank = 11;
         g_bk_call_target = (uint16_t)&menus_entry_invalidate_banked;
         banked_call_run();

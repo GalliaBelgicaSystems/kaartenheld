@@ -715,7 +715,7 @@ void shop_content_render(void)
 
     if (!s_sc_shop_def) {
         sc_draw_text(0, 5, "(nothing)", 9);
-        sc_draw_text(0, 7, "[B] Leave", 9);
+        /* Row-7 leave hint lives in the bank-15 tail (empty branch). */
         return;
     }
 
@@ -724,7 +724,7 @@ void shop_content_render(void)
             sc_draw_text(0, 5, "(nothing to sell)", 17);
         else
             sc_draw_text(0, 5, "(out of stock)", 17);
-        sc_draw_text(0, 7, "[B] Leave", 9);
+        /* Row-7 leave hint lives in the bank-15 tail (empty branch). */
         return;
     }
 
@@ -862,10 +862,11 @@ void shop_content_render(void)
      * dialogue box on exit (docs/loot.md §34.6), so buying no longer
      * changes these lines.  Row 17 (failure message) is painted by the
      * bank-15 post-pass. */
-    if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
-        sc_draw_text(0, 16, "[A]Sell [B]Leave", 18);
-    else
-        sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
+    /* Row-16 button footer lives in the bank-15 tail
+     * (shop_clean_tail_banked): bank 2 is at its ceiling
+     * (AGENTS.md 52.18) and the tail runs on every full
+     * render before commit, so leaving the row for it costs
+     * no blink. */
 }
 
 /* save_load_content_render now lives in save_load_banked.c (ROM bank 11);

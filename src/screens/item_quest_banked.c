@@ -348,9 +348,19 @@ static void iq_draw_quest(Game *g)
         'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
         UI_TILE_MENUS_BOTTOM_BORDER);
     if (g->prev_screen == SCREEN_OVERWORLD) {
-        IQ_DRAW_TEXT(0, 16, "SEL:INFO A:SAVE+QUIT", 20);
+        IQ_DRAW_TEXT(0, 16, NULL, 20);
+        menu_stamp_chrome(16, 0, UI_TILE_BUTTON_SELECT_1);
+        menu_stamp_chrome(16, 1, UI_TILE_BUTTON_SELECT_2);
+        menu_stamp_chrome(16, 2, UI_TILE_BUTTON_SELECT_3);
+        IQ_DRAW_TEXT(4, 16, "INFO", 4);
+        menu_stamp_chrome(16, 9, UI_TILE_BUTTON_A);
+        IQ_DRAW_TEXT(11, 16, "SAVE+QUIT", 9);
     } else {
-        IQ_DRAW_TEXT(0, 16, "SEL:INFO", 20);
+        IQ_DRAW_TEXT(0, 16, NULL, 20);
+        menu_stamp_chrome(16, 0, UI_TILE_BUTTON_SELECT_1);
+        menu_stamp_chrome(16, 1, UI_TILE_BUTTON_SELECT_2);
+        menu_stamp_chrome(16, 2, UI_TILE_BUTTON_SELECT_3);
+        IQ_DRAW_TEXT(4, 16, "INFO", 16);
     }
     IQ_DRAW_TEXT(0, 17, NULL, 20);
 }
@@ -392,7 +402,9 @@ static void iq_draw_quest_detail(Game *g)
         IQ_DRAW_TEXT(0, i, NULL, 20);
     for (i = 0; i < 20; i++)
         menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
-    IQ_DRAW_TEXT(0, 16, "B:BACK", 20);
+    IQ_DRAW_TEXT(0, 16, NULL, 20);
+    menu_stamp_chrome(16, 0, UI_TILE_BUTTON_B);
+    IQ_DRAW_TEXT(2, 16, "BACK", 18);
     IQ_DRAW_TEXT(0, 17, NULL, 20);
 }
 

@@ -39,6 +39,16 @@ static void sl_put_char(uint8_t x, uint8_t y, char c)
     g_ui_screen_buf[y][x] = c;
 }
 
+static void sl_stamp_button(uint8_t x, uint8_t y, uint8_t tile)
+{
+    volatile uint8_t *dst;
+    if (y >= 18 || x >= 20) return;
+    VBK_REG = 0;
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    BANKED_VRAM_WRITE(dst, tile);
+    g_ui_screen_buf[y][x] = ' ';
+}
+
 static void sl_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
 {
     uint8_t i;
@@ -98,12 +108,18 @@ void save_load_content_render(void)
         sl_draw_text(1, s_sl_y, (s_sl_pos == 0) ? "SLOT 1:" : ((s_sl_pos == 1) ? "SLOT 2:" : "SLOT 3:"), 7);
         sl_draw_text(9, s_sl_y, (s_sl_present & (1 << s_sl_pos)) ? "SAVED" : "(EMPTY)", 7);
     }
-    sl_draw_text(0, 11, (s_sl_game->save_slot_mode == 2) ? "[A] START " : "[A] LOAD  ", 10);
-    sl_draw_text(10, 11, "[B] BACK", 8);
+    sl_stamp_button(0, 11, UI_TILE_BUTTON_A);
+    sl_draw_text(2, 11, (s_sl_game->save_slot_mode == 2) ? "START" : "LOAD ", 5);
+    sl_draw_text(7, 11, NULL, 1);
+    sl_stamp_button(10, 11, UI_TILE_BUTTON_B);
+    sl_draw_text(12, 11, "BACK", 8);
     if (s_sl_game->save_slot_message >= 1 && s_sl_game->save_slot_message <= 3) {
-        sl_draw_text(2, 13, (s_sl_game->save_slot_message == 1) ? "Game Saved!" : ((s_sl_game->save_slot_message == 3) ? "Overwrite? A:YES" : "Slot is empty!"), 16);
+        sl_draw_text(2, 13, (s_sl_game->save_slot_message == 1) ? "Game Saved!" : ((s_sl_game->save_slot_message == 3) ? "Overwrite?   YES" : "Slot is empty!"), 16);
         if (s_sl_game->save_slot_message == 3) {
-            sl_draw_text(2, 14, "B:NO", 4);
+            sl_stamp_button(13, 13, UI_TILE_BUTTON_A);
+            sl_draw_text(2, 14, NULL, 20);
+            sl_stamp_button(2, 14, UI_TILE_BUTTON_B);
+            sl_draw_text(4, 14, "NO", 16);
         }
     }
 }

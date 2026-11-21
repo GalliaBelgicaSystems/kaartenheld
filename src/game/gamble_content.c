@@ -213,6 +213,16 @@ static void gamble_put_char(uint8_t x, uint8_t y, char ch)
     }
 }
 
+static void gamble_stamp_button(uint8_t x, uint8_t y, uint8_t tile)
+{
+    volatile uint8_t *dst;
+    if (y >= 18 || x >= 20) return;
+    VBK_REG = 0;
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    gamble_vram_sync_write(dst, tile);
+    g_ui_screen_buf[y][x] = ' ';
+}
+
 static void gamble_draw_text_line(uint8_t x, uint8_t y, const char *text,
                                   uint8_t max_chars)
 {
@@ -614,11 +624,14 @@ static void gamble_draw_dice(void)
 static void gamble_draw_controls(void)
 {
     gamble_draw_text_line(0, 16, 0, 20);
+    gamble_stamp_button(0, 16, UI_TILE_BUTTON_A);
     if (g_gamble.phase == GAMBLE_PHASE_RESULT) {
-        gamble_draw_text_line(0, 16, "A:AGAIN B:LEAVE", 15);
+        gamble_draw_text_line(2, 16, "AGAIN", 5);
     } else {
-        gamble_draw_text_line(0, 16, "A:ROLL B:LEAVE", 14);
+        gamble_draw_text_line(2, 16, "ROLL", 4);
     }
+    gamble_stamp_button(8, 16, UI_TILE_BUTTON_B);
+    gamble_draw_text_line(10, 16, "LEAVE", 10);
     gamble_color_span(0, 16, 20, UI_COLOR_NONE);
 }
 
@@ -719,6 +732,14 @@ static void gamble_oam_place(void)
  * no trampoline. */
 void dice_tiles_load_banked(void);
 
+/* Menu button cells (assets/menus-tile.png row 1, cols 4-10 +
+ * row 2, cols 0-2).  Button-only copy (10 cells, 160 bytes)
+ * for bank 8: a banked body must share its table's bank, and
+ * the full 42-cell chrome header already lives in bank 11
+ * (same symbol would be a duplicate definition).  Streamed
+ * once on gamble entry (LCD off) to VRAM 176-185. */
+#include "gfx/menus_button_tiles.h"
+
 static void gamble_entry(void)
 {
     /* LCD off for the whole transaction (same discipline as the battle
@@ -727,6 +748,18 @@ static void gamble_entry(void)
     gamble_cram_load();
     gamble_art_stream();
     dice_tiles_load_banked();
+    {
+        uint8_t bk, bj;
+        volatile uint8_t *bdst;
+        const uint8_t *bsrc;
+        for (bk = 0; bk < 10; bk++) {
+            bsrc = &menus_button_tiles[((uint16_t)bk << 4)];
+            bdst = (volatile uint8_t *)(0x8000u + (((uint16_t)176u + bk) << 4));
+            for (bj = 0; bj < 16; bj++) {
+                bdst[bj] = bsrc[bj];
+            }
+        }
+    }
     gamble_paint_full();
     gamble_oam_place();
     g_game.render_cache.valid = true;

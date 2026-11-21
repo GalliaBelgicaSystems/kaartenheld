@@ -13,6 +13,10 @@ Cell map (positional: CSV row/col == sheet cell):
       icon, action point icon, cards icon).
   Row 1, cols 0-3: the 4 status-bar icons (scan order: full heart,
       half heart, AP, arrow) for the battle status bar.
+  Row 1, cols 4-10: the 7 single-cell button icons (scan order:
+      a button, b button, start 1, start 2, start 3,
+      dpad up-down, dpad left-right).
+  Row 2, cols 0-2: the 3 select button cells (select 1-3).
   Cols 12-15, rows 0-3: the 4x4 hero-status portrait ("hero status RC":
       row digit + col digit, sheet order).  Corners (15,0)/(12,3) are
       blank by design (transparent portrait corners).
@@ -20,7 +24,8 @@ Cell map (positional: CSV row/col == sheet cell):
 
 Outputs (committed, deterministic):
   tools/level_editor/public/tiles/menus/menus_<slug>.png
-      (12 singles + 16 hero cells, one 8x8 PNG each)
+      (12 singles + 16 hero cells + 4 status + 10 buttons,
+       one 8x8 PNG each)
   tools/level_editor/tilesets/menus.json (flat curated manifest, same entry
       shape as tilesets/combat.json; no vram_block, so world generators
       and tiles-check skip it like the other UI sets)
@@ -52,6 +57,8 @@ TILE = 8
 EXPECT_W, EXPECT_H = 128, 32
 SINGLES = [(c, 0) for c in range(12)]
 STATUS = [(c, 1) for c in range(4)]
+BUTTONS = [(4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1),
+           (0, 2), (1, 2), (2, 2)]
 HERO = [(c, r) for r in range(4) for c in range(12, 16)]
 HERO_BLANK = [(15, 0), (12, 3)]
 
@@ -89,7 +96,7 @@ def main():
     if len(names) != len(set(names)):
         raise SystemExit("menu-tile-description.csv: names must be unique")
 
-    for (c, r) in SINGLES + STATUS:
+    for (c, r) in SINGLES + STATUS + BUTTONS:
         if not cell_drawn(img, c, r):
             raise SystemExit(
                 "expected drawn single at (%d,%d) for %r"
@@ -102,7 +109,7 @@ def main():
                 % (c, r, not want, want))
     for r in range(4):
         for c in range(12):
-            if (c, r) in SINGLES + STATUS:
+            if (c, r) in SINGLES + STATUS + BUTTONS:
                 continue
             if cell_drawn(img, c, r):
                 raise SystemExit(
@@ -124,7 +131,7 @@ def main():
             "category": "ui",
         })
 
-    for (c, r) in SINGLES + HERO + STATUS:
+    for (c, r) in SINGLES + HERO + STATUS + BUTTONS:
         label = grid[r][c]
         tid = "menus_" + slugify(label)
         cell = img.crop((c * TILE, r * TILE, (c + 1) * TILE, (r + 1) * TILE))
