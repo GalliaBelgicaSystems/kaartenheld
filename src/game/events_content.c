@@ -39,6 +39,30 @@
 #pragma bank 10
 
 const EventDefinition g_events[] = {
+#ifdef TRAVEL_DEMO
+    {
+        /* Travel-demo supply merchant: the field MERCHANT opens the
+         * route's food/water shop instead of talking.  First-match
+         * wins, so this precedes the dialogue fallthrough (which the
+         * consume-guard also skips after a screen change). */
+        EVENT_ID_TRAVEL_SUPPLY, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, MAP_FIELD,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_TRAVEL_SUPPLY, 0, 0, 0 }}
+    },
+    {
+        /* Travel-demo prototype: the field signpost starts the
+         * field-to-village journey (route 0) instead of teleporting.
+         * First-match wins, so this precedes the signpost dialogue
+         * fallthrough (which the travel consume-guard also skips). */
+        EVENT_ID_TRAVEL_DEMO, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_FIELD,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_JOURNEY_START, 0, 0, 0 }}
+    },
+#endif
     {
         EVENT_ID_TOWN_ARRIVAL, EVENT_TRIGGER_MAP_ENTER, ENTITY_ID_NONE, MAP_TOWN,
         1,

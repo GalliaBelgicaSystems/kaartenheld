@@ -14,6 +14,7 @@ SRC_DIR = src
 
 TARGET = $(BUILD_DIR)/kaartenheld.gb
 TARGET_DEBUG = $(BUILD_DIR)/kaartenheld_debug.gb
+TARGET_TRAVEL = $(BUILD_DIR)/kaartenheld-travel-demo.gb
 
 JOBS ?= auto
 
@@ -41,7 +42,13 @@ TEST_CONTENT_SRCS = $(SRC_DIR)/game/scenes_content_test.c $(SRC_DIR)/game/actors
 CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c \
 	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b11.c $(SRC_DIR)/game/scenes_terrain_b9.c \
 	$(SRC_DIR)/game/scenes_terrain_b12.c
-SRCS := $(filter-out $(TEST_CONTENT_SRCS),$(SRCS))
+# Travel-demo-only sources (new ROM, kaartenheld-travel-demo.gb): the
+# journey slice (state, screen, generated tables).  Excluded from the
+# main ROMs so journey content can never affect the main game or its
+# memory budget; linked into OBJS_TRAVEL only.
+TRAVEL_SRCS = $(SRC_DIR)/game/travel.c $(SRC_DIR)/game/travel_screen.c \
+	$(SRC_DIR)/game/travel_content.c $(SRC_DIR)/game/travel_paint_banked.c
+SRCS := $(filter-out $(TEST_CONTENT_SRCS) $(TRAVEL_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 11 in
 # release (pristine) to free the tight world/shop banks.  Excluded from
@@ -103,17 +110,23 @@ HUGEDRIVER_B9_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b9.o
 
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ) $(HUGEDRIVER_B9_OBJ)
 OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG) $(HUGEDRIVER_B9_OBJ_DEBUG)
+# Travel-demo prototype ROM: same release content, separate objects with
+# -DTRAVEL_DEMO (own build dir so the main ROMs never see the flag).
+# Music/SFX/driver blobs carry no demo branches, so the release ones link.
+OBJS_TRAVEL = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/travel/%.o,$(RELEASE_SRCS)) $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/travel/%.o,$(TRAVEL_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ) $(HUGEDRIVER_B9_OBJ)
 
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
+.PHONY: all release debug travel-demo run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check journeys journeys-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
 
 all: $(TARGET)
 
 release: $(TARGET)
 
 debug: $(TARGET_DEBUG)
+
+travel-demo: $(TARGET_TRAVEL)
 
 # Compile-to-assembly warning pass.  -Wall cannot be part of the normal
 # build: sdcc's --use-stdout pipeline corrupts the .asm stream when warnings
@@ -444,6 +457,16 @@ shops-check:
 	@python3 tools/screen_compiler/shops_compile.py --all --check
 	@python3 tools/level_compiler/validate.py --shop-refs
 
+# Journey content: journeys/routes/*.json + journeys/events/*.json is the
+# source of truth for the travel-demo ROM's road events (route table +
+# event table in ROM bank 9).  Main ROMs never build it (TRAVEL_SRCS).
+journeys:
+	@python3 tools/screen_compiler/journey_compile.py --all -o src/game/travel_content.c
+	@echo "All journeys compiled to src/game/travel_content.c"
+
+journeys-check:
+	@python3 tools/screen_compiler/journey_compile.py --all --check
+
 # Spawn actions: EVENT_ACTION_SPAWN_* rows in src/game/events_content.c
 # carry compiled bytes (e.g. the slime ow_type); validate.py resolves
 # the live values and fails loudly on drift (never hand-synced).
@@ -644,6 +667,27 @@ $(BUILD_DIR):
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c $(INCLUDES) -o $@ $<
+
+# Order the generated table before its object: with -j the object recipe
+# would otherwise compile the stale committed copy while the compiler
+# rewrites it (same hazard as the parallel gfx/content rules avoid by
+# listing generated outputs as explicit prerequisites).
+$(BUILD_DIR)/travel/game/travel_content.o: journeys
+$(BUILD_DIR)/travel/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DTRAVEL_DEMO $(INCLUDES) -o $@ $<
+
+build/travel/world/world.o: src/world/world.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DTRAVEL_DEMO -Wf--max-allocs-per-node500 $(INCLUDES) -o $@ $<
+
+build/travel/world/patrol_banked.o: src/world/patrol_banked.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DTRAVEL_DEMO -Wf--max-allocs-per-node500 $(INCLUDES) -o $@ $<
+
+build/travel/world/actor_load_banked.o: src/world/actor_load_banked.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DTRAVEL_DEMO -Wf--max-allocs-per-node500 $(INCLUDES) -o $@ $<
 
 # Ensure UI modules rebuild when generated sprite headers change
 $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
@@ -1027,6 +1071,12 @@ $(TARGET_DEBUG): gfx tiles levels levels-test screens dialogues shops entities m
 	@if grep -Eq "Possible overflow|spans into the next" $(BUILD_DIR)/link-debug.log; then echo "link: BANK OVERFLOW detected (see $(BUILD_DIR)/link-debug.log)" >&2; exit 1; fi
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld_debug.noi $(BUILD_DIR)/kaartenheld_debug.sym
 	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
+
+$(TARGET_TRAVEL): gfx tiles levels screens dialogues shops journeys entities music $(OBJS_TRAVEL) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
+	@$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo16 $(LDFLAGS) -Wl-m -Wl-j -o $@ build/crt0.o $(OBJS_TRAVEL) $(GB_LITE) $(SM83_LITE) > $(BUILD_DIR)/link-travel.log 2>&1; rc=$$?; cat $(BUILD_DIR)/link-travel.log; test $$rc -eq 0
+	@if grep -Eq "Possible overflow|spans into the next" $(BUILD_DIR)/link-travel.log; then echo "link: BANK OVERFLOW detected (see $(BUILD_DIR)/link-travel.log)" >&2; exit 1; fi
+	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld-travel-demo.noi $(BUILD_DIR)/kaartenheld-travel-demo.sym
+	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "TRAVEL-DEMO" -W no-overwrite $@
 
 build/crt0.o: src/crt0.s | $(BUILD_DIR)
 	sdasgb -o $@ $<

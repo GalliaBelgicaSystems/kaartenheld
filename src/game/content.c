@@ -62,12 +62,23 @@ void game_new_game(GameState *state)
     state->scene.scene_id = SCENE_TEST_FIELD;
     scene_spawn(MAP_TEST_FIELD);
 #else
+#ifdef TRAVEL_DEMO
+    state->scene.scene_id = SCENE_FIELD;
+    scene_spawn(MAP_FIELD);
+#else
     state->scene.scene_id = SCENE_WAKE_GROVE;
     scene_spawn(MAP_WAKE_GROVE);
+#endif
 #endif
     state->scene.player_x = g_bk_byte_b;
     state->scene.player_y = g_bk_byte_c;
     state->scene.player_facing = g_bk_byte_d;
+#ifdef TRAVEL_DEMO
+    /* Demo start: two steps above the field signpost (5,9), facing it. */
+    state->scene.player_x = 5;
+    state->scene.player_y = 7;
+    state->scene.player_facing = DIRECTION_DOWN;
+#endif
 
     state->party.count = 1;
     state->party.members[0].id = CHARACTER_HERO;
@@ -84,6 +95,15 @@ void game_new_game(GameState *state)
     state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 1;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
     state->currency.amount[CURRENCY_ID_ARROWS - 1] = HERO_START_ARROWS;
+#ifdef TRAVEL_DEMO
+    /* Convergence countdown (travel-demo ROM): 180 days left.  Main-ROM
+     * behavior unchanged (slots stay zero there). */
+    state->variables.values[VARIABLE_ID_DAY - 1] = CONVERGENCE_DAYS;
+    state->variables.values[VARIABLE_ID_LORD_POWER - 1] = 0;
+    /* Road rations for the travel demo (supplied by the field merchant). */
+    state->variables.values[VARIABLE_ID_FOOD - 1] = 6;
+    state->variables.values[VARIABLE_ID_WATER - 1] = 12;
+#endif
     /* Neutral market at boot (game_state_zero leaves 0, which is outside
      * the valid 24-48 band; readers treat out-of-band as neutral, but a
      * new game states it explicitly). */
@@ -138,6 +158,13 @@ void game_on_level_up(GameState *state, ProgressionTarget target,
 ScreenId game_screen_after_victory(const Game *g)
 {
     if (!g) return SCREEN_OVERWORLD;
+#ifdef TRAVEL_DEMO
+    /* Road ambush won: pay the data-driven gold and resume the journey. */
+    if (game_travel_active()) {
+        travel_on_victory();
+        return SCREEN_JOURNEY;
+    }
+#endif
     if (game_variable_get(&g->state, VARIABLE_ID_ENDING_SHOWN) != 0) {
         return SCREEN_ENDING;
     }

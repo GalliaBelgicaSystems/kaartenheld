@@ -78,7 +78,15 @@ void battle_screen_update(Game *g)
                         game_screen_after_victory(g));
                 } else {
                     world_on_battle_fled(g);
+#ifdef TRAVEL_DEMO
+                    if (game_travel_active()) {
+                        screen_change(g, SCREEN_JOURNEY);
+                    } else {
+#endif
                     screen_change(g, SCREEN_OVERWORLD);
+#ifdef TRAVEL_DEMO
+                    }
+#endif
                 }
             } else {
                 /* Slime-lord desperation outro (unwinnable final battle):
@@ -90,6 +98,13 @@ void battle_screen_update(Game *g)
                     game_slime_despair_outro();
                     return;
                 }
+#ifdef TRAVEL_DEMO
+                /* Road ambush lost: floor HP at 1, charge a recovery
+                 * step, resume the journey (never a game over). */
+                if (game_travel_consume_defeat(g)) {
+                    screen_change(g, SCREEN_JOURNEY);
+                } else {
+#endif
                 world_on_battle_end(g, false);
                 vg->game_over_choice = 0;
                 /* Stop everything: the per-frame tick is gated off on
@@ -97,6 +112,9 @@ void battle_screen_update(Game *g)
                  * from the defeat would drone on under GAME_OVER. */
                 audio_play_music(MUSIC_NONE);
                 screen_change(g, SCREEN_GAME_OVER);
+#ifdef TRAVEL_DEMO
+                }
+#endif
             }
         }
         return;

@@ -5,6 +5,9 @@
 #include "rpg/deck.h"
 #include "rpg/currency.h"
 #include "banked.h"
+#ifdef TRAVEL_DEMO
+#include "content.h"
+#endif
 
 /* Game-layer slime-trio spawn body (src/game/slime_trio_spawn_banked.c,
  * ROM bank 10 = GAME_EVENT_BANK).  Declared here so the fixed-bank
@@ -139,6 +142,14 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
             /* Stage an autosave (game_update flushes once, on canonical
              * state).  Generic mechanism; the game rows decide when. */
             g_autosave_pending = 1;
+#ifdef TRAVEL_DEMO
+        } else if (t == EVENT_ACTION_JOURNEY_START) {
+            /* Travel-demo route start (game layer, travel.c). */
+            travel_start((uint8_t)a0);
+        } else if (t == EVENT_ACTION_TRAVEL_SUPPLY) {
+            /* Travel-demo supply merchant (game layer, travel.c). */
+            travel_open_supply((uint8_t)a0);
+#endif
         }
     }
 }

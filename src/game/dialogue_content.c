@@ -89,6 +89,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_FIELD_MERCHANT,
+        "MERCHANT",
+        5,
+        {"SUPPLIES! FOOD AND", "WATER FOR THE ROAD.", "EAT AND DRINK OR", "THE WILD WILL", "FIND YOU HUNGRY."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_FIELD_SIGNPOST,
         "",
         4,

@@ -1,0 +1,10 @@
+{
+  "id": "traveler_help",
+  "kind": "choice",
+  "text": "TRAVELER NEEDS HELP.",
+  "help_text": "YOU SHARE SUPPLIES.",
+  "help_reward_gold": 15,
+  "help_delay_steps": 1,
+  "ignore_text": "YOU WALK ON.",
+  "ignore_days": 0
+}

@@ -635,6 +635,31 @@
       }
     },
     {
+      "id": "field_supplier",
+      "type": "npc",
+      "position": {
+        "x": 7,
+        "y": 9
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_MERCHANT",
+        "display_name": "MERCHANT",
+        "dialogue": "DIALOGUE_ID_FIELD_MERCHANT",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "C",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_merchant"
+      }
+    },
+    {
       "id": "mailbox",
       "type": "signpost",
       "position": {

@@ -9,6 +9,10 @@ ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y
 {
     const StaticActorDefinition *actor;
     ActorEngageResult result;
+#ifdef TRAVEL_DEMO
+    MapId map_before;
+    uint8_t screen_before;
+#endif
 
     if (!g) return ENGAGE_NONE;
 
@@ -22,7 +26,21 @@ ActorEngageResult interaction_try_at(Game *g, uint8_t target_x, uint8_t target_y
      * spawns every HOSTILE-flagged def into the runtime slots; only
      * non-hostiles reach g_static_actors).  Hostile bumps resolve as
      * movement encounters, never here. */
+#ifdef TRAVEL_DEMO
+    map_before = g->world.map_id;
+    screen_before = g->screen;
+#endif
     result = event_engage_actor(g, actor, g->world.map_id);
+#ifdef TRAVEL_DEMO
+    /* A teleporting (SCENE_CHANGE) or screen-changing (JOURNEY_START)
+     * event consumes the engagement: without this, the static
+     * fallthrough below opens the origin actor's dialogue on the new
+     * map/screen.  Travel-demo only; no shipped event teleports or
+     * changes screens from an INTERACT row. */
+    if (g->world.map_id != map_before || g->screen != screen_before) {
+        return ENGAGE_NONE;
+    }
+#endif
     if (result != ENGAGE_NONE) {
         return result;
     }

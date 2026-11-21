@@ -1,0 +1,30 @@
+{
+  "id": "field_to_village",
+  "name": "FIELD ROAD",
+  "start": "field",
+  "destination": "village_area",
+  "dest_x": 10,
+  "dest_y": 9,
+  "supply": { "food_price": 2, "water_price": 1 },
+  "methods": [
+    {
+      "id": "carriage",
+      "name": "CARRIAGE",
+      "cost_gold": 50,
+      "steps": 0,
+      "frequency": 0,
+      "pool": []
+    },
+    {
+      "id": "foot",
+      "name": "ON FOOT",
+      "cost_gold": 0,
+      "steps": 5,
+      "frequency": 35,
+      "pool": [
+        { "event": "ambush_slimes", "weight": 50 },
+        { "event": "traveler_help", "weight": 50 }
+      ]
+    }
+  ]
+}

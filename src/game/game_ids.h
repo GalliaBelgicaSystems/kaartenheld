@@ -71,6 +71,10 @@
 #define EVENT_ID_DOG_HINT       (EVENT_ID_FIRST_GAME + 26)
 #define EVENT_ID_DOG_ASK        (EVENT_ID_FIRST_GAME + 27)
 #define EVENT_ID_DOG_THANKS     (EVENT_ID_FIRST_GAME + 28)
+#ifdef TRAVEL_DEMO
+#define EVENT_ID_TRAVEL_DEMO    (EVENT_ID_FIRST_GAME + 29)
+#define EVENT_ID_TRAVEL_SUPPLY  (EVENT_ID_FIRST_GAME + 30)
+#endif
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -135,7 +139,11 @@ typedef enum {
     VARIABLE_ID_ENERGY_POOL        = 6,   /* battle energy pool: story events raise it, no cap */
     VARIABLE_ID_GEM_OWNED          = 7,   /* owned-gem bitmask (bit i = gem i won) */
     VARIABLE_ID_GEM_EQUIPPED       = 8,   /* equipped-gem bitmask (subset of owned, max MAX_EQUIPPED_GEMS bits) */
-    VARIABLE_ID_DOG_QUEST          = 9    /* 0 = not started, 1 = ACTIVE (heard the hint), 2 = complete (key traded) */
+    VARIABLE_ID_DOG_QUEST          = 9,   /* 0 = not started, 1 = ACTIVE (heard the hint), 2 = complete (key traded) */
+    VARIABLE_ID_DAY                = 10,  /* Convergence countdown (days left, starts at CONVERGENCE_DAYS) */
+    VARIABLE_ID_LORD_POWER         = 11,  /* Lord of Slimes strength (0 = normal, 1 = converged/supreme) */
+    VARIABLE_ID_FOOD               = 12,  /* journey rations (1 burned per travel day) */
+    VARIABLE_ID_WATER              = 13   /* journey water (2 burned per travel day) */
 } VariableIdNamed;
 
 /* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[].
@@ -147,6 +155,11 @@ typedef enum {
     CURRENCY_ID_GOLD = 1,
     CURRENCY_ID_ARROWS = 2
 } CurrencyIdNamed;
+
+/* Convergence countdown (docs/travel-system.md §35): days left until the
+ * Lord of Slimes peaks.  Travel steps and road events burn days; at zero
+ * the Lord goes supreme (VARIABLE_ID_LORD_POWER) and late fights differ. */
+#define CONVERGENCE_DAYS 180
 
 /* Shared arrow pool tuning (limited-arrows). */
 #define ARROWS_MAX         30
@@ -183,7 +196,11 @@ typedef enum {
  * bank: bank 10 hosts it because bank 2 (cards catalog + the DECK view
  * build) is full.  Keep in sync with events_content.c's `#pragma bank`. */
 #define GAME_EVENT_BANK  10
+#ifdef TRAVEL_DEMO
+#define GAME_EVENT_COUNT 31
+#else
 #define GAME_EVENT_COUNT 29
+#endif
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 
