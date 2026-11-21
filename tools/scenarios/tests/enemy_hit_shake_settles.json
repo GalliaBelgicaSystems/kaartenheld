@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "enemy_hit_shake_settles",
  "test": true,
  "description": "Enemy shake settles cleanly: a SW3 attack damages the forest slime (arming the slot judder), and after the shake expires the art footprint fringe holds no stranded tiles or tints while the hero HP block on row 7 keeps its FIELD tint (the enemy-band wipe covers rows 2-6 only, proving the boundary).",

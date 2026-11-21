@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_preview_lethal",
  "test": true,
  "description": "Counter forecast on a lethal swing: hero at 2 HP stages a DA3 pair (not confirmed) vs the telegraphed 2 -- the counter lands FIRST for 9, so the forecast honestly shows CNT 9 beside DMG 2 (a killing counter would skip the swing entirely).",

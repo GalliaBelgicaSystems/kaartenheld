@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_first_victory_chain",
  "test": true,
  "description": "Seeded loot across the first-victory boundary: starting at MONSTERS_DEFEATED=0 with seed 7005, the first victory (Slime Knight) grants the guaranteed BRONZE SHIELD (id 129) after consuming the same 3 loot-RNG steps as a normal drop, and the second victory (spawned Slime Trio) rolls the exact same seeded card (id 100, WOOD RING) as loot_rank_knight_chain where MONSTERS_DEFEATED started at 1.",

@@ -635,10 +635,10 @@ typedef enum {
     NBR_W = 3
 } NbrEdge;
 
-void world_init(World *w, const GameState *state);
-void world_load_map(World *w, MapId map_id, const GameState *state);
+void world_init(World *w, GameState *state);
+void world_load_map(World *w, MapId map_id, GameState *state);
 void world_change_map(World *w, MapId map_id, uint8_t spawn_x, uint8_t spawn_y,
-                      const GameState *state);
+                      GameState *state);
 
 /* Overworld camera: keep the player centred in the WORLD_VIEW_W x
  * WORLD_VIEW_H view, clamped at the scene bounds (scenes smaller than the
@@ -660,7 +660,7 @@ void world_update_scroll(World *w);
  * world_player_px/player_py. */
 WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
                                      const GameState *state);
-WorldMoveResult world_update_move(World *w, const GameState *state);
+WorldMoveResult world_update_move(World *w, GameState *state);
 
 /* Advance autonomous patrol AI for all active hostile actors in the scene.
  * If an actor steps into the player, sets encounter_actor_index and returns

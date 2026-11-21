@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_detail",
  "test": true,
  "description": "SELECT on a card row opens the detail page: name, rider, type, AP cost, power, uses, owned/decked counts and shop value reminder (selling itself lives in the shop SELL tab)",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "hero_idle_standing_phase2",
  "test": true,
  "description": "Standing hero idle animates: 16 frames after hero_idle_standing the same untouched hero shows idle frame 2 (OAM 97). The pair proves the idle toggle; walk frames must never appear while standing.",
@@ -15,7 +16,7 @@
   },
   {
    "type": "oam_tile",
-   "entry": 0,
+   "entry": 38,
    "expected": 97
   }
  ],

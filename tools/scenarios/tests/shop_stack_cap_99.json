@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_stack_cap_99",
  "test": true,
  "description": "Shop purchases refuse at the 99-copy collection ceiling instead of charging gold for vanished copies: owning 99 IRON_RING refuses the purchase with Already owned!, emits CARD_PURCHASE_FAILED, and leaves gold at 50.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_rank_knight_chain",
  "test": true,
  "description": "Slime-knight chain under ranks (docs/enemies_ranking.md \u00a71.6/\u00a74.7, decided \u00a78.7 kept): one knight kill is two encounters and two rolls -- R4 on the knight plus R1 on the spawned trio, with 12 g + 5 g purses (37 g total from 20 staged). No extra code: the spawned trio carries BATTLE_SLIME, so the rank table already resolves the second roll as a fodder roll. The 32-deep telemetry ring cannot hold both loot events across two full battles, so the knight's R4 card is proven through state (its STEEL RING row in the collection) while the trio's R1 roll is proven through its LOOT event; the R4 shape itself is pinned by loot_rank_knight (d2=4) and the audit.",

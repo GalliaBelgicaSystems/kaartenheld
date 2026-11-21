@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "defend_dagger_poison_expiry",
   "test": true,
   "description": "Counter-dagger poison applied in PLAYER_DEFEND lasts 2 full confused enemy rounds: grace skips the landing defend-end tick, enemy 0 hits itself twice across rounds 2 and 3 (DAMAGE_RECEIVED 0), STATUS_TICKED + STATUS_EXPIRED(POISON, slot 1) fire after round 3, and round 4 resumes normal DAMAGE_RECEIVED > 0.",

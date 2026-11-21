@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "progression_weapon",
  "test": true,
  "description": "Hero progression: adding progress that crosses a threshold levels up and emits LEVEL_UP (engine only supports hero target type)",

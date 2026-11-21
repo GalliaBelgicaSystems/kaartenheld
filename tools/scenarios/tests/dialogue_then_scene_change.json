@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "dialogue_then_scene_change",
  "test": true,
  "description": "Talk to the mayor and close (leaves g->prev_screen stale DIALOGUE), walk to the field gate, then debug-load the town save: scene_load to a different map must fully repaint (tileset + all rows), not take the 4-row dialogue-exit restore. Regression for the stale-prev misclassification.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_sell_decked_copy",
  "test": true,
  "description": "Selling a fully decked copy auto-undecks it first when the deck has slack: with one owned IRON RING loot twin (id 164) fully decked (10-card starter + ring = 11, above DECK_MIN_CARDS), A on its SELL row removes it from the deck and the collection, pays the loot formula value (8g at neutral market), and emits CARD_SOLD -- no silent blip, no stranded deck.",

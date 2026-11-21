@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_group_clear_counts",
  "test": true,
  "description": "Single-copy removal honesty on the deck side: one A press on the fully-decked first row removes exactly one copy (1 CARD_REMOVED_FROM_DECK, deck 4 -> 3), with no duplicate emit and no clear-all.",

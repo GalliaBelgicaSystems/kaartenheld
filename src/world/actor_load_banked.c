@@ -12,6 +12,12 @@
 #include "world.h"
 #include "rpg/state.h"
 #include "banked.h"
+#include "telemetry.h"
+/* Ring writer (debug): a banked body cannot re-enter the trampoline to
+ * reach telemetry_emit_banked (non-reentrant), so the zone wipe writes
+ * the ring directly -- same precedent as the game-owned grant bodies
+ * (carl_grant_banked.c).  Fixed-bank code keeps using telemetry_emit(). */
+#include "telemetry_ring.h"
 
 /* Fixed-WRAM per-slot display-name staging (defined in actor.c, always
  * mapped).  actor_spawn copies the bank-2 def literal here; fixed-bank
@@ -26,10 +32,16 @@ extern char s_actor_names[MAX_WORLD_ACTORS][13];
  *
  * Self-contained: reads only its own bank-local data, the staged
  * pointers/bytes, and WRAM (always mapped).  Never calls fixed-bank
- * code: the two tiny GameState lookups below are deliberate local
- * replicas of game_variable_get() / game_world_actor_is_defeated()
- * (src/rpg/state.c) -- KEEP IN SYNC with those if their storage layout
- * ever changes. */
+ * code: the tiny GameState lookups below are deliberate local replicas
+ * of game_variable_get() (src/rpg/state.c) -- KEEP IN SYNC with that if
+ * its storage layout ever changes.  Defeat checks read the zone
+ * bitmask directly (same layout as rpg/state.h WorldState).
+ *
+ * The loader owns zone settling: when the table's zone differs from the
+ * recorded one, the old zone's bits clear (leaving a zone respawns its
+ * enemies) and the new zone records.  Zone 0 means unsettled (fresh
+ * boot/new game or staged scenario bits): it settles without clearing
+ * so staged defeats survive the first load. */
 
 extern StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
 extern uint8_t g_static_actor_count;
@@ -71,10 +83,42 @@ static void actor_spawn(WorldActorRuntime *r, const WorldActorDefinition *def)
     r->solo = def->solo;
 }
 
+/* Zone settle + defeat test live in tiny static helpers, not inline:
+ * inlining their live values into actor_load_scene_banked spills the
+ * static-copy address math below into ~700 extra bytes (bank-4/9
+ * headroom, review).  Same-bank direct calls need no trampoline
+ * (actor_spawn precedent); the loader stays the single settle funnel. */
+static void zone_sync_banked(GameState *state, uint8_t act)
+{
+    uint8_t i;
+    if (!state || state->world.zone == act) return;
+    if (state->world.zone != 0) {
+        for (i = 0; i < ZONE_DEFEAT_BYTES; i++) {
+            state->world.bits[i] = 0;
+        }
+        /* Visible wipe (debug builds; the release macro compiles it
+         * out): leaving a zone respawns its enemies, and the harness
+         * can assert on ZONE_CHANGED instead of inferring it.  Silent
+         * settles (zone 0) stay quiet -- every boot/load would spam. */
+        telemetry_ring_emit((uint8_t)EVENT_ZONE_CHANGED,
+                            state->world.zone, act, 0, 0);
+    }
+    state->world.zone = act;
+}
+
+static uint8_t defeat_test_banked(const GameState *state, uint16_t actor_id)
+{
+    uint8_t aid;
+    if (!state || actor_id == 0 || actor_id > ZONE_DEFEAT_BITS) return 0;
+    aid = (uint8_t)actor_id;
+    return (uint8_t)((state->world.bits[ZONE_DEFEAT_BYTE(aid)] &
+                      (uint8_t)(1u << ZONE_DEFEAT_BIT(aid))) != 0);
+}
+
 void actor_load_scene_banked(void)
 {
     World *world = (World *)g_bk_ptr_a;
-    const GameState *state = (const GameState *)g_bk_ptr_b;
+    GameState *state = (GameState *)g_bk_ptr_b;
     MapId map_id = (MapId)g_bk_byte_a;
     uint8_t i, d, slot;
 
@@ -94,23 +138,23 @@ void actor_load_scene_banked(void)
         const WorldActorTable *tbl = &g_actor_registry[i];
         if (tbl->map_id != map_id) continue;
 
+        /* Zone settling (rpg/state.h WorldState): a new zone clears the
+         * old zone's defeat bits -- leaving a zone respawns its enemies.
+         * Zone 0 settles silently (fresh boot/new game, staged scenario
+         * bits): no clear, so setup survives the first load. */
+        zone_sync_banked(state, tbl->act);
+
         slot = 0;
         for (d = 0; d < tbl->count; d++) {
             const WorldActorDefinition *def = &tbl->defs[d];
 
-            /* Replica of game_world_actor_is_defeated() (src/rpg/state.c):
-             * linear scan of the persistent world actor state. */
-            if (def->actor_id != 0) {
-                bool defeated = false;
-                uint8_t w;
-                for (w = 0; w < state->world.count; w++) {
-                    if (state->world.actors[w].actor_id == def->actor_id) {
-                        defeated = (state->world.actors[w].state ==
-                                    (uint8_t)ACTOR_STATE_DEFEATED);
-                        break;
-                    }
-                }
-                if (defeated) continue;
+            /* Bit-test replica of game_world_actor_is_defeated() (helper
+             * above): bit (N-1) records ActorId N.  Id 0 is untracked
+             * runtime (slime-trio morph, co-located tutor statics); ids
+             * past ZONE_DEFEAT_BITS never persist (validate.py rejects
+             * them, belt and braces). */
+            if (defeat_test_banked(state, def->actor_id)) {
+                continue;
             }
 
             /* Replica of game_variable_get() (src/rpg/state.c):

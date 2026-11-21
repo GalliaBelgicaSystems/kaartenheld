@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "enemy_confuse_final_blow",
  "test": true,
  "description": "Friendly fire can end the fight: with its tribemates already down, a poisoned slime turns its telegraphed swing on itself for lethal damage -- ENTITY_DEFEATED fires for the victim (the non-target defeat path reports it, unlike the old swallow) and BATTLE_WON follows since nothing stands.",

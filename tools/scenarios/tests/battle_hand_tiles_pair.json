@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_hand_tiles_pair",
  "test": true,
  "description": "Staged pair (SW3+BO3) shows the centered PAIR hand-name tiles on row 10 (cols 9-10, word slots 229/230, FIELD), the player-turn attack trio on row 7 (S7^, tiles 104/110, FIELD), and blank row-8 forecast.",

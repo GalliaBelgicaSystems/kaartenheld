@@ -95,18 +95,23 @@ def load_scenario(sess, name):
         return json.load(f)
 
 
+"""Authoritative sprite position (y, x) from the hero's shadow OAM slot."""
+PLAYER_OAM_SLOT = 38
+
+
 def shadow_oam(sess):
-    """Authoritative sprite position (y, x) from shadow OAM slot 0."""
-    return (sess._memread(0xC000), sess._memread(0xC001))
+    """Authoritative sprite position (y, x) from the hero's shadow OAM slot."""
+    base = 0xC000 + 4 * PLAYER_OAM_SLOT
+    return (sess._memread(base), sess._memread(base + 1))
 
 
 def shadow_sprite_tile(sess):
-    """Sprite tile byte from shadow OAM slot 0 (y, x, tile, attr)."""
-    return sess._memread(0xC002)
+    """Sprite tile byte from the hero's shadow OAM slot (y, x, tile, attr)."""
+    return sess._memread(0xC000 + 4 * PLAYER_OAM_SLOT + 2)
 
 
 def shadow_oam_slot_tile(sess, slot):
-    """Tile byte of shadow OAM entry `slot` (0 = player).  Each entry is
+    """Tile byte of shadow OAM entry `slot` (38 = hero).  Each entry is
     four bytes at 0xC000 + 4*slot: y, x, tile, attr."""
     return sess._memread(0xC000 + 4 * slot + 2)
 

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_ap_formula_wood",
  "test": true,
  "description": "AP formula anchor W SW (docs/card-ap-cost-formula.md §0/§4.1): a real deck of five wood swords dealt through deck_init draws pip tile 96 (AP_TILE_1) on all five hand slots. No hand injection: the cost travels catalog def -> battle deck -> OAM.",

@@ -1,7 +1,8 @@
 {
+ "act": 1,
  "name": "quest_mark_mayor_offer",
  "test": true,
- "description": "Quest marker ? over the mayor while MONSTER_HUNT is NOT_STARTED: entry 30 shows QUESTION_TILE (127). No execute; the marker is part of the pending overworld render. Marker compact order on TEST_TOWN: entry 30 is the mayor's ?, entry 31 the village dog's ? (DOG_KEY unset).",
+ "description": "Quest marker ? over the mayor while MONSTER_HUNT is NOT_STARTED: entry 30 shows QUESTION_TILE (127). No execute; the marker is part of the pending overworld render. Marker compact order on TEST_TOWN: entry 30 is the mayor's ?, entry 31 the village dog's ? (DOG_KEY unset). The hero renders from entry 38 in the same frame: OAM index order draws lower entries on top, so badges 30-37 always cover the hero standing under them.",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -35,6 +36,11 @@
    "type": "oam_tile",
    "entry": 31,
    "expected": 127
+  },
+  {
+   "type": "oam_tile",
+   "entry": 38,
+   "expected": 96
   }
  ]
 }

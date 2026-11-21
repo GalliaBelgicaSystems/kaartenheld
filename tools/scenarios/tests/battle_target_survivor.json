@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_target_survivor",
  "test": true,
  "description": "With only the middle Mountain Pass slime surviving (slots 0 and 2 at 0 HP), a DOWN press that wraps back onto the SAME living slot must NOT emit TARGET_CHANGED. The first DOWN (0 -> 1, a real selection change) emits exactly once; the second DOWN wraps 1->2->0->1 and changes nothing, so event_count stays 1 and the caret stays on the middle slime.",

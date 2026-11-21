@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "actor_guard_interaction",
  "test": true,
  "description": "Friendly World Actor (Guard) starts dialogue when engaged",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_equip_unlocked_pool4",
  "test": true,
  "description": "Equip gate release (docs/enemies_ranking.md \u00a74.8): the same STEEL FIRE BOW (id 210, cost 4) decks normally once the pool reaches 4 -- pressing A on its DECK row emits CARD_ADDED_TO_DECK and no CARD_EQUIP_LOCKED. Companion file: deck_equip_locked_loot (pool 2 refuses).",

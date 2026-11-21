@@ -1,0 +1,48 @@
+{
+ "act": "always",
+ "name": "zone_clear_on_act_change",
+ "test": true,
+ "description": "Leaving a zone respawns its enemies: staged act-1 SLIME_FOREST defeat is wiped on entry to act 2 and stays wiped on return, with one ZONE_CHANGED per crossing (leaving is a full reset, re-farmable by design).",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 4247,
+  "world": {
+   "SLIME_FOREST": "DEFEATED"
+  }
+ },
+ "actions": [
+  {
+   "type": "teleport",
+   "scene": "TEST_ACT2_FIELD",
+   "x": 10,
+   "y": 9
+  },
+  {
+   "type": "teleport",
+   "scene": "TEST_FOREST",
+   "x": 8,
+   "y": 6
+  }
+ ],
+ "assertions": [
+  {
+   "type": "zone",
+   "expected": 1
+  },
+  {
+   "type": "defeat_bit",
+   "actor": "SLIME_FOREST",
+   "expected_state": "ALIVE"
+  },
+  {
+   "type": "event_count",
+   "event": "ZONE_CHANGED",
+   "count": 2
+  }
+ ]
+}

@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_unequip",
   "test": true,
   "description": "Manual unequip: A on an equipped gem clears only the equipped bit (ownership kept) and the row flips back to OFF.",

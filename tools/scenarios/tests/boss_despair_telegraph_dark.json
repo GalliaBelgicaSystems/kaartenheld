@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "boss_despair_telegraph_dark",
  "test": true,
  "description": "Same telegraph hold, sampled 8 frames later (half a 16-frame blink window): the boss art reads blank in real VRAM while the message rows persist, proving the art actually toggles instead of staying stamped.",

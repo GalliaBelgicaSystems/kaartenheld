@@ -15,7 +15,10 @@
  *
  * Engine files must never include this (AGENTS.md §55.1 is about game
  * headers; this one is debug-owned and banked-only by convention):
- * fixed-bank code uses telemetry_emit(), never this. */
+ * fixed-bank code uses telemetry_emit(), never this.  Banked engine
+ * bodies may include it (actor_load_banked.c zone wipe): like game
+ * bodies they cannot re-enter the trampoline, and the ring writer is
+ * bank-agnostic WRAM work. */
 #ifdef DEBUG_BUILD
 static void telemetry_ring_emit(uint8_t type, uint8_t d0, uint8_t d1,
                                 uint8_t d2, uint8_t d3)

@@ -1090,8 +1090,8 @@ def emit_actors_code(levels_by_id, bank=2, registry=None,
     out.append(" * Friendly actors are pure static definitions.  Hostile actors are")
     out.append(" * spawned into World.actors runtime slots by actor_load_scene(), so a")
     out.append(" * scene can hold several hostile actors at once.  Each hostile definition")
-    out.append(" * carries a stable ActorId (unique across scenes) so its defeat can be")
-    out.append(" * recorded persistently in GameState.world and survive scene reloads.")
+    out.append(" * carries a stable ActorId (unique within its zone) so its defeat can be")
+    out.append(" * recorded in the zone defeat bitmask and survive scene reloads.")
     out.append(" */\n")
     empty_sids = set()
     for sid in ordered:
@@ -1113,12 +1113,17 @@ def emit_actors_code(levels_by_id, bank=2, registry=None,
     out.append("const WorldActorTable g_actor_tables[] = {")
     for sid in ordered:
         map_id_enum = map_enum[sid]
+        # Zone tag for the defeat bitmask (levels/*.json act, default 1):
+        # the loader clears the old zone's bits when it changes, so
+        # leaving a zone respawns its enemies (AGENTS.md 42.4).  Retired
+        # holes are unreachable (never loaded); they emit 1.
+        act = levels_by_id[sid].get("act", 1) if sid is not None else 1
         if sid in empty_sids:
             out.append(f"    {{ {map_id_enum + ',':<20s} 0,")
-            out.append("        0 },")
+            out.append(f"        0, {act} }},")
         else:
             out.append(f"    {{ {map_id_enum + ',':<20s} g_{sid}_actors,")
-            out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])) }},")
+            out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])), {act} }},")
     out.append("};")
     # Chest-sprite open states: one resolved if per actor with an
     # open_flag/open_variable prop, in registry order.  No table, no

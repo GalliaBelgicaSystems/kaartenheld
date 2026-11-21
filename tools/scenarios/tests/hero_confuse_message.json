@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "hero_confuse_message",
  "test": true,
  "description": "Confused hero message beat: DBG_APPLY_STATUS poisons the player, so the next decision phase auto-stages without input -- rows 9+10 read Confused! / You play randomly! on the staged beat (the execution beat is pinned separately by hero_confuse_autoplay).",

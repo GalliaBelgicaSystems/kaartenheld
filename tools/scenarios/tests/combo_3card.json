@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_3card",
  "test": true,
  "description": "Three of a kind (SW3 + SW3 + SW3, suited): tier THREE KIND, multiplier 180+30=210, damage 9*210/100=18.  Kills Carl (staged to 18 HP; unkillable at 99 in real play).  Locks COMBO_RESOLVED payload (tier=3) and EFFECT_RESOLVED amount.",

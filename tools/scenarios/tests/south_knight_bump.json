@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "south_knight_bump",
  "test": true,
  "description": "The waiting slime knight (AI_NONE) starts combat on bump: stepping into its tile opens the knight battle (no patrol, no lesson, no pre-fight dialogue)",

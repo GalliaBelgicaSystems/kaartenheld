@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_equip_capped_twin",
  "test": true,
  "description": "Uncapped ownership with full identity folding: the curated IRON_RING and its loot twin (id 164) fold into one curated row (owned 2). Decking the curated ring succeeds; decking by the twin id afterwards is refused (no owned row under that id after the fold) -- 1 CARD_ADDED_TO_DECK, curated row intact, twin row gone.",

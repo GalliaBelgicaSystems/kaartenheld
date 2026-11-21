@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "alert_music_resume",
  "test": true,
  "description": "Sting plays on top of the running track and the music keeps going (never restarts): 130 frames after the TEST_FOREST kobold spots the hero (pursuers, sting at ~30 f) the forest track still plays -- no MUSIC_CHANGED fired in between.",

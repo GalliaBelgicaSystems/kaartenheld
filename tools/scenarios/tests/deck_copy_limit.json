@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_copy_limit",
  "test": true,
  "description": "Ownership is uncapped (only the deck enforces the uniform 5-per-identity limit): BRONZE_SWORD (starter owns/decks 2) grants and decks once more; POISON_DAGGER grants three and decks three times, the 4th deck_add is refused (owned out); WOODEN_SHIELD (starter owns/decks 4) grants twice (owned 6) and decks once more to the 5-per-identity cap, the next deck_add is refused by the cap. Exactly 5 CARD_ADDED_TO_DECK events fire.",

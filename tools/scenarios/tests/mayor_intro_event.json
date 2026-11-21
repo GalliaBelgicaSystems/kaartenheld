@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "mayor_intro_event",
  "test": true,
  "description": "MAYOR_INTRO event: first interaction with the Mayor starts the intro dialogue and sets MET_MAYOR immediately",

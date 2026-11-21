@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "heal_flash_white",
  "test": true,
  "description": "Heal flash off-phase: 24 frames after the same HE5 heal the pulse is off, so the hero HP block carries the steady FIELD slot again (not a stuck DIM). Companion to heal_flash_green; together they pin both halves of the pulse.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_despair_poison",
  "test": true,
  "description": "Poison dagger counter dropping the unkillable Lord of Slimes to 0 before the 1-HP despair floor skips the post-swing bank-11 rider cleanly (matches the 0-HP attack guard and never reads stale g_bk_byte_e): boss floors to 1 HP, incoming 6 hits hero 10->4, FOCUSING hold opens, and neither STATUS_APPLIED nor STATUS_RESISTED emits.",

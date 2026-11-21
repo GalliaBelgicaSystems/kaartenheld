@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_first_victory_after_carl",
  "test": true,
  "description": "Spar exception to the first-victory grant (docs/loot.md 34.5): beating Carl increments the kill counter but grants nothing (rank 0), so the NEXT real victory must still drop the BRONZE SHIELD. Staged with one kill (the spar) plus the spar-won latch the victory event sets; felling the wall slime (R1) yields the bronze plain shield (derived id 0x81 = 129) like a true first victory, with the same LOOT_CARD_ADDED payload and CARDS-tab reveal.",

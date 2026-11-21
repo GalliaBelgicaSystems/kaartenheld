@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_progress",
  "test": true,
  "description": "Defeating a hostile actor increments the global MONSTERS_DEFEATED counter (the quest objective)",

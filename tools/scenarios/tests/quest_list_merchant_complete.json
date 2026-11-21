@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_list_merchant_complete",
  "test": true,
  "description": "A completed SHOP KEYS quest stays listed in the QUEST tab as 'complete - MERCHANT' (MONSTER HUNT NOT_STARTED stays hidden, so it sits at rows 3/4)",

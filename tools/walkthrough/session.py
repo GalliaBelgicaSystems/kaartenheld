@@ -322,7 +322,7 @@ class Session:
 
     # ── OAM ──────────────────────────────────────────────────────────
     def oam_actor_ys(self):
-        """Real-OAM Y bytes for the actor region (entries 1..26; entry 0 is
+        """Real-OAM Y bytes for the actor region (entries 1..26; entry 38 is
         the player).  0 = hidden; GBDK stores screenY + 16.  Used to assert
         nothing draws over the dialogue box."""
         base = 0xFE00

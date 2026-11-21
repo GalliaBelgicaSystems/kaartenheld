@@ -203,10 +203,13 @@ def main():
     # races it).
     lcdc_init = None
 
-    # Shadow-OAM slot 0 = the player sprite (y, x).  Read before the frame's
-    # ui_sprite_commit so it always reflects the latest game_render.
-    OAM_Y = 0xC000
-    OAM_X = 0xC001
+    # Shadow-OAM slot 38 = the player sprite (y, x, tile, attr).  Read
+    # before the frame's ui_sprite_commit so it always reflects the latest
+    # game_render.
+    PLAYER_OAM_SLOT = 38
+    OAM_Y = 0xC000 + 4 * PLAYER_OAM_SLOT
+    OAM_X = OAM_Y + 1
+    OAM_TILE = OAM_Y + 2
 
     # Boot position is the TEST_FIELD spawn from
     # tools/scenarios/fixtures/levels/test_field.json player.spawn
@@ -330,9 +333,9 @@ def main():
             sprite_track_frames += 1
 
         # Check 4: the '@' glyph (the OAM sprite's tile, read from shadow OAM
-        # slot 0's tile field) must never appear in the BG tilemap -- the hero
+        # slot 38's tile field) must never appear in the BG tilemap -- the hero
         # is OAM-only and a stale BG '@' would double-draw it.
-        hero_tile = pb.memory[0xC002]
+        hero_tile = pb.memory[OAM_TILE]
         if hero_bg_tile is None:
             hero_bg_tile = hero_tile
         if any(b == hero_bg_tile for b in curr_vram_map):

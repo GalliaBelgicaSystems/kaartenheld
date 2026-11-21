@@ -53,9 +53,6 @@ extern const uint8_t enemy_ow_tiles[];
  * budget, AGENTS.md 52.18).  Never calls fixed-bank code (the bank is
  * switched away while it runs). */
 
-/* Carl's tutor hostile actor id (persistent defeat key). */
-#define ACTOR_ID_CARL_TUTOR 1
-
 /* static_marks[] in World must track MAX_STATIC_ACTORS (actor.h):
  * world.h cannot include actor.h (circular), so the size is literal
  * there -- fail loudly here instead of silently truncating. */
@@ -153,14 +150,13 @@ static uint8_t marks_has_card(uint8_t id)
 
 static uint8_t marks_carl_defeated(void)
 {
-    uint8_t i;
-    for (i = 0; i < g_game.state.world.count; i++) {
-        if (g_game.state.world.actors[i].actor_id == ACTOR_ID_CARL_TUTOR &&
-            g_game.state.world.actors[i].state == (uint8_t)ACTOR_STATE_DEFEATED) {
-            return 1;
-        }
-    }
-    return 0;
+    /* One-shot latch, not the zone bit: the STORY_FLAG_ID_TUTORIAL_SPAR_WON
+     * flag (set by the victory event) survives zone changes, so the
+     * quest mark stays gone after backtracking.  Same bit math as
+     * rpg/state.c. */
+    uint8_t f = (uint8_t)(STORY_FLAG_ID_TUTORIAL_SPAR_WON - 1);
+    return (uint8_t)((g_game.state.flags.bytes[(uint8_t)(f >> 3)] &
+                      (uint8_t)(1u << (f & 7))) != 0);
 }
 
 /* ── Carl's "leaving without the lesson" offer ─────────────────────

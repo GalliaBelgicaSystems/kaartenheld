@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "dog_trade",
  "test": true,
  "description": "Bumping the village dog while holding the bone offers 'Give Bone to dog?': answering YES swaps the bone for the OLD KEY, opens the thanks, and closing it sets DOG_KEY (the ? mark's off switch)",

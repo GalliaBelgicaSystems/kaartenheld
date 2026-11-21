@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_no_double_reward",
  "test": true,
  "description": "Once the quest is COMPLETE, the Mayor gives the already-rewarded dialogue and the +1 AP energy-pool reward is not granted again (ENERGY_POOL stays at the staged post-reward value)",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "town_boot",
  "test": true,
  "description": "Boot directly into the overworld on the Town scene with arrival flag set",

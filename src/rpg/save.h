@@ -10,7 +10,11 @@
  * migrated; see docs/save-format.md. */
 
 #define SAVE_MAGIC   0x5247   /* "GR" */
-/* v7: second currency slot (ARROWS, limited-arrows) shifts world,
+/* v8: WorldState is a zone-scoped defeat bitmask (zone + 16 bytes) instead
+ * of the flat 16-entry list (1 + 16*3 bytes) -- a v7 save would decode
+ * defeats, progression and economy shifted, so v7 saves are rejected
+ * outright.
+ * v7: second currency slot (ARROWS, limited-arrows) shifts world,
  * progression and economy by 2 bytes -- a v6 save would load all of
  * them corrupted, so v6 saves are rejected outright.
  * v6: CARD_FIRE_SWORD renamed to plain CARD_BRONZE_SWORD on the same id
@@ -20,7 +24,7 @@
  * the checksum against the grown struct, so pre-v4 saves read as
  * empty instead of loading truncated) + appended EconomyState
  * (docs/economy.md §6.3, the v4->v5 bump). */
-#define SAVE_VERSION 7
+#define SAVE_VERSION 8
 #define SAVE_SLOT_COUNT 3
 
 /* SRAM save geometry shared by the SRAM bodies.  Slots are

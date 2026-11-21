@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "game_over_boot",
  "test": true,
  "description": "Boot directly into the Game Over screen with the Continue prompt",

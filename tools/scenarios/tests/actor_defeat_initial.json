@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "actor_defeat_initial",
  "test": true,
  "description": "Carl never despawns: with SLIME_FIELD already DEFEATED his tutor side still stands on (14,8), so bumping it opens the repeat lesson (intro card guide, no AP line) instead of walking through or fighting",

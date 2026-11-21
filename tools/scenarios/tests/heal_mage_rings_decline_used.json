@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "heal_mage_rings_decline_used",
  "test": true,
  "description": "Declining the rings lesson after the free heal is used closes plainly: USED is already set so there is no heal flow to fall through to -- NO sets nothing (lesson still unheard, ask repeats next talk) and the overworld resumes with exactly one DIALOGUE_CHOICE. Pins the one-shot: no second heal is reachable through the ask.",
@@ -6,7 +7,7 @@
   "scene": "TEST_TOWN",
   "player": {"x": 12, "y": 9, "facing": "DOWN"},
   "seed": 1007,
-  "flags": {"ARRIVED_TOWN": true, "HEAL_MAGE_USED": true},
+  "flags": {"ARRIVED_TOWN": true, "HEAL_MAGE_USED": true, "TUTORIAL_SPAR_WON": true},
   "variables": {"QUEST_MONSTER_HUNT": 2, "MERCHANT_QUEST": 2},
   "world": {"CARL_FIELD": "DEFEATED"},
   "inventory": {"IRON_RING": 1},

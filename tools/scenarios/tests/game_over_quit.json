@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "game_over_quit",
  "test": true,
  "description": "On the Game Over Continue? prompt, choosing NO silences everything (no scene track, no pursuer sting: the per-frame tick is gated off terminal screens) and shows the try-again Thanks text (normal death, no congratulations). After the ~5 s hold the game reboots cleanly into a fresh overworld with the scene track back.",

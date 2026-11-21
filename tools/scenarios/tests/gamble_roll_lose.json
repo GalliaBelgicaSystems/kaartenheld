@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_roll_lose",
   "test": true,
   "description": "Seeded loss: NUM=1 BET=1 rolls dice 2/6/3 (seed 12345), zero matches, loses the 1-gold bet (20 -> 19). Result shows under the kobold.",

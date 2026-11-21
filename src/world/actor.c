@@ -77,7 +77,7 @@ ActorEngageResult actor_engage(const StaticActorDefinition *actor, DialogueState
     return ENGAGE_NONE;
 }
 
-void actor_load_scene(World *world, MapId map_id, const GameState *state)
+void actor_load_scene(World *world, MapId map_id, GameState *state)
 {
     /* Body runs banked (src/world/actor_load_banked.c): the registered
      * tables live in the same ROM bank, so the body reads them directly

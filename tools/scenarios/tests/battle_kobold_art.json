@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_kobold_art",
  "test": true,
  "description": "Kobold battle renders 3x2 OAM art (BG footprint blank); HP line and wiring pinned.",

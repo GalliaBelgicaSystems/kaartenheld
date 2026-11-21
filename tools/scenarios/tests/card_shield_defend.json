@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_shield_defend",
  "test": true,
  "description": "In defend phase a shield card blocks the next enemy attack by its value: SH3 vs the knight's telegraphed SWORD(3) means the hero takes 0 damage (exact block, net 0: no damage and -- with no over-block -- no heal). The block is one-shot against the next attack. (Bumped the static south knight for a real damaging telegraph; the tutorial spar hits for 0 and cannot test blocking.)",

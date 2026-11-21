@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "status_ice_player_halved",
   "test": true,
   "description": "Iced hero deals halved damage (rounded up): DBG_APPLY_STATUS ices the PLAYER (slot 0) up front, then a lone SW3 swing lands for 2 instead of 3 (DAMAGE_DEALT d0=2 while EFFECT_RESOLVED keeps the full 3, mirroring the enemy telegraph softening). Healing is untouched; no cards grey out and no turn is skipped.",

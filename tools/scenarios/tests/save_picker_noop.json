@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "save_picker_noop",
  "test": true,
  "description": "A no-op cursor press stays silent: from game-over Continue into the save picker, DOWN past the last slot clamps without moving, so the third DOWN stages nothing -- exactly the two real moves blip.",

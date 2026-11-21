@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "ring_heal_sfx",
  "test": true,
  "description": "Ring heal cue: SW5 + RING2 attacks as a PAIR healing 12 and plays the HEAL cue (sfx_last 10), not the block thump.",

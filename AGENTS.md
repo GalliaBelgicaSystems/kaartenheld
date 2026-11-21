@@ -1865,6 +1865,56 @@ Rules:
   fixtures; `make debug` chains `levels-test` automatically.  memmap
   guards the bank-4 fixture budget.
 
+## 42.4 Acts: demo (act 1) vs shared vs future acts
+
+Act 1 is the demo (ends after the lord-of-slimes fight).  Levels and
+scenarios carry a top-level `act` key so act-1 story tests can be skipped
+while iterating on act 2:
+
+* Levels (`levels/*.json`): `"act": 1` on every current level.  New act-2
+  levels use `"act": 2` with an `act2_` id prefix and an `Act 2 — ...`
+  display name, so the editor's filter box isolates them with zero
+  tooling.
+* Scenarios (`tools/scenarios/tests/*.json`): `"act": 1` (proves
+  demo-specific content — Carl/mayor/guard/dog/merchant/shopkeys/
+  heal-mage/skeleton/gamble/wizard, act-1 map boots/gates/chests,
+  boss/mimic/throne) or `"act": "always"` (proves a shared
+  engine/system rule, even when staged on an act-1 fixture as background
+  — e.g. `arrows_shop_buy` stages `MERCHANT_QUEST: 2` but tests the
+  generic shop).  Staging a flag as background is not testing it; only
+  assertions that prove act-1 content (story flags, quest variables,
+  `DOG_ASK` / `TUTORIAL_CARL_*` / `KOBOLD_INVITE` dialogue args,
+  named-actor state) mark a scenario act 1.  `validate_scenario()`
+  additionally requires a numbered scenario's staged scene to belong to
+  that act (an `always` scene may be anything).
+* Recorded borderline calls: `south_knight_bump` is `always` (the only
+  hostile-bump test); `actor_slime_combat`, `boss_despair_*`, and the
+  whole `gamble_*` family (including bet/roll mechanics and the
+  `gem_grant_*` / `gem_no_grant` Nis prize triggers) are act 1 for
+  now — move them to `always` if act 2 reuses the despair mechanic or
+  the dice system.
+
+Current status: the key is inert for filtering (`compile.py --all`,
+the editor `/api/levels`, and `run_all()` all ignore it), so the layout
+stays flat (`levels/*.json`, no subdirs — recursive globs need tooling
+changes first) and `make test-harness` still runs the full suite (CI
+gate).  It is load-bearing elsewhere: `compile.py` emits it into the
+actor tables (zone defeats, §53.8), `validate.py` keys ActorId
+uniqueness and the `act2_` prefix on it, and `validate_scenario()`
+checks scenario/scene act agreement.  `validate_scenario()` requires a valid top-level `act`
+(`int >= 1` or `"always"`) on every scenario, and the level editor
+preserves `act` verbatim on load/save round-trips.  Local fast loop while
+on act 2 — run shared + act-2 scenarios only:
+
+```bash
+for s in $(python3 -c "import json,glob; print(' '.join(d['name'] for f in sorted(glob.glob('tools/scenarios/tests/*.json')) for d in [json.load(open(f))] if d.get('act') in ('always',2)))"); do
+  make test-scenario SCENARIO=$s || break
+done
+```
+
+A new act gets a new `act` value + `actN_` prefix; never renumber
+existing tags.
+
 ---
 
 # 43. Bug Reproduction
@@ -2894,6 +2944,23 @@ in `src/core/game.c`, called once per frame right after
   unconditionally every frame, so a request can never go stale --
   not across screens, saves, loads, or harness teleports.
 
+## 52.29 Per-frame debug builders share the VBlank budget (Nov 2026)
+
+`debug_snapshot()` (core + extended builders) runs EVERY frame in the
+debug ROM, inside the same VBlank budget as the game.  A 128-iteration
+bit-decode loop in the extended snapshot builder pushed the overworld
+frame over budget: every game frame then took two VBlanks (vsync waits
+for the next one), so boot ran at half speed and the title arrived ~400
+frames late -- `verify-music` 5a/5c failed (START hold landed on NOTICE,
+no SFX), while the music-clock checks stayed green (the timer ISR is
+cycle-based, unaffected).  Symptom class: anything paced in game frames
+(boot timeline, input windows, patrols) runs slow while cycle-paced
+systems (audio ISR) look fine.  Keep per-frame debug work bounded (the
+decoder is byte-first with zero-skip: 16 iterations when empty); never
+scan the full 128-bit mask per frame.  `verify-music` is the canary
+(its title-wait budget assumes full-rate frames), not the harness
+(SameBoy steps frames discretely and cannot see pacing).
+
 ---
 
 # 53. State Ownership
@@ -2969,24 +3036,26 @@ in sync; changing one without the other silently breaks every scenario.
 
 * Core snapshot (`g_snap_buf`, 36 bytes): byte 12 is `state.flags.bytes[0]`,
   byte 19 is `state.scene.scene_id`.  Existing scenarios depend on these.
-* Extended snapshot (`g_state_snap_buf`, 294 bytes, version 0x08): version
+* Extended snapshot (`g_state_snap_buf`, 317 bytes, version 0x0A): version
   byte 0, flags 1..8, variables 9..40 (all MAX_STATE_VARIABLES as int16
   LE -- grown from 9..24 for the 9th variable in Nov 2026; the builder
   always copied 16 vars while the layout reserved 8, so vars 9+ used to
   alias the currency bytes), currency count 41 + entries 42..53, party
   count 54 + members 55..66, inventory (collection) count 67 + entries
-  68..167, world count 168 + entries 169..216, progression count 217 +
-  entries 218..265, equipment 266, camera/world geometry 267..272,
-  battle-deck count at 273 followed by up to 20 deck card ids at
-  274..293.
-* State-load descriptor (`g_scen_state_buf`, 320 bytes, version 0x05):
+  68..167, world count 168 + entries 169..216 (16 lowest set defeat bits
+  decoded), progression count 217 + entries 218..265, equipment 266,
+  camera/world geometry 267..272, battle-deck count at 273 followed by
+  up to 20 deck card ids at 274..293, economy state at 294..299, zone at
+  300, and raw zone defeat bitmask at 301..316.
+* State-load descriptor (`g_scen_state_buf`, 326 bytes, version 0x06):
   variables section carries up to 16 entries (vid + int16 LE, 3 bytes
   each at 19..66), so variables 9+ load through descriptors; the
   optional deck section at 297 (present flag) / 298 (count) / 299..318
   (card ids)
   replaces the starter deck when present — an explicit empty deck is how
   scenarios reach `battle_start`'s packed fallback path now that
-  `DECK_MIN_CARDS` blocks emptying a deck through gameplay.
+  `DECK_MIN_CARDS` blocks emptying a deck through gameplay; status mask
+  at 319; economy state at 320..325.
 * Every important gameplay transition must emit a telemetry event; state
   assertions must be possible without screenshots.
 
@@ -3041,6 +3110,35 @@ The byte offsets in `g_snap_buf` / `g_state_snap_buf` are an internal
 transport contract and may change; scenarios must not depend on them.
 Semantic assertions (`flag`, `variable`, `inventory`, `party_hp`,
 `party_level`, `actor_state`, `screen_row`, ...) are the stable API.
+
+## 53.8 Zone-scoped defeat bitmask (acts)
+
+Enemy defeats persist per story zone (`WorldState.zone` + 128 defeat
+bits, `src/rpg/state.h`), not game-wide: the loader (`actor_load_banked.c`,
+the single funnel every map load passes through) clears the old zone's
+bits when the table zone (`WorldActorTable.act`, compiled from
+`levels/*.json` act, `compile.py`) changes, so leaving a zone respawns
+its enemies.  The wipe runs during the load, before the frame's
+`scene_sync_from_world` + autosave flush (`game_update`), so a slot
+saved after a zone change holds the cleared mask -- never a mix.
+The clear emits `EVENT_ZONE_CHANGED` (old, new); silent settles
+(zone 0 on boot/staged setup) stay quiet.  ActorIds index the bits
+(`N-1`) and must be unique within a zone only (`validate.py` enforces
+range 1..128 plus per-act uniqueness, so zones may reuse ids).
+Save+quit preserves the exact zone state (zone + bits travel in
+`GameState`/SRAM); zone 0 means unsettled and settles without clearing,
+so staged scenario bits survive the first load.  One-shot bosses that
+must never respawn are story flags, never defeat bits.  Regression:
+`actor_defeat_save_load`.
+
+Deliberate re-farm rule: a zone change is a full reset -- kills recount
+toward `MONSTERS_DEFEATED`, and re-killed enemies grant their loot and
+gold again (no take-backs on what was already granted).  Carl is the
+one exception to the *offer*, not the reset: his body still respawns
+with the zone, but the `TUTORIAL_SPAR_WON` flag latch (set by his
+victory event) keeps the leave-the-field offer, the `?` mark and the
+INTRO YES re-fight suppressed -- the lesson is taught once, the spar
+itself stays zone-bound like every other fight.
 
 ---
 

@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "battle_bow_uses_display6",
   "test": true,
   "description": "A 6-shot 1-AP wood bow draws its real power digit on the card's middle row (font tile 17 = '1') and the 6_arrows_left glyph on the floor row (VRAM 112, former menu blank); the semantic row reads BO6. Guards the uses 0..6 ladder (LOOT_BOW_USES_FROM_AP tops out at 6).",

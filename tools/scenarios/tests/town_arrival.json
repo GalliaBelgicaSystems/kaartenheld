@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "town_arrival",
  "test": true,
  "description": "Walk east on Field into gate tile to enter Town map",

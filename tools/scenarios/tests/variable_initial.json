@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "variable_initial",
  "test": true,
  "description": "Declarative initial_state injects variables into the canonical GameState without clobbering defaults",

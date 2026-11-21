@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_scroll_down",
  "test": true,
  "description": "DECK-tab scroll-down indicator: with 10 pile groups (8 curated + 2 loot) only 8 fit the visible window, so row 14 shows the rotated-finger down caret ('v' in the buffer) under the pile material column while the deck side (3 rows, fits) shows none; at the top there is no up caret on row 4.",

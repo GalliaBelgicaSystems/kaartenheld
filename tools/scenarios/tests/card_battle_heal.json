@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_battle_heal",
  "test": true,
  "description": "Playing a HE5 card in the attack phase heals the hero by its power (5) instead of dealing damage",

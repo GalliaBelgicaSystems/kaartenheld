@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "quit_with_quest",
  "test": true,
  "description": "QUEST-tab save & quit with a tracked quest: the SHOP KEYS quest lists, A opens the quit confirm, A on YES writes the active slot and lands on the title screen.",

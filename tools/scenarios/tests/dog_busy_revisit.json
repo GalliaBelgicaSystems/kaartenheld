@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "dog_busy_revisit",
  "test": true,
  "description": "Bumping the village dog after the trade shows it is busy gnawing the bone (DOG_BUSY), not the handover thanks: the thanks belongs to the trade moment only, with no duplicate key",

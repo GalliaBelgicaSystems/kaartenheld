@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "diagonal_corner_actor_vert",
  "test": true,
  "description": "Diagonal corner rule (actor on vertical orthogonal): from (14,9) UP+RIGHT targets (15,8), while Carl on the (14,8) vertical orthogonal blocks N/S movement and (15,9) is free floor, so the player glides horizontally around Carl to (15,9) facing RIGHT instead of stalling or encountering.",

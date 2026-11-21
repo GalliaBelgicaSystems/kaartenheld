@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "hero_sprite_status_tint",
  "test": true,
  "description": "Hero badge sprite follows status: DBG_APPLY_STATUS ices the PLAYER (slot 0, duration 5, no rounds played so nothing expires) and the row-7 sprite cell (col 1) must carry the ICE palette (2) instead of the healthy NONE (0); the buffer keeps '@' so the sprite stays assertable as text.",

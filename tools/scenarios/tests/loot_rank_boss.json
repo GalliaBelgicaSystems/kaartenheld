@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_rank_boss",
  "test": true,
  "description": "R6 boss row (docs/enemies_ranking.md \u00a74.2): the Lord of Slimes is rank 6 and his battle boots on the R6 row (the roll happens at battle start like every encounter). The demo lord is unkillable by design (despair hold at <=20 HP), so no victory loot is grantable here -- the R6 material shape is pinned by enemy_audit's cut-table check plus the shared walk code the R1-R5 victories exercise. This scenario proves the R6 battle runs: staged to 1 HP, the lord clamps, flashes and holds the FOCUSING telegraph instead of dying.",

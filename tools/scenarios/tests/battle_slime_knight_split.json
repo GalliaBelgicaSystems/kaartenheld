@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_slime_knight_split",
  "test": true,
  "description": "Felling the castle armor (solo 15 HP) breaks it open: VICTORY is skipped for the knight, the KNIGHT_SPLIT briefing opens instead (full sentence, no banner truncation), and the quest tracks the kill (+12 gold). The trio itself is covered by battle_slime_trio_spawn.",

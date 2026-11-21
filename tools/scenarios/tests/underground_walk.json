@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "underground_walk",
  "test": true,
  "description": "Walk the Underground floor (PLAYER_MOVED) then bump the proving wall (blocked: position holds, no encounter)",

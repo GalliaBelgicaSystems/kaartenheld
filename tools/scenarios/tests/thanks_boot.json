@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "thanks_boot",
  "test": true,
  "description": "Boot directly into the Thanks screen with the demo NOT completed: shows the try-again variant (Try to beat the Lord of Slimes...) rather than the demo-complete congratulations.",

@@ -317,16 +317,17 @@ function levelEditorApiPlugin(): Plugin {
           return;
         }
 
-        // Actor-id registry across ALL scenes: ActorIds must be unique
-        // across levels (the toolchain's cross-file check), so the
-        // editor's auto-assign and browser validation need the global
-        // picture, not just the current level.  ?exclude=<levelId>
-        // omits one level (used when validating that level itself).
+        // Actor-id registry across scenes (zone-scoped per act, §53.8):
+        // ActorIds must be unique within a story zone (act), so the
+        // editor's auto-assign and browser validation carry each entry's
+        // act.  ?exclude=<levelId> omits one level; ?act=<n> filters to one zone.
         if (req.method === 'GET' && (req.url || '').startsWith('/api/actor-ids')) {
           try {
             const u = new URL(req.url || '', 'http://localhost');
             const exclude = u.searchParams.get('exclude') || '';
-            const used: Array<{ id: number; level: string }> = [];
+            const actParam = u.searchParams.get('act');
+            const wantAct = actParam !== null && actParam !== '' ? Number(actParam) : null;
+            const used: Array<{ id: number; level: string; act: number }> = [];
             const dir = path.join(repoRoot, 'levels');
             // Retired ids are tombstoned and their (stale) files must not
             // reserve actor ids — otherwise a leftover file silently blocks
@@ -339,10 +340,12 @@ function levelEditorApiPlugin(): Plugin {
               if (exclude && levelId === exclude) continue;
               if (levelId in retired) continue;
               const data = readJsonFile(path.join('levels', f));
+              const levelAct = typeof data.act === 'number' && Number.isInteger(data.act) ? data.act : 1;
+              if (wantAct !== null && levelAct !== wantAct) continue;
               for (const o of (data.objects || []) as Array<{ properties?: Record<string, unknown> }>) {
                 const aid = ((o.properties || {}) as Record<string, unknown>).actor_id;
                 if (typeof aid === 'number' && Number.isInteger(aid) && aid > 0) {
-                  used.push({ id: aid, level: levelId });
+                  used.push({ id: aid, level: levelId, act: levelAct });
                 }
               }
             }

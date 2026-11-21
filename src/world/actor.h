@@ -121,11 +121,14 @@ typedef struct {
 } WorldActorDefinition;
 
 /* A per-map block of actor definitions.  The engine owns no scene content:
- * the game layer registers its tables via actor_register_tables(). */
+ * the game layer registers its tables via actor_register_tables().  act is
+ * the story zone (level JSON act key, default 1): the loader clears the
+ * defeat bitmask when it changes, so leaving a zone respawns it. */
 typedef struct {
     MapId map_id;
     const WorldActorDefinition *defs;
     uint8_t count;
+    uint8_t act;
 } WorldActorTable;
 
 void actor_register_tables(const WorldActorTable *tables, uint8_t count, uint8_t bank);
@@ -201,9 +204,11 @@ uint8_t actor_find_hostile_slot(const World *world, uint8_t x, uint8_t y);
 ActorEngageResult actor_engage(const StaticActorDefinition *actor, DialogueState *dialogue);
 
 /* Spawn all hostile actor definitions for the given map into
- * World.actors runtime slots.  Actors whose ActorId is marked DEFEATED in
- * state are not spawned (persistent defeat). */
-void actor_load_scene(World *world, MapId map_id, const GameState *state);
+ * World.actors runtime slots.  Actors whose ActorId bit is set in the
+ * zone bitmask are not spawned (persistent defeat within the zone).
+ * Takes a mutable state: settling into a new zone clears the old zone's
+ * bits (leaving a zone respawns its enemies). */
+void actor_load_scene(World *world, MapId map_id, GameState *state);
 
 extern StaticActorDefinition g_static_actors[MAX_STATIC_ACTORS];
 extern uint8_t g_static_actor_count;

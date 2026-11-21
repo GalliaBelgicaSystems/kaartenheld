@@ -1,0 +1,63 @@
+{
+ "act": "always",
+ "name": "zone_defeat_stays_dead",
+ "test": true,
+ "description": "Zone defeat bits gate spawning: staged act-1 SLIME_FOREST defeat is wiped on entry to act 2 (per-zone namespace, same id alive here), a set_defeat in act 2 survives a same-zone reload, and the defeated act-2 slime never spawns (actor_absent). Exactly one ZONE_CHANGED fires (same-zone reloads stay silent).",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 4247,
+  "world": {
+   "SLIME_FOREST": "DEFEATED"
+  }
+ },
+ "actions": [
+  {
+   "type": "teleport",
+   "scene": "TEST_ACT2_FIELD",
+   "x": 10,
+   "y": 9
+  },
+  {
+   "type": "set_defeat",
+   "actor": "SLIME_FOREST"
+  },
+  {
+   "type": "teleport",
+   "scene": "TEST_ACT2_FIELD",
+   "x": 10,
+   "y": 9
+  }
+ ],
+ "assertions": [
+  {
+   "type": "zone",
+   "expected": 2
+  },
+  {
+   "type": "defeat_bit",
+   "actor": "SLIME_FOREST",
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "actor_state",
+   "actor": "SLIME_FOREST",
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "actor_absent",
+   "entity": "SLIME",
+   "x": 12,
+   "y": 10
+  },
+  {
+   "type": "event_count",
+   "event": "ZONE_CHANGED",
+   "count": 1
+  }
+ ]
+}
