@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "dog_quest_complete",
  "test": true,
  "description": "Trading the bone to the village dog completes the DOG'S KEY quest: YES swaps bone for OLD KEY, sets DOG_QUEST=2, and the QUEST tab shows it complete with the OLD KEY reward",

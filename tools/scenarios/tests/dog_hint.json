@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "dog_hint",
  "test": true,
  "description": "Bumping the village dog without the bone plays its hint ('The dog is holding a key and won't give it.'): closing it sets MET_DOG through the dialogue completion flag, which unlocks the skeleton's bone offer",

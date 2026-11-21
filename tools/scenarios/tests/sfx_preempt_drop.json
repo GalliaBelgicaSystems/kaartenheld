@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "sfx_preempt_drop",
  "test": true,
  "description": "SFX preemption policy: a low-priority UI blip (CURSOR) arriving while a higher-priority select cue (SELECT) is still playing is dropped, not restarted -- UI spam can no longer extend music-channel mutes. A (select SW3) then LEFT within the SELECT window: sfx_last stays SELECT (2), count stays 1.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_description_render",
  "test": true,
  "description": "CARDS tab lists one row per owned card name (weapon icon + rider + material + AP + DECK d/o) from row 5, with the AP unit icon stamped at col 6/16 next to every AP pip and the health rider icon stamped at the ring row's elem cell (vram_row pins the rider cell plus the two adjacent icon/pip tiles, and the col-9 inventory separator).",

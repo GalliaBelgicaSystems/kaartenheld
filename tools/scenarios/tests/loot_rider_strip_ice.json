@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_rider_strip_ice",
  "test": true,
  "description": "Wood-rider stripping, ICE case (docs/loot.md 34.1): id 120 is a hand-encoded WOOD ICE SWORD (material 0, ice effect) -- an illegal combo the generator never rolls. Synthesis strips it, and the one-row-per-card fold merges it into the starter WOOD SWORD row (same stats), so the detail page is opened from the first row now: it shows WOOD SWORD with NO RIDER (an unstripped card would show ICE RIDER) and the OAM rider slot stays hidden (entry 1 == 0). Same last-line-of-defense path as the poison case (loot_rider_strip).",

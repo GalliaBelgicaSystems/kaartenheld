@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_cost_energy",
  "test": true,
  "description": "Energy pool (2/phase) gates combo building: a cost-0 card plus two cost-1 cards select (0+1+1 = 2 exactly), the fourth is rejected (3 > 2), the hand executes as suited THREE KIND for 6 damage, and the pool refreshes at the next decision phase.  Rejection feedback itself is covered by battle_reject_message.",

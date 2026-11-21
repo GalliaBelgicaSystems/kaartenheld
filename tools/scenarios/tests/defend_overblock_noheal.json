@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_overblock_noheal",
  "test": true,
  "description": "Plain-shield over-block (docs/loot.md 34.4): WITHOUT a ring in the defense combo the negative net is CLAMPED to zero -- SH5 blocks the slime's 2 incoming but the -3 over-block restores NOTHING: DAMAGE_RECEIVED reports 0, no HEALED event, hero stays at 6/10",

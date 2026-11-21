@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_multi_enemy_targeting",
  "test": true,
  "description": "Bumping the Mountain Pass slime starts a 3-slime battle (trio clones share the struck actor's 10 HP) and D-pad DOWN cycles the target cursor",

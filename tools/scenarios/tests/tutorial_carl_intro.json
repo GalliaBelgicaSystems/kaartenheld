@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "tutorial_carl_intro",
   "test": true,
   "description": "Bumping into Carl (single tutorial sprite) opens his spar offer first (dangerous alone, YES/NO ask) through the bump dialogue path; the spar does NOT start until YES closes the lesson",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "state_midgame_battle",
  "test": true,
  "description": "Injected mid-game party state feeds battle_start: battle player HP mirrors the party member",

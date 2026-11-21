@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "enemy_confuse_select_resolve",
   "test": true,
   "description": "Confused foe SELECT shortcut: pressing SELECT on beat 1 ('FOE IS CONFUSED!') promotes msg_id to CONFUSED_OUTCOME so DEFENSE_RESOLVE shows 'FOE ATTACKS ALLIES!' in UI_COLOR_POISON instead of staying stuck on beat-1 wording.",

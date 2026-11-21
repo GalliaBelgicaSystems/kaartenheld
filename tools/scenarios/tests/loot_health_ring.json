@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_health_ring",
  "test": true,
  "description": "Ringth-rider display (docs/loot.md 34.1): a bronze plain ring (derived id 132 = 0x84: material 1, plain, weapon ring) shows the green '+' menu BG icon (tile 231) over the elem cell plus a RINGTH RIDER detail line. Display-only: no status, no on-hit roll. Wood rings show it too (see ring_uses_loot_detail); on-hit riders still strip at wood (see loot_rider_strip).",

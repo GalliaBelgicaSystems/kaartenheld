@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "enemy_confuse_self",
  "test": true,
  "description": "Lone confused enemy harms itself: with its allies already down, a poisoned slime turns its telegraphed swing on itself -- it takes the full incoming damage (slime at 8, SW1 hero hit for 1, self-hit for 2, stands at 5) while the hero takes nothing (DAMAGE_RECEIVED 0, hero stays at 60).",

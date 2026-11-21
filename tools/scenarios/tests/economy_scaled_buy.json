@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "economy_scaled_buy",
  "test": true,
  "description": "Market-scaled buy quote (docs/economy.md §4): at index 48 (150%) a POISON_DAGGER (price 8, bias 0) quotes S = (8*48+16)>>5 = 12, not the neutral 8. Two debug-path buys from 50g leave 26g (neutral would leave 34g); companion to shop_max_copies which pins the neutral 8g triplet.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_timer_bar_full",
  "test": true,
  "description": "The battle countdown bar renders a full 20 cells on entry (20 '=' tiles, 20 seconds at 1 second per tile)",

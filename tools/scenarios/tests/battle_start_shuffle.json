@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_start_shuffle",
  "test": true,
  "description": "Battle start shuffles the draw pile: Carl's spar deals a random five from the 10-card starter deck instead of the persistent DECK-menu order, so the opening hand is NOT 'SW1 SW1 SH1 SH1 SW3' (fails on the pre-shuffle ROM, where the deal was always the first five entries). The pile still holds the other five cards",

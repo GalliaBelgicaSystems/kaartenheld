@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_requires_owned_card",
  "test": true,
  "description": "deck_add_card rejects cards the player does not own: POISON_DAGGER deck-add fails while unowned (no CARD_ADDED_TO_DECK), SHOP KEYS is rejected as SPECIAL, and after the card enters the collection exactly 1 CARD_ADDED_TO_DECK event fires",

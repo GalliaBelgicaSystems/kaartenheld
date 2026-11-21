@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "multi_slot_save_load",
  "test": true,
  "description": "Saving to slot 2 and slot 3 maintains isolated save states in SRAM",

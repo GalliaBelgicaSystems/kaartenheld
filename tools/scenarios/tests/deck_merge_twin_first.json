@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_merge_twin_first",
  "test": true,
  "description": "Full identity folding (uncapped ownership): the loot twin (id 164) owned BEFORE the curated IRON_RING folds onto the curated survivor (row 66:2, twin row gone). No remainder row, nothing lost.",

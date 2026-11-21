@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_battle_selection_cycle",
  "test": true,
  "description": "Select two cards into the combo and undo one, verifying cursor movement, selection-order markers, and the per-card description line stay intact (heal cards show the X joker glyph: HE7 reads HEX; daggers read Dagger: counter even with no rider)",

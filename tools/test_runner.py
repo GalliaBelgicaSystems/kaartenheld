@@ -128,6 +128,12 @@ VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 NEW_GAME_COLLECTION = {"WOOD_SWORD": 4, "WOODEN_SHIELD": 4, "BRONZE_SWORD": 2}
 
 def validate_scenario(data, filepath):
+    act_tag = data.get("act")
+    if act_tag != "always" and (isinstance(act_tag, bool) or not isinstance(act_tag, int) or act_tag < 1):
+        raise ValueError(
+            f"SCENARIO ERROR in {filepath}: Missing or invalid top-level 'act' tag {act_tag!r} "
+            f"(want integer >= 1 or 'always'; see AGENTS.md 42.4).")
+
     for act in data.get("actions", []):
         if act.get("type") == "interact":
             actor = act.get("actor")

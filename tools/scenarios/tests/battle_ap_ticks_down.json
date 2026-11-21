@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_ap_ticks_down",
  "test": true,
  "description": "The AP badge ticks down as cards are selected: one cost-1 card moves the displayed AP from 1 to 0 (a second select is rejected at the flat-1 default pool), while the phase pool itself (battle_energy) stays at 1 because reservation is display-level -- battle_energy is only paid down when the hand actually resolves.  Proves the HUD reflects the same reserved remainder that nav_hand_playable gates on.",

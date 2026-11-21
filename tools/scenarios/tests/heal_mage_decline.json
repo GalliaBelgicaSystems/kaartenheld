@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "heal_mage_decline",
   "test": true,
   "description": "Village Heal Mage NO path: moving the cursor to NO and confirming opens the 'come back when you're hurt' follow-up with no heal, no jingle, and HEAL_MAGE_USED stays clear so the mage asks again next time.",

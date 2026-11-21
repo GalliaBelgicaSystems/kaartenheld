@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "movement_wall_collision",
  "test": true,
  "description": "Player attempts to walk into a solid # wall and is blocked by world collision",

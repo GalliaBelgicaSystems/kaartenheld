@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "mimic_blink_reveal",
  "test": true,
  "description": "Castle mimic flashes its true face (OAM 105) for ~10 of every 64 anim ticks: same staging as mimic_blink_closed, stepped into the reveal window. The pair proves the 54/10 asymmetric duty.",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "gate_to_castle",
  "test": true,
  "description": "Walk the overworld gate path from Field through South Field and Mountain Pass to Castle",

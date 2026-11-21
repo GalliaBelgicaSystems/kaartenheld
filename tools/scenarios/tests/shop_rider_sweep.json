@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_rider_sweep",
  "test": true,
  "description": "Merchant stock riders: the iron ring row stamps the green health menu BG icon (tile 231) over its elem cell (every healing ring carries the health rider); bow/shield/wood/bronze-sword rows stamp no element rider (STATUS_NONE -- swords never ride). Rider OAM entries stay hidden on every row and no phantom icons leak (docs/loot.md 34.1). Burn-rider coverage moved to loot fire bows (item_rider_icons) and injected hands (rider_hud_icons).",

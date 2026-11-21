@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "forest_boot",
  "test": true,
  "description": "Boot directly into the overworld on the Forest scene (kobold pursuers: entry sting holds the track, FOREST resumes ~1 s later)",

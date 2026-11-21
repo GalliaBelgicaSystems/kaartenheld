@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_exit",
   "test": true,
   "description": "B at the table makes Nis say goodbye ('Come back anytime!') in a dialogue box; closing it returns to the overworld with gold untouched and the scene track restored.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_ring_takes_hit",
  "test": true,
  "description": "A lone ring in defense adds 0 block and heals nothing against a real hit (docs/loot.md 34.4): ring vs the knight's telegraphed SWORD(3) takes full damage (hero 10 -> 7, DAMAGE_RECEIVED 3, no HEALED). Rings only convert an over-block into healing (see defend_overblock_heal); without overblock there is nothing to convert.",

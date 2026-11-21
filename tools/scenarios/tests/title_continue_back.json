@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "title_continue_back",
  "test": true,
  "description": "Boot to the title menu, choose CONTINUE (opens the SAVE/LOAD screen in load mode), then press B. The save/load screen must return to the TITLE menu -- NOT boot a new overworld game. Regression for the B/START hardcoded SCREEN_OVERWORLD bug (only valid for overworld-entered save/load screens).",

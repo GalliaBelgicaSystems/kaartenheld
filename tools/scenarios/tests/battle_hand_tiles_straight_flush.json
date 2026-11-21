@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_hand_tiles_straight_flush",
  "test": true,
  "description": "Straight flush (SW1-5 suited run) shows the centered STRAIGHT FLUSH tiles on row 10 (cols 3-16, word slots in order, green) with no damage number.",

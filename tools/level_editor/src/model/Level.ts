@@ -112,6 +112,7 @@ export interface TerrainBlock {
 }
 
 export interface LevelData {
+  act?: number;
   id: string;
   name: string;
   map: MapMetadata;
@@ -129,6 +130,9 @@ export interface LevelData {
 }
 
 export interface EditorLevel {
+  /** Story act this level belongs to (1 = demo, 2+ = future acts);
+   *  preserved verbatim through load/save round-trips (AGENTS.md 42.4). */
+  act?: number;
   id: string;
   name: string;
   width: number;
@@ -537,6 +541,7 @@ export function levelDataToEditor(data: any): EditorLevel {
   }
 
   return {
+    ...(typeof data.act === 'number' ? { act: data.act } : {}),
     id: data.id || 'scene',
     name: data.name || data.id || 'Scene',
     width: w,
@@ -593,6 +598,8 @@ export function editorToLevelData(lvl: EditorLevel): any {
   }
 
   return {
+    // Preserved verbatim: story act tag (AGENTS.md 42.4).
+    ...(typeof lvl.act === 'number' ? { act: lvl.act } : {}),
     id: lvl.id,
     name: lvl.name,
     map: {

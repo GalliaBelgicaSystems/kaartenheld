@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "camera_boundary_clamp",
  "test": true,
  "description": "Walk the player to the far SE corner of the Field (30,16); with a 17-row world viewport (physical row 17 is the Window HUD) the 18-tall map scrolls one tile vertically so scroll_y advances to 1 while scroll_x clamps at 12 (width-20 tiles)",

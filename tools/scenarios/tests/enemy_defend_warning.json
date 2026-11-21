@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "enemy_defend_warning",
  "test": true,
  "description": "Defend phase forecasts the telegraphed incoming damage and the staged block side by side: after one attack vs the mountain slime trio (lead card power 2), the row reads DMG 2 in red on the left and DEF 0 in green on the right while defending with nothing staged",

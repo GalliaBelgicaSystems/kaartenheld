@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "quest_list_empty",
  "test": true,
  "description": "The QUEST tab starts empty: with no quest accepted, neither MONSTER HUNT nor SHOP KEYS is listed and a placeholder shows instead. SELECT/UP/DOWN are no-ops on the empty log (leaving it needs LEFT/RIGHT, covered by quest_tab_switch)",

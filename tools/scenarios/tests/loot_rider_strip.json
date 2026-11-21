@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_rider_strip",
  "test": true,
  "description": "Wood-rider stripping (docs/loot.md 34.1): id 107 is a hand-encoded WOOD POISON DAGGER (material 0, poison effect, dagger) -- a LEGAL pair the generator never rolls at wood. Synthesis must strip it: the detail page shows WOOD DAGGER (proving the right card is selected, not the starter wood sword) with NO RIDER (an unstripped card would show POISON RIDER plus a rider icon). Covers the synth last line of defense.",

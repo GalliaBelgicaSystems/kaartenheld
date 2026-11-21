@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_poison",
  "test": true,
  "description": "Counter poison rider lands after the swing: the leading dagger carries a guaranteed poison rider (chance 255), so the counter still applies POISON to the attacker (STATUS_APPLIED) -- and never greys (no CARDS_GREYED). But the fresh poison does NOT confuse this turn's swing: the telegraphed swing hits the hero (DAMAGE_RECEIVED 3, hero 10->7) instead of turning on the ally (no victim-slot DAMAGE_DEALT). Opener SW1 leaves the kobold at 14; the suited DA2 pair counters for the full 6, leaving it at 8, poisoned for next turn.",

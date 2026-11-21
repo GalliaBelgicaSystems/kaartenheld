@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "enemy_confuse_ack",
  "test": true,
  "description": "Confused foe acknowledgement, two beats: the telegraph stages 'FOE IS CONFUSED!' on the combo row (row 10); the first A reveals who takes the redirected blow ('FOE ATTACKS ALLIES!' when an ally stands, 'FOE HURTS ITSELF!' when alone) and the second A resolves the swing. Hero takes nothing either way (DAMAGE_RECEIVED 0).",

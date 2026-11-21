@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "intro_slide_start",
  "test": true,
  "description": "A on the fourth (last) intro slide starts the run: the game restarts into the overworld.",

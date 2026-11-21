@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "collection_stack_refolds",
  "test": true,
  "description": "Full identity folding on stack (uncapped ownership): granting the curated STEEL_SHIELD and its loot twin (id 193) folds everything into one curated row however the copies interleave -- removing one curated copy and adding another twin re-runs the fold into a single row (curated 4, twin row gone) instead of keeping a capped remainder. Pre-fix the existing-row path returned before deck_collection_merge_duplicates ran.",

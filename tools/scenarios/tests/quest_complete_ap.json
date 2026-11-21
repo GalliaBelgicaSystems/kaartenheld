@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_complete_ap",
  "test": true,
  "description": "With 3 monsters defeated and the quest ACTIVE, talking to the Mayor completes MONSTER HUNT: QUEST_COMPLETE dialogue (I see you hate these monsters...), quest=COMPLETE, ENERGY_POOL +1",

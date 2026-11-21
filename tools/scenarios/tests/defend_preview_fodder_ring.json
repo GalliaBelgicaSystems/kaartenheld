@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_preview_fodder_ring",
  "test": true,
  "description": "Live COMBO-row preview in defend with inert fodder selected first (docs/loot.md 34.3, manual 8.2/row 10): defend selection [SW9 fodder, SH3, SH3, RING5] must preview THREE KIND -- the effective set {SH3, SH3, RING} with the ring substituting 3. Guards the preview path (ui_battle_content.c) against the selection-order indexing bug fixed in combo_resolve_banked; preview and resolve must agree (see defend_ring_joker_fodder). No execute: the row blanks on resolve, so the preview is asserted while pending.",

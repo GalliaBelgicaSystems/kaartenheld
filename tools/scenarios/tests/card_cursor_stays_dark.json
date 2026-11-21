@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_cursor_stays_dark",
  "test": true,
  "description": "Selecting a card keeps the cursor on it: the marker shows the dark arrow (VRAM 110, UI_TILE_SELECT_ARROW_DARK) instead of auto-advancing right",

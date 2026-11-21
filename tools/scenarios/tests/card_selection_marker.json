@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_selection_marker",
  "test": true,
  "description": "After pressing A to select a card, row 15 must show the numbered marker (not just the cursor). Validates that the inner selection loop reads combo_count and selected_indices correctly on real boot.",

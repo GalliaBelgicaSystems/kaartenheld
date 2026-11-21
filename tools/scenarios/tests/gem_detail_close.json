@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "gem_detail_close",
  "test": true,
  "description": "B on the GEM detail page returns to the list with no stale detail rows: row 3 shows STRAIGHT GEM again while rows 6 and 9 no longer carry the INFO text.",

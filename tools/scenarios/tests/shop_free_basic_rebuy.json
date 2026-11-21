@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_free_basic_rebuy",
  "test": true,
  "description": "Starter basics are rebuyable for free with no ownership cap: with 0 gold the third BRONZE SWORD buys at price 0 (CARD_PURCHASED(67,0)) and two WOOD SWORD buys land (owned 6), no refusal, gold stays 0.",

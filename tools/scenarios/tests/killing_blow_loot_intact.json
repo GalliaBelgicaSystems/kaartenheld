@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "killing_blow_loot_intact",
  "test": true,
  "description": "Killing-blow loot is intact (docs/loot.md 34.5, docs/enemies_ranking.md \u00a74.3): seed 5002 on the R3 kobold rolls a BRONZE POISON DAGGER (id 139) and the victory reveal names it on the VRAM row, proving the killing blow neither shifts nor suppresses the start-of-battle roll.",

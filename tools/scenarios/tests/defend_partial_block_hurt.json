@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_partial_block_hurt",
  "test": true,
  "description": "Defend feedback contract: a 0-block defend hand (SW staged on attack, BO on defend) vs the forest slime's 2 incoming takes net 2 (hero 10 -> 8) and plays the HURT cue (sfx_last 9), not the block thump.",

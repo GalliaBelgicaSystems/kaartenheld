@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "diagonal_corner_actor",
  "test": true,
  "description": "Diagonal corner rule (actor, wall-hug slide): from (13,8) UP+RIGHT targets floor (14,7) but Carl on the (14,8) orthogonal blocks the horizontal axis, so the player glides along the free vertical axis to (13,7) instead of stopping -- corner-cutting into (14,7) stays blocked.",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "dog_greeting",
  "test": true,
  "description": "The wild dog talks in two pages: first screen says Meow, A advances to Bark bark I mean, A closes back to the overworld",

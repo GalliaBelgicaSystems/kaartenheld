@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "patrol_bat_circle",
  "test": true,
  "description": "Bat patrols in a 2x2 clockwise circle around its spawn point (7,4)",

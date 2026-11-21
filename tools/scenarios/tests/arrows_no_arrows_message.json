@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "arrows_no_arrows_message",
  "test": true,
  "description": "Selecting a bow with an empty shared arrow pool is rejected with a transient 'NO ARROWS!' flash on the battle HUD (row 9, limited-arrows).",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "tutorial_menu",
  "test": true,
  "description": "Boot into the title screen, open the menu (START), move down to the TUTORIAL entry (index 3), and press A to enter the first tutorial slide.",

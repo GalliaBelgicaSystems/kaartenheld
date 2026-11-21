@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_preview_trips",
  "test": true,
  "description": "Counter forecast trips: three staged DA2 (not confirmed) preview CNT 12 ((2+2+2)x210%), pairing the dealt-12 counter in defend_dagger_ring. Real-VRAM read.",

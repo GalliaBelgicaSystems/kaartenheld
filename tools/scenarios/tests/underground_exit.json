@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "underground_exit",
  "test": true,
  "description": "Step north onto the Underground stairs gate at (10,4): the point exit fires to TEST_CASTLE",

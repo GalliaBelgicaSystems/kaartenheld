@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_preview_ring",
  "test": true,
  "description": "Counter forecast with a ring: staged DA2 x3 plus a mid-selection HE ring (not confirmed) previews CNT 12 -- the ring is excluded exactly like the prep compaction, pairing the dealt-12 counter in defend_dagger_ring.",

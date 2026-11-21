@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "boss_despair_counter",
  "test": true,
  "description": "A dagger counter that drops the Lord of Slimes to 0 does NOT kill him and does NOT end the fight: the floor clamps him to 1 HP with no ENTITY_DEFEATED telemetry, and the hold opens on the next frame (flashing art, FOCUSING banner, waits for A). Covers the defend-phase damage source.",

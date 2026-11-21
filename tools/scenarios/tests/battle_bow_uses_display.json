@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_bow_uses_display",
  "test": true,
  "description": "A 2-shot bronze bow draws its real power digit on the card's middle row (font tile 19 = '3') and the remaining-uses arrow counter on the floor row (2 arrows fresh, tile 100); the semantic row reads BO2.",

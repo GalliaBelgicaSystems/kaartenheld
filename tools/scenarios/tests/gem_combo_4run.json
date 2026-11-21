@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_combo_4run",
   "test": true,
   "description": "Short straight top-three rule (gem equipped): a 4-run stages SW1 + BO2 + SW3 + BO4, only the highest three count (2+3+4=9), damage 9*130/100=11. Kills Carl (staged HP; unkillable at 99 in real play).",

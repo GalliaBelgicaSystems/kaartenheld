@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "shop_full_names",
  "test": true,
  "description": "Shop rows show the weapon with the OAM material ingot (docs/loot.md 34.1: the CARDS list shows the same cards with text materials; the shop shows ingot + weapon): the merchant's stock paints RING / BOW / SHIELD next to bronze / iron / mythril / steel ingots instead of 3-letter codes.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "chase_sight_wakes",
  "test": true,
  "description": "A chaser that spawns with the hero in sight (TEST_FOREST kobold at (4,10), hero at (12,10): 8 tiles away, inside AI_CHASE_SIGHT = 10) wakes up on the first overworld tick and chases: the alert sting plays (sfx_last == 7), the pursuer ! bubble debuts over it (entry 30 == EXCLAIM_TILE 126) and it takes its first step toward the hero (kobold at (5,10) after 60 frames).",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "arrows_victory_drop",
  "test": true,
  "description": "Defeating the kobold drops 1-3 arrows alongside the gold (limited-arrows): CURRENCY_ADDED fires with the ARROWS id and the pool grows from the staged 0.",

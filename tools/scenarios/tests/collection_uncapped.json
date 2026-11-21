@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "collection_uncapped",
  "test": true,
  "description": "Ownership is uncapped (only the deck caps at 5 per identity): granting 10 POISON_DAGGER lands all 10 in the collection, and 5 deck while the 6th deck_add is refused by the uniform 5-per-identity gate.",

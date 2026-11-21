@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "notice_skip",
  "test": true,
  "description": "A on the boot notice skips straight to the title PRESS START.",

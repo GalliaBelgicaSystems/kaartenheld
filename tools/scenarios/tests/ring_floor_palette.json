@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "ring_floor_palette",
  "test": true,
  "description": "A finite-use ring's floor remaining-uses counter rides the weapon (wood) palette like the bow's: HE1 ring with 1 use shows HEX on the semantic row and palette 5 on both the X row and the floor row (bare box span would leave the counter paper-white)",

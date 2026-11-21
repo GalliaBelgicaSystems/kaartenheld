@@ -1865,6 +1865,51 @@ Rules:
   fixtures; `make debug` chains `levels-test` automatically.  memmap
   guards the bank-4 fixture budget.
 
+## 42.4 Acts: demo (act 1) vs shared vs future acts
+
+Act 1 is the demo (ends after the lord-of-slimes fight).  Levels and
+scenarios carry a top-level `act` key so act-1 story tests can be skipped
+while iterating on act 2:
+
+* Levels (`levels/*.json`): `"act": 1` on every current level.  New act-2
+  levels use `"act": 2` with an `act2_` id prefix and an `Act 2 — ...`
+  display name, so the editor's filter box isolates them with zero
+  tooling.
+* Scenarios (`tools/scenarios/tests/*.json`): `"act": 1` (154: proves
+  demo-specific content — Carl/mayor/guard/dog/merchant/shopkeys/
+  heal-mage/skeleton/gamble/wizard, act-1 map boots/gates/chests,
+  boss/mimic/throne) or `"act": "always"` (405: proves a shared
+  engine/system rule, even when staged on an act-1 fixture as background
+  — e.g. `arrows_shop_buy` stages `MERCHANT_QUEST: 2` but tests the
+  generic shop).  Staging a flag as background is not testing it; only
+  assertions that prove act-1 content (story flags, quest variables,
+  `DOG_ASK` / `TUTORIAL_CARL_*` / `KOBOLD_INVITE` dialogue args,
+  named-actor state) mark a scenario act 1.
+* Recorded borderline calls: `south_knight_bump` is `always` (the only
+  hostile-bump test); `actor_slime_combat`, `boss_despair_*`, and the
+  whole `gamble_*` family (including bet/roll mechanics and the
+  `gem_grant_*` / `gem_no_grant` Nis prize triggers) are act 1 for
+  now — move them to `always` if act 2 reuses the despair mechanic or
+  the dice system.
+
+Current status: the key is inert for filtering (`compile.py --all`,
+`validate.py`, the editor `/api/levels`, and `run_all()` all ignore it),
+so the layout stays flat (`levels/*.json`, no subdirs — recursive globs
+need tooling changes first) and `make test-harness` still runs the full
+suite (CI gate).  `validate_scenario()` requires a valid top-level `act`
+(`int >= 1` or `"always"`) on every scenario, and the level editor
+preserves `act` verbatim on load/save round-trips.  Local fast loop while
+on act 2 — run shared + act-2 scenarios only:
+
+```bash
+for s in $(python3 -c "import json,glob; print(' '.join(d['name'] for f in sorted(glob.glob('tools/scenarios/tests/*.json')) for d in [json.load(open(f))] if d.get('act') in ('always',2)))"); do
+  make test-scenario SCENARIO=$s || break
+done
+```
+
+A new act gets a new `act` value + `actN_` prefix; never renumber
+existing tags.
+
 ---
 
 # 43. Bug Reproduction

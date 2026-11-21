@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "battle_ice_foe_halved",
   "test": true,
   "description": "Iced foe deals halved damage (rounded up, odd case): an iced slime telegraphs its lead SW2 (ENEMY_CARD_PLAYED keeps the full 2) but the resolved swing lands 1 (DAMAGE_RECEIVED d0=1, hero 60->59). No TURN_SKIPPED, no CARDS_GREYED, and the combo row never names a fizzle.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_forecast_dagger",
  "test": true,
  "description": "Enemy turn with daggers staged: row 7 shows the red attack trio (down arrow 228 + incoming power + sword 104), row 8 the red counter trio (dagger 107 + counter + up arrow 110); row 10 shows the centered PAIR tiles.",

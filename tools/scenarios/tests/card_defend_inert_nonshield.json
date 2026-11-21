@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_defend_inert_nonshield",
  "test": true,
  "description": "In defend phase non-shield cards are inert: playing BO4 contributes 0 block, but Carl's practice deck deals 0 damage, so the hero stays at full HP",

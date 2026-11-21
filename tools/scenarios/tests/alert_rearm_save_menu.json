@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "alert_rearm_save_menu",
  "test": true,
  "description": "Same-map reload re-arms the alert via a real load: after the forest alert expires, saving then loading the slot (real load_game_slot path) respawns the kobold asleep, so the sight scan alerts again -- the sting plays a second time (sfx_count == 2) and the kobold's ! marker returns.",

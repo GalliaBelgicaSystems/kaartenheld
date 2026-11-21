@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "boss_despair_tick",
  "test": true,
  "description": "A burn tick that drops the Lord of Slimes to 20 or less does NOT kill him: the floor clamps him with no ENTITY_DEFEATED telemetry, and the hold opens (flashing art, FOCUSING banner, waits for A). Covers the status-tick damage source; hero attacks heal so only the tick damages the boss.",

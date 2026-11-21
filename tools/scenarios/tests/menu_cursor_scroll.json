@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "menu_cursor_scroll",
  "test": true,
  "description": "Targeted menu updates (AGENTS.md 36): cursor UP/DOWN in the CARDS tab repaints only the affected cells (no full render-cache invalidate / LCD-off redraw). The full-height list shows the FILTER/SORT row plus the column header and all six collection cards at once (rows 2-10, no window shift); six DOWN presses drive the caret to the last row. Assertions check the caret position (row 10, header present, off the top rows, help text).",

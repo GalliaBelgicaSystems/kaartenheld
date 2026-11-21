@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "actor_bat",
  "test": true,
  "description": "Extensibility: a second hostile actor (Bat) starts combat with no generic engine changes",

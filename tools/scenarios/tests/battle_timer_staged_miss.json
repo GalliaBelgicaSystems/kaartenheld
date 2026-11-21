@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "battle_timer_staged_miss",
   "test": true,
   "description": "Timeout with a staged-but-unvalidated combo is a miss like an empty one: after staging one card with A and waiting 1210 frames with no SELECT, the banner reads MISSED! and no COMBO_RESOLVED / DAMAGE_DEALT / CARD_PLAYED occurred (validation happens only through SELECT; the staging is dropped, nothing is spent).",

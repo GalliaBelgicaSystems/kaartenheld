@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "carl_tutorial_attack",
   "test": true,
   "description": "Carl's battle opens with a plain solo screen plus his attack coaching box (TAKE THIS AP handover line, then pick cards with A, L/R cursor, SELECT confirms); closing it lands on a standard TARGET CARL banner with no leftover hint rows",

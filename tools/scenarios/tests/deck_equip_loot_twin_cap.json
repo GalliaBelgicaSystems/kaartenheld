@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_equip_loot_twin_cap",
  "test": true,
  "description": "Uniform 5-per-identity deck limit: two IRON RING loot twins (derived id 164) owned under one row deck twice (identity total 2 < 5) -- both succeed. Pins that loot-vs-loot no longer caps at the old curated 1.",

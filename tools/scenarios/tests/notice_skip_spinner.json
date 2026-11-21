@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "notice_skip_spinner",
  "test": true,
  "description": "Skipping SPLASH into NOTICE when (frame & 7) != 0 primes the autosave spinner tile in OAM entry 39 on the very first rendered NOTICE frame.",

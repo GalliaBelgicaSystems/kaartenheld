@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "enemy_confuse_ack_text",
   "test": true,
   "description": "Confused foe acknowledgement text: the telegraph shows 'FOE IS CONFUSED!' then the first A reveals 'FOE ATTACKS ALLIES!' on the combo row (combo_row 10) when a live ally stands; the swing has NOT resolved yet (no ENTITY_DEFEATED, hero untouched).",

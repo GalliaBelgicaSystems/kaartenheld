@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "gem_detail_info",
  "test": true,
  "description": "GEM detail page: with the STRAIGHT gem owned, SELECT on the GEM tab opens the INFO page (name, skill, short-straight rules, bottom border + B:BACK); B closes it back to the list.",

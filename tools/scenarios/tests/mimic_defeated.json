@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "mimic_defeated",
  "test": true,
  "description": "Killing the castle Mimic (HP pinned low via SET_ENEMY_HP; a real 50 HP grind would take dozens of blind flushes) wins the battle through the normal victory flow: BATTLE_WON, monster counter +1. Pins the kill path the encounter-only coverage misses.",

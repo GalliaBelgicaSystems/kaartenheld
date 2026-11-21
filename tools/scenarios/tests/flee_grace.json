@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "flee_grace",
  "test": true,
  "description": "Post-flee encounter grace (~2s): hero spawns adjacent to the chasing kobold at (4,9)/(4,10) and flees the instant battle. Stepping into the kobold during grace only bumps (no fight); START then opens the ITEM screen in the overworld and B backs out of it. End state proves it: still OVERWORLD with the kobold untouched at 15 HP. Without the grace the first step would start battle 2 and the game would still be in battle.",

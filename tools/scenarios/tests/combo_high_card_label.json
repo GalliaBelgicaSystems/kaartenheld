@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_high_card_label",
  "test": true,
  "description": "HIGH CARD preview label: two non-pairing cards (SW2 staged first, BO5 second) read HCARD on the COMBO row with the HIGHEST value (DMG5) -- never the first-selected card's value. No execute: the pin is the pending label.",
