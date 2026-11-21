@@ -155,19 +155,31 @@ void scenario_load_apply_banked(void)
         g_game.state.cards.deck.count = n;
     }
 
-    /* Persistent world actors: pointer increment (3-byte entries). */
+    /* Persistent world defeats: staged (id, state) entries fold into
+     * the zone bitmask (bit (N-1) records ActorId N; DEFEATED sets,
+     * anything else clears -- ALIVE explicitly revives).  The zone
+     * itself settles on the first scene load (loader's zone-0 rule),
+     * so staged bits always survive setup. */
     {
-        PersistentActorState *w;
+        uint8_t aid;
+        uint8_t bit;
         p = b + STATE_LOAD_DESC_WORLD_ENTRY_OFF;
         count = b[STATE_LOAD_DESC_WORLD_COUNT_OFF];
-        w = &g_game.state.world.actors[0];
         for (i = 0; i < count; i++) {
             lo = *p++;
             hi = *p++;
-            w->actor_id = (ActorId)((uint16_t)lo | ((uint16_t)hi << 8));
-            w->state = *p++;
-            g_game.state.world.count = (uint8_t)(i + 1);
-            w++;
+            aid = lo;
+            if (hi == 0 && aid >= 1 && aid <= ZONE_DEFEAT_BITS) {
+                bit = (uint8_t)(aid - 1);
+                if (*p) {
+                    g_game.state.world.bits[(uint8_t)(bit >> 3)] |=
+                        (uint8_t)(1u << (bit & 7));
+                } else {
+                    g_game.state.world.bits[(uint8_t)(bit >> 3)] &=
+                        (uint8_t)~(1u << (bit & 7));
+                }
+            }
+            p++;
         }
     }
 

@@ -46,8 +46,11 @@
  *   bytes 55..66       : up to 4 party members x {id, hp, max_hp}
  *   byte  67           : inventory count
  *   bytes 68..167      : up to 50 inventory entries x {item_id, quantity}
- *   byte  168          : world (persistent actor) count
+ *   byte  168          : world (persistent actor) count (defeat-bit decode,
+ *                        capped at the 16 listed entries below)
  *   bytes 169..216     : up to 16 world entries x {actor_id_lo, actor_id_hi, state}
+ *                        (decoded from the zone defeat bitmask: set bit
+ *                        (N-1) lists ActorId N DEFEATED)
  *   byte  217          : progression count
  *   bytes 218..265     : up to 8 progression x {type, id_lo, id_hi, level, prog_lo, prog_hi}
  *   byte  266          : equipment weapon

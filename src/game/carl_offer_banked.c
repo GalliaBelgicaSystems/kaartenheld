@@ -41,7 +41,6 @@
 void carl_skip_offer_banked(void)
 {
     World *w = &g_game.world;
-    uint8_t i;
     uint8_t f;
 
     if (g_game.world.map_id != MAP_FIELD
@@ -55,12 +54,13 @@ void carl_skip_offer_banked(void)
     if (w->move_state != MOVE_STATE_MOVING) return;
     if (w->move_outcome != MOVE_OUTCOME_EDGE &&
         w->move_outcome != MOVE_OUTCOME_EXIT) return;
-    /* Spar already won (persistent defeat): no offer. */
-    for (i = 0; i < g_game.state.world.count; i++) {
-        if (g_game.state.world.actors[i].actor_id == ACTOR_ID_CARL_TUTOR &&
-            g_game.state.world.actors[i].state == (uint8_t)ACTOR_STATE_DEFEATED) {
-            return;
-        }
+    /* Spar already won (persistent defeat bit): no offer.  Same bit
+     * math as rpg/state.c (ActorId N lives in bit (N-1)%8 of
+     * world.bits[(N-1)/8]); the id is a compile-time 1, so this is one
+     * byte test, no loop. */
+    if ((g_game.state.world.bits[(ACTOR_ID_CARL_TUTOR - 1) >> 3] &
+         (uint8_t)(1u << ((ACTOR_ID_CARL_TUTOR - 1) & 7))) != 0) {
+        return;
     }
     /* Skip already taken (one-shot): no offer.  Same bit math as
      * rpg/state.c (flag N lives in bit (N-1)%8 of flags.bytes[(N-1)/8]). */

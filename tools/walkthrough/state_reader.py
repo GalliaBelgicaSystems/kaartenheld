@@ -34,8 +34,8 @@ OFF_CARDS_DECK = OFF_CARDS + 101         # cards[20] + count = 21
 OFF_FLAGS = OFF_CARDS + 122              # bytes[8]
 OFF_VARIABLES = OFF_FLAGS + 8            # int16 x 16 = 32
 OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 2 (gold + arrows) = 4
-OFF_WORLD = OFF_CURRENCY + 4             # GameState.world: count + actors[16]x3 = 49
-OFF_PROGRESSION = OFF_WORLD + 49         # ProgressionStore: count + entries[2]x6 = 13
+OFF_WORLD = OFF_CURRENCY + 4             # GameState.world: zone + bits[16] = 17
+OFF_PROGRESSION = OFF_WORLD + 17         # ProgressionStore: count + entries[2]x6 = 13
 OFF_ECONOMY = OFF_PROGRESSION + 13       # EconomyState: index + gold_in + gold_out + battles = 6
 STATE_SIZE = OFF_ECONOMY + 6             # == sizeof(GameState); locates World/Battle
 

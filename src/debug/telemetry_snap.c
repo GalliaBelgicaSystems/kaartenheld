@@ -52,12 +52,28 @@ void debug_state_snapshot_banked(void)
         *p++ = st->cards.collection.entries[i].count;
     }
 
-    b[STATE_SNAP_WORLD_OFFSET] = st->world.count;
-    p = b + STATE_SNAP_WORLD_OFFSET + 1;
-    for (i = 0; i < st->world.count && i < 16; i++) {
-        snap_copy(p, &st->world.actors[i].actor_id, 2);
-        p += 2;
-        *p++ = st->world.actors[i].state;
+    /* Zone defeat bitmask, decoded to the legacy (actor_id, state) list
+     * the harness asserts on: entry k names ActorId (k+1) DEFEATED.
+     * Only set bits list, capped at the 16-entry wire section (fixtures
+     * stage a handful of hostiles; a cleared zone lists none).  The
+     * count clamps to the listed entries so readers never walk into the
+     * progression section. */
+    {
+        uint8_t aid;
+        uint8_t listed;
+        listed = 0;
+        p = b + STATE_SNAP_WORLD_OFFSET + 1;
+        for (aid = 1; aid <= ZONE_DEFEAT_BITS && listed < 16; aid++) {
+            uint8_t bb = (uint8_t)(aid - 1);
+            if ((st->world.bits[(uint8_t)(bb >> 3)] &
+                 (uint8_t)(1u << (bb & 7))) != 0) {
+                *p++ = aid;
+                *p++ = 0;
+                *p++ = (uint8_t)ACTOR_STATE_DEFEATED;
+                listed++;
+            }
+        }
+        b[STATE_SNAP_WORLD_OFFSET] = listed;
     }
 
     b[STATE_SNAP_PROGRESSION_COUNT_OFF] = st->progression.count;

@@ -10,8 +10,8 @@
  * Friendly actors are pure static definitions.  Hostile actors are
  * spawned into World.actors runtime slots by actor_load_scene(), so a
  * scene can hold several hostile actors at once.  Each hostile definition
- * carries a stable ActorId (unique across scenes) so its defeat can be
- * recorded persistently in GameState.world and survive scene reloads.
+ * carries a stable ActorId (unique within its zone) so its defeat can be
+ * recorded in the zone defeat bitmask and survive scene reloads.
  */
 
 static const WorldActorDefinition g_test_field_actors[] = {
@@ -271,21 +271,21 @@ static const WorldActorDefinition g_test_underground_actors[] = {
 
 const WorldActorTable g_actor_tables[] = {
     { MAP_TEST_FIELD,      g_test_field_actors,
-        (uint8_t)(sizeof(g_test_field_actors) / sizeof(g_test_field_actors[0])) },
+        (uint8_t)(sizeof(g_test_field_actors) / sizeof(g_test_field_actors[0])), 1 },
     { MAP_TEST_TOWN,       g_test_town_actors,
-        (uint8_t)(sizeof(g_test_town_actors) / sizeof(g_test_town_actors[0])) },
+        (uint8_t)(sizeof(g_test_town_actors) / sizeof(g_test_town_actors[0])), 1 },
     { MAP_TEST_FOREST,     g_test_forest_actors,
-        (uint8_t)(sizeof(g_test_forest_actors) / sizeof(g_test_forest_actors[0])) },
+        (uint8_t)(sizeof(g_test_forest_actors) / sizeof(g_test_forest_actors[0])), 1 },
     { MAP_TEST_MOUNTAIN_PASS, g_test_mountain_pass_actors,
-        (uint8_t)(sizeof(g_test_mountain_pass_actors) / sizeof(g_test_mountain_pass_actors[0])) },
+        (uint8_t)(sizeof(g_test_mountain_pass_actors) / sizeof(g_test_mountain_pass_actors[0])), 1 },
     { MAP_TEST_CASTLE,     g_test_castle_actors,
-        (uint8_t)(sizeof(g_test_castle_actors) / sizeof(g_test_castle_actors[0])) },
+        (uint8_t)(sizeof(g_test_castle_actors) / sizeof(g_test_castle_actors[0])), 1 },
     { MAP_TEST_SOUTH_FIELD, g_test_south_field_actors,
-        (uint8_t)(sizeof(g_test_south_field_actors) / sizeof(g_test_south_field_actors[0])) },
+        (uint8_t)(sizeof(g_test_south_field_actors) / sizeof(g_test_south_field_actors[0])), 1 },
     { MAP_TEST_GAMBLE,     g_test_gamble_actors,
-        (uint8_t)(sizeof(g_test_gamble_actors) / sizeof(g_test_gamble_actors[0])) },
+        (uint8_t)(sizeof(g_test_gamble_actors) / sizeof(g_test_gamble_actors[0])), 1 },
     { MAP_TEST_UNDERGROUND, g_test_underground_actors,
-        (uint8_t)(sizeof(g_test_underground_actors) / sizeof(g_test_underground_actors[0])) },
+        (uint8_t)(sizeof(g_test_underground_actors) / sizeof(g_test_underground_actors[0])), 1 },
 };
 
 const uint8_t g_actor_table_count = 8;

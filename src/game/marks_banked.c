@@ -153,14 +153,11 @@ static uint8_t marks_has_card(uint8_t id)
 
 static uint8_t marks_carl_defeated(void)
 {
-    uint8_t i;
-    for (i = 0; i < g_game.state.world.count; i++) {
-        if (g_game.state.world.actors[i].actor_id == ACTOR_ID_CARL_TUTOR &&
-            g_game.state.world.actors[i].state == (uint8_t)ACTOR_STATE_DEFEATED) {
-            return 1;
-        }
-    }
-    return 0;
+    /* Same bit math as rpg/state.c (ActorId N lives in bit (N-1)%8 of
+     * world.bits[(N-1)/8]); the id is a compile-time 1, so this is one
+     * byte test, no loop. */
+    return (uint8_t)((g_game.state.world.bits[(ACTOR_ID_CARL_TUTOR - 1) >> 3] &
+                      (uint8_t)(1u << ((ACTOR_ID_CARL_TUTOR - 1) & 7))) != 0);
 }
 
 /* ── Carl's "leaving without the lesson" offer ─────────────────────

@@ -844,8 +844,8 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                 f"#define {ent_id} (ENTITY_ID_FIRST_GAME + N) to src/game/game_ids.h")
             objects_ok = False
         aid = props.get("actor_id", 0)
-        if not isinstance(aid, int) or aid < 0 or aid > 65535:
-            errors.append(f"Object '{oid}' has invalid actor_id '{aid}' (0..65535)")
+        if not isinstance(aid, int) or aid < 0 or aid > 128:
+            errors.append(f"Object '{oid}' has invalid actor_id '{aid}' (0..128: zone bitmask bits)")
             objects_ok = False
         facing = props.get("facing", "DOWN")
         if facing not in ("UP", "DOWN", "LEFT", "RIGHT"):
@@ -1222,20 +1222,23 @@ def main():
             print(f"ERROR: {err}")
             overall_success = False
 
-    # Cross-file check: nonzero actor_id values drive persistent defeat
-    # tracking in GameState.world and must be unique across scenes.
+    # Cross-file check: nonzero actor_id values drive the zone defeat
+    # bitmask (bit N-1 per ActorId N) and must be unique within a zone
+    # (levels/*.json act): leaving a zone clears its bits, so a later
+    # zone may reuse ids.  Cross-zone duplicates are fine.
     seen_actor_ids = {}
     for p, data in loaded_levels:
+        zone = data.get("act", 1)
         for obj in data.get("objects", []):
             props = obj.get("properties", {}) or {}
             aid = props.get("actor_id", 0)
             if isinstance(aid, int) and aid != 0:
-                if aid in seen_actor_ids:
+                if (zone, aid) in seen_actor_ids:
                     print(f"ERROR: actor_id {aid} used by both "
-                          f"'{seen_actor_ids[aid]}' and '{obj.get('id')}' (must be unique)")
+                          f"'{seen_actor_ids[(zone, aid)]}' and '{obj.get('id')}' in act {zone} (must be unique within a zone)")
                     overall_success = False
                 else:
-                    seen_actor_ids[aid] = obj.get("id")
+                    seen_actor_ids[(zone, aid)] = obj.get("id")
 
     # Cross-file check: neighbor links must be reciprocal (walk back).
     # One-sided links used to warn; they now fail loudly -- a missing

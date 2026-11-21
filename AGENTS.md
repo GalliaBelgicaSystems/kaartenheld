@@ -3087,6 +3087,20 @@ transport contract and may change; scenarios must not depend on them.
 Semantic assertions (`flag`, `variable`, `inventory`, `party_hp`,
 `party_level`, `actor_state`, `screen_row`, ...) are the stable API.
 
+## 53.8 Zone-scoped defeat bitmask (acts)
+
+Enemy defeats persist per story zone (`WorldState.zone` + 128 defeat
+bits, `src/rpg/state.h`), not game-wide: the loader (`actor_load_banked.c`)
+clears the old zone's bits when the table zone (`WorldActorTable.act`,
+compiled from `levels/*.json` act, `compile.py`) changes, so leaving a
+zone respawns its enemies.  ActorIds index the bits (`N-1`) and must be
+unique within a zone only (`validate.py` enforces range 1..128 plus
+per-act uniqueness, so zones may reuse ids).  Save+quit preserves the
+exact zone state (zone + bits travel in `GameState`/SRAM); zone 0 means
+unsettled and settles without clearing, so staged scenario bits survive
+the first load.  One-shot bosses that must never respawn are story
+flags, never defeat bits.  Regression: `actor_defeat_save_load`.
+
 ---
 
 # 54. State Ownership, Screens & Actor Lifecycle (audit)
