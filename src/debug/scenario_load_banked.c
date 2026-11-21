@@ -156,13 +156,13 @@ void scenario_load_apply_banked(void)
     }
 
     /* Persistent world defeats: staged (id, state) entries fold into
-     * the zone bitmask (bit (N-1) records ActorId N; DEFEATED sets,
-     * anything else clears -- ALIVE explicitly revives).  The zone
-     * itself settles on the first scene load (loader's zone-0 rule),
-     * so staged bits always survive setup. */
+     * the zone bitmask (bit (N-1) records ActorId N; DEFEATED sets, any
+     * other state clears -- ALIVE explicitly revives, matching
+     * game_world_set_actor_state's set/clear contract in rpg/state.c).
+     * The zone itself settles on the first scene load (loader's zone-0
+     * rule), so staged bits always survive setup. */
     {
         uint8_t aid;
-        uint8_t bit;
         p = b + STATE_LOAD_DESC_WORLD_ENTRY_OFF;
         count = b[STATE_LOAD_DESC_WORLD_COUNT_OFF];
         for (i = 0; i < count; i++) {
@@ -170,13 +170,12 @@ void scenario_load_apply_banked(void)
             hi = *p++;
             aid = lo;
             if (hi == 0 && aid >= 1 && aid <= ZONE_DEFEAT_BITS) {
-                bit = (uint8_t)(aid - 1);
-                if (*p) {
-                    g_game.state.world.bits[(uint8_t)(bit >> 3)] |=
-                        (uint8_t)(1u << (bit & 7));
+                if (*p == (uint8_t)ACTOR_STATE_DEFEATED) {
+                    g_game.state.world.bits[ZONE_DEFEAT_BYTE(aid)] |=
+                        (uint8_t)(1u << ZONE_DEFEAT_BIT(aid));
                 } else {
-                    g_game.state.world.bits[(uint8_t)(bit >> 3)] &=
-                        (uint8_t)~(1u << (bit & 7));
+                    g_game.state.world.bits[ZONE_DEFEAT_BYTE(aid)] &=
+                        (uint8_t)~(1u << ZONE_DEFEAT_BIT(aid));
                 }
             }
             p++;

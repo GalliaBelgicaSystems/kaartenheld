@@ -155,12 +155,25 @@ void dialogue_choice_nav_banked(void)
             /* Carl's spar offer: NO clears the stashed spar so closing
              * the follow-up returns to the overworld with no fight; YES
              * assigns LESSON progress (full re-init, so re-accepting
-             * replays the lesson) and closes into the stashed spar. */
+             * replays the lesson) and closes into the stashed spar.
+             * Post-victory YES (one-shot latch STORY_FLAG_ID_TUTORIAL_SPAR_WON,
+             * which survives zone respawns): clear the stash and close
+             * plainly -- the lesson never re-fights.  The fixed close
+             * would otherwise auto-start the stashed spar. */
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
                 g_game.world.encounter_actor_index = NO_ACTOR_INDEX;
                 g_bk_byte_a = 3;
                 g_bk_byte_c = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_DECLINE;
                 return;
+            }
+            {
+                uint8_t sf = (uint8_t)(STORY_FLAG_ID_TUTORIAL_SPAR_WON - 1);
+                if ((g_game.state.flags.bytes[(uint8_t)(sf >> 3)] &
+                     (uint8_t)(1u << (sf & 7))) != 0) {
+                    g_game.world.encounter_actor_index = NO_ACTOR_INDEX;
+                    g_bk_byte_a = 2;
+                    return;
+                }
             }
             /* Full re-init, so re-accepting replays the lesson.  The
              * AP line of the attack box is truthful only when THIS

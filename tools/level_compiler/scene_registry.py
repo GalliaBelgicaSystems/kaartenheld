@@ -24,9 +24,12 @@ REGISTRY_VERSION = 1
 
 # Fixed harness-test fixture names.  Values come from the registry's
 # _test_base (a fixed block that never moves); only the NAMES live here.
+# Appended at the END: ids are dense from the base, so existing fixtures
+# keep their ids.  test_act2_field is the act-2 zone probe (zone
+# defeats, §53.8): same ActorIds as act 1 by design.
 TEST_SCENE_ORDER = ["test_field", "test_town", "test_forest",
                     "test_mountain_pass", "test_castle", "test_south_field",
-                    "test_gamble", "test_underground"]
+                    "test_gamble", "test_underground", "test_act2_field"]
 
 
 def registry_path():

@@ -300,7 +300,9 @@ const EventDefinition g_events[] = {
      * every milestone (tutorial win, chest, Monster Hunt, mimic) adds
      * exactly one to the base-1 pool, reaching 5 in any completion
      * order (fleeing the lesson grants nothing).  Carl's defeat is
-     * persistent (one-shot via GameState.world).  The lesson's +1 AP is
+     * persistent within the zone (zone defeat bit; leaving the zone
+     * respawns him, but the TUTORIAL_SPAR_WON flag latch keeps the
+     * spar offer, the ? mark and the re-fight suppressed).  The lesson's +1 AP is
      * handed over when the spar STARTS (overworld encounter path,
      * one-shot via TUTORIAL_SKIPPED -- shared with the leave-the-field
      * skip, which hands over the same point), so the win row below keeps

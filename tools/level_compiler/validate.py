@@ -545,6 +545,22 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     width = map_info.get("width", 0)
     height = map_info.get("height", 0)
 
+    # Act tag (story zone, AGENTS.md 42.4/53.8): required, 1..255 (emitted
+    # as a uint8 table byte).  An act-less level would silently join
+    # zone 1's ActorId namespace and share its defeat bits.
+    act = level_data.get("act")
+    if isinstance(act, bool) or not isinstance(act, int) or act < 1 or act > 255:
+        errors.append(f"Level '{level_id}' needs an integer 'act' 1..255 (story zone)")
+    else:
+        passed.append("Act tag valid")
+    # Act-2 naming: act2_ ids live in act 2 and vice versa, so the
+    # editor filter and the zone namespace never disagree.  Fixtures
+    # keep their test_ prefix (test_act2_*), real levels use act2_*.
+    is_act2_name = level_id.startswith("act2_") or level_id.startswith("test_act2_")
+    if isinstance(act, int) and not isinstance(act, bool):
+        if is_act2_name != (act == 2):
+            errors.append(f"Level '{level_id}': act2_ id prefix must match act 2 (got act {act})")
+
     # Bounds check
     if width <= 0 or width > MAX_WORLD_WIDTH:
         errors.append(f"Map width {width} is out of bounds (1..{MAX_WORLD_WIDTH})")

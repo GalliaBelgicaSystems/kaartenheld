@@ -1,5 +1,5 @@
 {
- "act": "always",
+ "act": 1,
   "name": "actor_slime_collision",
   "test": true,
   "description": "Walking into Carl (lesson tile) emits actor collision and opens his spar offer; answering YES closes into the encounter battle",

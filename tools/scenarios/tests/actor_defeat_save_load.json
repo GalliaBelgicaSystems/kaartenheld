@@ -2,7 +2,7 @@
  "act": "always",
  "name": "actor_defeat_save_load",
  "test": true,
- "description": "Zone defeat bits survive a save/load roundtrip: staging two TEST_FOREST defeats, saving, mutating gold, then loading restores the defeats (enemies stay dead) and the saved gold. Guards the old 16-entry cap dropping kills while keeping loot.",
+ "description": "Zone defeats survive a save/load roundtrip: staging two TEST_FOREST defeats, saving, mutating gold, then loading restores the defeats (enemies stay dead) and the saved gold. The uncapped bitmask itself is pinned by defeat_bits_no_cap (17 kills) and zone_defeat_stays_dead (spawn gating).",
  "initial_state": {
   "scene": "TEST_FOREST",
   "player": {

@@ -269,6 +269,16 @@ static const WorldActorDefinition g_test_underground_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_test_act2_field_actors[] = {
+    {
+        2, ENTITY_ID_SLIME, 12, 10, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME, AI_NONE, 10, 10, 5, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 9, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_TEST_FIELD,      g_test_field_actors,
         (uint8_t)(sizeof(g_test_field_actors) / sizeof(g_test_field_actors[0])), 1 },
@@ -286,6 +296,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_test_gamble_actors) / sizeof(g_test_gamble_actors[0])), 1 },
     { MAP_TEST_UNDERGROUND, g_test_underground_actors,
         (uint8_t)(sizeof(g_test_underground_actors) / sizeof(g_test_underground_actors[0])), 1 },
+    { MAP_TEST_ACT2_FIELD, g_test_act2_field_actors,
+        (uint8_t)(sizeof(g_test_act2_field_actors) / sizeof(g_test_act2_field_actors[0])), 2 },
 };
 
-const uint8_t g_actor_table_count = 8;
+const uint8_t g_actor_table_count = 9;

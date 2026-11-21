@@ -1,5 +1,5 @@
 {
- "act": 1,
+ "act": "always",
  "name": "merchant_sell_loot",
  "test": true,
  "description": "Sell loot at the card merchant (docs/loot.md 34.6): engage the Merchant, flip RIGHT to the SELL tab, and A on the loot row. Selling one WOOD PLAIN DAGGER (id 99, 0x63) pays its formula value (power 1 + wood tier 0 = 1 gold), emits CARD_SOLD(99,1,0) and removes the copy (the SELL list is empty afterwards).",

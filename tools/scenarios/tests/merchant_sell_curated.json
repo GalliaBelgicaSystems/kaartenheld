@@ -1,5 +1,5 @@
 {
- "act": 1,
+ "act": "always",
  "name": "merchant_sell_curated",
  "test": true,
  "description": "Sell a curated card at the card merchant (docs/loot.md §34.6): the IRON_RING (id 66, buy 20) sells from the shop's SELL tab at its rarity-cut value -- iron tier 2 keeps price x (5-2)/6 = 10 gold, below the 20 buy price -- emitting CARD_SOLD(66,10,0) and removing the copy. Companion to merchant_sell_loot (loot formula value).",

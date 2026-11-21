@@ -1115,7 +1115,8 @@ def emit_actors_code(levels_by_id, bank=2, registry=None,
         map_id_enum = map_enum[sid]
         # Zone tag for the defeat bitmask (levels/*.json act, default 1):
         # the loader clears the old zone's bits when it changes, so
-        # leaving a zone respawns its enemies (AGENTS.md 42.4).
+        # leaving a zone respawns its enemies (AGENTS.md 42.4).  Retired
+        # holes are unreachable (never loaded); they emit 1.
         act = levels_by_id[sid].get("act", 1) if sid is not None else 1
         if sid in empty_sids:
             out.append(f"    {{ {map_id_enum + ',':<20s} 0,")

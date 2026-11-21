@@ -1,5 +1,6 @@
 {
  "id": "test_south_field",
+  "act": 1,
  "name": "TEST Desolate South Field",
  "map": {
   "width": 20,

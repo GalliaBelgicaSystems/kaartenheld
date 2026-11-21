@@ -21,7 +21,14 @@
  * wider ids; actor_id 0 stays untracked runtime). */
 #define ZONE_DEFEAT_BITS 128
 #define ZONE_DEFEAT_BYTES (ZONE_DEFEAT_BITS / 8)
-#define MAX_PERSISTENT_ACTORS ZONE_DEFEAT_BITS
+
+/* Zone defeat addressing shared by fixed and banked readers (pure
+ * arithmetic, no calls -- safe to expand in banked bodies, AGENTS.md
+ * §52.11.1).  Bit (N-1) records ActorId N.  Banked bodies pair the byte
+ * macro with a same-bank 8-entry mask table (a `1u << n` runtime shift
+ * compiles to an sla loop); fixed-bank readers use plain shifts. */
+#define ZONE_DEFEAT_BYTE(aid) ((uint8_t)(((aid) - 1) >> 3))
+#define ZONE_DEFEAT_BIT(aid) ((uint8_t)(((aid) - 1) & 7))
 #define MAX_CURRENCIES        2
 #define MAX_PROGRESSION_TARGETS 2
 

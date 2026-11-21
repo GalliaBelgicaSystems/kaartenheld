@@ -82,21 +82,17 @@ static bool actor_id_valid(ActorId actor_id)
     return (actor_id >= 1 && actor_id <= ZONE_DEFEAT_BITS);
 }
 
-static void defeat_bit(const GameState *state, ActorId actor_id,
-                       uint8_t *out_byte, uint8_t *out_mask)
+static void defeat_bit(ActorId actor_id, uint8_t *out_byte, uint8_t *out_mask)
 {
-    uint8_t b;
-    (void)state;
-    b = (uint8_t)(actor_id - 1);
-    *out_byte = (uint8_t)(b >> 3);
-    *out_mask = (uint8_t)(1U << (b & 7));
+    *out_byte = ZONE_DEFEAT_BYTE(actor_id);
+    *out_mask = (uint8_t)(1u << ZONE_DEFEAT_BIT(actor_id));
 }
 
 bool game_world_actor_is_defeated(const GameState *state, ActorId actor_id)
 {
     uint8_t byte, mask;
     if (!state || !actor_id_valid(actor_id)) return false;
-    defeat_bit(state, actor_id, &byte, &mask);
+    defeat_bit(actor_id, &byte, &mask);
     return (state->world.bits[byte] & mask) != 0;
 }
 
@@ -105,7 +101,7 @@ void game_world_set_actor_state(GameState *state, ActorId actor_id,
 {
     uint8_t byte, mask;
     if (!state || !actor_id_valid(actor_id)) return;
-    defeat_bit(state, actor_id, &byte, &mask);
+    defeat_bit(actor_id, &byte, &mask);
     if (actor_state == (uint8_t)ACTOR_STATE_DEFEATED) {
         if (state->world.bits[byte] & mask) return;
         state->world.bits[byte] |= mask;

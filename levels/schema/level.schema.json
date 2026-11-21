@@ -3,12 +3,13 @@
   "title": "Level",
   "description": "Canonical level definition for the Game Boy RPG level editor and compiler.",
   "type": "object",
-  "required": ["id", "name", "map", "layers", "player"],
+  "required": ["id", "act", "name", "map", "layers", "player"],
   "properties": {
     "act": {
       "type": "integer",
       "minimum": 1,
-      "description": "Story act this level belongs to (1 = demo, 2+ = future acts; see AGENTS.md 42.4)."
+      "maximum": 255,
+      "description": "Story act this level belongs to (1 = demo, 2+ = future acts; see AGENTS.md 42.4). Required: an act-less level silently joins zone 1's id namespace. Emitted as an unsigned byte."
     },
     "id": {
       "type": "string",

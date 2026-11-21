@@ -1,5 +1,6 @@
 {
   "id": "test_town",
+  "act": 1,
   "name": "TEST Oakhaven Town",
   "map": {
     "width": 20,

@@ -14,7 +14,7 @@ Battery-backed SRAM persistence of the canonical `GameState`
 | Offset | Size | Field |
 |---|---|---|
 | 0xA000 | 2 | magic `0x5247` (`"GR"`) |
-| 0xA002 | 1 | format version (`SAVE_VERSION = 7`) |
+| 0xA002 | 1 | format version (`SAVE_VERSION = 8`) |
 | 0xA003 | 1 | checksum |
 | 0xA004 | `sizeof(GameState)` | the serialized `GameState` |
 
@@ -50,8 +50,9 @@ Battery-backed SRAM persistence of the canonical `GameState`
 * Future migrations should read the old version and upgrade in place before
   writing back.
 * `GameState` is the *only* persistent payload: scene, party, inventory,
-  flags, variables, currency, persistent world actor state, progression,
-  equipment.  Runtime state (`Battle`, `DialogueState`, `World.actors` HP,
+  flags, variables, currency, zone defeat bitmask (`WorldState.zone` +
+  128 bits), progression, equipment.  Runtime state (`Battle`,
+  `DialogueState`, `World.actors` HP,
   the active screen) is never saved; it is rebuilt from `GameState` on load.
 
 ## Harness coverage

@@ -57,20 +57,29 @@ void debug_state_snapshot_banked(void)
      * Only set bits list, capped at the 16-entry wire section (fixtures
      * stage a handful of hostiles; a cleared zone lists none).  The
      * count clamps to the listed entries so readers never walk into the
-     * progression section. */
+     * progression section.  Byte-first with zero skip: the common empty
+     * mask costs 16 iterations, not 128 -- this builder runs every
+     * frame, and a full 128-iteration scan pushed the overworld frame
+     * past its VBlank budget (boot ran at half speed). */
     {
-        uint8_t aid;
+        uint8_t i;
+        uint8_t bit;
         uint8_t listed;
         listed = 0;
         p = b + STATE_SNAP_WORLD_OFFSET + 1;
-        for (aid = 1; aid <= ZONE_DEFEAT_BITS && listed < 16; aid++) {
-            uint8_t bb = (uint8_t)(aid - 1);
-            if ((st->world.bits[(uint8_t)(bb >> 3)] &
-                 (uint8_t)(1u << (bb & 7))) != 0) {
-                *p++ = aid;
-                *p++ = 0;
-                *p++ = (uint8_t)ACTOR_STATE_DEFEATED;
-                listed++;
+        for (i = 0; i < ZONE_DEFEAT_BYTES && listed < 16; i++) {
+            uint8_t byte = st->world.bits[i];
+            if (byte == 0) continue;
+            for (bit = 0; bit < 8 && listed < 16; bit++) {
+                if ((byte & (uint8_t)(1u << bit)) != 0) {
+                    /* i*8 as an explicit shift: banked code must not
+                     * pull the SDCC multiply library (fixed _CODE,
+                     * AGENTS.md §52.18). */
+                    *p++ = (uint8_t)((uint8_t)(i << 3) + bit + 1);
+                    *p++ = 0;
+                    *p++ = (uint8_t)ACTOR_STATE_DEFEATED;
+                    listed++;
+                }
             }
         }
         b[STATE_SNAP_WORLD_OFFSET] = listed;
@@ -106,4 +115,11 @@ void debug_state_snapshot_banked(void)
      * EconomyState is 6 contiguous bytes (no padding: u8/u16/u16/u8). */
     snap_copy(b + STATE_SNAP_MARKET_INDEX_OFF, &st->economy,
               (uint8_t)sizeof(EconomyState));
+
+    /* Zone tail (v10, appended): recorded zone + raw defeat bitmask.
+     * The world section above lists only the 16 lowest set ids; these
+     * bytes let the harness assert any bit (defeat_bit) and the zone. */
+    b[STATE_SNAP_ZONE_OFF] = st->world.zone;
+    snap_copy(b + STATE_SNAP_ZONE_BITS_OFF, st->world.bits,
+              ZONE_DEFEAT_BYTES);
 }
