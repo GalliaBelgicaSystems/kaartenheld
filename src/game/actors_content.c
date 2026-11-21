@@ -613,7 +613,7 @@ static const WorldActorDefinition g_act2_town_actors[] = {
 
 static const WorldActorDefinition g_act2_ruins_actors[] = {
     {
-        0, ENTITY_ID_SIGNPOST, 2, 1, DIRECTION_DOWN,
+        0, ENTITY_ID_SIGNPOST, 0, 3, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         '?', "EXIT", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_RUINS_LEAVE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,

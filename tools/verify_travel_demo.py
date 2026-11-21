@@ -766,10 +766,10 @@ def test_ruins():
         print("chest OK: AP %d -> %d" % (ap0, d.ap()))
         assert _walk_ruins_to(d, 13, 6), d.scene()
         assert _walk_ruins_to(d, 6, 6), d.scene()
-        assert _walk_ruins_to(d, 2, 6), d.scene()
-        assert _walk_ruins_to(d, 2, 2), d.scene()
+        assert _walk_ruins_to(d, 1, 6), d.scene()
+        assert _walk_ruins_to(d, 1, 3), d.scene()
         day0 = d.day()
-        d.press("up", settle=20)  # bump the exit signpost
+        d.press("left", settle=20)  # bump the exit door in the west wall
         assert d.wait_for(lambda: d.text_has("LEAVE RUINS?"), ticks=300), \
             d.rows()
         d.press("a", settle=30)  # YES
