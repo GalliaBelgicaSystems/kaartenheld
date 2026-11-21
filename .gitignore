@@ -2,12 +2,14 @@ build/*
 !build/.gitkeep
 !build/kaartenheld.gb
 !build/kaartenheld_debug.gb
+!build/kaartenheld-travel-demo.gb
 !build/kaartenheld_manual.pdf
 *.o
 *.map
 *.sym
 !build/kaartenheld.sym
 !build/kaartenheld_debug.sym
+!build/kaartenheld-travel-demo.sym
 *.noi
 *.lst
 *.ihx
