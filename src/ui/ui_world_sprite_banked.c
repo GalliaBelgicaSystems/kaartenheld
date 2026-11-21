@@ -78,11 +78,11 @@ static void boss_vram_cell(uint16_t idx, uint8_t tile)
 #define SHADOW_OAM_BASE 0xC000u
 #define OAM_SLOT_ACTOR0 1u  /* hostile slots start at OAM entry 1 */
 /* Static slots follow the hostile block via the running cursor, capped at
- * OAM_STATIC_LAST (entry 37): entries 30-37 are the fixed HUD-marker
- * slots and 38 is the player, so an uncapped overflow would stomp the
- * hero (or a badge).  Real content never reaches the cap (busiest map:
+ * OAM_STATIC_LAST (entry 29): entries 30-37 are the fixed HUD-marker
+ * slots and 38 is the player, so an uncapped overflow would stomp a
+ * badge (or the hero).  Real content never reaches the cap (busiest map:
  * 7 hostiles + 0 statics); the cap keeps the invariant structural. */
-#define OAM_STATIC_LAST 37u
+#define OAM_STATIC_LAST 29u
 /* (Static actors follow the hostile block via a running cursor; their base
  * is OAM_SLOT_ACTOR0 + the sum of each hostile's w*h sprite cells, which
  * equals OAM_SLOT_ACTOR0 + MAX_WORLD_ACTORS when every hostile is 1x1.) */

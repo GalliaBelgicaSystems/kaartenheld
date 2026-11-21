@@ -434,7 +434,11 @@ export function createEmptyEditorLevel(id: string = 'new_scene', tilesetId: stri
     grid.push(row);
   }
 
+  const actMatch = /^(?:test_)?act(\d+)_/.exec(id);
+  const act = actMatch ? Math.max(1, Math.min(255, parseInt(actMatch[1], 10))) : 1;
+
   return {
+    act,
     id,
     name: id.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
     width,
@@ -597,9 +601,10 @@ export function editorToLevelData(lvl: EditorLevel): any {
     return screenData;
   }
 
+  const defaultAct = /^(?:test_)?act2_/.test(lvl.id) ? 2 : 1;
   return {
-    // Preserved verbatim: story act tag (AGENTS.md 42.4).
-    ...(typeof lvl.act === 'number' ? { act: lvl.act } : {}),
+    // Preserved verbatim: story act tag (AGENTS.md 42.4/53.8, required 1..255).
+    act: typeof lvl.act === 'number' ? lvl.act : defaultAct,
     id: lvl.id,
     name: lvl.name,
     map: {

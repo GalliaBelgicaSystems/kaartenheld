@@ -1383,6 +1383,8 @@ def normalize_semantic_state(snap, state_snap):
         "deck": sorted((state_snap or {}).get("deck", [])),
         "world": sorted((w.get("actor_id"), w.get("state"))
                         for w in (state_snap or {}).get("world", [])),
+        "zone": (state_snap or {}).get("zone"),
+        "defeat_bits": list((state_snap or {}).get("defeat_bits", [])),
         "progression": sorted((p.get("name"), p.get("level"), p.get("progress"))
                                for p in (state_snap or {}).get("progression", [])),
     }

@@ -3036,24 +3036,26 @@ in sync; changing one without the other silently breaks every scenario.
 
 * Core snapshot (`g_snap_buf`, 36 bytes): byte 12 is `state.flags.bytes[0]`,
   byte 19 is `state.scene.scene_id`.  Existing scenarios depend on these.
-* Extended snapshot (`g_state_snap_buf`, 294 bytes, version 0x08): version
+* Extended snapshot (`g_state_snap_buf`, 317 bytes, version 0x0A): version
   byte 0, flags 1..8, variables 9..40 (all MAX_STATE_VARIABLES as int16
   LE -- grown from 9..24 for the 9th variable in Nov 2026; the builder
   always copied 16 vars while the layout reserved 8, so vars 9+ used to
   alias the currency bytes), currency count 41 + entries 42..53, party
   count 54 + members 55..66, inventory (collection) count 67 + entries
-  68..167, world count 168 + entries 169..216, progression count 217 +
-  entries 218..265, equipment 266, camera/world geometry 267..272,
-  battle-deck count at 273 followed by up to 20 deck card ids at
-  274..293.
-* State-load descriptor (`g_scen_state_buf`, 320 bytes, version 0x05):
+  68..167, world count 168 + entries 169..216 (16 lowest set defeat bits
+  decoded), progression count 217 + entries 218..265, equipment 266,
+  camera/world geometry 267..272, battle-deck count at 273 followed by
+  up to 20 deck card ids at 274..293, economy state at 294..299, zone at
+  300, and raw zone defeat bitmask at 301..316.
+* State-load descriptor (`g_scen_state_buf`, 326 bytes, version 0x06):
   variables section carries up to 16 entries (vid + int16 LE, 3 bytes
   each at 19..66), so variables 9+ load through descriptors; the
   optional deck section at 297 (present flag) / 298 (count) / 299..318
   (card ids)
   replaces the starter deck when present — an explicit empty deck is how
   scenarios reach `battle_start`'s packed fallback path now that
-  `DECK_MIN_CARDS` blocks emptying a deck through gameplay.
+  `DECK_MIN_CARDS` blocks emptying a deck through gameplay; status mask
+  at 319; economy state at 320..325.
 * Every important gameplay transition must emit a telemetry event; state
   assertions must be possible without screenshots.
 
