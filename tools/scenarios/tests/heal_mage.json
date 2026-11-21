@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "heal_mage",
  "test": true,
  "description": "Village Heal Mage YES path: talking to the red-robed mage (12,10) opens the YES/NO ask; confirming YES (default cursor) heals the hurt hero to full HP, plays the chest-loot jingle (restored to TOWN), marks HEAL_MAGE_USED, and opens the ring-tip thanks. The mage shares the wizard's OAM blob tile (dedup) with its own red ramp: OAM entry 9 shows tile 119.",

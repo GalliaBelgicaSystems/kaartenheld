@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "hero_idle_standing",
  "test": true,
  "description": "Standing hero shows idle frame 1 (OAM 96) with correct idle art bytes: boot TEST_FIELD, no input, step 1. The oam_bytes pins guard the boot stream (a buffer-offset bug once streamed BSS garbage here: tile id right, art blank).",
@@ -15,7 +16,7 @@
   },
   {
    "type": "oam_tile",
-   "entry": 0,
+   "entry": 38,
    "expected": 96
   },
   {

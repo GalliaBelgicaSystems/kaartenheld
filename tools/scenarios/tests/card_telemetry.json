@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "card_telemetry",
  "test": true,
  "description": "Playing a card in battle emits CARD_PLAYED telemetry",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "arrows_energy_beats_arrows",
  "test": true,
  "description": "Message priority (limited-arrows): a bow that fails on energy while arrows remain flashes NO ENERGY!, not NO ARROWS!. The NO ARROWS message fires only for the arrows condition itself (staged bows at/over the pool).",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "quit_cancel",
  "test": true,
  "description": "Declining the quit confirm returns to the overworld with nothing saved: A opens the confirm, DOWN toggles to NO, A closes it, no GAME_SAVED fires.",

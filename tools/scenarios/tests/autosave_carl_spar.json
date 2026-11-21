@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "autosave_carl_spar",
  "test": true,
  "description": "Starting Carl's spar hands over +1 AP and checkpoints the active slot: YES on the offer starts the fight with pool 2 and GAME_SAVED fired.",

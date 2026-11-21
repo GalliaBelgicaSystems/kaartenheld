@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "autosave_map_enter",
  "test": true,
  "description": "Walking through the field gate into town checkpoints the active slot: RIGHT enters TEST_TOWN (autosave fires), LEFT leaves for the field (no save), then a debug load of slot 1 restores the town-entry state.",

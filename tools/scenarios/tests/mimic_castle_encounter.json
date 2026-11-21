@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "mimic_castle_encounter",
  "test": true,
  "description": "Walking into the castle mimic (12,10) starts a BATTLE_MIMIC battle with the new 3x2 mimic art and deck",

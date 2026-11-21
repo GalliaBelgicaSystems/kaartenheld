@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "autosave_quest_ap",
  "test": true,
  "description": "Turning in the Monster Hunt (3 kills, quest ACTIVE) grants +1 AP, completes the quest, and checkpoints the active slot: QUEST_COMPLETE dialogue is up, quest reads COMPLETE, pool reads 2, GAME_SAVED fired.",

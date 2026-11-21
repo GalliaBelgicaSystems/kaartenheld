@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_invite_accept",
   "test": true,
   "description": "Answering YES on Nis's invite (default cursor, A) opens the table on CHOOSE BET / CHOOSE NUMBER / GOLD OWNED with hidden dice. YES choice recorded.",

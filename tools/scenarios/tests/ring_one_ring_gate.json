@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "ring_one_ring_gate",
  "test": true,
  "description": "MAX ONE RING per selection (docs/loot.md 34.3): selecting a second ring card flashes ONE RING! and refuses the add -- no combo is played",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_combo_singleton",
   "test": true,
   "description": "Dynamic best-subset: a lone high card beats a low run (SW1 + BO2 + SW3 + DA7 + SW9, gem equipped, no pairs): HIGH CARD 9 wins over SHORT (6 x 130 = 7).",

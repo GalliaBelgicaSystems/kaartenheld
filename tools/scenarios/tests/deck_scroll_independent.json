@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_scroll_independent",
  "test": true,
  "description": "DECK tab sides scroll independently: with 12 pile groups and 12 deck groups, walking DOWN 11 times on PILE moves only the pile window (top row shows the scrolled BRONZE_SWORD cell \"S  1  3\" -- 9-row windows land on view position 2) while the deck window stays at the top (top row still shows the WOOD_SWORD cell \"S  1  1\"). Under the old shared offset both sides would move together and the WOOD_SWORD cell would be gone.",

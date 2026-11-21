@@ -1,0 +1,61 @@
+{
+ "act": "always",
+ "name": "actor_defeat_save_load",
+ "test": true,
+ "description": "Zone defeats survive a save/load roundtrip: staging two TEST_FOREST defeats, saving, mutating gold, then loading restores the defeats (enemies stay dead) and the saved gold. The uncapped bitmask itself is pinned by defeat_bits_no_cap (17 kills) and zone_defeat_stays_dead (spawn gating).",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 4247,
+  "currency": {
+   "GOLD": 50
+  },
+  "world": {
+   "SLIME_FOREST": "DEFEATED",
+   "BAT_FOREST": "DEFEATED"
+  }
+ },
+ "actions": [
+  {
+   "type": "save"
+  },
+  {
+   "type": "add_currency",
+   "currency": "GOLD",
+   "amount": 100
+  },
+  {
+   "type": "load"
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "actor_state",
+   "actor": "SLIME_FOREST",
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "actor_state",
+   "actor": "BAT_FOREST",
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "actor_state",
+   "actor": "SLIME_MOUNTAIN_PASS",
+   "expected_state": "ALIVE"
+  },
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 50
+  }
+ ]
+}

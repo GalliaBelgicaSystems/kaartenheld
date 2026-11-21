@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_hold_repeat",
  "test": true,
  "description": "Holding DOWN auto-repeats the DECK list walk: a 40-frame hold from the FILTER row advances several rows (caret reaches row 9), not just the single step an edge-triggered press would give. PLACEHOLDER.",

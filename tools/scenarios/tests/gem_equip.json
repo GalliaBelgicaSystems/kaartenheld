@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_equip",
   "test": true,
   "description": "Manual equip: with the STRAIGHT gem owned, A on the GEM tab sets the equipped bit and the row flips to ON (no auto-equip anywhere on the grant path).",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_detail_monster",
  "test": true,
  "description": "SELECT on the MONSTER HUNT quest row opens its detail page: the quest name, the giver (Mayor in Town), the objective (kill 3 monsters) and the live progress (3/3)",

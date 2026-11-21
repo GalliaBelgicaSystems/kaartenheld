@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_combo_ring_short",
   "test": true,
   "description": "Ring completes a short straight (SW4 + SW6 + ring->5, gem equipped): best trial is SHORT STRAIGHT (run 4,5,6, base 15 x 130 = 19 healing). The ring's joker trial, not the leftover v=1 trial, sets the run.",

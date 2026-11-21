@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_lethal",
  "test": true,
  "description": "Counter-first order with a lethal swing: hero at 2 HP stages DA3+DA3 -- the counter lands FIRST for 9 (kobold 14->5, opener SW1), then the unblocked incoming 2 still drops the hero (2->0): two DAMAGE_DEALT, ENTITY_DEFEATED(00), BATTLE_LOST, never BATTLE_WON. Only a killing counter saves the hero.",

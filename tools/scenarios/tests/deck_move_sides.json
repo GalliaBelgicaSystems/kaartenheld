@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "deck_move_sides",
   "test": true,
   "description": "Per-side deck move: DOWN lands on the only pile row (SHIELD, avail 1) and A adds it (CARD_ADDED_TO_DECK, its pile cell vanishes so the cursor advances back to FILTER); DOWN flips to the deck side (lazy flip, pile is empty) onto WOOD_SWORD; RIGHT stays (empty pile); A removes one copy (CARD_REMOVED_FROM_DECK, the sword reappears on the pile); LEFT steps back to the pile cell; A adds the last pile copy (CARD_ADDED_TO_DECK, pile empties again, cursor advances to FILTER). Material OAM ingots (wood tile 121/slot 5) on the deck row; the emptied pile row stays blank.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "new_game_claims_slot",
  "test": true,
  "description": "Finishing the NEW GAME intro claims the picked slot: slot picker A, four slide advances, the fresh overworld boots with the slot saved (GAME_SAVED fired).",

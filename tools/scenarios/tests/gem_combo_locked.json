@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "gem_combo_locked",
   "test": true,
   "description": "Gem gate: the same SW1 + BO2 + SW3 hand with no gem equipped stays HIGH CARD (max 3, damage 3) -- the tier only classifies while the gem is equipped.",

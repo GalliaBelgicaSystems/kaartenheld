@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "merchant_quest_start",
  "test": true,
  "description": "The Lost Merchant (Town) asks the hero to retrieve his stolen shop keys: quest dialogue, quest ACTIVE (tracked) but NOT delivered",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_gate",
  "test": true,
  "description": "Monster kills count toward the quest objective even before the quest is started, so earlier kills are never wasted",

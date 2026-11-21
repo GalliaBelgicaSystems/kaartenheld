@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_banner_reset",
  "test": true,
  "description": "Enemy-turn red banner resets: after the telegraphed defend resolves (BLOCKED ATTACK!), the next player-turn banner (TARGET SLIME) renders with the default palette (row 0 attr 0), not the leaked enemy-turn red.",

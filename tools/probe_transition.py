@@ -3,7 +3,7 @@
 
 Drives the RELEASE ROM (real timing), pokes the player next to a gate,
 steps through it, and counts VBlanks from the scene flip to the player
-sprite reappearing in real OAM (entry 0 Y != 0).  That count is exactly
+sprite reappearing in real OAM (entry 38 Y != 0).  That count is exactly
 the user-perceived "sprites take time to show" delay: sprites are hidden
 up front by ui_sprite_begin_transition and only recommitted after the
 full redraw (main.c game_render/commit ordering).
@@ -47,12 +47,15 @@ SETTLE = 12
 POLL_BUDGET = 1200
 
 
+PLAYER_OAM_SLOT = 38
+
+
 def oam_player_y(sess):
-    return sess.pb.memory[0xFE00]
+    return sess.pb.memory[0xFE00 + 4 * PLAYER_OAM_SLOT]
 
 
 def shadow_player_y(sess):
-    return sess.pb.memory[0xC000]
+    return sess.pb.memory[0xC000 + 4 * PLAYER_OAM_SLOT]
 
 
 def vram_blank_rows(sess):

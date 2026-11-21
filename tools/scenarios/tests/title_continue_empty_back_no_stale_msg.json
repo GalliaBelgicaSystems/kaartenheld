@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "title_continue_empty_back_no_stale_msg",
  "test": true,
  "description": "Pressing CONTINUE on an empty slot shows 'Slot is empty!', backing out via B clears save_slot_message, and immediately picking NEW GAME opens SAVE_LOAD without stale status text.",

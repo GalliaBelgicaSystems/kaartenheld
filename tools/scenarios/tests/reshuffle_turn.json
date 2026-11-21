@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "reshuffle_turn",
  "test": true,
  "description": "Playing one card per decision phase drains the 12-card starter deck's draw pile (dealt hand 5 + pile 7, net -1 per phase): the seventh phase-start draw finds the pile dry with an open slot and runs the reshuffle turn (EVENT_DECK_RESHUFFLED, discard pile redealt) which consumes the player's action -- the enemy attacks but takes no damage that cycle. Ends mid-cycle right after the first shuffle so the count pins at exactly 1.",

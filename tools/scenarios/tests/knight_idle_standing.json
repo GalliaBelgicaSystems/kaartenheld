@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "knight_idle_standing",
  "test": true,
  "description": "Standing slime knight shows the idle pose (OAM 125), never walk frames: the TEST_SOUTH_FIELD knight (AI_NONE) stands while the hero waits far away at (8,10).",

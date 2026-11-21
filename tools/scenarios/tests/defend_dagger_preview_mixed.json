@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_preview_mixed",
  "test": true,
  "description": "Counter forecast suppressed for mixed hands: staged SH3+DA4 (not confirmed) shows the normal DEF 3 forecast with no CNT -- the dagger will be lost on confirm (see defend_dagger_shield_mix).",

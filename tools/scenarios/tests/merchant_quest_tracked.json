@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "merchant_quest_tracked",
  "test": true,
  "description": "Accepting the Lost Shop Keys quest tracks it: after the merchant's briefing closes, the QUEST tab lists SHOP KEYS as active (regression: accepting left MERCHANT_QUEST at 0, invisible)",

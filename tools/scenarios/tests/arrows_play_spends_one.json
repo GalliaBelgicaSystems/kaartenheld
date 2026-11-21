@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "arrows_play_spends_one",
  "test": true,
  "description": "Playing one bow spends exactly 1 arrow from the shared pool (limited-arrows): staged ARROWS 2 drops to 1, CARD_PLAYED fires, and the bow still deals its damage.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_remainder_row_at_cap",
  "test": true,
  "description": "Full identity folding + same-name grouping: curated IRON_RING and its loot twin (id 164) fold to ONE row (owned 2 / decked 1). LEFT A on the saturated row is a silent no-op; RIGHT flips to the deck side and A sends the decked copy back (MIN-guarded), never an AT CAP pin.",

@@ -1,5 +1,6 @@
 {
   "id": "test_underground",
+  "act": 1,
   "name": "TEST Underground Halls",
   "map": {
     "width": 20,

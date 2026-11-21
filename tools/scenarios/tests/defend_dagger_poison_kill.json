@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_poison_kill",
  "test": true,
  "description": "Counter poison rider suppressed on a kill: the leading dagger carries a guaranteed poison rider, but the DA3-pair counter (9, full) finishes the 4-HP enemy0 first -- the swing never lands (hero stays 10) and poison must NOT land on the corpse (no STATUS_APPLIED, no CARDS_GREYED), only ENTITY_DEFEATED and the target step with no victory.",

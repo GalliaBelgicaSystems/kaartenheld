@@ -10,8 +10,8 @@
  * Friendly actors are pure static definitions.  Hostile actors are
  * spawned into World.actors runtime slots by actor_load_scene(), so a
  * scene can hold several hostile actors at once.  Each hostile definition
- * carries a stable ActorId (unique across scenes) so its defeat can be
- * recorded persistently in GameState.world and survive scene reloads.
+ * carries a stable ActorId (unique within its zone) so its defeat can be
+ * recorded in the zone defeat bitmask and survive scene reloads.
  */
 
 static const WorldActorDefinition g_field_actors[] = {
@@ -516,39 +516,39 @@ static const WorldActorDefinition g_underground_tunnel_south_actors[] = {
 
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
-        (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])) },
+        (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])), 1 },
     { MAP_TOWN,            g_town_actors,
-        (uint8_t)(sizeof(g_town_actors) / sizeof(g_town_actors[0])) },
+        (uint8_t)(sizeof(g_town_actors) / sizeof(g_town_actors[0])), 1 },
     { MAP_FOREST,          g_forest_actors,
-        (uint8_t)(sizeof(g_forest_actors) / sizeof(g_forest_actors[0])) },
+        (uint8_t)(sizeof(g_forest_actors) / sizeof(g_forest_actors[0])), 1 },
     { MAP_MOUNTAIN_PASS,   g_mountain_pass_actors,
-        (uint8_t)(sizeof(g_mountain_pass_actors) / sizeof(g_mountain_pass_actors[0])) },
+        (uint8_t)(sizeof(g_mountain_pass_actors) / sizeof(g_mountain_pass_actors[0])), 1 },
     { MAP_CASTLE,          g_castle_actors,
-        (uint8_t)(sizeof(g_castle_actors) / sizeof(g_castle_actors[0])) },
+        (uint8_t)(sizeof(g_castle_actors) / sizeof(g_castle_actors[0])), 1 },
     { MAP_SOUTH_FIELD,     g_south_field_actors,
-        (uint8_t)(sizeof(g_south_field_actors) / sizeof(g_south_field_actors[0])) },
+        (uint8_t)(sizeof(g_south_field_actors) / sizeof(g_south_field_actors[0])), 1 },
     { MAP_SOUTH_RIDGE,     g_south_ridge_actors,
-        (uint8_t)(sizeof(g_south_ridge_actors) / sizeof(g_south_ridge_actors[0])) },
+        (uint8_t)(sizeof(g_south_ridge_actors) / sizeof(g_south_ridge_actors[0])), 1 },
     { MAP_CASTLE_ENTRY,    g_castle_entry_actors,
-        (uint8_t)(sizeof(g_castle_entry_actors) / sizeof(g_castle_entry_actors[0])) },
+        (uint8_t)(sizeof(g_castle_entry_actors) / sizeof(g_castle_entry_actors[0])), 1 },
     { MAP_CASTLE_HALL,     g_castle_hall_actors,
-        (uint8_t)(sizeof(g_castle_hall_actors) / sizeof(g_castle_hall_actors[0])) },
+        (uint8_t)(sizeof(g_castle_hall_actors) / sizeof(g_castle_hall_actors[0])), 1 },
     { MAP_THRONE_ROOM,     g_throne_room_actors,
-        (uint8_t)(sizeof(g_throne_room_actors) / sizeof(g_throne_room_actors[0])) },
+        (uint8_t)(sizeof(g_throne_room_actors) / sizeof(g_throne_room_actors[0])), 1 },
     { MAP_GRASSY_FOREST,   g_grassy_forest_actors,
-        (uint8_t)(sizeof(g_grassy_forest_actors) / sizeof(g_grassy_forest_actors[0])) },
+        (uint8_t)(sizeof(g_grassy_forest_actors) / sizeof(g_grassy_forest_actors[0])), 1 },
     { MAP_VILLAGE_AREA,    g_village_area_actors,
-        (uint8_t)(sizeof(g_village_area_actors) / sizeof(g_village_area_actors[0])) },
+        (uint8_t)(sizeof(g_village_area_actors) / sizeof(g_village_area_actors[0])), 1 },
     { MAP_DESOLATE_FIELD,  g_desolate_field_actors,
-        (uint8_t)(sizeof(g_desolate_field_actors) / sizeof(g_desolate_field_actors[0])) },
+        (uint8_t)(sizeof(g_desolate_field_actors) / sizeof(g_desolate_field_actors[0])), 1 },
     { MAP_WAKE_GROVE,      g_wake_grove_actors,
-        (uint8_t)(sizeof(g_wake_grove_actors) / sizeof(g_wake_grove_actors[0])) },
+        (uint8_t)(sizeof(g_wake_grove_actors) / sizeof(g_wake_grove_actors[0])), 1 },
     { MAP_UNDERGROUND_TUNNEL, 0,
-        0 },
+        0, 1 },
     { MAP_UNDERGROUND_TUNNEL_SOUTH, g_underground_tunnel_south_actors,
-        (uint8_t)(sizeof(g_underground_tunnel_south_actors) / sizeof(g_underground_tunnel_south_actors[0])) },
+        (uint8_t)(sizeof(g_underground_tunnel_south_actors) / sizeof(g_underground_tunnel_south_actors[0])), 1 },
     { MAP_DEMO_END_WAKE_SCENE, 0,
-        0 },
+        0, 1 },
 };
 
 #include "game.h"

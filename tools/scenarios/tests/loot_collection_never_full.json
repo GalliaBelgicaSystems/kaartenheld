@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_collection_never_full",
  "test": true,
  "description": "Ownership is uncapped and identities fold fully, so the 50-row shelf can never fill (only 45 distinct card identities exist game-wide): with 43 distinct identities owned, the victory drop still lands -- LOOT_CARD_ADDED fires and the result screen shows YOU FOUND. No drop is ever silently lost to a full shelf.",

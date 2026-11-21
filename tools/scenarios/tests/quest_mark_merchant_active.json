@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_mark_merchant_active",
  "test": true,
  "description": "No quest marker on the merchant while SHOP KEYS is ACTIVE but the shop keys are not held (mid-quest reminder). No marker on the merchant while ACTIVE without the shop keys; entry 30 is the village dog's ? (DOG_KEY unset), entry 31 stays cleared.",

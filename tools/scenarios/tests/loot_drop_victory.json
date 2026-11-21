@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_drop_victory",
  "test": true,
  "description": "First-victory loot grant (docs/loot.md 34.5): the very first fight's drop is always a BRONZE SHIELD (balancing: the opening loot teaches blocking), regardless of the isolated loot RNG stream. Felling the wall slime (R1) with zero kills so far yields the bronze plain shield (derived id 0x81 = 129); asserts LOOT_CARD_ADDED telemetry payload and that the CARDS tab shows the synthesized identity name. Rank-0 lesson fights (Carl's spar) grant nothing and cannot consume this.",

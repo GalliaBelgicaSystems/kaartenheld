@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "mayor_reinteract",
  "test": true,
  "description": "Conditional re-trigger: first interaction starts the quest (MAYOR_INTRO) and sets MET_MAYOR; a second interaction fires QUEST_ACTIVE while monsters remain. Three-line pages: the 11-line INTRO closes in 4 presses.",

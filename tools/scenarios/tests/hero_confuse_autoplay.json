@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "hero_confuse_autoplay",
  "test": true,
  "description": "Confused hero auto-executes: DBG_APPLY_STATUS poisons the player, so decision phases stage and resolve random hands with no input anywhere in the actions -- CARD_PLAYED and DAMAGE_DEALT fire on their own (the message beat itself is pinned by hero_confuse_message).",

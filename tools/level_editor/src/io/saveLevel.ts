@@ -67,9 +67,12 @@ export async function cleanRetiredOrphans(): Promise<{ success: boolean; removed
   }
 }
 
-export async function fetchUsedActorIds(exclude?: string): Promise<Array<{ id: number; level: string }>> {
-  const q = exclude ? `?exclude=${encodeURIComponent(exclude)}` : '';
-  const res = await fetch(`/api/actor-ids${q}`);
+export async function fetchUsedActorIds(exclude?: string, act?: number): Promise<Array<{ id: number; level: string; act?: number }>> {
+  const params = new URLSearchParams();
+  if (exclude) params.set('exclude', exclude);
+  if (typeof act === 'number') params.set('act', String(act));
+  const qs = params.toString();
+  const res = await fetch(`/api/actor-ids${qs ? `?${qs}` : ''}`);
   const data = await res.json();
   if (!res.ok || !data.success) {
     throw new Error(data.error || `actor-id fetch failed with status ${res.status}`);

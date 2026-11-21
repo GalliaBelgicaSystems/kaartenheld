@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "quest_tab_switch",
  "test": true,
  "description": "Quick-screen tab switching is symmetric: LEFT/RIGHT moves DECK -> QUEST and back again (QUEST list previously swallowed LEFT/RIGHT so the return trip was impossible)",

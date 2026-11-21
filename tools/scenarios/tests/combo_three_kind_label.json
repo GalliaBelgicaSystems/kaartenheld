@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_three_kind_label",
  "test": true,
  "description": "Three of a kind (SW3 BO3 HE3 + DA5 kicker) reads THREE KIND on the live COMBO row while pending, before execution.",

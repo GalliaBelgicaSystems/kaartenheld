@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "progression_hero_consequence",
  "test": true,
  "description": "A HERO level-up triggers the game-specific consequence (max HP +2, full heal) through the separate consequence layer",

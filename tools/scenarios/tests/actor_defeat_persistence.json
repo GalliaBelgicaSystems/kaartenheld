@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "actor_defeat_persistence",
  "test": true,
  "description": "Beating Carl records SLIME_FIELD DEFEATED persistently and raises the pool to 2 with the victory speech (post-battle static checks live in field_chest_dagger/town flows: a pre-existing debug-only battle-turn wipe can drop statics, see roadmap)",

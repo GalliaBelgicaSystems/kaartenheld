@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_detail_shopkeys_complete",
  "test": true,
  "description": "SELECT on a completed SHOP KEYS row shows DONE plus what the reward was: GOT SHOP OPENED (the merchant shop opens)",

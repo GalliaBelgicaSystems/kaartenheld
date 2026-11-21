@@ -16,7 +16,19 @@
 #define MAX_PARTY_MEMBERS     1
 #define MAX_STATE_FLAGS       64
 #define MAX_STATE_VARIABLES   16
-#define MAX_PERSISTENT_ACTORS 16
+/* Zone-scoped defeat store (see WorldState below): bit (N-1) records
+ * ActorId N defeated.  ActorIds must stay 1..128 (validate.py rejects
+ * wider ids; actor_id 0 stays untracked runtime). */
+#define ZONE_DEFEAT_BITS 128
+#define ZONE_DEFEAT_BYTES (ZONE_DEFEAT_BITS / 8)
+
+/* Zone defeat addressing shared by fixed and banked readers (pure
+ * arithmetic, no calls -- safe to expand in banked bodies, AGENTS.md
+ * §52.11.1).  Bit (N-1) records ActorId N.  Banked bodies pair the byte
+ * macro with a same-bank 8-entry mask table (a `1u << n` runtime shift
+ * compiles to an sla loop); fixed-bank readers use plain shifts. */
+#define ZONE_DEFEAT_BYTE(aid) ((uint8_t)(((aid) - 1) >> 3))
+#define ZONE_DEFEAT_BIT(aid) ((uint8_t)(((aid) - 1) & 7))
 #define MAX_CURRENCIES        2
 #define MAX_PROGRESSION_TARGETS 2
 
@@ -120,16 +132,17 @@ typedef struct {
     ProgressionEntry entries[MAX_PROGRESSION_TARGETS];
 } ProgressionStore;
 
-/* Persistent world actor state: survives scene reloads.  Keyed by the
- * stable ActorId of a particular spawned instance, not its type. */
+/* Persistent world actor state: zone-scoped defeat bitmask.  Leaving a
+ * zone respawns its enemies, so only the CURRENT zone's defeats are
+ * stored: bit (N-1) records ActorId N defeated (ActorIds unique within
+ * a zone, enforced by validate.py).  128 bits cover a whole zone; the
+ * old flat list (16 entries game-wide) silently dropped the 17th kill
+ * while keeping its loot.  Zone 0 means unsettled (fresh boot/new game):
+ * the actor loader settles it to the loaded table's zone without
+ * clearing. */
 typedef struct {
-    ActorId actor_id;
-    uint8_t state; /* ActorStateId */
-} PersistentActorState;
-
-typedef struct {
-    PersistentActorState actors[MAX_PERSISTENT_ACTORS];
-    uint8_t count;
+    uint8_t zone; /* story act of the recorded defeats (level JSON act key) */
+    uint8_t bits[ZONE_DEFEAT_BYTES];
 } WorldState;
 
 /* The canonical, potentially-saveable persistent game state.  Gameplay

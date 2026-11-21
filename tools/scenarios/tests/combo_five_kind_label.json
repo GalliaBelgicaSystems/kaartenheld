@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "combo_five_kind_label",
  "test": true,
  "description": "Five of a kind (SW3 BO3 HE3 DA3 SH3, all symbols) reads FIVE KIND on the live COMBO row while pending, before execution.",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "status_tab",
  "test": true,
  "description": "The HERO tab (RIGHT twice from DECK) shows hero HP, battle AP pool, gold, decked copies and the shared arrow pool; LEFT returns to the QUEST tab",

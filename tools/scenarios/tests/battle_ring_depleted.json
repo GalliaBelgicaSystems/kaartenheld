@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_ring_depleted",
  "test": true,
  "description": "Ring single-use gate (docs/loot.md 34.1): staging a wood ring whose uses are exhausted (uses_remaining = 0) is rejected with a transient 'OUT OF USES!' flash on row 9 -- the ring counterpart of battle_depleted_message. Pairs with battle_health_ring, which proves the 1 -> 0 consumption.",

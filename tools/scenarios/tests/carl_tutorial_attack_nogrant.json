@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "carl_tutorial_attack_nogrant",
   "test": true,
   "description": "Re-spar (or post-skip spar) grants no AP: the attack coaching box opens the no-grant variant (same controls coaching, no TAKE THIS AP handover line). TUTORIAL_SKIPPED is pre-staged so the spar-start grant takes its early-return path; closing the box lands on a standard TARGET CARL banner.",

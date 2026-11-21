@@ -46,8 +46,11 @@
  *   bytes 55..66       : up to 4 party members x {id, hp, max_hp}
  *   byte  67           : inventory count
  *   bytes 68..167      : up to 50 inventory entries x {item_id, quantity}
- *   byte  168          : world (persistent actor) count
+ *   byte  168          : world (persistent actor) count (defeat-bit decode,
+ *                        capped at the 16 listed entries below)
  *   bytes 169..216     : up to 16 world entries x {actor_id_lo, actor_id_hi, state}
+ *                        (decoded from the zone defeat bitmask: set bit
+ *                        (N-1) lists ActorId N DEFEATED)
  *   byte  217          : progression count
  *   bytes 218..265     : up to 8 progression x {type, id_lo, id_hi, level, prog_lo, prog_hi}
  *   byte  266          : equipment weapon
@@ -63,8 +66,10 @@
  *   bytes 295..296     : gold_in LE (loot gold only, §6.1)
  *   bytes 297..298     : gold_out LE (shop spend)
  *   byte  299          : battles-since-update
+ *   byte  300          : zone (story act of the recorded defeats)
+ *   bytes 301..316     : raw zone defeat bitmask (bit (N-1) = ActorId N)
  */
-#define STATE_SNAP_VERSION_BYTE    0x09
+#define STATE_SNAP_VERSION_BYTE    0x0A
 #define STATE_SNAP_FLAGS_OFFSET    1
 #define STATE_SNAP_FLAGS_SIZE      8
 #define STATE_SNAP_VARIABLES_OFFSET  9
@@ -96,7 +101,13 @@
 #define STATE_SNAP_MARKET_GOLD_IN_OFF 295
 #define STATE_SNAP_MARKET_GOLD_OUT_OFF 297
 #define STATE_SNAP_MARKET_BATTLES_OFF 299
-#define STATE_SNAP_TOTAL_SIZE        300
+/* Zone tail (v10, zone defeats §53.8, appended -- never inserted):
+ * recorded zone + the raw 16-byte defeat bitmask (the world section
+ * above decodes only the 16 lowest set ids for the legacy list). */
+#define STATE_SNAP_ZONE_OFF 300
+#define STATE_SNAP_ZONE_BITS_OFF 301
+#define STATE_SNAP_ZONE_BITS_SIZE 16
+#define STATE_SNAP_TOTAL_SIZE        317
 
 /* Scenario initial-state descriptor (g_scen_state_buf) layout (version 0x06).
  * Written by the host STATE_LOAD command and applied by scenario_load_state().
@@ -252,6 +263,12 @@ typedef enum {
      * d2 = direction (1 = up, 2 = down, 3 = toward-100/stay).
      * Emitted on every non-skipped shop-boundary update. */
     EVENT_MARKET_UPDATED,
+    /* Zone defeat-mask clear (zone-scoped defeats, AGENTS.md §53.8,
+     * append-only wire contract): d0 = old zone, d1 = new zone.
+     * Emitted by the banked scene loader when entering a new zone
+     * wipes the old zone's bits (leaving a zone respawns it).  Silent
+     * settles (zone 0 on boot/staged setup) emit nothing. */
+    EVENT_ZONE_CHANGED,
 } GameEventType;
 
 typedef struct {

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "currency_initial",
  "test": true,
  "description": "Currency is injectable via initial_state and assertable as a semantic currency (not a variable)",

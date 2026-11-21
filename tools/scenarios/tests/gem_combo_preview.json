@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "gem_combo_preview",
  "test": true,
  "description": "Preview == resolve agreement for the short straight: staged SW4 + BO5 + SW6 (gem equipped, unsuited) reads SHORT STR DMG19 on the COMBO row before confirming.",

@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "merchant_shop_open",
  "test": true,
  "description": "Finding the shop keys unlocks the shop via delivery: first talk holding it fires THANKS (+15 gold, shop keys removed, quest COMPLETE); closing and talking again opens the shop with the one-copy ring+bow stock",

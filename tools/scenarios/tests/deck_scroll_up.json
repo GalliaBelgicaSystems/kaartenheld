@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "deck_scroll_up",
  "test": true,
  "description": "DECK-tab scroll-up indicator (per-side windows): with 10 pile groups scrolled to the bottom (10 DOWN presses from the FILTER row), row 4 shows the up caret on the pile side only -- the deck window never moved (its 3 starter rows stay at the top, nothing above them), while the row-14 down caret is gone (nothing left below the pile window).",

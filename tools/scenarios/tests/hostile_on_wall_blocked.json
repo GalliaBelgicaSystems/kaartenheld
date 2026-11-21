@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "hostile_on_wall_blocked",
  "test": true,
  "description": "A HOSTILE actor placed on unwalkable art (wall_slime at (3,1) in TEST_MOUNTAIN_PASS) must NOT be engageable: walkability gates actor resolution, so bumping the wall from (4,1) is blocked and no encounter starts. Regression for the move-order (actor checks before walkability).",

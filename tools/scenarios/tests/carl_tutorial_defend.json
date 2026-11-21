@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "carl_tutorial_defend",
   "test": true,
   "description": "After the first player attack resolves, Carl's 0-damage swing telegraphs into the first DEFEND phase, which opens his shield coaching box instead of a row hint",

@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "new_game",
  "test": true,
  "description": "Verify initial game state after boot",

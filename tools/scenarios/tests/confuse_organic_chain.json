@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "confuse_organic_chain",
  "test": true,
  "description": "Organic poison chains into confusion: the castle bat's fixed-order deck replays its poison bow every 5th swing -- that swing's 60/255 rider can land on the hero (STATUS_APPLIED id 1 with no debug action anywhere in this scenario), and rounds keep resolving after (CARD_PLAYED liveness; the confused-autoplay link itself is pinned by hero_confuse_autoplay). 30 SELECTs cover ~15 swings (three poison swings), the bat is staged at 60 HP so the hero's own attacks can never end the fight early, and the hero at 99 HP outlasts the incoming damage. Only the 60/255 roll varies by seed.",

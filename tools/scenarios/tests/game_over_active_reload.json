@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "game_over_active_reload",
  "test": true,
  "description": "Game-over YES reloads the active slot directly with no picker: slot 1 saved, hero dies, A on Continue lands back in the overworld and emits GAME_LOADED.",

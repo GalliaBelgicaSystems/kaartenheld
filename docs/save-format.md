@@ -9,12 +9,12 @@ Battery-backed SRAM persistence of the canonical `GameState`
 * MBC5 cart with RAM + battery (header cart type `0x1B`, RAM size 8 KB).
 * SRAM base `0xA000`.
 
-## Layout (version 7)
+## Layout (version 8)
 
 | Offset | Size | Field |
 |---|---|---|
 | 0xA000 | 2 | magic `0x5247` (`"GR"`) |
-| 0xA002 | 1 | format version (`SAVE_VERSION = 7`) |
+| 0xA002 | 1 | format version (`SAVE_VERSION = 8`) |
 | 0xA003 | 1 | checksum |
 | 0xA004 | `sizeof(GameState)` | the serialized `GameState` |
 
@@ -29,7 +29,9 @@ Battery-backed SRAM persistence of the canonical `GameState`
   `GameState` layout or field semantics change in a way that breaks old
   saves.
 * A loader must reject a version it does not understand (it already does).
-  Version 6 and older saves are rejected outright (v6 predates the
+  Version 7 and older saves are rejected outright (v8 replaces the flat
+  16-entry world list with the zone bitmask, so defeats/progression/
+  economy would decode shifted; v6 predates the
   second currency slot, so world/progression/economy would decode
   shifted; v5 predates the
   `CARD_FIRE_SWORD` -> plain `CARD_BRONZE_SWORD` rename on id 0x43, so a
@@ -38,6 +40,9 @@ Battery-backed SRAM persistence of the canonical `GameState`
   struct fails their checksum); the demo ships no
   migration while the loot CardId space is still changing.
 * v6 is the rename bump (same id, new meaning -- rejection, not migration).
+* v8 is the zone-bitmask bump (WorldState 49 B -> 17 B: zone + 128
+  defeat bits; leaving a zone respawns its enemies -- rejection, not
+  migration).
 * v7 is the arrows bump (second currency slot shifts world/progression/
   economy by 2 bytes -- rejection, not migration).
 * v5 appends `EconomyState` (docs/economy.md §6: market index, gold
@@ -45,8 +50,9 @@ Battery-backed SRAM persistence of the canonical `GameState`
 * Future migrations should read the old version and upgrade in place before
   writing back.
 * `GameState` is the *only* persistent payload: scene, party, inventory,
-  flags, variables, currency, persistent world actor state, progression,
-  equipment.  Runtime state (`Battle`, `DialogueState`, `World.actors` HP,
+  flags, variables, currency, zone defeat bitmask (`WorldState.zone` +
+  128 bits), progression, equipment.  Runtime state (`Battle`,
+  `DialogueState`, `World.actors` HP,
   the active screen) is never saved; it is rebuilt from `GameState` on load.
 
 ## Harness coverage
@@ -60,8 +66,10 @@ poke (raw SRAM byte write with the MBC5 RAM gate opened first):
 `save_version_accept` saves GOLD 50, gains 25 and loads -- GOLD reads 50
 again (control: the save path works); `save_version_reject` does the same
 but backdates slot 1's version byte (`0xA002`) to 2 before loading, then
-pokes it forward to 7 (a future version) -- GOLD stays 75 both times,
-proving the load is refused and state untouched.
+pokes it forward to 9 (a future version) -- GOLD stays 75 both times,
+proving the load is refused and state untouched.  `actor_defeat_save_load`
+pins the zone defeat bitmask through the same roundtrip (staged defeats
+survive save/mutate/load while saved gold is restored).
 
 Power-cycle persistence (writing SRAM to a `.sav` file on hardware/mGBA) is
 emulator/hardware behavior and is not covered by the in-session harness test.

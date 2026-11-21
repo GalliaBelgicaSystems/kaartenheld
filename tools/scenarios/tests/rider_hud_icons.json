@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "rider_hud_icons",
  "test": true,
  "description": "Cards carrying fire/freeze riders show their OAM icons inset over their own top-right corners (entries 19/20) from the moment they are dealt, with no selection; a riderless card shows nothing (entry 21 hidden). Injected statuses bypass legality; the bow types reflect the new rider hosts.",

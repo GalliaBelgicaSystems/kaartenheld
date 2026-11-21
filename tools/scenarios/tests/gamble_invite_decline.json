@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_invite_decline",
   "test": true,
   "description": "Answering NO on Nis's invite (RIGHT then A) walks away: back to overworld, gold untouched, NO choice recorded.",

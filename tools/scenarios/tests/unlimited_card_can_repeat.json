@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "unlimited_card_can_repeat",
  "test": true,
  "description": "An unlimited card (uses 0xFF) can be played in consecutive turns: HE5 heals on turn 1 and again on turn 2 after a full defend cycle (defend timer expiry keeps the hand full so no reshuffle eats the next select). Proves unlimited cards never deplete and the phase loop returns to PLAYER_SELECT.",

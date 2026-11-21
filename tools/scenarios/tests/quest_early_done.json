@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "quest_early_done",
  "test": true,
  "description": "Kills done before accepting: with the quest NOT_STARTED and 3 monsters already slain, the first talk takes the early-turn-in path (MAYOR_EARLY, not MAYOR_INTRO): MET_MAYOR set, +1 AP, quest jumps straight to COMPLETE",

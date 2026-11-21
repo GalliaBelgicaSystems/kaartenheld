@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "heal_mage_ring_lesson_text",
   "test": true,
   "description": "The ring lesson's final page teaches the defense rule: a ring adds no block but converts over-block into healing. The ask takes one confirm first (talk, YES, then lesson pages), so this stops with page 3 open to assert the exact wording.",
@@ -6,7 +7,7 @@
     "scene": "TEST_TOWN",
     "player": {"x": 12, "y": 9, "facing": "DOWN"},
     "seed": 1007,
-    "flags": {"ARRIVED_TOWN": true},
+    "flags": {"ARRIVED_TOWN": true, "TUTORIAL_SPAR_WON": true},
     "variables": {"QUEST_MONSTER_HUNT": 2, "MERCHANT_QUEST": 2},
     "world": {"CARL_FIELD": "DEFEATED"},
     "inventory": {"IRON_RING": 1},

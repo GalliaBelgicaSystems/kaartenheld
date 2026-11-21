@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "oam_tiles_survive_battle",
  "test": true,
  "description": "OAM tile VRAM survives a full battle roundtrip under the time-share contract: boot TEST_FIELD, beat Carl, return to the overworld, then assert the overworld-owned ids hold overworld art byte-for-byte (hero idle at 96/97, blob tail chest-open + kobold/knight idle at 123/124/125, marks at 126/127). Battles stream pips over 96/97 and riders over 123-125; overworld entry restores both. A missing restore fails here while every tile-id assert stays green.",

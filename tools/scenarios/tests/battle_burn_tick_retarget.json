@@ -1,4 +1,5 @@
 {
+ "act": "always",
   "name": "battle_burn_tick_retarget",
   "test": true,
   "description": "REGRESSION: trio, enemy0 at 2HP + BURN, chipped to 1HP, burn tick kills it at the next turn start. The step-off-corpse must retarget (TARGET_CHANGED) before the second attack, so exactly one ENTITY_DEFEATED fires and the damage lands on a live enemy.",

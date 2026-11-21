@@ -1,4 +1,5 @@
 {
+ "act": 1,
  "name": "heal_mage_refused_tip",
  "test": true,
  "description": "Repeat visit after the one free heal: the refusal lecture continues onto page 2 with the combat-healing tip (buy the ring from the merchant), no heal, no jingle",

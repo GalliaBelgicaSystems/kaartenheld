@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "gamble_invite",
   "test": true,
   "description": "Bumping Nis the kobold opens his rules dialogue (not the table): speaker tag, rules page, choice page with the stake-50 prize teaser and YES default.",

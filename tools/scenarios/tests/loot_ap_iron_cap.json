@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "loot_ap_iron_cap",
  "test": true,
  "description": "Rank-only loot (docs/enemies_ranking.md \u00a74.3/\u00a78.1): pool 4 is staged (the old AP-4 iron cap) but the drop is unaffected -- seed 76 on the R3 kobold rolls the identical STEEL SWORD (id 192) as pool 5 (loot_ap_steel). Rank decides quality; AP only unlocks equipping.",

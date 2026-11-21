@@ -1,5 +1,6 @@
 {
   "id": "test_gamble",
+  "act": 1,
   "name": "TEST Chuck-a-Luck Den",
   "map": {
     "width": 20,

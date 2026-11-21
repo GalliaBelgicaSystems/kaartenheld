@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "battle_hand_tiles_highcard",
  "test": true,
  "description": "High card (no poker tier) leaves row 10 blank: no name tiles in VRAM, buffer or palette.",

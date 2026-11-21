@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "confuse_despair_floor",
  "test": true,
  "description": "Confused self-harm is capped at 5 (the Lord of Slimes no longer nearly one-shots itself): a poisoned Lord turns its telegraphed swing (6) on itself for 5 -- 60 minus the hero\u2019s 1-chip minus 5 capped self-harm leaves 54 HP, above the 20-HP hold threshold, so no FOCUSING hold opens yet and the fight continues (TARGET phase) with no ENTITY_DEFEATED and no BATTLE_WON.",

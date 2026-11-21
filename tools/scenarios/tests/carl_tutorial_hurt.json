@@ -1,4 +1,5 @@
 {
+ "act": 1,
   "name": "carl_tutorial_hurt",
   "test": true,
   "description": "Ignoring the flee lesson and attacking again earns one looping jeer per attack (UCH!, EW!, ...) instead of re-teaching the tutorial; each coaching box shows exactly once and the second jeer proves the loop index advances",

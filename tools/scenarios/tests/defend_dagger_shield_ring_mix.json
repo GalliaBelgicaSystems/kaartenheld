@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "defend_dagger_shield_ring_mix",
  "test": true,
  "description": "Mixed shield + dagger + ring: the daggers are lost (no counter -- exactly one DAMAGE_DEALT, the opener SW1, kobold 15->14) while the ring wildcards the shield into a PAIR ((5)x120%=6 block vs the telegraphed 2, flat SH5 alone would block 5). All three staged cards are eaten (CARD_PLAYED x4); at full HP the over-block heals nothing.",

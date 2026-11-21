@@ -1,4 +1,5 @@
 {
+ "act": "always",
  "name": "hero_walking",
  "test": true,
  "description": "Moving hero shows walk frames (OAM 98/99), never idle: press LEFT from (13,8), step 4 mid-walk. Companion to hero_idle_standing (standing shows 96/97).",
@@ -19,7 +20,7 @@
   },
   {
    "type": "oam_tile",
-   "entry": 0,
+   "entry": 38,
    "expected": 98
   }
  ],
