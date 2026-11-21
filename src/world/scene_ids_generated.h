@@ -24,6 +24,7 @@
 #define MAP_DEMO_END_WAKE_SCENE 23
 #define MAP_ACT2_FIELD 24
 #define MAP_ACT2_TOWN 25
+#define MAP_ACT2_RUINS 26
 
 /* No neighbor on an edge (SceneDefinition neighbor_n/s/e/w). */
 #define MAP_NONE 0xFF
@@ -33,7 +34,7 @@
  * count: after a delete, ids are sparse and the old len(scenes)
  * would reject the highest live id at runtime (NULL scene def).
  * Engine guards MUST use this, never a named max id. */
-#define MAP_REAL_COUNT 26
+#define MAP_REAL_COUNT 27
 
 #define SCENE_FIELD 0
 #define SCENE_TOWN 1
@@ -54,6 +55,7 @@
 #define SCENE_DEMO_END_WAKE_SCENE 23
 #define SCENE_ACT2_FIELD 24
 #define SCENE_ACT2_TOWN 25
+#define SCENE_ACT2_RUINS 26
 
 /* Frozen harness-test fixtures (debug build only). Fixed block,
  * never moves: real ids grow upward from 0 and can never reach it. */

@@ -114,6 +114,8 @@ void travel_open_supply(uint8_t route);
 bool game_travel_active(void);
 void travel_on_victory(void);
 bool game_travel_consume_defeat(struct Game *g);
+void travel_resume_from_ruins(struct Game *g);
+bool game_travel_in_ruins(void);
 #endif
 void game_events_register(void);void game_dialogue_register(void);
 void game_actors_register(void);

@@ -321,6 +321,30 @@ const DialogueDefinition g_dialogues[] = {
         1
     },
     {
+        DIALOGUE_ID_RUINS_CHEST_AP,
+        "CHEST:",
+        3,
+        {"OLD RELIC! AP up!", "The road will cost", "one more day."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_RUINS_CHEST_EMPTY,
+        "CHEST:",
+        2,
+        {"EMPTY. NOTHING", "LEFT INSIDE."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_RUINS_LEAVE,
+        "",
+        2,
+        {"LEAVE RUINS?", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_SHOPKEYS_FOUND,
         "",
         3,

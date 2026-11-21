@@ -62,6 +62,42 @@ const EventDefinition g_events[] = {
         1,
         {{ EVENT_ACTION_JOURNEY_START, 0, 0, 0 }}
     },
+    {
+        /* Sunken-ruins AP chest (travel demo, one-shot via its own
+         * flag): the relic raises the pool by 1 and warns the road
+         * will cost one more day (burned on the way out). */
+        EVENT_ID_RUINS_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, MAP_ACT2_RUINS,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, false, false }},
+        4,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_RUINS_CHEST_AP, 0, 0 },
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, 0 },
+            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
+        }
+    },
+    {
+        /* Sunken-ruins exit (travel demo): the first-room signpost
+         * asks LEAVE RUINS? (YES/NO); YES resumes the journey
+         * through choice code 12, NO closes plainly. */
+        EVENT_ID_RUINS_EXIT, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_RUINS,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_RUINS_LEAVE, 0, 0 }}
+    },
+    {
+        /* Opened ruins chest (travel demo): the relic is gone, so
+         * repeats report empty here instead of falling through to
+         * the any-map CHEST_LOCKED row (which demands the dog's
+         * Old Key and would misreport a looted chest as locked). */
+        EVENT_ID_RUINS_CHEST_EMPTY, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, MAP_ACT2_RUINS,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, true, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_RUINS_CHEST_EMPTY, 0, 0 }}
+    },
 #endif
     {
         EVENT_ID_TOWN_ARRIVAL, EVENT_TRIGGER_MAP_ENTER, ENTITY_ID_NONE, MAP_TOWN,

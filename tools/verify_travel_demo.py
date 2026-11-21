@@ -12,6 +12,11 @@ inside `nix develop` for PyBoy)
   defeat:  lose on purpose (HP floor 1, +1 step, resume)
   flee:    flee resumes the journey
   days:    day burn, zero crossing, late-buffed slime
+  ruins:   route pool forced to [ruins_sight] @100% (rebuild ROM
+           first): EXPLORE enters the 3-room map with no day burn,
+           the relic chest grants +1 AP, LEAVE RUINS? YES resumes
+           the journey costing one extra day, trip arrives.
+  ruins_ignore: same tuning; IGNORE keeps the schedule, no day burn.
   full:    shipped tuning (35%, mixed pool); asserts arrival only.
 
 Drives: field boot -> signpost -> JOURNEY -> steps/events -> village.
@@ -34,6 +39,7 @@ SCREEN_JOURNEY = 16
 SCENE_FIELD = 0
 SCENE_ACT2_FIELD = 24
 SCENE_ACT2_TOWN = 25
+SCENE_ACT2_RUINS = 26
 
 
 class D:
@@ -87,6 +93,9 @@ class D:
 
     def day(self):
         return self.r.variable(10)
+
+    def ap(self):
+        return self.r.variable(6)
 
     def total_steps(self):
         import struct
@@ -437,12 +446,14 @@ def test_days():
     """Day counter: steps and victories burn days; zero flips the Lord
     supreme (buffed late ambushes + LATE! row).
     NOTE: run with a long route (steps=99, ambush pool @255) so retries
-    can never arrive mid-test; restore shipped tuning afterwards."""
+    can never arrive mid-test; restore shipped tuning afterwards.
+    (With the shipped 10-step route the walk below still fits: it
+    advances ~5 times, so arrival cannot trigger.)"""
     d = D()
     try:
         boot_to_journey(d)
         select_foot(d)
-        assert d.total_steps() >= 50, d.total_steps()
+        assert d.total_steps() >= 10, d.total_steps()
         assert d.day() == 180, d.day()
         assert d.text_has("DAYS 180"), d.rows()
         d.press("a", settle=20)  # advance: step + day (always burns 1)
@@ -556,14 +567,14 @@ def test_supply():
         assert d.wait_for(lambda: d.text_has("FOOD"), ticks=300), d.rows()
         assert d.text_has("WATER"), d.rows()
         assert d.text_has("LEAVE"), d.rows()
-        assert d.food() == 6 and d.water() == 12, (d.food(), d.water())
+        assert d.food() == 12 and d.water() == 24, (d.food(), d.water())
         d.press("a", settle=20)  # buy FOOD (2G)
         assert d.gold() == 18, d.gold()
-        assert d.food() == 7, d.food()
+        assert d.food() == 13, d.food()
         d.press("down", settle=12)  # select WATER
         d.press("a", settle=20)  # buy WATER (1G)
         assert d.gold() == 17, d.gold()
-        assert d.water() == 13, d.water()
+        assert d.water() == 25, d.water()
         d.press("down", settle=12)  # select LEAVE
         assert d.wait_for(lambda: d.text_has("> LEAVE"), ticks=200), d.rows()
         d.press("a", settle=20)  # leave
@@ -599,11 +610,209 @@ def test_starve():
         d.close()
 
 
+def _walk_ruins_to(d, tx, ty):
+    """Greedy corridor walk inside the ruins (enemies stationary)."""
+    for _ in range(150):
+        st = d.scene()
+        if (st["player_x"], st["player_y"]) == (tx, ty):
+            return True
+        if d.screen() == SCREEN_BATTLE:
+            assert win_fight(d), "ruins fight lost?"
+            assert d.wait_for(lambda: d.screen() == SCREEN_OVERWORLD,
+                              ticks=600)
+            continue
+        x, y = st["player_x"], st["player_y"]
+        if x < tx:
+            d.press("right", settle=14)
+        elif x > tx:
+            d.press("left", settle=14)
+        elif y < ty:
+            d.press("down", settle=14)
+        elif y > ty:
+            d.press("up", settle=14)
+        else:
+            return True
+    return False
+
+
+def _dismiss_dialogue(d):
+    for _ in range(12):
+        if d.screen() == SCREEN_OVERWORLD:
+            break
+        d.press("a", settle=30)
+        d.tick(30)
+    assert d.screen() == SCREEN_OVERWORLD, "dialogue did not close"
+
+
+def _journey_until_ruins(d, ignore_first):
+    """Walk one journey; returns 'explored' once the ruins prompt is
+    confirmed with EXPLORE, 'ignored' after an IGNORE, 'town' on
+    arrival without any ruins prompt (caller reboots and retries)."""
+    for _ in range(60):
+        st = d.scene()
+        if st["scene_id"] == SCENE_ACT2_TOWN:
+            return "town"
+        sc = d.screen()
+        if sc == SCREEN_BATTLE:
+            assert win_fight(d)
+            d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
+            d.press("a", settle=20)
+            continue
+        if sc != SCREEN_JOURNEY:
+            return "overworld?"
+        if d.text_has("AMBUSH!"):
+            d.press("a", settle=30)
+            assert d.wait_for(lambda: d.screen() == SCREEN_BATTLE,
+                              ticks=600), "no battle"
+            assert win_fight(d), "ambush lost?"
+            assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                              ticks=600)
+            d.press("a", settle=20)
+        elif d.text_has("YOU SPOT OLD RUINS"):
+            if ignore_first:
+                day0 = d.day()
+                total0 = d.total_steps()
+                d.press("down", settle=12)  # toggle to IGNORE
+                assert d.wait_for(lambda: d.text_has("EXPLORE>IGNORE"),
+                                  ticks=200), d.rows()
+                d.press("a", settle=20)
+                assert d.wait_for(lambda: d.text_has("YOU WALK ON."),
+                                  ticks=300), d.rows()
+                assert d.gold() == d.gold(), d.gold()
+                d.press("a", settle=20)
+                assert d.day() == day0, (d.day(), day0)
+                assert d.total_steps() == total0, d.total_steps()
+                print("ignore OK: no reward, no day burn, schedule kept")
+                return "ignored"
+            day0 = d.day()
+            assert d.text_has(">EXPLORE"), d.rows()
+            d.press("a", settle=30)  # EXPLORE
+            assert d.wait_for(lambda: d.screen() == SCREEN_OVERWORLD,
+                              ticks=600), "no ruins map (screen=%d)" % d.screen()
+            st = d.scene()
+            assert st["scene_id"] == SCENE_ACT2_RUINS, st
+            assert d.day() == day0, "entry must not burn days"
+            print("explore OK: ruins map, day untouched (%d)" % day0)
+            return "explored"
+        elif d.text_has("TRAVELER NEEDS"):
+            d.press("a", settle=20)  # help
+            d.wait_for(lambda: d.text_has("YOU SHARE"), ticks=300)
+            d.press("a", settle=20)
+        else:
+            d.press("a", settle=20)
+    return "timeout"
+
+
+def _finish_trip(d):
+    for _ in range(80):
+        st = d.scene()
+        if st["scene_id"] == SCENE_ACT2_TOWN:
+            break
+        if d.screen() == SCREEN_BATTLE:
+            assert win_fight(d)
+            d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
+            d.press("a", settle=20)
+        elif d.screen() == SCREEN_JOURNEY:
+            if d.text_has("AMBUSH!"):
+                d.press("a", settle=30)
+            elif d.text_has("TRAVELER NEEDS"):
+                d.press("down", settle=12)
+                d.press("a", settle=20)
+                d.wait_for(lambda: d.text_has("YOU WALK ON."), ticks=300)
+                d.press("a", settle=20)
+            elif d.text_has("YOU SPOT OLD RUINS"):
+                d.press("down", settle=12)
+                d.press("a", settle=20)
+                d.wait_for(lambda: d.text_has("YOU WALK ON."), ticks=300)
+                d.press("a", settle=20)
+            else:
+                d.press("a", settle=20)
+        else:
+            d.tick(30)
+    st = d.scene()
+    assert st["scene_id"] == SCENE_ACT2_TOWN, st
+
+
+def test_ruins():
+    """Roadside ruins (shipped tuning, reboot until the prompt stages):
+    EXPLORE -> 3-room map, relic chest +1 AP, LEAVE RUINS? YES resumes
+    the journey costing one extra day, trip still arrives."""
+    d = None
+    try:
+        for _ in range(5):
+            d = D()
+            boot_to_journey(d)
+            select_foot(d)
+            res = _journey_until_ruins(d, False)
+            print("ruins attempt -> %s" % res)
+            if res == "explored":
+                break
+            d.close()
+            d = None
+        assert d is not None, "never rolled ruins in 5 boots?"
+        assert _walk_ruins_to(d, 5, 6), d.scene()
+        assert _walk_ruins_to(d, 7, 6), d.scene()
+        assert _walk_ruins_to(d, 12, 6), d.scene()
+        assert _walk_ruins_to(d, 14, 6), d.scene()
+        assert _walk_ruins_to(d, 15, 6), d.scene()
+        ap0 = d.ap()
+        d.press("right", settle=20)  # bump the relic chest
+        assert d.wait_for(lambda: d.screen() != SCREEN_OVERWORLD,
+                          ticks=300), "no chest dialogue"
+        assert d.wait_for(lambda: d.text_has("OLD RELIC!"), ticks=300), \
+            d.rows()
+        _dismiss_dialogue(d)
+        assert d.ap() == ap0 + 1, (d.ap(), ap0)
+        print("chest OK: AP %d -> %d" % (ap0, d.ap()))
+        assert _walk_ruins_to(d, 13, 6), d.scene()
+        assert _walk_ruins_to(d, 6, 6), d.scene()
+        assert _walk_ruins_to(d, 2, 6), d.scene()
+        assert _walk_ruins_to(d, 2, 2), d.scene()
+        day0 = d.day()
+        d.press("up", settle=20)  # bump the exit signpost
+        assert d.wait_for(lambda: d.text_has("LEAVE RUINS?"), ticks=300), \
+            d.rows()
+        d.press("a", settle=30)  # YES
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=600), "no journey resume (screen=%d)" % d.screen()
+        assert d.day() == day0 - 1, (d.day(), day0)
+        print("leave OK: looted exit cost +1 day (%d -> %d)"
+              % (day0, d.day()))
+        _finish_trip(d)
+        print("ruins trip OK; AP %d" % d.ap())
+    finally:
+        if d is not None:
+            d.close()
+
+
+def test_ruins_ignore():
+    """IGNORE on the ruins prompt: no detour, no day burn, schedule kept."""
+    d = None
+    try:
+        for _ in range(5):
+            d = D()
+            boot_to_journey(d)
+            select_foot(d)
+            res = _journey_until_ruins(d, True)
+            print("ruins-ignore attempt -> %s" % res)
+            if res == "ignored":
+                break
+            d.close()
+            d = None
+        assert d is not None, "never rolled ruins in 5 boots?"
+        _finish_trip(d)
+        print("ruins-ignore trip OK")
+    finally:
+        if d is not None:
+            d.close()
+
+
 def test_full():
     d = D()
     try:
         boot_to_journey(d)
         select_foot(d)
+        seen = 0
         for _ in range(40):
             st = d.scene()
             if st["scene_id"] == SCENE_ACT2_TOWN:
@@ -614,10 +823,22 @@ def test_full():
                 d.press("a", settle=20)
             elif d.screen() == SCREEN_JOURNEY:
                 if d.text_has("TRAVELER NEEDS"):
+                    seen += 1
                     d.press("a", settle=20)  # help
                     d.wait_for(lambda: d.text_has("YOU SHARE"), ticks=300)
                     d.press("a", settle=20)
                 elif d.text_has("AMBUSH!"):
+                    seen += 1
+                    d.press("a", settle=20)
+                elif d.text_has("YOU SPOT OLD RUINS"):
+                    seen += 1
+                    # full trip skips the detour: IGNORE keeps the schedule
+                    d.press("down", settle=12)  # toggle to IGNORE
+                    assert d.wait_for(lambda: d.text_has("EXPLORE>IGNORE"),
+                                      ticks=200), d.rows()
+                    d.press("a", settle=20)
+                    assert d.wait_for(lambda: d.text_has("YOU WALK ON."),
+                                      ticks=300), d.rows()
                     d.press("a", settle=20)
                 else:
                     d.press("a", settle=20)
@@ -625,7 +846,10 @@ def test_full():
                 d.tick(30)
         st = d.scene()
         assert st["scene_id"] == SCENE_ACT2_TOWN, st
-        print("full-trip arrival OK; gold %d" % d.gold())
+        # on-foot guarantee: at least one random event per journey
+        assert seen >= 1, "no random event on foot trip?"
+        print("full-trip arrival OK; gold %d; events %d"
+              % (d.gold(), seen))
     finally:
         d.close()
 
@@ -652,5 +876,9 @@ if __name__ == "__main__":
         test_nogold()
     elif mode == "days":
         test_days()
+    elif mode == "ruins":
+        test_ruins()
+    elif mode == "ruins_ignore":
+        test_ruins_ignore()
     else:
         test_full()

@@ -74,6 +74,9 @@
 #ifdef TRAVEL_DEMO
 #define EVENT_ID_TRAVEL_DEMO    (EVENT_ID_FIRST_GAME + 29)
 #define EVENT_ID_TRAVEL_SUPPLY  (EVENT_ID_FIRST_GAME + 30)
+#define EVENT_ID_RUINS_CHEST    (EVENT_ID_FIRST_GAME + 31)
+#define EVENT_ID_RUINS_EXIT     (EVENT_ID_FIRST_GAME + 32)
+#define EVENT_ID_RUINS_CHEST_EMPTY (EVENT_ID_FIRST_GAME + 33)
 #endif
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
@@ -126,7 +129,12 @@ typedef enum {
                                        * first-victory bronze shield */
     STORY_FLAG_ID_SLIME_LORD_INTRO = 13, /* Lord of Slimes throne-room intro
                                           * dialogue played (advancing 5 rows) */
+#ifdef TRAVEL_DEMO
+    STORY_FLAG_ID_RUINS_CHEST = 14, /* sunken-ruins AP chest (demo only) */
+    STORY_FLAG_ID_COUNT        = 15
+#else
     STORY_FLAG_ID_COUNT        = 14
+#endif
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -197,7 +205,7 @@ typedef enum {
  * build) is full.  Keep in sync with events_content.c's `#pragma bank`. */
 #define GAME_EVENT_BANK  10
 #ifdef TRAVEL_DEMO
-#define GAME_EVENT_COUNT 31
+#define GAME_EVENT_COUNT 34
 #else
 #define GAME_EVENT_COUNT 29
 #endif

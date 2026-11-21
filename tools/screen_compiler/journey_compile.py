@@ -21,6 +21,8 @@ Event schemas (kind):
     choice: text (<=20, prompt), help_text (<=20, result line),
             help_reward_gold (0..30000), help_delay_steps (0..255),
             ignore_text (<=20).
+    ruins: text (<=20, prompt), explore_text (<=20, enter line),
+            ignore_text (<=20).
 
 Usage:
     python3 tools/screen_compiler/journey_compile.py --all -o src/game/travel_content.c
@@ -148,8 +150,17 @@ def load_events(battle_ids):
                            "text": doc["text"], "help_text": doc["help_text"],
                            "ignore_text": doc["ignore_text"],
                            "gold": gold, "delay": delay, "ignore": ignore})
+        elif kind == "ruins":
+            check_text("text", doc.get("text"), eid)
+            check_text("explore_text", doc.get("explore_text"), eid)
+            check_text("ignore_text", doc.get("ignore_text"), eid)
+            events.append({"id": eid, "kind": "ruins",
+                           "text": doc["text"],
+                           "help_text": doc["explore_text"],
+                           "ignore_text": doc["ignore_text"],
+                           "gold": 0, "delay": 0, "ignore": 0})
         else:
-            fail("%s: kind must be 'battle' or 'choice'" % eid)
+            fail("%s: kind must be 'battle', 'choice' or 'ruins'" % eid)
     if not events:
         fail("no events in journeys/events/")
     return events
@@ -308,7 +319,10 @@ def emit(routes, events, scenes, battle_ids):
             lines.append('        "", /* text2 */')
             lines.append('        "", /* text3 */')
         else:
-            lines.append("        TRAVEL_EVENT_CHOICE,")
+            if e["kind"] == "ruins":
+                lines.append("        TRAVEL_EVENT_RUINS,")
+            else:
+                lines.append("        TRAVEL_EVENT_CHOICE,")
             lines.append("        0, /* battle */")
             lines.append('        "", /* enemy_name (unused) */')
             lines.append("        0, /* enemy_hp */")

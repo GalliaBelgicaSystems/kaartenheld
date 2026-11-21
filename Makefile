@@ -387,7 +387,7 @@ levels-check:
 	@python3 tools/level_compiler/validate.py levels/*.json
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c --check
 
-src/game/scenes_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b7.c src/game/scenes_terrain_b9.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
+src/game/scenes_content.c src/game/actors_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b9.c src/game/scenes_terrain_b11.c src/game/scenes_terrain_b12.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c
 # ^ Also (re)generates src/world/scene_ids_generated.h (MAP_*/SCENE_* values
 # from levels/registry.json) as a side effect; the wildcard above includes

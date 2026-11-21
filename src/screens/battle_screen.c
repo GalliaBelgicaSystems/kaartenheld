@@ -79,7 +79,7 @@ void battle_screen_update(Game *g)
                 } else {
                     world_on_battle_fled(g);
 #ifdef TRAVEL_DEMO
-                    if (game_travel_active()) {
+                    if (game_travel_active() && !game_travel_in_ruins()) {
                         screen_change(g, SCREEN_JOURNEY);
                     } else {
 #endif

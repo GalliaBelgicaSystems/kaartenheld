@@ -130,6 +130,15 @@ void dialogue_screen_update(Game *g)
             g->title_menu_index = 0;
             screen_change(g, SCREEN_TITLE);
             return;
+#ifdef TRAVEL_DEMO
+        } else if (g_bk_byte_a == 12) {
+            /* Sunken-ruins exit confirmed (YES on LEAVE RUINS?):
+             * close the dialogue, burn the looted day if the chest
+             * was opened, and return to the journey screen. */
+            dialogue_end(&g->dialogue);
+            travel_resume_from_ruins(g);
+            return;
+#endif
         } else if (g_bk_byte_a == 6) {
 #ifdef DEBUG_BUILD
             if (g_bk_byte_b) telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);

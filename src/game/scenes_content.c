@@ -716,6 +716,31 @@ static const SceneTerrainBlock s_underground_tunnel_south_terrain[] = {
     { 0, 0, 0, 0, 0 }
 };
 
+static const SceneTerrainBlock s_act2_ruins_terrain[] = {
+    { 0, 0, 1, 1, TILE_CASTLE_00 },
+    { 1, 0, 18, 1, TILE_CASTLE_01 },
+    { 19, 0, 1, 1, TILE_CASTLE_02 },
+    { 0, 1, 1, 12, TILE_CASTLE_03 },
+    { 6, 1, 1, 5, TILE_CASTLE_03 },
+    { 13, 1, 1, 5, TILE_CASTLE_03 },
+    { 19, 1, 1, 12, TILE_CASTLE_04 },
+    { 3, 3, 1, 1, TILE_CASTLE_18 },
+    { 10, 3, 1, 1, TILE_CASTLE_18 },
+    { 16, 3, 1, 1, TILE_CASTLE_18 },
+    { 4, 4, 1, 1, TILE_CASTLE_15 },
+    { 15, 5, 1, 1, TILE_CASTLE_15 },
+    { 6, 7, 1, 6, TILE_CASTLE_03 },
+    { 13, 7, 1, 6, TILE_CASTLE_03 },
+    { 3, 9, 1, 1, TILE_CASTLE_19 },
+    { 10, 9, 1, 1, TILE_CASTLE_19 },
+    { 16, 9, 1, 1, TILE_CASTLE_19 },
+    { 11, 10, 1, 1, TILE_CASTLE_15 },
+    { 0, 13, 1, 1, TILE_CASTLE_09 },
+    { 1, 13, 18, 1, TILE_CASTLE_10 },
+    { 19, 13, 1, 1, TILE_CASTLE_11 },
+    { 0, 0, 0, 0, 0 }
+};
+
 extern const SceneTerrainBlock s_desolate_field_terrain[];
 extern const SceneTerrainBlock s_field_terrain[];
 extern const SceneTerrainBlock s_forest_terrain[];
@@ -756,5 +781,6 @@ const SceneDefinition g_scenes[] = {
     { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_DEMO_END_WAKE_SCENE, MUSIC_UNDERGROUND, 24, 18, 0,                   0, WORLD_TILESET_UNDERGROUND, s_demo_end_wake_scene_terrain, 12, 10, DIRECTION_UP,    TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 9, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_ACT2_FIELD,      MUSIC_OVERWORLD,   24, 18, 0,                   0, WORLD_TILESET_FOREST,    s_act2_field_terrain, 17, 7, DIRECTION_LEFT,  TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 12, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
-    { MAP_ACT2_TOWN,       MUSIC_TOWN,        20, 18, 0,                   0, WORLD_TILESET_VILLAGE,   s_act2_town_terrain, 2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 11, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }
+    { MAP_ACT2_TOWN,       MUSIC_TOWN,        20, 18, 0,                   0, WORLD_TILESET_VILLAGE,   s_act2_town_terrain, 2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 11, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
+    { MAP_ACT2_RUINS,      MUSIC_DUNGEON,     20, 14, 0,                   0, WORLD_TILESET_CASTLE,    s_act2_ruins_terrain, 2, 2, DIRECTION_DOWN,  TILE_CASTLE_37, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }
 };

@@ -24,6 +24,8 @@ uint8_t g_travel_event;
 uint8_t g_travel_fought;
 uint8_t g_travel_choice;
 uint8_t g_travel_msg;
+uint8_t g_travel_seen;
+uint8_t g_travel_in_ruins;
 
 /* Staged table rows: copied from bank 9 on stage, read by logic and
  * render from WRAM (never map a ROM window around a render). */
@@ -55,6 +57,7 @@ uint8_t travel_view(void)
     if (g_travel_method == 0xFF) return TRAVEL_VIEW_METHOD;
     if (g_travel_event == TRAVEL_EVENT_NONE) return TRAVEL_VIEW_IDLE;
     if (s_event.kind == TRAVEL_EVENT_BATTLE) return TRAVEL_VIEW_AMBUSH;
+    if (s_event.kind == TRAVEL_EVENT_RUINS) return TRAVEL_VIEW_RUINS;
     return TRAVEL_VIEW_HELP;
 }
 
@@ -101,6 +104,8 @@ void travel_start(uint8_t route)
     g_travel_event = TRAVEL_EVENT_NONE;
     g_travel_fought = 0;
     g_travel_choice = 0;
+    g_travel_seen = 0;
+    g_travel_in_ruins = 0;
     for (i = 0; i < s_route.method_count; i++) {
         if (s_route.methods[i].cost_gold == 0) {
             g_travel_choice = i;
@@ -180,6 +185,8 @@ static void travel_confirm_method(Game *g)
     g_travel_total = s_method.steps;
     g_travel_left = s_method.steps;
     g_travel_event = TRAVEL_EVENT_NONE;
+    g_travel_seen = 0;
+    g_travel_in_ruins = 0;
     game_render_reset(g);
 }
 
@@ -198,6 +205,8 @@ void travel_open_supply(uint8_t route)
     g_travel_event = TRAVEL_EVENT_NONE;
     g_travel_fought = 0;
     g_travel_choice = 0;
+    g_travel_seen = 0;
+    g_travel_in_ruins = 0;
     g_travel_msg = TRAVEL_MSG_NONE;
     g_travel_active = 1;
     screen_change(&g_game, SCREEN_JOURNEY);
@@ -297,6 +306,8 @@ static void travel_arrive(Game *g)
     g_travel_fought = 0;
     g_travel_msg = TRAVEL_MSG_NONE;
     g_travel_choice = 0;
+    g_travel_seen = 0;
+    g_travel_in_ruins = 0;
     scene_load(g, scene, x, y);
     def = scene_definition_for_map(g->world.map_id);
     audio_play_music(def ? def->music : MUSIC_OVERWORLD);
@@ -394,6 +405,37 @@ static void travel_advance(Game *g)
         }
         if (g_travel_event != TRAVEL_EVENT_NONE) {
             g_travel_choice = 0;
+            g_travel_seen = 1;
+            audio_play_sfx(SFX_ALERT);
+            game_render_reset(g);
+            return;
+        }
+    }
+    /* On-foot guarantee: the last rollable step forces an event when
+     * nothing has fired yet (pool must be non-empty; carriage methods
+     * never reach here with steps).  Starvation above already covers
+     * empty-belly trips. */
+    if (g_travel_left == 1 && !g_travel_seen && s_method.pool_count > 0) {
+        sum = 0;
+        for (i = 0; i < s_method.pool_count; i++) {
+            sum = (uint8_t)(sum + s_method.pool_weight[i]);
+        }
+        if (sum > 0) {
+            do {
+                pick = (uint8_t)rng_next();
+            } while (pick >= sum);
+            cum = 0;
+            g_travel_event = 0;
+            for (i = 0; i < s_method.pool_count; i++) {
+                cum = (uint8_t)(cum + s_method.pool_weight[i]);
+                if (pick < cum) {
+                    g_travel_event = s_method.pool_event[i];
+                    break;
+                }
+            }
+            travel_load_event(g_travel_event);
+            g_travel_choice = 0;
+            g_travel_seen = 1;
             audio_play_sfx(SFX_ALERT);
             game_render_reset(g);
             return;
@@ -421,8 +463,69 @@ static void travel_advance(Game *g)
     }
     travel_load_event(g_travel_event);
     g_travel_choice = 0;
+    g_travel_seen = 1;
     audio_play_sfx(SFX_ALERT);
     game_render_reset(g);
+}
+
+static void travel_enter_ruins(Game *g);
+
+/* Resolve the staged ruins choice.  EXPLORE suspends the journey and
+ * loads the ruins map (no day burn on entry); IGNORE keeps the
+ * schedule with no cost. */
+static void travel_resolve_ruins(Game *g, uint8_t explore)
+{
+    if (!g) return;
+    if (explore) {
+        g_travel_msg = TRAVEL_MSG_NONE;
+        g_travel_event = TRAVEL_EVENT_NONE;
+        g_travel_choice = 0;
+        travel_enter_ruins(g);
+        return;
+    }
+    g_travel_msg = TRAVEL_MSG_IGNORED;
+    g_travel_choice = 0;
+    audio_play_sfx(SFX_CONFIRM);
+    game_render_reset(g);
+}
+
+/* Suspend the journey inside the ruins (entry map, no day burn).
+ * g_travel_in_ruins keeps the battle exits routed to the overworld
+ * while the journey state (steps left, seen flag) waits untouched. */
+static void travel_enter_ruins(Game *g)
+{
+    if (!g) return;
+    g_travel_in_ruins = 1;
+    g_travel_fought = 0;
+    audio_play_sfx(SFX_CONFIRM);
+    scene_load(g, SCENE_ACT2_RUINS, 2, 2);
+    audio_play_music(MUSIC_DUNGEON);
+    screen_change(g, SCREEN_OVERWORLD);
+    game_render_reset(g);
+}
+
+/* Leave the ruins back to the journey.  The trip itself costs no
+ * days; a looted treasure chest adds one day (its flag is set by the
+ * ruins chest event row).  Called from the YES/NO leave dialogue. */
+void travel_resume_from_ruins(Game *g)
+{
+    if (!g) return;
+    if (game_flag_is_set(&g->state, (FlagId)STORY_FLAG_ID_RUINS_CHEST)) {
+        travel_burn_days(g, 1);
+    }
+    g_travel_in_ruins = 0;
+    g_travel_event = TRAVEL_EVENT_NONE;
+    g_travel_fought = 0;
+    g_travel_msg = TRAVEL_MSG_NONE;
+    g_travel_choice = 0;
+    audio_play_sfx(SFX_CONFIRM);
+    screen_change(g, SCREEN_JOURNEY);
+    game_render_reset(g);
+}
+
+bool game_travel_in_ruins(void)
+{
+    return g_travel_in_ruins != 0;
 }
 
 static void travel_update_event(Game *g)
@@ -431,6 +534,19 @@ static void travel_update_event(Game *g)
         if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
             audio_play_sfx(SFX_CONFIRM);
             travel_open_ambush(g);
+        }
+        return;
+    }
+    if (s_event.kind == TRAVEL_EVENT_RUINS) {
+        if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN) ||
+            input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
+            g_travel_choice ^= 1;
+            audio_play_sfx(SFX_CURSOR);
+            game_render_reset(g);
+            return;
+        }
+        if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
+            travel_resolve_ruins(g, (uint8_t)(g_travel_choice == 0));
         }
         return;
     }
@@ -525,6 +641,7 @@ bool game_travel_consume_defeat(Game *g)
 {
     const SceneDefinition *def;
     if (!g || !g_travel_active) return false;
+    if (g_travel_in_ruins) return false;
     g->state.party.members[0].hp = 1;
     g->world.player.hp = 1;
     if (g_travel_total < 255) g_travel_total++;

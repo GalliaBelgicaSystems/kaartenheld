@@ -1790,12 +1790,13 @@ def walk_sweep(planner, checks):
                            "skipped: teleport-only"))
             s.close()
             continue
-        if name in ("act2_field", "act2_town"):
+        if name in ("act2_field", "act2_town", "act2_ruins"):
             # Travel-demo maps (journeys/ + travel ROM only): no portal
             # targets them by design, so the sweep cannot walk there.
             # Same explicit-SKIP contract as the finale above; the
             # travel-demo driver (tools/verify_travel_demo.py) covers
-            # their boot/merchant/signpost paths instead.
+            # their boot/merchant/signpost paths instead (ruins entry,
+            # chest and exit ride the travel events, not portals).
             checks.append(("sweep", "sweep %s reachable" % name, "SKIP",
                            "travel-demo map (no inbound portal by design)",
                            "skipped: teleport-only"))

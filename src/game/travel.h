@@ -27,6 +27,7 @@
 
 #define TRAVEL_EVENT_BATTLE 1
 #define TRAVEL_EVENT_CHOICE 2
+#define TRAVEL_EVENT_RUINS 3
 
 #define TRAVEL_EVENT_NONE 0xFF
 
@@ -37,6 +38,7 @@
 #define TRAVEL_VIEW_MSG 3
 #define TRAVEL_VIEW_METHOD 4
 #define TRAVEL_VIEW_SUPPLY 5
+#define TRAVEL_VIEW_RUINS 6
 
 /* Result message ids (g_travel_msg). */
 #define TRAVEL_MSG_NONE 0
@@ -103,6 +105,8 @@ extern uint8_t g_travel_event;
 extern uint8_t g_travel_fought;
 extern uint8_t g_travel_choice;
 extern uint8_t g_travel_msg;
+extern uint8_t g_travel_seen;    /* an event rolled this journey (guarantee) */
+extern uint8_t g_travel_in_ruins; /* suspended in the ruins map */
 
 /* Staged table rows (bank-9 copies, valid while travelling). */
 const TravelRoute *travel_route_row(void);

@@ -96,13 +96,19 @@ void game_new_game(GameState *state)
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
     state->currency.amount[CURRENCY_ID_ARROWS - 1] = HERO_START_ARROWS;
 #ifdef TRAVEL_DEMO
+    /* Travel demo: testing-phase hero (5 AP + stronger cards).  The main
+     * ROM keeps pool 1 and the plain starter deck (Act 1 untouched). */
+    state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 5;
+    state->currency.amount[CURRENCY_ID_ARROWS - 1] = 20;
     /* Convergence countdown (travel-demo ROM): 180 days left.  Main-ROM
      * behavior unchanged (slots stay zero there). */
     state->variables.values[VARIABLE_ID_DAY - 1] = CONVERGENCE_DAYS;
     state->variables.values[VARIABLE_ID_LORD_POWER - 1] = 0;
-    /* Road rations for the travel demo (supplied by the field merchant). */
-    state->variables.values[VARIABLE_ID_FOOD - 1] = 6;
-    state->variables.values[VARIABLE_ID_WATER - 1] = 12;
+    /* Road rations for the travel demo (supplied by the field merchant).
+     * 10 steps + detours + a possible ruins day: 12 food / 24 water
+     * covers the trip without starving a clean run. */
+    state->variables.values[VARIABLE_ID_FOOD - 1] = 12;
+    state->variables.values[VARIABLE_ID_WATER - 1] = 24;
 #endif
     /* Neutral market at boot (game_state_zero leaves 0, which is outside
      * the valid 24-48 band; readers treat out-of-band as neutral, but a
@@ -133,6 +139,26 @@ void game_new_game(GameState *state)
             banked_copy(2, &id, &g_hero_starter_deck_ids[i], 1);
             deck_add_card(&state->cards, id);
         }
+#ifdef TRAVEL_DEMO
+        /* Testing-phase muscle: curated steel shield + iron ring plus
+         * synthesized steel fire/ice bows and iron fire/ice daggers.
+         * Loot ids encode material/effect/weapon (loot.h): steel fire
+         * bow 0xD2, steel ice bow 0xDA, iron fire dagger 0xB3, iron
+         * ice dagger 0xBB.  AP 3-4 each, playable at pool 5.  Each goes
+         * to the collection and the draw pile through the real paths. */
+        {
+            static const uint8_t extra_ids[] = {
+                CARD_STEEL_SHIELD, CARD_IRON_RING, 0xD2, 0xDA, 0xB3, 0xBB
+            };
+            for (i = 0; i < 6; i++) {
+                deck_collection_add(&state->cards, (CardId)extra_ids[i], 1);
+            }
+            g_bk_byte_d = 0;
+            for (i = 0; i < 6; i++) {
+                deck_add_card(&state->cards, (CardId)extra_ids[i]);
+            }
+        }
+#endif
     }
 }
 
@@ -159,8 +185,10 @@ ScreenId game_screen_after_victory(const Game *g)
 {
     if (!g) return SCREEN_OVERWORLD;
 #ifdef TRAVEL_DEMO
-    /* Road ambush won: pay the data-driven gold and resume the journey. */
-    if (game_travel_active()) {
+    /* Road ambush won: pay the data-driven gold and resume the journey.
+     * Ruins fights are ordinary world battles (the journey is only
+     * suspended), so they return to the overworld like any other. */
+    if (game_travel_active() && !game_travel_in_ruins()) {
         travel_on_victory();
         return SCREEN_JOURNEY;
     }

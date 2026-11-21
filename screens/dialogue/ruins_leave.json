@@ -1,0 +1,9 @@
+{
+  "id": "ruins_leave",
+  "speaker": "",
+  "lines": [
+    "LEAVE RUINS?",
+    "> YES   NO"
+  ],
+  "choice": "yes_no"
+}

@@ -29,11 +29,11 @@ const TravelRoute g_travel_routes[] = {
             { /* foot */
                 "ON FOOT", /* name */
                 0, /* cost_gold */
-                5, /* steps (0 = instant) */
+                10, /* steps (0 = instant) */
                 35, /* frequency */
-                2, /* pool_count */
-                { 0, 1, 0, 0 }, /* pool_event */
-                { 50, 50, 0, 0 }, /* pool_weight */
+                3, /* pool_count */
+                { 0, 2, 1, 0 }, /* pool_event */
+                { 50, 50, 50, 0 }, /* pool_weight */
             },
         },
     },
@@ -56,6 +56,20 @@ const TravelEvent g_travel_events[] = {
         "", /* text2 */
         "", /* text3 */
     },
+    { /* ruins_sight */
+        TRAVEL_EVENT_RUINS,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* reward_gold */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        0, /* delay */
+        0, /* ignore_days */
+        "YOU SPOT OLD RUINS.", /* text */
+        "YOU ENTER THE RUINS.", /* help result */
+        "YOU WALK ON.", /* ignore result */
+    },
     { /* traveler_help */
         TRAVEL_EVENT_CHOICE,
         0, /* battle */
@@ -72,4 +86,4 @@ const TravelEvent g_travel_events[] = {
     },
 };
 
-const uint8_t g_travel_event_count = 2;
+const uint8_t g_travel_event_count = 3;

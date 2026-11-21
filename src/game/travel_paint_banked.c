@@ -406,6 +406,8 @@ void travel_paint_banked(void)
         view = TRAVEL_VIEW_IDLE;
     } else if (e->kind == TRAVEL_EVENT_BATTLE) {
         view = TRAVEL_VIEW_AMBUSH;
+    } else if (e->kind == TRAVEL_EVENT_RUINS) {
+        view = TRAVEL_VIEW_RUINS;
     } else {
         view = TRAVEL_VIEW_HELP;
     }
@@ -443,6 +445,13 @@ void travel_paint_banked(void)
             tp_text(2, 11, "> HELP   IGNORE", 20);
         } else {
             tp_text(2, 11, "  HELP  >IGNORE", 20);
+        }
+    } else if (view == TRAVEL_VIEW_RUINS) {
+        tp_text(2, 9, e->text, 20);
+        if (g_travel_choice == 0) {
+            tp_text(2, 11, ">EXPLORE IGNORE", 20);
+        } else {
+            tp_text(2, 11, " EXPLORE>IGNORE", 20);
         }
     } else {
         if (g_travel_msg == TRAVEL_MSG_HELPED) {

@@ -19,11 +19,12 @@
       "id": "foot",
       "name": "ON FOOT",
       "cost_gold": 0,
-      "steps": 5,
+      "steps": 10,
       "frequency": 35,
       "pool": [
         { "event": "ambush_slimes", "weight": 50 },
-        { "event": "traveler_help", "weight": 50 }
+        { "event": "traveler_help", "weight": 50 },
+        { "event": "ruins_sight", "weight": 50 }
       ]
     }
   ]
