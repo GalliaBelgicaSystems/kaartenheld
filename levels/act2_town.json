@@ -1,6 +1,7 @@
 {
+  "act": 2,
   "id": "act2_town",
-  "name": "Oakhaven Town",
+  "name": "Act 2 — Oakhaven Town",
   "map": {
     "width": 20,
     "height": 18,

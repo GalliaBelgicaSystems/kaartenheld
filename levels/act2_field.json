@@ -1,6 +1,7 @@
 {
+  "act": 2,
   "id": "act2_field",
-  "name": "Emerald Plains",
+  "name": "Act 2 — Emerald Plains",
   "map": {
     "width": 24,
     "height": 18,
