@@ -18,7 +18,8 @@
     "underground_tunnel": 20,
     "underground_tunnel_south": 21,
     "demo_end_wake_scene": 23,
-    "act2_field": 24
+    "act2_field": 24,
+    "act2_town": 25
   },
   "_retired": {
     "forest2": 6,

@@ -559,6 +559,58 @@ static const WorldActorDefinition g_act2_field_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_act2_town_actors[] = {
+    {
+        0, ENTITY_ID_MAYOR, 10, 5, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'M', "MAYOR", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_MAYOR_GREETING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 6, 0
+    },
+    {
+        0, ENTITY_ID_TOWN_GUARD, 10, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'G', "GUARD", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_GUARD_DAGGER_LESSON, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 4, 0
+    },
+    {
+        0, ENTITY_ID_WIZARD, 6, 10, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'W', "WIZARD", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_WIZARD_AUTOSAVE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 8, 0
+    },
+    {
+        0, ENTITY_ID_HEAL_MAGE, 12, 10, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'W', "HEAL MAGE", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 5, 0
+    },
+    {
+        0, ENTITY_ID_VILLAGE_DOG, 8, 14, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "VILLAGE_DOG", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_DOG_HINT, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 1, 0
+    },
+    {
+        0, ENTITY_ID_DOG, 11, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "DOG", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 1, 0
+    },
+    {
+        0, ENTITY_ID_SIGNPOST, 15, 5, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '#', "HOUSE", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_HOUSE_DOOR, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
         (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])) },
@@ -596,6 +648,8 @@ const WorldActorTable g_actor_tables[] = {
         0 },
     { MAP_ACT2_FIELD,      g_act2_field_actors,
         (uint8_t)(sizeof(g_act2_field_actors) / sizeof(g_act2_field_actors[0])) },
+    { MAP_ACT2_TOWN,       g_act2_town_actors,
+        (uint8_t)(sizeof(g_act2_town_actors) / sizeof(g_act2_town_actors[0])) },
 };
 
 #include "game.h"
@@ -619,4 +673,4 @@ uint8_t chest_is_open_banked(void)
     return 0;
 }
 
-const uint8_t g_actor_table_count = 18;
+const uint8_t g_actor_table_count = 19;

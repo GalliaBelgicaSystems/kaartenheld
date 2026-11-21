@@ -2,9 +2,9 @@
   "id": "field_to_village",
   "name": "FIELD ROAD",
   "start": "field",
-  "destination": "village_area",
-  "dest_x": 10,
-  "dest_y": 9,
+  "destination": "act2_town",
+  "dest_x": 2,
+  "dest_y": 7,
   "supply": { "food_price": 2, "water_price": 1 },
   "methods": [
     {

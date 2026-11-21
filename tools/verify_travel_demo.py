@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join("tools", "walkthrough"))
 from pyboy import PyBoy
 from state_reader import (StateReader, ATTACK_TYPES, BATTLE_HAND, CARD_SIZE,
                           CARD_TYPE, CARD_VALUE, OFF_VARIABLES,
-                          OFF_CURRENCY)
+                          OFF_CURRENCY, OFF_PARTY, CHARACTER_STATE_HP)
 
 ROM = "build/kaartenheld-travel-demo.gb"
 SCREEN_OVERWORLD = 0
@@ -33,7 +33,7 @@ SCREEN_BATTLE = 2
 SCREEN_JOURNEY = 16
 SCENE_FIELD = 0
 SCENE_ACT2_FIELD = 24
-SCENE_VILLAGE = 17
+SCENE_ACT2_TOWN = 25
 
 
 class D:
@@ -107,6 +107,11 @@ class D:
         raw = struct.pack("<h", v)
         self.pb.memory[addr] = raw[0]
         self.pb.memory[addr + 1] = raw[1]
+        self.tick(2)
+
+    def poke_php(self, v):
+        addr = self.r.state + OFF_PARTY + CHARACTER_STATE_HP
+        self.pb.memory[addr] = v
         self.tick(2)
 
     def poke_gold(self, v):
@@ -274,10 +279,12 @@ def test_ambush():
         assert d.gold() == gold0 + 8, "gold %d -> %d" % (gold0, d.gold())
         print("ambush victory +8G OK (gold %d -> %d)" % (gold0, d.gold()))
         d.press("a", settle=20)  # dismiss loot msg
-        # walk the rest of the way (more ambushes may fire: fight them)
-        for _ in range(30):
+        # walk on a while (more ambushes may fire: fight them). Arrival
+        # itself is covered by the full/premium trips (this tuning uses
+        # a long route so retries can never strand it).
+        for _ in range(12):
             st = d.scene()
-            if st["scene_id"] == SCENE_VILLAGE:
+            if st["scene_id"] == SCENE_ACT2_TOWN:
                 break
             if d.screen() == SCREEN_BATTLE:
                 assert win_fight(d), "follow-up ambush lost?"
@@ -289,12 +296,10 @@ def test_ambush():
             else:
                 d.tick(30)
         st = d.scene()
-        assert st["scene_id"] == SCENE_VILLAGE, st
-        assert (st["player_x"], st["player_y"]) == (10, 9), st
+        assert st["scene_id"] in (SCENE_ACT2_TOWN, SCENE_ACT2_FIELD), st
         assert d.gold() == gold0 + 8 * wins, "gold %d, wins %d" \
             % (d.gold(), wins)
-        print("arrival village OK after %d ambush wins; final gold %d"
-              % (wins, d.gold()))
+        print("walk-on OK after %d ambush wins; gold %d" % (wins, d.gold()))
     finally:
         d.close()
 
@@ -340,7 +345,7 @@ def test_help(help_it):
         # asserts here (arrival is covered by the full/ambush trips)
         for _ in range(12):
             st = d.scene()
-            if st["scene_id"] == SCENE_VILLAGE:
+            if st["scene_id"] == SCENE_ACT2_TOWN:
                 break
             if d.screen() == SCREEN_JOURNEY:
                 if d.text_has("TRAVELER NEEDS"):
@@ -353,7 +358,7 @@ def test_help(help_it):
             else:
                 d.tick(30)
         st = d.scene()
-        assert st["scene_id"] in (SCENE_VILLAGE, SCENE_ACT2_FIELD), st
+        assert st["scene_id"] in (SCENE_ACT2_TOWN, SCENE_ACT2_FIELD), st
         print("walk-on OK")
     finally:
         d.close()
@@ -373,6 +378,7 @@ def test_defeat():
                 break
         assert d.text_has("AMBUSH!"), d.rows()
         d.poke_day(10)
+        d.poke_php(3)  # quick deterministic defeat (2 slime hits)
         d.press("a", settle=30)  # fight
         assert d.wait_for(lambda: d.screen() == SCREEN_BATTLE,
                           ticks=600), "no battle"
@@ -495,10 +501,10 @@ def test_premium():
         assert d.wait_for(lambda: d.text_has("> CARRIAGE"), ticks=200), \
             d.rows()
         d.press("a", settle=30)  # confirm: pay and arrive
-        assert d.wait_for(lambda: d.scene()["scene_id"] == SCENE_VILLAGE,
+        assert d.wait_for(lambda: d.scene()["scene_id"] == SCENE_ACT2_TOWN,
                           ticks=600), d.scene()
         st = d.scene()
-        assert (st["player_x"], st["player_y"]) == (10, 9), st
+        assert (st["player_x"], st["player_y"]) == (2, 7), st
         assert d.gold() == 10, d.gold()  # 60 - 50 fare
         assert d.day() == 180, d.day()  # instantaneous: no days burned
         assert d.screen() == SCREEN_OVERWORLD, d.screen()
@@ -600,7 +606,7 @@ def test_full():
         select_foot(d)
         for _ in range(40):
             st = d.scene()
-            if st["scene_id"] == SCENE_VILLAGE:
+            if st["scene_id"] == SCENE_ACT2_TOWN:
                 break
             if d.screen() == SCREEN_BATTLE:
                 assert win_fight(d)
@@ -618,7 +624,7 @@ def test_full():
             else:
                 d.tick(30)
         st = d.scene()
-        assert st["scene_id"] == SCENE_VILLAGE, st
+        assert st["scene_id"] == SCENE_ACT2_TOWN, st
         print("full-trip arrival OK; gold %d" % d.gold())
     finally:
         d.close()
@@ -632,7 +638,7 @@ if __name__ == "__main__":
         test_help(True)
     elif mode == "ignore":
         test_help(False)
-    if mode == "defeat":
+    elif mode == "defeat":
         test_defeat()
     elif mode == "flee":
         test_flee()

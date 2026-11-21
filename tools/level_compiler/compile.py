@@ -471,6 +471,9 @@ OVERFLOW_TERRAIN_BANK = {
     # bank 12 is the release spill bank with room to spare, and its
     # stamp body already exists (no scene.c dispatch change needed).
     "act2_field": 12,
+    # Travel-demo town copy (same 20x18 footprint as town, ~950 B):
+    # alongside village_area in bank 11 for the same reason.
+    "act2_town": 11,
 }
 
 

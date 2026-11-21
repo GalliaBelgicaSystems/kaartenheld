@@ -11,8 +11,8 @@
 const TravelRoute g_travel_routes[] = {
     { /* field_to_village */
         "FIELD ROAD", /* name */
-        17, /* dest_scene (village_area) */
-        10, 9, /* dest_x, dest_y */
+        25, /* dest_scene (act2_town) */
+        2, 7, /* dest_x, dest_y */
         2, /* food_price */
         1, /* water_price */
         2, /* method_count */
