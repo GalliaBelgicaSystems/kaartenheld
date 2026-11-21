@@ -63,8 +63,8 @@ void game_new_game(GameState *state)
     scene_spawn(MAP_TEST_FIELD);
 #else
 #ifdef TRAVEL_DEMO
-    state->scene.scene_id = SCENE_FIELD;
-    scene_spawn(MAP_FIELD);
+    state->scene.scene_id = SCENE_ACT2_FIELD;
+    scene_spawn(MAP_ACT2_FIELD);
 #else
     state->scene.scene_id = SCENE_WAKE_GROVE;
     scene_spawn(MAP_WAKE_GROVE);

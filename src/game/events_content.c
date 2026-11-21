@@ -45,7 +45,7 @@ const EventDefinition g_events[] = {
          * route's food/water shop instead of talking.  First-match
          * wins, so this precedes the dialogue fallthrough (which the
          * consume-guard also skips after a screen change). */
-        EVENT_ID_TRAVEL_SUPPLY, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, MAP_FIELD,
+        EVENT_ID_TRAVEL_SUPPLY, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, MAP_ACT2_FIELD,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
@@ -56,7 +56,7 @@ const EventDefinition g_events[] = {
          * field-to-village journey (route 0) instead of teleporting.
          * First-match wins, so this precedes the signpost dialogue
          * fallthrough (which the travel consume-guard also skips). */
-        EVENT_ID_TRAVEL_DEMO, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_FIELD,
+        EVENT_ID_TRAVEL_DEMO, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_FIELD,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,

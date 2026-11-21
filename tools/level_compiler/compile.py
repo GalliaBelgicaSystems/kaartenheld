@@ -467,6 +467,10 @@ OVERFLOW_TERRAIN_BANK = {
     # Finale backdrop (teleport-only, never walked): its 24x18 scattered
     # floor is ~930 B of terrain blocks, which bank 5 cannot hold.
     "demo_end_wake_scene": 9,
+    # Travel-demo field copy (same 24x18 footprint as field, ~1325 B):
+    # bank 12 is the release spill bank with room to spare, and its
+    # stamp body already exists (no scene.c dispatch change needed).
+    "act2_field": 12,
 }
 
 

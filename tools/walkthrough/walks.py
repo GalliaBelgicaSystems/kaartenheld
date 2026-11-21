@@ -1790,6 +1790,17 @@ def walk_sweep(planner, checks):
                            "skipped: teleport-only"))
             s.close()
             continue
+        if name == "act2_field":
+            # Travel-demo map (journeys/ + travel ROM only): no portal
+            # targets it by design, so the sweep cannot walk there.
+            # Same explicit-SKIP contract as the finale above; the
+            # travel-demo driver (tools/verify_travel_demo.py) covers
+            # its boot/merchant/signpost paths instead.
+            checks.append(("sweep", "sweep %s reachable" % name, "SKIP",
+                           "travel-demo map (no inbound portal by design)",
+                           "skipped: teleport-only"))
+            s.close()
+            continue
         if name == "wake_grove":
             st = s.reader.scene_state()
             s.check_eq("sweep %s scene" % name, st["scene_id"],
