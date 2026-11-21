@@ -1,8 +1,17 @@
 {
  "name": "item_rider_icons",
  "test": true,
- "description": "Item CARDS list shows rider OAM sprites over each rider card's elem cell (FIRE SWORD burn row 5 -> entry 3 tile 123, POISON DAGGER row 6 -> entry 4 tile 125); riderless rows stay hidden",
+ "description": "Item CARDS list stamps dedicated menu rider BG tiles (228-231) over each rider card's element cell on its pile side (POISON DAGGER row -> tile 230, bronze FIRE BOW loot row -> tile 228); rider OAM entries stay hidden (riders are BG art now -- the recycled enemy-sprite OAM art was cropped off-center) and the deck side stays blank. Material ingots ride alongside (entries 17/18 tile 118 wood/iron shared art, 25/26 wood). Swords never ride, so burn coverage moved to a loot bow (id 146).",
  "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 146,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
   {
    "type": "press",
    "button": "START"
@@ -19,13 +28,18 @@
   },
   {
    "type": "screen_row",
-   "row": 6,
-   "contains": "BRONZE SWORD"
+   "row": 7,
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
-   "row": 7,
-   "contains": "BRONZE DAGGER"
+   "row": 5,
+   "contains": "D  2"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "B  2"
   },
   {
    "type": "oam_tile",
@@ -40,17 +54,54 @@
   {
    "type": "oam_tile",
    "entry": 3,
-   "expected": 123
+   "expected": 0
   },
   {
    "type": "oam_tile",
    "entry": 4,
-   "expected": 125
+   "expected": 0
   },
   {
    "type": "oam_tile",
    "entry": 5,
    "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 9,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 10,
+   "expected": 0
+  },
+  {
+   "type": "oam_tile",
+   "entry": 17,
+   "expected": 118
+  },
+  {
+   "type": "oam_tile",
+   "entry": 18,
+   "expected": 118
+  },
+  {
+   "type": "oam_tile",
+   "entry": 26,
+   "expected": 121
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 5,
+   "col": 3,
+   "expected": 4
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 6,
+   "col": 3,
+   "expected": 1
   }
  ],
  "initial_state": {

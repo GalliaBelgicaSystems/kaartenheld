@@ -1,0 +1,450 @@
+{
+ "name": "loot_collection_never_full",
+ "test": true,
+ "description": "Ownership is uncapped and identities fold fully, so the 50-row shelf can never fill (only 45 distinct card identities exist game-wide): with 43 distinct identities owned, the victory drop still lands -- LOOT_CARD_ADDED fires and the result screen shows YOU FOUND. No drop is ever silently lost to a full shelf.",
+ "initial_state": {
+  "scene": "TEST_MOUNTAIN_PASS",
+  "player": {
+   "x": 12,
+   "y": 10,
+   "facing": "DOWN"
+  },
+  "seed": 5002,
+  "party": {
+   "HERO": {
+    "hp": 60,
+    "max_hp": 60
+   }
+  },
+  "variables": {
+   "MONSTERS_DEFEATED": 1
+  },
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 160,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 161,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 98,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 100,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 154,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 129,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 130,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 131,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 70,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 132,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 162,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 163,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 164,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 192,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 193,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 194,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 195,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 196,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 224,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 225,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 226,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 227,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 228,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 186,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 210,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 242,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 146,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 178,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 218,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 250,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 172,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 133,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 165,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 197,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 229,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 69,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 73,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 68,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 74,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 171,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 203,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 235,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 106,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 180,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 188,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 96,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 97,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 96,
+   "quantity": 1
+  },
+  {
+   "type": "collection_add",
+   "card_id": 97,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 1,
+   "hp": 1
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 2,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "event_occurred",
+   "event": "LOOT_CARD_ADDED"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "YOU FOUND"
+  }
+ ]
+}

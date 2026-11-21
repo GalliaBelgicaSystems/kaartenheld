@@ -253,32 +253,85 @@ def main():
 
     # Dismiss Title Screen (SCREEN_TITLE = 9) and Intro slides (SCREEN_INTRO = 10)
     # to drop into the OVERWORLD (SCREEN_OVERWORLD = 0) at the FIELD spawn
-    # (17,7) from levels/field.json player.spawn.
+    # (17,7) from levels/field.json player.spawn.  Step down from CONTINUE
+    # (index 0) onto NEW GAME (index 1) whenever the title menu is open.
+    def _advance_to_new_game():
+        if (pb.memory[game_addr] == 9
+                and (pb.tilemap_background.tile_identifier(3, 9) & 0xFF) == 30
+                and (pb.tilemap_background.tile_identifier(5, 9) & 0xFF) == 35):
+            press("down", settle=16)
+
     for _ in range(20):
         if pb.memory[game_addr] == 0:
             break
+        _advance_to_new_game()
         press("start", settle=16)
+        if pb.memory[game_addr] == 0:
+            break
+        _advance_to_new_game()
         press("a", settle=16)
 
-    # Locate player entity in WRAM once overworld is reached
-    wram = bytes(pb.memory[i] for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
-    idx = wram.find(PLAYER_BOOT)
-    if idx >= 0:
-        pos_addr[0] = WRAM_BASE + idx
+    # Wait for the intro-exit transition frame to finish syncing
+    # world.player.hp/max_hp from party state (game_update runs
+    # screen_update -> save_claim_active -> line ~219 HP sync, which can
+    # span multiple PyBoy ticks after g_game.screen flips to 0), then
+    # locate the player entity in WRAM.  Fail loudly if not found rather
+    # than falling back to a stale g_game offset.
+    idx = -1
+    for _ in range(60):
+        wram = bytes(pb.memory[i] for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
+        idx = wram.find(PLAYER_BOOT)
+        if idx >= 0 and (pb.memory[0xFF40] & 0x80):
+            break
+        pb.tick()
+    if idx < 0:
+        print("error: player boot pattern not found in WRAM", file=sys.stderr)
+        pb.stop()
+        return 1
+    pos_addr[0] = WRAM_BASE + idx
 
     samples.clear()
 
     print(f"boot: player at {sample()[:2]} ticks={samples[-1][2]}")
     ok = walk("right", lambda x, y: x >= 30)
     ok = walk("down", lambda x, y: y == 7) and ok
-    ok = walk("right", lambda x, y: x == 2) and ok          # gate crossing
+
+    # Carl's leave-the-field offer intercepts the FIRST attempt to leave
+    # the field (a fresh game, spar not won, skip not taken): the gate
+    # step is cancelled and a STAY/LEAVE box opens instead of the crossing.
+    # Answer LEAVE (the skip: grants the spar's AP once, sets the
+    # one-shot flag) and retry -- the retry crosses.  STAY would keep
+    # blocking and re-ask.  Same contract as the walkthrough's
+    # _drain_skip_offer; keep them in sync.  The dialogue is polled every
+    # press: walking blind would burn the whole step budget before the
+    # box was noticed, which both failed the crossing and skewed the
+    # clean-frame sample budget.
+    def in_dialogue():
+        return pb.memory[game_addr] == 1
+
+    def cross_to_town(budget=80):
+        for _ in range(budget):
+            if pos()[0] == 2:
+                return True
+            if in_dialogue():
+                # Single-page STAY/LEAVE ask (choice live on open):
+                # toggle STAY -> LEAVE, confirm, then close the ask +
+                # the granted follow-up line.
+                press("right", settle=16)  # toggle to LEAVE
+                press("a", settle=16)      # confirm LEAVE
+                for _ in range(8):
+                    if not in_dialogue():
+                        break
+                    press("a", settle=30)
+                continue
+            press("right", settle=8)
+        return pos()[0] == 2
+
+    ok = cross_to_town() and ok                             # gate crossing
     ok = walk("down", lambda x, y: y == 8) and ok
     ok = walk("right", lambda x, y: x == 9) and ok
 
     # Bump the guard: a blocked RIGHT press opens dialogue (SCREEN_DIALOGUE = 1).
-    def in_dialogue():
-        return pb.memory[game_addr] == 1
-
     for _ in range(8):
         if in_dialogue():
             break
@@ -353,6 +406,17 @@ def main():
     clean_frames = 0
     for _i in range(1, len(samples)):
         if _i not in off and (_i - 1) not in off:
+            # Same torn-read guard as the total above: a small backward
+            # dip (<= 32768, i.e. not a real uint16 wrap) is a host read
+            # that caught the lo byte wrapped with a stale hi byte, not
+            # counter motion -- the % 65536 would otherwise book it as a
+            # +65k phantom.  (Seen deterministically once the snapshot
+            # grew +16 bytes and shifted the ISR/read interleaving: a
+            # -242 dip booked +65294.)  Skipping the pair (not patching
+            # the value) keeps wrong-rate clocks failing: 2x/0.5x errors
+            # are 50-100% deviations, far above the 7% band.
+            if 0 < samples[_i - 1][2] - samples[_i][2] <= 32768:
+                continue
             clean_total += (samples[_i][2] - samples[_i - 1][2]) % 65536
             clean_frames += 1
     clean_expected = clean_frames * (256 / 59.7275)

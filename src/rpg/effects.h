@@ -40,6 +40,14 @@ typedef struct {
  * immediately after the call. */
 extern EffectResult g_effect_last;
 
+/* Defend-block carry (WRAM _DATA): the dagger counter eval runs between
+ * the defend hand's block resolution and its net application and
+ * overwrites g_effect_last, so the counter prep stashes the fresh block
+ * sum here and the defend body consumes it.  Written once per defend
+ * (always, right after the hand resolves) and read once right after --
+ * never live across any other dispatch. */
+extern uint8_t g_defend_block_save;
+
 /* Bank-3 scaling body, called bank-locally by combo_resolve_banked().
  * Self-contained: pure function of (effect, combo).  Not for fixed-bank
  * callers (bank 3 is not mapped there). */

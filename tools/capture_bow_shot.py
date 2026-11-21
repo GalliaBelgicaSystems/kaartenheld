@@ -32,7 +32,7 @@ BT_BOW = 2
 CARD_EFFECT_DAMAGE_TARGET = 1
 # Battle struct: player(14) + enemies[3](42) + enemy_count + target_idx,
 # then the dirty byte.
-DIRTY_OFF = 14 + 3 * 14 + 2
+DIRTY_OFF = 15 + 3 * 15 + 2  # Combatant is 15 B (hp+max+name[13]); dirty sits at +62
 BATTLE_DIRTY_HAND = 0x10
 
 SHOTS = [

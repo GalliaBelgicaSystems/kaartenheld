@@ -30,7 +30,7 @@
  * bank, same gating as the BG stamper, so riders and boxes can never
  * desync.  This placement also keeps the fixed bank under 0x8000: a
  * third trampoline dispatch out of ui_update_battle() overflows the
- * debug fixed bank (AGENTS.md 52.18).  The undo body moved to bank 2 to
+ * debug fixed bank (AGENTS.md 52.18).  The undo body moved to bank 11 to
  * make room here (its dispatch retargeted, same size). */
 void battle_rider_draw(const volatile Battle *battle)
 {
@@ -110,6 +110,13 @@ void battle_rider_draw(const volatile Battle *battle)
             }
         }
         col = (uint8_t)(i << 2);
+        /* Deck shake (player hit): ride the card's top-right corner
+         * with the same whole-hand offset as the BG box (never on
+         * a victory result: the loot reveal owns the zone). */
+        if (g_battle_deck_timer != 0 && battle->result != BATTLE_RESULT_VICTORY &&
+            (g_battle_deck_timer & 2) != 0) {
+            col = (uint8_t)(col + 1);
+        }
         re = (volatile uint8_t *)(0xC000u + ((uint16_t)(19 + i) << 2));
         if (tile) {
             re[0] = (uint8_t)((top << 3) + 16);

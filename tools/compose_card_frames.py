@@ -21,7 +21,8 @@ LAYOUT = [
     ['combat_top_left_card_corner', 'combat_top_middle_card', 'combat_top_right_card_corner'],
     ['combat_left_card_side', 'combat_center_card', 'combat_right_card_side'],
     ['combat_bottom_left_card_corner', 'combat_bottom_middle_card', 'combat_bottom_right_card_corner'],
-    # Turn-timer bar segments (HUD skin): filled / empty, then the HUD
+    # Turn-timer bar segments (HUD skin): filled / empty (the empty cell's
+    # art is a blank tile so drained columns leave no hollow pips), then the HUD
     # icons from the combat tileset (combat-tileset-description.csv):
     # hp / ap / deck, the light/dark up-arrow select icons (light = cursor,
     # dark = cursor on an already-selected card; both replace the '^'
@@ -41,15 +42,17 @@ LAYOUT = [
     ['combat_sword_icon', 'combat_shield_icon', 'combat_bow_icon'],
     ['combat_dagger_icon', 'combat_ring_icon', 'combat_x_icon'],
     # Limited-use arrow counters (bow floor row, shared by HEAL rings):
-    # remaining-uses glyphs 0-5 plus the power-row nine icon.  VRAM:
-    # floor states at 98-101 (uses 0..3), 97 (uses 4) and 103 (uses 5),
-    # power icon at 102 — free BG fetch slots (see s_card_tile_vram_ids
-    # in src/ui/ui_battle_content.c).  The row-7 blank still maps to 97
-    # first, but the appended 4-arrows cell overwrites it right after
-    # (nothing reads blank-97); same for the row-9 blank at 103.
+    # remaining-uses glyphs 0-6 plus the power-row nine icon.  VRAM:
+    # floor states at 98-101 (uses 0..3), 97 (uses 4), 103 (uses 5)
+    # and 112 (uses 6), power icon at 102 — free BG fetch slots (see
+    # s_card_tile_vram_ids in src/ui/ui_battle_content.c).  The row-9
+    # blank still maps to 103 first, but the appended 5-arrows cell
+    # overwrites it right after (nothing reads blank-103); same for the
+    # row-7 blank at 97.  Slot 112 was the menu blank (UI_TILE_MENU_BLANK,
+    # never stamped at runtime) and now carries the 6-arrows glyph.
     ['combat_0_arrows_left', 'combat_1_arrow_left', 'combat_2_arrows_left'],
     ['combat_3_arrows_left', 'combat_nine_icon', None],
-    ['combat_4_arrows_left', 'combat_5_arrows_left', None],
+    ['combat_4_arrows_left', 'combat_5_arrows_left', 'combat_6_arrows_left'],
 ]
 
 
@@ -61,6 +64,18 @@ def main():
             if name is None:
                 continue
             im = Image.open('%s/%s.png' % (PUB, name)).convert('RGB')
+            # Sheet-background keys to paper white: the combat sheet's
+            # transparent background reads as #fffeff/#fcfcfc (palette
+            # indices 0/24), but card-frame cells must pixel-fit their
+            # display ramp exactly (verify_palette_manifest check 6) --
+            # fight3's paper is pure #ffffff, so normalize the keys.
+            # Anything else keeps its pixels (nearest-shade mismatches
+            # stay visible in ramp_mismatches.json, never silenced here).
+            px = im.load()
+            for j in range(8):
+                for i in range(8):
+                    if px[i, j] in ((255, 254, 255), (252, 252, 252)):
+                        px[i, j] = (255, 255, 255)
             sheet.paste(im.resize((8, 8), Image.NEAREST), (x * 8, y * 8))
     sheet.save('assets/card_frames.png')
     print('wrote assets/card_frames.png')

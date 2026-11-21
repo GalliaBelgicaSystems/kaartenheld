@@ -4,12 +4,8 @@
  "description": "Defend feedback contract: an exact block (SH3 vs the knight's telegraphed SWORD 3, net 0, hero stays 10/10) plays the BLOCK thump (sfx_last 6), not the hurt cue.",
  "actions": [
   {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
    "type": "wait",
-   "frames": 30
+   "frames": 35
   },
   {
    "type": "set_hand_card",
@@ -97,7 +93,7 @@
   }
  ],
  "initial_state": {
-  "scene": "TEST_SOUTH_FIELD",
+  "scene": "TEST_FOREST",
   "player": {
    "x": 16,
    "y": 15,
@@ -109,6 +105,7 @@
     "max_hp": 10
    }
   },
-  "seed": 7009
+  "seed": 7009,
+  "start_battle": true
  }
 }

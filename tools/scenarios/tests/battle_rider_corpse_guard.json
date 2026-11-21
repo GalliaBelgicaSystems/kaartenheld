@@ -1,7 +1,7 @@
 {
   "name": "battle_rider_corpse_guard",
   "test": true,
-  "description": "REGRESSION: bat trio, hero at 13HP. Five 0-dmg SH attacks advance rounds; block-0 SW defends let swings 1-4 land full (2+3+3+2=10) so swing 5 (BOW3 + poison rider) is lethal. The organic rider must NOT apply to the already-dead player: no STATUS_APPLIED, no CARDS_GREYED after ENTITY_DEFEATED(00).",
+  "description": "REGRESSION: bat trio, hero at 13HP. Five 0-dmg SH attacks advance rounds; block-0 SW defends let swings 1-4 land full (2+3+3+2=10) so swing 5 (BOW3 + poison rider) is lethal. The organic rider must NOT apply to the already-dead player: no STATUS_APPLIED (hence no confusion, and no CARDS_GREYED -- poison never greys) after ENTITY_DEFEATED(00).",
   "initial_state": {
     "scene": "TEST_CASTLE",
     "start_battle": true,

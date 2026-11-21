@@ -1,7 +1,7 @@
 {
  "name": "large_map_scroll",
  "test": true,
- "description": "Walk south on the Field (32x18 tiles); with a full-screen 18-row viewport the map fits vertically so scroll_y stays 0 while the player moves to (2,16), proving the large-map data model works with a full-height viewport",
+ "description": "Walk south on the Field (32x18 tiles); with a 17-row world viewport (physical row 17 is the Window HUD) the 18-tall map scrolls one tile vertically, so scroll_y advances to 1 while the player moves to (2,16), proving the large-map data model works with a 17-row viewport",
  "actions": [
   {
    "type": "hold",
@@ -26,7 +26,7 @@
   {
    "type": "camera",
    "expected_x": 0,
-   "expected_y": 0
+   "expected_y": 1
   },
   {
    "type": "scroll_x",
@@ -34,7 +34,7 @@
   },
   {
    "type": "scroll_y",
-   "expected": 0
+   "expected": 1
   },
   {
    "type": "world_height",

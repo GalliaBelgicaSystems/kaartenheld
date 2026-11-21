@@ -1,0 +1,48 @@
+{
+ "name": "arrows_cheapest_first",
+ "test": true,
+ "description": "With 1 arrow and an all-bow deck (6x 5-AP mythril BOW_9 + 1x 1-AP wood bow id 98) the opening deal draws only the cheapest bow (BO1), the other 4 slots stay empty, and 6 pile cards remain.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row_exact",
+   "row": 13,
+   "expected": "BO1"
+  },
+  {
+   "type": "battle_draw_remaining",
+   "expected": 6
+  },
+  {
+   "type": "currency",
+   "expected": 1,
+   "currency": "ARROWS"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7301,
+  "currency": {
+   "ARROWS": 1
+  },
+  "deck": {
+   "BOW_9": 6,
+   "98": 1
+  },
+  "start_battle": true
+ }
+}

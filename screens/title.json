@@ -57,8 +57,8 @@
     "first_row": 9,
     "row_step": 2,
     "options": [
-      "> NEW GAME",
       "> CONTINUE",
+      "> NEW GAME",
       "> SOUND",
       "> TUTORIAL",
       "> CREDITS"

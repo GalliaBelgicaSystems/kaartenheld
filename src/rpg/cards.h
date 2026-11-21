@@ -51,6 +51,11 @@ typedef struct {
     uint8_t effect;     /* CardEffectType */
     uint8_t battle_type; /* BattleCardType for combat deck mapping; unused for SPECIAL */
     uint8_t price;      /* shop price in gold (0 = not sold) */
+    /* Per-card economy bias (docs/economy.md §4.1): signed gold added to
+     * price BEFORE market scaling (part of base_price, so the §5.1
+     * arbitrage invariant holds).  0 = table/synth price is right.  Costs
+     * one byte per definition; zero-filled synths default to 0. */
+    int8_t price_bias;
     /* On-hit status rider (docs/combo-system.md §13): battle rolls the
      * deterministic RNG and applies status_id when the roll passes.
      * chance is in 1/255 units (e.g. 160 ~= 63%); 0 = no rider. */

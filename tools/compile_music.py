@@ -69,14 +69,37 @@ src = re.sub(r"static const hUGEWaveInstr_t wave_instruments\[\] = \{\s*\};",
 src = re.sub(r"static const unsigned char waves\[\] = \{\s*\};",
               "static const unsigned char waves[1] = {0};", src)
 
+# Pan-convention translation (8xy effects): the tracker/GBStudio
+# composition tools author the pan byte mirrored relative to the
+# hardware NR51 layout (verified Nov 2026: the opening theme's first
+# ping is authored to go LEFT, but the .uge bytes decode to
+# CH1+CH2 RIGHT under NR51 -- while GBStudio itself plays it left).
+# Nibble-swap every 8xy effect param so the ROM reproduces the authored
+# stereo image: the author's left nibble lands on NR51's left bits.
+# Runs before dedup so the merge key and the playback-equivalence
+# guard below both see the final shipped bytes.  Songs without pan
+# events are untouched.
+def _swap_pan_byte(m):
+    return "0x8" + m.group(2) + m.group(1)
+src, n_pan = re.subn(r"0x8([0-9A-Fa-f])([0-9A-Fa-f])\b", _swap_pan_byte, src)
+if n_pan:
+    print(f"compile_music.py: translated {n_pan} pan bytes (tracker convention -> NR51)",
+          file=sys.stderr)
+
 # Deduplicate byte-identical pattern arrays.  uge2source emits one C array
-# per tracker pattern slot, so a repeated section (e.g. Forest.uge P2/P6)
-# lands in ROM twice.  Merging identical arrays is playback-identical: the
-# driver reads the same byte stream through the rewritten order references.
-# Bank 6 (driver + songs) is full, so every byte counts.  Runs on every
-# song; songs without duplicates come out byte-identical.  If a future
+# per tracker pattern slot, so a repeated section lands in ROM twice.
+# Merging identical arrays is playback-identical: the driver reads the
+# same byte stream through the rewritten order references.  Bank 6
+# (driver + songs) is full, so every byte counts.  Runs on every song;
+# songs without duplicates come out byte-identical.  If a future
 # uge2source changes the P-name scheme the pass finds nothing and no-ops
 # (a resulting bank overflow then fails loudly in make memmap).
+#
+# The merge key is the full whitespace-normalized pattern body: note names,
+# lengths, and effect bytes all participate.  A digits-only key was tried
+# here and silently merged same-rhythm/different-pitch patterns (Battle BGM
+# P16/P20/P24 into P0, P26 into P18 -- wrong notes in-game, incl. the last
+# note before the loop), so never reduce the key below the full DN tokens.
 def dedup_patterns(src):
     pat_re = re.compile(r"static const unsigned char (P\d+)\[\] = \{(.*?)\};", re.S)
     defs = [(m.group(1), m.group(2)) for m in pat_re.finditer(src)]
@@ -86,20 +109,40 @@ def dedup_patterns(src):
     seen = {}
     canon_sizes = {}
     for name, body in defs:
-        nums = re.findall(r"\d+", body)
-        key = ",".join(nums)
+        key = re.sub(r"\s+", "", body)
         if key in seen:
             canon[name] = seen[key]
-            canon_sizes[name] = len(nums)
+            canon_sizes[name] = len(re.findall(r"DN\(", body))
         else:
             seen[key] = name
     if not canon:
         return src
+    # Playback-equivalence guard: expand every order table to its sequence
+    # of normalized pattern bodies before the rewrite, and require the same
+    # expansion after.  A merge that changed any audible byte fails here
+    # instead of shipping wrong notes (this caught nothing while the key
+    # was digits-only -- the guard compares full bodies, the key did not).
+    def expand(text):
+        bodies = {}
+        for m in pat_re.finditer(text):
+            bodies[m.group(1)] = re.sub(r"\s+", "", m.group(2))
+        seq = []
+        for m in re.finditer(r"order\d+\[\] = \{(.*?)\};", text, re.S):
+            for ref in re.findall(r"(?<![A-Za-z0-9_])P\d+(?![A-Za-z0-9_])", m.group(1)):
+                seq.append(bodies[ref])
+        return seq
+    before = expand(src)
     for old in canon:
         src = re.sub(r"static const unsigned char " + old + r"\[\] = \{.*?\};\s*",
                       "", src, count=1, flags=re.S)
     for old, new in canon.items():
         src = re.sub(r"(?<![A-Za-z0-9_])" + old + r"(?![A-Za-z0-9_])", new, src)
+    after = expand(src)
+    if before != after:
+        print("compile_music.py: error: dedup changed the playback stream "
+              f"({len(before)} vs {len(after)} order entries differ)",
+              file=sys.stderr)
+        sys.exit(4)
     # Verify: every P-name referenced from the order tables must still be
     # defined (guards against a regex/toolchain mismatch corrupting them).
     # itDutySxx/itNoiseSxx tables share the P-prefix namespace, so only

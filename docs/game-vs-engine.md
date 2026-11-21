@@ -31,7 +31,7 @@ For any new feature:
 | Feature | Belongs in | Evidence |
 |---|---|---|
 | New enemy / NPC | `src/game/actors.c` | boss = conditional-spawn data row |
-| New item | `src/game/items.c` | amulet/NUT added with no engine change |
+| New item | `src/game/items.c` | shop-keys/NUT added with no engine change |
 | New shop / stock | `src/game/shops.c` | second shop via `shop_id` |
 | New quest | `src/game/quests.c` + events | Lost Merchant, zero engine edits |
 | New dialogue | `src/game/dialogue.c` | lines are data |

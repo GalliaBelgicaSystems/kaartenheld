@@ -3,6 +3,12 @@
  * Do not edit directly -- edit screens/rider_icons.json and re-run.
  * Battle per-card OAM rider icons: VRAM tile ids + OBJ palette slots
  * for the selected-card element riders.
+ *
+ * TIME-SHARE: ids 123-125 alias blob-tail offsets 23-25 (the
+ * last walk cell + idle rows).  Battle entry streams rider art
+ * here (marks_load_battle_tiles); overworld entry restores the
+ * blob tail.  ow_blob_layout's == 26 contract keeps the tail
+ * populated on both sides of the share.
  */
 
 #ifndef RIDER_TILES_GENERATED_H

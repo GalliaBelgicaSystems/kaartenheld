@@ -1,0 +1,356 @@
+#pragma bank 15
+#pragma disable_warning 110
+
+#include <stdint.h>
+#include <stdbool.h>
+#include "rpg/deck.h"
+#include "rpg/cards.h"
+#include "rpg/loot.h"
+#include "rpg/status.h"
+#include "game_ids.h"
+#include "banked.h"
+
+/* ── Banked collection merge (ROM bank 11: bank 2, the catalog's bank,
+ * is full, bank 10 filled up with the fade pair plus this file's own
+ * growth, and the fixed bank cannot host the compare loop) ─────────────────────────────
+ * Entry point: deck_merge_banked, g_bk_ptr_a = CardState*.  Moved out
+ * of the fixed bank (AGENTS.md §52.11.1/§52.18): the identity compare
+ * needs real definitions, and card_get_def is a fixed-bank trampoline
+ * a banked body must never call.
+ *
+ * Curated identities live in the table below (hand-written next to the
+ * catalog it mirrors in src/game/cards_content.c, kept honest by
+ * tools/card_costs.py --check-identity); loot ids are synthesized with
+ * pure macros (LOOT_POWER / CARD_AP / LOOT_RING_USES / LOOT_BOW_USES_FROM_AP,
+ * same formulas as loot_synth_banked -- slugs and prices stay out, they
+ * are not identity).
+ *
+ * One row per card identity: a curated catalog row and its mechanically
+ * identical loot twin are the same physical card.  Ownership is uncapped
+ * (clamped only at the 99-copy display/storage max), so pairs fold
+ * fully into the first row while the deck gate enforces a uniform
+ * 5-per-identity limit.  Idempotent; runs after every collection add
+ * that opens a new row and on save load. */
+
+/* Curated identities, index = CardId - CARD_FIRST_GAME (dense catalog
+ * range, see game_ids.h GAME_CARD_COUNT): type, power, cost, uses,
+ * effect, battle type, rider id, rider chance, max_copies. */
+static const uint8_t s_ident_catalog[GAME_CARD_COUNT][9] = {
+    /* CARD_IRON_SWORD    */ { 0, 5, 2, 0, 1, 0, 0, 0, 5 },
+    /* CARD_WOODEN_SHIELD */ { 1, 1, 1, 0, 2, 1, 0, 0, 5 },
+    /* CARD_IRON_RING     */ { 2, 4, 2, 3, 3, 3, 0, 0, 1 },
+    /* CARD_BRONZE_SWORD  */ { 0, 3, 1, 0, 1, 0, 0, 0, 3 },
+    /* CARD_POISON_DAGGER */ { 0, 2, 2, 0, 1, 4, 1, 208, 3 },
+    /* CARD_SHOPKEYS        */ { 5, 0, 0, 0, 0, 0, 0, 0, 1 },
+    /* CARD_BOW_9         */ { 0, 7, 5, 2, 1, 2, 0, 0, 1 },
+    /* CARD_WOOD_SWORD    */ { 0, 1, 1, 0, 1, 0, 0, 0, 5 },
+    /* CARD_STEEL_SHIELD  */ { 1, 6, 3, 0, 2, 1, 0, 0, 2 },
+    /* CARD_BONE          */ { 5, 1, 0, 0, 0, 0, 0, 0, 1 },
+    /* CARD_OLD_KEY       */ { 5, 2, 0, 0, 0, 0, 0, 0, 1 },
+};
+
+/* (type, battle type, effect) per loot weapon, index 0..4
+ * (sword/shield/bow/dagger/ring; reserved ids ride the ring row).
+ * Flat tables (not [5][3]): a stride-3 index needs the 8-bit multiply
+ * library, whose helpers are RAM-resident and unreachable while a bank
+ * is mapped (AGENTS.md §52.1/52.11). */
+static const uint8_t s_ident_type[5] = { 0, 1, 0, 0, 2 };
+static const uint8_t s_ident_battle[5] = { 0, 1, 2, 4, 3 };
+static const uint8_t s_ident_fx[5] = { 1, 2, 1, 1, 3 };
+static const uint8_t s_ident_chance[4] = { 0, 208, 208, 176 };
+
+/* Rider legality as a macro (not a call): deck_ident_cmp sits on the
+ * loot-grant stack chain, and a separate frame there costs worst-case
+ * depth (AGENTS.md §52.24).  Effect id doubles as the status id.
+ * Poison is dagger-only, fire/ice bow-only (swords never ride). */
+#define DECK_RIDER_OK(fx, wpn) \
+    ((uint8_t)(((fx) == EFF_POISON) ? ((wpn) == WPN_DAGGER) : \
+               (((fx) == EFF_FIRE || (fx) == EFF_ICE) ? ((wpn) == WPN_BOW) : 0)))
+
+/* Loot identity synthesis as a macro (not a call): deck_ident_cmp sits
+ * on the loot-grant stack chain, and a separate frame there costs
+ * worst-case depth (AGENTS.md §52.24).  Same pure macros as
+ * loot_synth_banked (LOOT_POWER / CARD_AP / LOOT_RING_USES /
+ * LOOT_BOW_USES_FROM_AP). */
+#define DECK_LOOT_IDENT(lid, out)                                          \
+    do {                                                                   \
+        uint8_t _m = loot_id_material(lid);                                \
+        uint8_t _e = loot_id_effect(lid);                                  \
+        uint8_t _w = loot_id_weapon(lid);                                  \
+        uint8_t _wi = ((_w) <= WPN_RING) ? (_w) : WPN_SWORD;                \
+        uint8_t _wr = ((_w) <= WPN_RING) ? (_w) : WPN_RING;                 \
+        uint8_t _hr = ((_m) >= MAT_BRONZE && (_e) != EFF_PLAIN &&           \
+                       DECK_RIDER_OK((_e), (_w)));                          \
+        (out)[0] = s_ident_type[_wr];                                      \
+        (out)[1] = LOOT_POWER((_m), (_wi));                                 \
+        (out)[2] = ((_w) <= WPN_RING) ?                                     \
+            CARD_AP((out)[1], (_m), (_hr)) : 0;                             \
+        (out)[3] = ((_wr) == 4) ? LOOT_RING_USES(_m) :                      \
+                   (((_wr) == 2) ? LOOT_BOW_USES_FROM_AP((out)[2]) : 0);     \
+        (out)[4] = s_ident_fx[_wr];                                        \
+        (out)[5] = s_ident_battle[_wr];                                    \
+        if (_hr) {                                                         \
+            (out)[6] = (_e);                                               \
+            (out)[7] = s_ident_chance[_e];                                 \
+        } else {                                                           \
+            (out)[6] = STATUS_NONE;                                        \
+            (out)[7] = 0;                                                  \
+        }                                                                  \
+    } while (0)
+
+/* Resolve-and-compare identity check.  Returns 1 when a and b are
+ * the same physical card (identical type/power/cost/uses/effect/
+ * battle type/rider; id, max_copies, price and name are NOT identity).
+ * Synthesis is inline (macro + unrolled loop), never a call: this
+ * compare sits on the loot-grant stack chain (AGENTS.md §52.24). */
+static uint8_t deck_ident_cmp(CardId a, CardId b)
+{
+    uint8_t ab[8];
+    uint8_t bb[8];
+    uint8_t f;
+    if (loot_is_loot_id(a)) {
+        DECK_LOOT_IDENT(a, ab);
+    } else {
+        uint8_t k;
+        if (a < CARD_FIRST_GAME) return 0;
+        k = (uint8_t)(a - CARD_FIRST_GAME);
+        if (k >= GAME_CARD_COUNT) return 0;
+        for (f = 0; f < 8; f++) ab[f] = s_ident_catalog[k][f];
+    }
+    if (loot_is_loot_id(b)) {
+        DECK_LOOT_IDENT(b, bb);
+    } else {
+        uint8_t k;
+        if (b < CARD_FIRST_GAME) return 0;
+        k = (uint8_t)(b - CARD_FIRST_GAME);
+        if (k >= GAME_CARD_COUNT) return 0;
+        for (f = 0; f < 8; f++) bb[f] = s_ident_catalog[k][f];
+    }
+    for (f = 0; f < 8; f++) {
+        if (ab[f] != bb[f]) return 0;
+    }
+    return 1;
+}
+
+/* Decked copies follow their card id when a loot twin folds onto its
+ * curated survivor row. */
+static void deck_retarget(DeckState *d, CardId from, CardId to)
+{
+    uint8_t i;
+    if (!d || from == to) return;
+    for (i = 0; i < d->count; i++) {
+        if (d->cards[i] == from) {
+            d->cards[i] = to;
+        }
+    }
+}
+
+/* Uniform 5-per-identity deck gate for deck_add_card (same bank,
+ * plain call from the fixed-bank wrapper): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id; g_bk_byte_c = 1 when decking keeps the
+ * identity at-or-under 5, 0 when the identity is already saturated
+ * or the id is unknown. */
+void deck_ident_gate_banked(void)
+{
+    CardState *cs = (CardState *)g_bk_ptr_a;
+    CardId id = g_bk_byte_a;
+    uint8_t total = 0;
+    uint8_t i;
+    if (!cs || !deck_ident_cmp(id, id)) {
+        g_bk_byte_c = 0;
+        return;
+    }
+    for (i = 0; i < cs->deck.count; i++) {
+        if (!deck_ident_cmp(id, cs->deck.cards[i])) continue;
+        total++;
+    }
+    g_bk_byte_c = (uint8_t)(total < 5);
+}
+
+/* Equip verdict for deck_equip_card (same bank, plain call from the
+ * fixed-bank wrapper): g_bk_ptr_a = CardState*, g_bk_byte_a = candidate
+ * id, g_bk_byte_d = live pool.  Answers g_bk_byte_c = 1 proceed, 2
+ * pool-locked (cost staged in g_bk_byte_b for telemetry), 3 deck full,
+ * 4 any per-card refusal, 5 fully-decked row clears (MIN floor holds),
+ * 6 fully-decked row refused by the MIN floor.  The fully-decked
+ * answers come FIRST, before the gate: clearing only shrinks the deck,
+ * so it can never create the unplayable state the gate guards, and a
+ * maxed row keeps its MIN-floor messaging even when its cost is above
+ * the pool.  The uniform AP gate
+ * (docs/enemies_ranking.md §4.8) lives here: no card above the pool can
+ * be decked, curated or loot.  Costs resolve without card_get_def (a
+ * fixed-bank trampoline a banked body must never call): curated rows
+ * read the table above, loot ids synthesize through the same pure
+ * macros as loot_synth_banked; SPECIAL rows cost 0 and are refused as
+ * quest items before cost ever matters.  Mirrors deck_add_card's fixed
+ * checks exactly (ownership, SPECIAL, owned count, deck floor,
+ * uniform 5-per-identity limit) so the verdict and the apply cannot disagree --
+ * the apply still runs through deck_add_card, so there is one append
+ * site.  Moved out of the fixed bank (AGENTS.md §52.11.1/§52.18): the
+ * scans do not fit under the 0x8000 ceiling. */
+void deck_equip_verdict_banked(void)
+{
+    CardState *cs = (CardState *)g_bk_ptr_a;
+    CardId id = g_bk_byte_a;
+    uint8_t pool = g_bk_byte_d;
+    uint8_t is_loot = loot_is_loot_id(id);
+    uint8_t cost = 0;
+    uint8_t owned = 0;
+    uint8_t in_deck = 0;
+    uint8_t total = 0;
+    uint8_t i;
+    g_bk_byte_c = 4;
+    if (!cs || id == CARD_NONE) return;
+    if (is_loot) {
+        uint8_t out[9];
+        DECK_LOOT_IDENT(id, out);
+        cost = out[2];
+    } else {
+        uint8_t k = (uint8_t)(id - CARD_FIRST_GAME);
+        if (k >= GAME_CARD_COUNT) return;
+        if (s_ident_catalog[k][0] == (uint8_t)CARD_TYPE_SPECIAL) return;
+        cost = s_ident_catalog[k][2];
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        if (cs->collection.entries[i].id != id) continue;
+        owned = (uint8_t)(owned + cs->collection.entries[i].count);
+        if (owned < cs->collection.entries[i].count) owned = 255;
+    }
+    if (owned == 0) return;
+    for (i = 0; i < cs->deck.count; i++) {
+        if (cs->deck.cards[i] == id) in_deck++;
+    }
+    /* Fully-decked rows clear (MIN-guarded) without consulting the gate
+     * (see header comment).  owned > 0 is guaranteed here. */
+    if (in_deck >= owned) {
+        if ((uint8_t)(cs->deck.count - in_deck) < DECK_MIN_CARDS)
+            g_bk_byte_c = 6;
+        else g_bk_byte_c = 5;
+        return;
+    }
+    /* The gate answers AFTER the fully-decked clear above: adding an
+     * over-pool card locks, but clearing a maxed row never does. */
+    if (cost > pool) {
+        g_bk_byte_b = cost;
+        g_bk_byte_c = 2;
+        return;
+    }
+    if (cs->deck.count >= MAX_DECK_CARDS) {
+        g_bk_byte_c = 3;
+        return;
+    }
+    if (!deck_ident_cmp(id, id)) return;
+    for (i = 0; i < cs->deck.count; i++) {
+        if (!deck_ident_cmp(id, cs->deck.cards[i])) continue;
+        total++;
+    }
+    if (total >= 5) return;
+    g_bk_byte_c = 1;
+}
+
+/* Full-collection absorb (same bank): g_bk_ptr_a = CardState*,
+ * g_bk_byte_a = candidate id, g_bk_byte_b = quantity; g_bk_byte_c = 1
+ * when the candidate folded into an existing same-identity row (atomic:
+ * all-or-nothing), 0 when no row matches or the matching row is already
+ * at 99 copies. */
+void deck_absorb_banked(void)
+{
+    CardState *cs = (CardState *)g_bk_ptr_a;
+    CardId id = g_bk_byte_a;
+    uint8_t qty = g_bk_byte_b;
+    uint8_t i;
+    g_bk_byte_c = 0;
+    if (!cs || qty == 0) return;
+    for (i = 0; i < cs->collection.count; i++) {
+        uint8_t total;
+        if (!deck_ident_cmp(cs->collection.entries[i].id, id))
+            continue;
+        if (cs->collection.entries[i].count >= 99) return;
+        total = (uint8_t)(cs->collection.entries[i].count + qty);
+        if (total < cs->collection.entries[i].count) total = 255;
+        /* Ownership display/storage max: 2-wide menu counts stay in
+         * range; excess vanishes instead of wrapping the uint8. */
+        if (total > 99) total = 99;
+        cs->collection.entries[i].count = total;
+        deck_retarget(&cs->deck, id, cs->collection.entries[i].id);
+        g_bk_byte_c = 1;
+        return;
+    }
+}
+
+/* Identity total (same bank): g_bk_ptr_a = CardState*, g_bk_byte_a = id;
+ * g_bk_byte_b = owned copies across every same-identity row (0 for
+ * unknown ids).  Dispatched by the loot-grant path for truthful
+ * LOOT_CARD_ADDED counts after folds move copies onto curated ids. */
+void deck_ident_total_banked(void)
+{
+    CardState *cs = (CardState *)g_bk_ptr_a;
+    CardId id = g_bk_byte_a;
+    uint8_t total = 0;
+    uint8_t i;
+    if (!cs) {
+        g_bk_byte_b = 0;
+        return;
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        if (!deck_ident_cmp(cs->collection.entries[i].id, id))
+            continue;
+        total = (uint8_t)(total + cs->collection.entries[i].count);
+        if (total < cs->collection.entries[i].count) total = 255;
+    }
+    g_bk_byte_b = total;
+}
+
+void deck_merge_banked(void)
+{
+    CardState *cs = (CardState *)g_bk_ptr_a;
+    uint8_t i;
+    uint8_t j;
+
+    if (!cs) return;
+    for (i = 0; i < cs->collection.count; i++) {
+        CardId keep_id = cs->collection.entries[i].id;
+        uint8_t keep_count = cs->collection.entries[i].count;
+        j = (uint8_t)(i + 1);
+        while (j < cs->collection.count) {
+            CardId drop_id = cs->collection.entries[j].id;
+            uint8_t drop_count = cs->collection.entries[j].count;
+            uint8_t total;
+            if (!deck_ident_cmp(keep_id, drop_id)) {
+                j++;
+                continue;
+            }
+            /* Uncapped ownership: prefer the curated id as the survivor
+             * (loot twins fold onto it); counts saturate at 255 here
+             * and clamp to the 99 display max below. */
+            if (loot_is_loot_id(keep_id) &&
+                !loot_is_loot_id(drop_id)) {
+                keep_id = drop_id;
+                drop_id = cs->collection.entries[i].id;
+                cs->collection.entries[i].id = keep_id;
+            }
+            /* Saturating 8-bit add (no 16-bit library needed in this
+             * banked body). */
+            total = (uint8_t)(keep_count + drop_count);
+            if (total < keep_count) total = 255;
+            keep_count = total;
+            cs->collection.entries[i].count = total;
+            deck_retarget(&cs->deck, drop_id, keep_id);
+            cs->collection.count--;
+            cs->collection.entries[j].id =
+                cs->collection.entries[cs->collection.count].id;
+            cs->collection.entries[j].count =
+                cs->collection.entries[cs->collection.count].count;
+        }
+    }
+    /* Ownership guard: no row ever holds more than 99 copies, so the
+     * 2-wide menu counts stay in range; excess copies vanish instead
+     * of wrapping the uint8.  Every collection add funnels through
+     * this merge (uncapped twins fold into one row), and save load
+     * runs it too, so this bounds the grouped menu totals in every
+     * reachable state. */
+    for (i = 0; i < cs->collection.count; i++) {
+        if (cs->collection.entries[i].count > 99)
+            cs->collection.entries[i].count = 99;
+    }
+}

@@ -34,7 +34,20 @@ enum {
     DBG_ACT_SET_HAND_CARD_STATUS = 17,
     DBG_ACT_SET_ENEMY_HP = 18,
     DBG_ACT_APPLY_STATUS = 19,
-    DBG_ACT_SET_HAND_RING = 20
+    DBG_ACT_SET_HAND_RING = 20,
+    /* Battle draw-pile staging (below-battle shuffle era): scenarios that
+     * choreograph a specific draw/refill order restore the pile after
+     * battle start has shuffled it. */
+    DBG_ACT_SET_DECK_CARD = 21,
+    DBG_ACT_SET_DECK_STATE = 22,
+    DBG_ACT_SET_DECK_RING = 23,
+    /* Pin the market index mid-scenario (docs/economy.md §5.1 arbitrage
+     * test): a0 = index in 1/32 units, clamped to 24..48 (else 32).
+     * Pure WRAM write, handled by the bank-5 leaf body. */
+    DBG_ACT_SET_MARKET_INDEX = 24,
+    /* Pin the material filter mid-scenario (WEAPON/MATERIAL picker):
+     * a0 = material id (MAT_*, 0xFF = ALL).  Pure WRAM write. */
+    DBG_ACT_SET_FILTER_MAT = 25
 };
 
 #endif /* SCENARIOS_H */

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schema/entity_type.schema.json",
+  "id": "shopkeys",
+  "label": "Shop Keys",
+  "kind": "npc",
+  "name": "SHOP KEYS",
+  "visual": "?",
+  "sprite_kind": "chest"
+}

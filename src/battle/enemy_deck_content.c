@@ -9,13 +9,15 @@
  * Small decks for each enemy type.  Each enemy draws one card per
  * attack turn; the card's power is the incoming damage the player
  * must defend against.  Decks reshuffle when exhausted.
- * Fixed order (no startup shuffle) — the starter deck follows the
- * same pattern (see deck_init.c). */
+ * Fixed order (no startup shuffle): enemy swings stay readable and
+ * scriptable.  The player's battle deck is shuffled at battle start
+ * (deck_shuffle_pile, see deck_init.c) -- enemies deliberately keep
+ * their authored order. */
 
 static const EnemyCard s_slime_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
 static const EnemyCard s_bat_deck[] = {
@@ -24,42 +26,43 @@ static const EnemyCard s_bat_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     /* Organic poison rider (Phase D): this swing carries a poison rider at
-     * ~60/255 chance; when it lands on the player it also greys her hand. */
+     * ~60/255 chance; when it lands on the player she is confused (she
+     * plays a random hand) -- control-only, no damage. */
     { BATTLE_CARD_TYPE_BOW,   3, STATUS_POISON, 60 },
 };
 static const EnemyCard s_slime_trio_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
 };
 static const EnemyCard s_kobold_deck[] = {
-    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 2, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
-};
-static const EnemyCard s_slime_knight_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  3, STATUS_NONE, 0 },
 };
-static const EnemyCard s_mimic_deck[] = {
+static const EnemyCard s_slime_knight_deck[] = {
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 5, STATUS_NONE, 0 },
-    { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  3, STATUS_NONE, 0 },
+};
+static const EnemyCard s_mimic_deck[] = {
+    { BATTLE_CARD_TYPE_SWORD, 5, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 5, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 6, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_SWORD, 4, STATUS_NONE, 0 },
+    { BATTLE_CARD_TYPE_HEAL,  4, STATUS_NONE, 0 },
 };
 static const EnemyCard s_spider_deck[] = {
     { BATTLE_CARD_TYPE_BOW,   2, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_SWORD, 3, STATUS_NONE, 0 },
     { BATTLE_CARD_TYPE_HEAL,  2, STATUS_NONE, 0 },
-    /* Webbing strike: poison rider at ~70/255; landing it also greys the
-     * player's hand (Phase D), the spider's signature threat. */
+    /* Webbing strike: poison rider at ~70/255; landing it confuses
+     * the player (Phase D), the spider's signature threat. */
     { BATTLE_CARD_TYPE_BOW,   3, STATUS_POISON, 70 },
 };
 /* Carl's practice deck: a single 0-power swing, drawn every round.  The

@@ -13,11 +13,45 @@
 #include "banked.h"
 #include "game_ids.h"
 
-/* Bank-2 helper (screen_content.c); keeps the fixed bank small
- * (AGENTS.md 52.18). */
-void item_menu_cursor_banked(void);
+/* DECK cursor bodies (menu_cursor_banked.c, bank 15): group sums,
+ * per-side packed draw maps and cursor geometry; the fixed bank only
+ * declares the two entry points it dispatches. */
+/* Grouped DECK view build (bank 15): g_bk_ptr_a = Game*, fills
+ * s_view_indices/s_view_count (one row per MATERIAL+WEAPON) and the
+ * per-side packed draw maps. */
+void item_view_build_banked(void);
+/* Text-only filter/sort picker (bank 15, no catalog reads): dispatched
+ * from fixed when the DECK tab is in picker mode.  Same staging as the
+ * render path. */
+void item_picker_render_banked(void);
+/* Whole-DECK update (bank 15): the entire DECK branch of
+ * item_screen_update moved out of the fixed bank (AGENTS.md 52.18).
+ * Same-bank helpers are plain calls inside it; WRAM pad edges replace
+ * input_pressed; SFX stages through the g_bk_sfx_req mailbox.
+ * Staging: g_bk_ptr_a = Game* (no-arg body). */
+void item_deck_update_banked(void);
+/* In-place row painter (bank 2): dispatched from fixed when the moved
+ * banked nav stages g_bk_paint_req.  Same staging as the render path. */
+void item_card_refresh_banked(void);
 
-/* Bank-8 GEM-tab bodies (item_gem_banked.c): the GEM nav/render route
+/* DECK nav mutations (filter/sort/tab) run banked (menu_cursor_banked.c,
+ * item_menu_cycle_banked, now bank 15 with the rest of the DECK menu):
+ * pure WRAM state machines.  Mode 0 = filter cycle, 1 = sort cycle,
+ * 2 = tab switch; dir is the tab direction (0 back, 1 forward), read
+ * here -- a banked body must never call input_pressed (AGENTS.md
+ * §52.11.1).  Modes 0/1 ignore dir. */
+void item_menu_cycle_banked(void);
+static void menu_cycle(Game *g, uint8_t mode, uint8_t dir)
+{
+    g_bk_call_bank = 15;
+    g_bk_call_target = (uint16_t)&item_menu_cycle_banked;
+    g_bk_ptr_a = (void *)g;
+    g_bk_byte_a = mode;
+    g_bk_byte_b = dir;
+    banked_call_run();
+}
+
+/* Bank-13 GEM-tab bodies (item_gem_banked.c): the GEM nav/render route
  * through here; non-GEM tabs forward to the quest bodies in the same
  * bank (direct call, no trampoline), so the fixed dispatch below needs
  * no extra branches for the fourth tab (fixed _HOME headroom: AGENTS.md
@@ -35,7 +69,6 @@ void item_gem_render_banked(void);
  * start at 1. */
 #define ROW_TOP     0
 #define FIRST_CARD  1
-#define VISIBLE_CARDS 5
 
 #define MODE_LIST         0
 #define MODE_CARD_DETAIL  1
@@ -46,6 +79,8 @@ void item_gem_render_banked(void);
 #define MSG_DECK_FULL  1
 #define MSG_DECK_MIN   2
 #define MSG_QUEST_ITEM 3
+#define MSG_NEED_AP    4
+#define MSG_DECK_CAPPED 5
 
 #define FILTER_ALL      0xFF
 #define SORT_NONE       0
@@ -56,188 +91,14 @@ void item_gem_render_banked(void);
 #define SORT_COST_DESC  5
 
 /* Filtered/sorted view over the deckable collection entries.  s_view_indices
- * holds collection indices; s_view_count is the number of visible cards. */
+ * holds collection indices; s_view_count is the number of visible cards.
+ * BUILT BY THE BANKED VIEW BODY (item_view_build_banked, bank 15) right
+ * before every DECK paint, and consumed read-only here: the fixed
+ * bank sits at 0x8000, so the view code lives with the card catalog it
+ * needs (AGENTS.md 52.18).  Every mutation path below invalidates the
+ * render cache, so the rebuild lands before the next consumer. */
 uint8_t s_view_indices[MAX_CARD_COLLECTION];
 uint8_t s_view_count;
-
-/* SPECIAL cards (quest items like the Lost Amulet) are LISTED but never
- * deckable -- pressing A shows a transient QUEST ITEM message instead. */
-static bool card_deckable(const CardDefinition *def)
-{
-    return def && def->type != CARD_TYPE_SPECIAL;
-}
-
-static CardId view_card_id(Game *g, uint8_t pos)
-{
-    return g->state.cards.collection.entries[s_view_indices[pos]].id;
-}
-
-/* ── Sell at the card merchant (docs/loot.md §24/§34.6) ─────────────
- * A loot card's detail page offers SELL while the player has engaged a
- * buying shop (g->shop_id set by the shop actor, cleared on scene
- * change).  Value = the def's price field -- for loot ids that is the
- * centralized sell value synthesized by loot_synth_banked. */
-static bool merchant_buys(const Game *g)
-{
-    const ShopDefinition *shop;
-    shop = game_shop_for_id(g->shop_id);
-    return shop && shop->buys;
-}
-
-static void card_detail_sell(Game *g)
-{
-    CardState *cs = &g->state.cards;
-    CardId id;
-    const CardDefinition *def;
-    uint8_t owned;
-
-    if ((uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
-        return;
-    id = view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
-    if (!loot_is_loot_id(id) || !merchant_buys(g)) return;
-    def = card_get_def(id);
-
-    /* Selling must never strand a decked card without ownership
-     * backing: require at least one copy outside the battle deck. */
-    owned = deck_collection_count(cs, id);
-    if (def == NULL || owned <= deck_count_in_deck(&cs->deck, id)) {
-        g->item_menu_message = MSG_DECK_FULL;
-        g->item_menu_msg_ttl = 45;
-        g->item_menu_mode = MODE_LIST;
-        return;
-    }
-    if (!deck_collection_remove(cs, id, 1)) return;
-    currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)def->price);
-    telemetry_emit(EVENT_CARD_SOLD, id, def->price,
-                   (uint8_t)(owned - 1), 0);
-    /* Back to the list: it rebuilds its view every frame, so a fully
-     * sold-out entry simply disappears and the OWN digit drops -- the
-     * CARD_SOLD event is the authoritative feedback for tests. */
-    g->item_menu_mode = MODE_LIST;
-}
-
-static bool filter_matches(Game *g, CardId id)
-{
-    const CardDefinition *def;
-    if (g->item_menu_filter == FILTER_ALL) return true;
-    def = card_get_def(id);
-    if (!def) return false;
-    return def->type == g->item_menu_filter;
-}
-
-static uint8_t sort_value(const CardDefinition *def, uint8_t sort)
-{
-    switch (sort) {
-        case SORT_TYPE:  return def->type;
-        case SORT_POWER:
-        case SORT_POWER_DESC: return def->power;
-        case SORT_COST:
-        case SORT_COST_DESC:  return def->cost;
-        default: return 0;
-    }
-}
-
-static void sort_view(Game *g)
-{
-    uint8_t i, j, tmp, va, vb;
-    uint8_t desc = (g->item_menu_sort == SORT_POWER_DESC ||
-                    g->item_menu_sort == SORT_COST_DESC);
-
-    for (i = 1; i < s_view_count; i++) {
-        tmp = s_view_indices[i];
-        va = sort_value(card_get_def(g->state.cards.collection.entries[tmp].id), g->item_menu_sort);
-        j = i;
-        while (j > 0) {
-            vb = sort_value(card_get_def(g->state.cards.collection.entries[s_view_indices[j - 1]].id),
-                            g->item_menu_sort);
-            if (desc ? (vb < va) : (vb > va)) {
-                s_view_indices[j] = s_view_indices[j - 1];
-                j--;
-            } else {
-                break;
-            }
-        }
-        s_view_indices[j] = tmp;
-    }
-}
-
-static void build_view(Game *g)
-{
-    uint8_t total, i;
-    const CardDefinition *def;
-
-    s_view_count = 0;
-    total = g->state.cards.collection.count;
-    for (i = 0; i < total; i++) {
-        def = card_get_def(g->state.cards.collection.entries[i].id);
-        if (!card_deckable(def)) continue;
-        if (filter_matches(g, g->state.cards.collection.entries[i].id))
-            s_view_indices[s_view_count++] = i;
-    }
-    if (g->item_menu_sort != SORT_NONE && s_view_count > 1)
-        sort_view(g);
-}
-
-static void cycle_filter(Game *g)
-{
-    if (g->item_menu_filter == FILTER_ALL)
-        g->item_menu_filter = CARD_TYPE_ATTACK;
-    else if (g->item_menu_filter == CARD_TYPE_ATTACK)
-        g->item_menu_filter = CARD_TYPE_DEFENSE;
-    else if (g->item_menu_filter == CARD_TYPE_DEFENSE)
-        g->item_menu_filter = CARD_TYPE_HEAL;
-    else if (g->item_menu_filter == CARD_TYPE_HEAL)
-        g->item_menu_filter = CARD_TYPE_STATUS;
-    else if (g->item_menu_filter == CARD_TYPE_STATUS)
-        g->item_menu_filter = CARD_TYPE_UTILITY;
-    else
-        g->item_menu_filter = FILTER_ALL;
-}
-
-static void cycle_sort(Game *g)
-{
-    /* Wrap instead of % -- SM83 has no hardware divide and the SDCC
-     * int-mod library would land in the tight fixed bank. */
-    g->item_menu_sort = (g->item_menu_sort >= SORT_COST_DESC) ?
-        SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
-}
-
-/* RIGHT advances, LEFT goes back (DECK <-> QUEST <-> HERO <-> GEM).
- * Directional: with four tabs a forward-only cycle would strand
- * LEFT presses on the wrong tab. The direction is read here so the
- * two call sites keep their original single-call shape (fixed-bank
- * _HOME headroom, AGENTS.md 52.18). */
-static void switch_tab(Game *g)
-{
-    if (input_pressed(INPUT_RIGHT)) {
-        if (g->item_menu_tab == TAB_GEM) g->item_menu_tab = TAB_DECK;
-        else g->item_menu_tab++;
-    } else {
-        if (g->item_menu_tab == TAB_DECK) g->item_menu_tab = TAB_GEM;
-        else g->item_menu_tab--;
-    }
-    g->item_menu_index = ROW_TOP;
-    g->item_menu_scroll = 0;
-    g->render_cache.valid = false;
-}
-
-/* Targeted cursor move (AGENTS.md 36).  The bank-2 body (screen_content.c)
- * computes the caret rows, repaints the two cells via sc_put_char (mirrored
- * into g_ui_screen_buf) and, when the visible window must shift, moves the
- * scroll and flags g->render_cache.valid=false so render takes the rare
- * full-redraw path.  A pure caret move never touches the render cache, so
- * the big item_screen_render stays at its baseline shape (AGENTS.md 52.19).
- * No staging bytes beyond the old/new indices; the body writes game state
- * directly through the staged Game* (WRAM is always mapped). */
-static void item_menu_step(Game *g, uint8_t new_index)
-{
-    g_bk_call_bank = 2;
-    g_bk_call_target = (uint16_t)&item_menu_cursor_banked;
-    g_bk_ptr_a = (void *)g;
-    g_bk_byte_a = g->item_menu_index;
-    g_bk_byte_b = new_index;
-    banked_call_run();
-}
 
 
 void item_screen_reset(Game *g)
@@ -245,10 +106,14 @@ void item_screen_reset(Game *g)
     g->item_menu_index = ROW_TOP;
     g->item_menu_tab = TAB_DECK;
     g->item_menu_scroll = 0;
+    g->item_menu_scroll_deck = 0;
+    g->item_menu_side = 0;
     g->item_menu_filter = FILTER_ALL;
+    g->item_menu_filter_mat = FILTER_ALL;
     g->item_menu_sort = SORT_NONE;
     g->item_menu_mode = MODE_LIST;
     g->item_menu_message = MSG_NONE;
+    g->item_menu_msg_ttl = 0;
 }
 
 static void close_menu(Game *g)
@@ -259,14 +124,19 @@ static void close_menu(Game *g)
 
 void item_screen_update(Game *g)
 {
-    uint8_t total;
-
-    /* Transient rejection messages expire on their own (~0.75s). */
+    /* Transient rejection messages expire on their own (~0.75s).  Every
+     * surface takes the full redraw: the next paint blanks and redraws
+     * without wiping, so expiry never blinks.  (The GEM tab shares this
+     * TTL for MAX 3 GEMS, its LIST mode is also 0; picker/detail own
+     * row 16 themselves.) */
     if (g->item_menu_msg_ttl > 0) {
         g->item_menu_msg_ttl--;
         if (g->item_menu_msg_ttl == 0) {
             g->item_menu_message = MSG_NONE;
-            g->render_cache.valid = false;
+            if (g->item_menu_tab == TAB_DECK && g->item_menu_mode == MODE_LIST)
+                g_bk_paint_req = 1;
+            else
+                g->render_cache.valid = false;
         }
     }
 
@@ -287,8 +157,8 @@ void item_screen_update(Game *g)
             case MODE_PICKER:
                 if (g->item_menu_mode == MODE_PICKER) {
                     g->item_menu_filter = g->item_menu_prev_filter;
+                    g->item_menu_filter_mat = g->item_menu_prev_filter_mat;
                     g->item_menu_sort = g->item_menu_prev_sort;
-                    build_view(g);
                 }
                 g->item_menu_mode = MODE_LIST;
                 break;
@@ -298,6 +168,7 @@ void item_screen_update(Game *g)
                     /* Two-step close: first B jumps to the top row. */
                     g->item_menu_index = ROW_TOP;
                     g->item_menu_scroll = 0;
+                    g->item_menu_scroll_deck = 0;
                 } else {
                     close_menu(g);
                 }
@@ -310,129 +181,48 @@ void item_screen_update(Game *g)
 
     /* QUEST, HERO and GEM tabs share the pre-DECK branch (LR switches
      * tabs from LIST mode; HERO is read-only otherwise).  Cursor/
-     * detail input for QUEST lives in bank 8 with the quest registry
-     * and GEM input routes through the bank-8 gem body (which forwards
+     * detail input for QUEST lives in bank 13 with the quest registry
+     * and GEM input routes through the bank-13 gem body (which forwards
      * QUEST back to the quest nav in-bank, so this dispatch needs no
      * tab branch of its own -- fixed-bank headroom: AGENTS.md 52.18). */
     if (g->item_menu_tab != TAB_DECK) {
         if (g->item_menu_mode == MODE_QUEST_DETAIL) return;
         if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-            switch_tab(g);
+            menu_cycle(g, 2, input_pressed(INPUT_RIGHT) ? 1 : 0);
             return;
         }
         if (g->item_menu_tab == TAB_HERO) return;
-        g_bk_call_bank = 8;
+        g_bk_call_bank = 13;
         g_bk_call_target = (uint16_t)&item_gem_nav_banked;
         g_bk_ptr_a = (void *)g;
         banked_call_run();
-        return;
-    }
-
-    /* ── DECK tab ─────────────────────────────────────────────── */
-    switch (g->item_menu_mode) {
-        case MODE_CARD_DETAIL:
-            if (input_pressed(INPUT_SELECT)) {
-                g->item_menu_mode = MODE_LIST;
-                g->render_cache.valid = false;
-            } else if (input_pressed(INPUT_A)) {
-                card_detail_sell(g);
-                g->render_cache.valid = false;
-            }
-            return;
-        case MODE_PICKER:
-            if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
-                g->item_menu_pick_row =
-                    (uint8_t)(g->item_menu_pick_row == 0 ? 1 : 0);
-                g->render_cache.valid = false;
-            } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-                if (g->item_menu_pick_row == 0) cycle_filter(g);
-                else cycle_sort(g);
-                build_view(g);
-                g->render_cache.valid = false;
-            } else if (input_pressed(INPUT_A)) {
-                g->item_menu_mode = MODE_LIST;
-                g->render_cache.valid = false;
-            }
-            return;
-        default:
-            break;
-    }
-
-    /* Tab switch (LIST mode only — submenus consume LR first). */
-    if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-        switch_tab(g);
-        return;
-    }
-
-    /* NOTE: no per-frame build_view here.  The view is rebuilt on every
-     * full redraw (see item_screen_render) plus explicitly after picker
-     * filter/sort changes.  That covers every consumer: at most one menu
-     * action runs per frame, every collection mutation invalidates the
-     * cache (same-frame rebuild before the next frame's consumption), and
-     * the SELECT/A/detail guards reject out-of-range indices.  A per-frame
-     * rebuild would cost fixed-bank bytes we do not have (see the render
-     * note; _HOME must stay below 0x8000). */
-    if (input_pressed(INPUT_SELECT)) {
-        if (g->item_menu_index >= FIRST_CARD &&
-            (uint8_t)(g->item_menu_index - FIRST_CARD) < s_view_count) {
-            g->item_menu_mode = MODE_CARD_DETAIL;
-            g->render_cache.valid = false;
+        /* QUEST-tab save & quit: A opens the quit confirm dialogue
+         * (overworld only; A is otherwise a no-op on this tab).  YES
+         * flushes the active slot and lands on the title PRESS START. */
+        if (input_pressed(INPUT_A) && g->item_menu_tab == TAB_QUEST &&
+            g->prev_screen == SCREEN_OVERWORLD) {
+            dialogue_start_def(&g->dialogue, (DialogueId)DIALOGUE_ID_QUIT_CONFIRM);
+            screen_change(g, SCREEN_DIALOGUE);
         }
         return;
     }
-    if (input_pressed(INPUT_A)) {
-        if (g->item_menu_index == ROW_TOP) {
-            g->item_menu_mode = MODE_PICKER;
-            g->item_menu_pick_row = 0;
-            g->item_menu_prev_filter = g->item_menu_filter;
-            g->item_menu_prev_sort = g->item_menu_sort;
-        } else {
-            CardState *cs = &g->state.cards;
-            CardId id;
-            if ((uint8_t)(g->item_menu_index - FIRST_CARD) >= s_view_count)
-                return;
-            id = view_card_id(g, (uint8_t)(g->item_menu_index - FIRST_CARD));
-            /* Count-up-then-clear: A adds one copy; once the card is fully
-             * decked (add rejected for per-card reasons, not a full deck),
-             * A clears every decked copy of it — but only if the remaining
-             * deck would still hold DECK_MIN_CARDS cards (all-or-nothing). */
-            if (card_get_def(id)->type == CARD_TYPE_SPECIAL) {
-                g->item_menu_message = MSG_QUEST_ITEM;
-                g->item_menu_msg_ttl = 45;
-                /* Without the invalidate the transient message never
-                 * appears until the next unrelated redraw. */
-                g->render_cache.valid = false;
-                return;
-            }
-            if (deck_add_card(cs, id)) {
-                telemetry_emit(EVENT_CARD_ADDED_TO_DECK, id, 0, 0, 0);
-                audio_play_sfx(SFX_SELECT);
-            } else if (cs->deck.count >= MAX_DECK_CARDS) {
-                g->item_menu_message = MSG_DECK_FULL;
-                g->item_menu_msg_ttl = 45;
-            } else if ((uint8_t)(cs->deck.count -
-                                 deck_count_in_deck(&cs->deck, id)) <
-                       DECK_MIN_CARDS) {
-                g->item_menu_message = MSG_DECK_MIN;
-                g->item_menu_msg_ttl = 45;
-            } else {
-                while (deck_remove_card(cs, id))
-                    telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK, id, 0, 0, 0);
-            }
-        }
-        g->render_cache.valid = false;
-        return;
-    }
 
-    total = (uint8_t)(s_view_count + 1); /* + the FILTER/SORT row */
-    if (total <= 1) return;
-
-    if (input_pressed(INPUT_UP)) {
-        item_menu_step(g, (g->item_menu_index > 0) ?
-            (uint8_t)(g->item_menu_index - 1) : (uint8_t)(total - 1));
-    } else if (input_pressed(INPUT_DOWN)) {
-        item_menu_step(g, (g->item_menu_index < (uint8_t)(total - 1)) ?
-            (uint8_t)(g->item_menu_index + 1) : ROW_TOP);
+    /* DECK tab: the whole branch lives banked (menu_cursor_banked.c
+     * item_deck_update_banked, bank 15) so the fixed bank stays under
+     * 0x8000 (AGENTS.md 52.18).  Same-bank helpers are plain calls
+     * inside it; WRAM pad edges replace input_pressed; SFX stages
+     * through the g_bk_sfx_req mailbox; in-place nav repaints stage
+     * g_bk_paint_req for the bank-2 row painter below. */
+    g_bk_call_bank = 15;
+    g_bk_call_target = (uint16_t)&item_deck_update_banked;
+    g_bk_ptr_a = (void *)g;
+    banked_call_run();
+    if (g_bk_paint_req) {
+        g_bk_paint_req = 0;
+        g_bk_call_bank = 2;
+        g_bk_call_target = (uint16_t)&item_card_refresh_banked;
+        g_bk_ptr_a = (void *)g;
+        banked_call_run();
     }
 }
 
@@ -444,40 +234,56 @@ void item_screen_render(Game *g)
     if (!g) return;
     rc = &g->render_cache;
     if (!rc->valid || rc->prev_screen != SCREEN_ITEM) {
-        /* The tab header (row 0 tabs + row 1 caret) is drawn by the
-         * banked bodies below (fixed-bank _HOME is nearly full,
-         * AGENTS.md 52.18): ui_clear_screen + CRAM here, then the
-         * dispatched body paints header + content. */
-
-        ui_clear_screen();
+        /* No screen wipe and no extra branch: ui_clear_screen() is gone.
+         * Each banked body paints its rows directly in one pass (no
+         * wholesale blank: the 320-cell blank spanned LCD-on frames
+         * and flashed).  Every row covers its full width, so tab
+         * switches morph cell-by-cell with no blank intermediate.
+         * CRAM still resets unconditionally: the first
+         * entry from another screen needs the base set, and reprogramming
+         * identical values mid-stay is invisible.  (Fixed-bank _HOME is
+         * nearly full, AGENTS.md 52.18: the bodies carry the cost in
+         * banked room.) */
         /* UI-mode CRAM (base set): card icons are encoded with the battle
          * display ramps (card_display_slots.json); the world tileset's
          * CRAM would show wrong colors.  Overworld/battle full redraws
-         * restore their own CRAM on exit.  No-op when opened from battle
-         * (already base). */
-        ui_set_cram_palette(0);
+         * restore their own CRAM on exit.  Only programmed on first entry
+         * from another screen (rc->prev_screen != SCREEN_ITEM): same-screen
+         * tab/mode switches keep the live menu CRAM (including slot 7's
+         * heal-rider green) without 64 redundant STAT-waited writes. */
+        if (rc->prev_screen != SCREEN_ITEM) {
+            ui_set_cram_palette(0);
+        }
 
-        /* The banked body consumes the view read-only (single shared
-         * view; see build_view).  The update no longer rebuilds it every
-         * frame (fixed-bank budget — see its note), so every full redraw
-         * rebuilds it here instead: the open frame can otherwise run
-         * before any update (same-frame screen_change), painting blank
-         * rows from the BSS-zero view that the valid cache then freezes.
-         * Detail-page sells also mutate and redraw in the same frame. */
-        build_view(g);
+        /* Rebuild the grouped view first, then dispatch the render (two
+         * sequential banked calls, same frame): the open frame can run
+         * before any update (same-frame screen_change), so the view can
+         * never wait for one.  Only the DECK tab has this view. */
+        if (g->item_menu_tab == TAB_DECK) {
+            g_bk_call_bank = 15;
+            g_bk_call_target = (uint16_t)&item_view_build_banked;
+            g_bk_ptr_a = (void *)g;
+            banked_call_run();
+        }
 
-        /* DECK + HERO content renders in bank 2; the QUEST and GEM tabs
-         * both render in bank 8 with their registries (AGENTS.md
-         * 52.11.1: code shares its tables' bank; bank 8 is the overflow
-         * bank per AGENTS.md 55.5).  GEM routes through
-         * item_gem_render_banked, which forwards QUEST to the quest
-         * renderer in-bank, so this dispatch needs no extra branch. */
-        if (g->item_menu_tab == TAB_QUEST || g->item_menu_tab == TAB_GEM) {
-            g_bk_call_bank = 8;
-            g_bk_call_target = (uint16_t)&item_gem_render_banked;
+        /* DECK content renders in bank 2, picker in bank 15 (text-only,
+         * no catalog: keeps bank 2 under 0x8000); QUEST, GEM and HERO
+         * render in bank 13 (AGENTS.md 52.11.1: code shares its tables'
+         * bank; bank 2 sits hard against 16 KB while banks 13/15 are
+         * free).  GEM routes through item_gem_render_banked, which
+         * forwards QUEST and HERO to their renderers in-bank, so this
+         * dispatch needs no extra branch. */
+        if (g->item_menu_tab == TAB_DECK) {
+            if (g->item_menu_mode == MODE_PICKER) {
+                g_bk_call_bank = 15;
+                g_bk_call_target = (uint16_t)&item_picker_render_banked;
+            } else {
+                g_bk_call_bank = 2;
+                g_bk_call_target = (uint16_t)&item_screen_render_banked;
+            }
         } else {
-            g_bk_call_bank = 2;
-            g_bk_call_target = (uint16_t)&item_screen_render_banked;
+            g_bk_call_bank = 13;
+            g_bk_call_target = (uint16_t)&item_gem_render_banked;
         }
         g_bk_ptr_a = (void *)g;
         banked_call_run();

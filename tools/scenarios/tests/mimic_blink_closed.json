@@ -1,0 +1,31 @@
+{
+ "name": "mimic_blink_closed",
+ "test": true,
+ "description": "Castle mimic rests as a closed chest (OAM 104) most of its 64-tick blink cycle: stage TEST_CASTLE far from the mimic at (5,14), step 1. Companion to mimic_blink_reveal (brief 105 flash).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 1
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 2,
+   "expected": 104
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 5,
+   "y": 14,
+   "facing": "UP"
+  },
+  "seed": 777
+ }
+}

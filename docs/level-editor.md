@@ -1112,39 +1112,60 @@ Whole map borders can link to other maps through `neighbors`:
 ```
 
 Stepping onto a non-wall cell of a linked border crosses to the neighbor
-scene with a mirrored entry spawn (one cell inside the opposite edge,
-clamped for size mismatches). Walls stay walls: a wall on a linked edge
-blocks, everything else crosses. A point exit on the same cell wins over
-the edge rule. Links should be reciprocal (walk back); one-sided links
-warn unless a point exit covers the return.
+scene at its arrival-side entry (`player.entry.<side>`, Spawn layer):
+crossing X's east edge into Y lands on Y's **west** entry (opposite of
+the crossed edge), and so on for north/south/east/west. A missing entry
+falls back to the destination's main spawn. Walls stay walls: a wall on
+a linked edge blocks, everything else crosses. A point exit on the same
+cell wins over the edge rule. Links should be reciprocal (walk back);
+one-sided links warn unless a point exit covers the return.
 
-### Crossing safety (paired openings, hard compile error)
+```json
+"player": {
+  "spawn": { "x": 2, "y": 7, "facing": "RIGHT" },
+  "entry": {
+    "west":  { "x": 1, "y": 7, "facing": "RIGHT" },
+    "east":  { "x": 18, "y": 4, "facing": "LEFT" },
+    "stairs_up": { "x": 10, "y": 10, "facing": "UP" }
+  }
+}
+```
 
-Because the landing cell is *inside* the neighbour, a border opening only
-works when the matching entry cell in the neighbour is walkable. A link
-therefore needs a corridor on both sides:
+Point exits (stairs, doors, tunnels) keep explicit `target_x/target_y`,
+and may instead name a destination entry via `target_entry` — the
+compiler resolves it to that entry (or the destination spawn when
+unset), so the landing lives in one place:
 
-* the source's linked border cells (the cells you step onto), and
-* the target's entry line one cell inside the opposite edge (where you
-  land), across the non-corner span.
+```json
+{ "x": 15, "y": 1, "target_scene": "forest",
+  "target_x": 8, "target_y": 16, "direction": "NORTH",
+  "tile_char": "<", "target_entry": "stairs_down" }
+```
 
-`open_ground_blocks` opens *unpainted* border cells; the shipped levels
-also carve the target entry lines explicitly so the whole edge is
-traversable (block levels subtract the entry row/column from their wall
-blocks; grid levels get the default floor). This is what stops a mapper
-from digging a wall just inside an opening and trapping the player.
+No `target_entry` = land exactly on `target_x/target_y`, as before.
+`tunnel` mouths cannot use `target_entry` (tunnels require
+spawn-tracks-gate landings).
+
+### Crossing safety (entry landing, hard compile error)
+
+Because every crossing on one edge lands on the same entry cell, a link
+only works when the used entry is walkable. The Spawn layer owns those
+cells (pick the point in the dropdown, click to move it, or edit
+x/y/facing in the Inspector): put each used entry on open ground and no
+edge alignment is ever needed — east entries can sit on row 1 while the
+crossing happened on row 10.
 
 `tools/level_compiler/collision.py` holds the one implementation
-(`mirrored_entry` + `edge_link_report`). It is enforced as a **hard
-compile error** — `compile.py` refuses to build a trapping pairing — and
+(`resolve_entry_spawn` + `edge_link_report`). It is enforced as a **hard
+compile error** — `compile.py` refuses to build a trapping link — and
 surfaced by `validate.py` and the editor's inline Edge-links panel
 (`/api/neighbor-check`). It rejects:
 
-* a walkable crossing whose mirrored landing cell is a wall (player stuck
-  inside a wall);
+* a link whose used entry is not walkable (every crossing would land
+  the player stuck);
 * a declared reciprocal return whose edge has no walkable cell (player
-  trapped in the neighbour — e.g. walking into a fully walled map);
-* a reciprocal return that itself lands in a wall.
+  cannot walk back);
+* a reciprocal return whose own used entry is not walkable.
 
 ## Contract
 
@@ -1156,7 +1177,9 @@ surfaced by `validate.py` and the editor's inline Edge-links panel
   fail loudly, like exit targets.
 * The ROM resolves a step as point-exit trigger first, then linked-edge
   crossing, then a normal walk (fixed-bank budget: the edge predicate
-  and mirrored spawn run banked; see AGENTS.md 55.5).
+  runs banked; entry itself is the destination's arrival-side named
+  entry from `SceneDefinition`, falling back to its main spawn, see
+  AGENTS.md 55.5). Each entry carries its own facing, applied on entry.
 * The editor paints linked borders with green `⇄ <scene>` strips, edits
   the four links in the Exits tab, rewires them on rename, and clears
   them on delete (same as exits). `validate.py` checks targets,
@@ -1164,8 +1187,8 @@ surfaced by `validate.py` and the editor's inline Edge-links panel
   panel reports the same per-link status inline (via
   `/api/neighbor-check`, using the editor's unsaved level data).
 * The walkthrough planner (`tools/walkthrough/route.py`) routes over
-  exits and edges identically, and only across crossings whose landing
-  cell is walkable; the content sweep visits every level through them.
+  exits and edges identically, and only across links whose used entry
+  is walkable; the content sweep visits every level through them.
 * `collision.py` is the shared collision/neighbor helper module for the
   compiler, validator, and planner (single source of truth; avoids the
   compile↔validate import cycle).

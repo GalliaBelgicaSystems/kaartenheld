@@ -33,7 +33,8 @@ OUT_DIR = (REPO_ROOT / "tools" / "level_editor" / "public" / "audio")
 
 SONGS = ["battle", "desolate_landscape", "forest", "boss_fight",
          "village", "castle", "mimic", "mimic_intro",
-         "opening", "chest_opening", "game_over", "demo_complete"]
+         "opening_more", "chest_opening", "game_over", "demo_complete",
+         "underground"]
 
 SR = 22050          # output sample rate
 TICK_HZ = 64        # hUGE_dosound rate (256 Hz timer / 4)
@@ -154,8 +155,12 @@ def parse_song_c(path, note_names):
 # ── GB hardware models ────────────────────────────────────────────────
 
 def period_to_freq(period):
-    if period >= 2048 or period < 0:
-        raise RenderError(f"period {period} out of range")
+    # GB period registers (NRx3/NRx4) are 11 bits: the driver writes the
+    # full 16-bit portamento value and the hardware keeps the low 11
+    # (hUGEDriver never masks; update_channel_freq splits DE straight
+    # into LOW/HIGH).  Mask here instead of erroring: slides that cross
+    # 2047 wrap on hardware, and the preview must follow.
+    period &= 0x7FF
     return 131072.0 / (2048 - period)
 
 
@@ -219,6 +224,7 @@ class Emu:
         self.tempo = parsed["tempo"]
         self.counter = 0
         self.tick = 0
+        self.nr51 = 0xFF  # stereo panning (driver fx_set_pan writes C verbatim; audio_init sets 0xFF)
         self.chans = [Chan("duty"), Chan("duty"), Chan("wave"), Chan("noise")]
         # structural validation up front (loud errors, never guesses)
         if parsed["order_cnt"] % 2:
@@ -421,7 +427,7 @@ class Emu:
             v = self.chans[ch]
             if inner == 0:
                 # row tick: attack path (porta skipped on tick 0, like the driver)
-                if fx not in (0, 1, 2, 0xE):
+                if fx not in (0, 1, 2, 8, 0xA, 0xC, 0xE):
                     raise RenderError(f"pattern effect {fx} unsupported")
                 arp = fx == 0 and param != 0
                 if note < LAST_NOTE:
@@ -439,6 +445,48 @@ class Emu:
                     raise RenderError(f"note value {note} unsupported")
                 if fx == 0xE and param == 0:
                     v.cut = True
+                if fx == 8:
+                    # set pan (driver fx_set_pan, tick 0 only): the
+                    # param byte IS the NR51 value, applied globally.
+                    self.nr51 = param & 0xFF
+                if fx == 0xA:
+                    # volume slide (driver fx_vol_slide, tick 0 only):
+                    # take the channel's current envelope volume, subtract
+                    # the low nibble (floor 0), add the high nibble
+                    # (cap 15), and replay the note at the new constant
+                    # volume (the driver writes vol<<4, clearing pace and
+                    # direction). CH3's wave channel gets the same NR32
+                    # write the driver performs.
+                    slide_vol = ((v.wavevol if ch == 3 else v.env) >> 4) & 0x0F
+                    slide_vol = max(0, slide_vol - (param & 0x0F))
+                    slide_vol = min(15, slide_vol + ((param >> 4) & 0x0F))
+                    if ch == 3:
+                        v.wavevol = slide_vol << 4
+                    else:
+                        v.env = slide_vol << 4
+                        v.env_t0 = self.tick
+                    self.attack(self.tick, ch, v.base_note)
+                if fx == 0xC:
+                    # set volume (driver fx_set_volume, tick 0 only): the
+                    # channel's volume becomes param's low nibble, applied
+                    # on top of whatever the row attacked (the driver then
+                    # replays the note at the new volume).  CH3's wave
+                    # volume is quantized exactly like the driver.
+                    set_vol = param & 0x0F
+                    if ch == 3:
+                        if set_vol == 0:
+                            v.wavevol = 0x00
+                        elif set_vol < 5:
+                            v.wavevol = 0x60
+                        elif set_vol < 10:
+                            v.wavevol = 0x40
+                        else:
+                            v.wavevol = 0x20
+                    else:
+                        # pace 0 + direction 0: env_vol() reads it back
+                        # as a constant volume.
+                        v.env = set_vol << 4
+                        v.env_t0 = self.tick
                 self.table_step(ch)
                 if ch == 0:
                     self.sweep_step(self.tick)
@@ -454,12 +502,24 @@ class Emu:
                 elif fx == 0xE:
                     if inner == param:
                         v.cut = True
+                elif fx == 0xA:
+                    # volume slide acts tick-0 only (driver ret nz); inner
+                    # ticks ignore it.
+                    pass
+                elif fx == 0xC:
+                    # set volume acts tick-0 only (driver ret nz); inner
+                    # ticks ignore it.
+                    pass
+                elif fx == 8:
+                    # set pan acts tick-0 only (driver ret nz); inner
+                    # ticks ignore it.
+                    pass
                 else:
                     raise RenderError(f"pattern effect {fx} on inner tick unsupported")
                 self.table_step(ch)
                 if ch == 0:
                     self.sweep_step(self.tick)
-        self.frames.append(tuple(self.chan_out(ch) for ch in range(4)))
+        self.frames.append((tuple(self.chan_out(ch) for ch in range(4)), self.nr51))
         self.counter += 1
         self.tick += 1
 
@@ -478,7 +538,11 @@ class Synth:
         self.lfsr_acc = 0.0
 
     def render_tick(self, frame):
-        """One 1/64 s tick -> samples (list of floats)."""
+        """One 1/64 s tick -> stereo samples (list of (L, R) float pairs).
+        NR51 panning is applied per channel exactly like the hardware
+        mixer (CH1: bit4/bit0, CH2: bit5/bit1, CH3: bit6/bit2,
+        CH4: bit7/bit3).  Songs without pan events stay centered."""
+        chframes, pan = frame
         n = SR / TICK_HZ
         count = int(n)
         out = []
@@ -487,20 +551,22 @@ class Synth:
         if self._frac >= 1.0:
             count += 1
             self._frac -= 1.0
+        gains = [((pan >> (4 + ch)) & 1, (pan >> ch) & 1) for ch in range(4)]
         for _ in range(count):
-            s = 0.0
+            s_l = 0.0
+            s_r = 0.0
             for ch in range(4):
-                freq, vol, aux, nr43 = frame[ch]
+                freq, vol, aux, nr43 = chframes[ch]
                 if vol == 0 or freq <= 0:
                     continue
                 if ch < 2:
                     self.phase[ch] = (self.phase[ch] + freq / SR) % 1.0
-                    s += (1.0 if self.phase[ch] < aux else -1.0) * (vol / 15.0)
+                    s = (1.0 if self.phase[ch] < aux else -1.0) * (vol / 15.0)
                 elif ch == 2:
                     # 32-nibble wave loop; scale 0..15 -> -1..1
                     self.phase[ch] = (self.phase[ch] + freq * 32.0 / SR) % 32.0
                     nib = aux[int(self.phase[ch]) % 32]
-                    s += ((nib / 7.5) - 1.0) * WAVE_VOLS[vol]
+                    s = ((nib / 7.5) - 1.0) * WAVE_VOLS[vol]
                 else:
                     width7 = bool(nr43 & 0x08)
                     self.lfsr_acc += freq / SR
@@ -512,8 +578,11 @@ class Synth:
                         else:
                             fb = ((self.lfsr ^ (self.lfsr >> 1)) & 1) << 14
                             self.lfsr = ((self.lfsr >> 1) | fb) & 0x7FFF
-                    s += (-1.0 if self.lfsr & 1 else 1.0) * (vol / 15.0)
-            out.append(s * 0.25)
+                    s = (-1.0 if self.lfsr & 1 else 1.0) * (vol / 15.0)
+                gl, gr = gains[ch]
+                s_l += s * gl
+                s_r += s * gr
+            out.append((s_l * 0.25, s_r * 0.25))
         return out
 
 
@@ -529,22 +598,25 @@ def render_song(name):
     samples = []
     for f in frames:
         samples.extend(synth.render_tick(f))
-    # normalize + fade
-    peak = max(1e-6, max(abs(s) for s in samples))
+    # normalize + fade (peak over both channels; fade applies to both)
+    peak = max(1e-6, max(max(abs(l), abs(r)) for l, r in samples))
     gain = 0.89 / peak
-    samples = [s * gain for s in samples]
+    samples = [(l * gain, r * gain) for l, r in samples]
     fade_n = min(len(samples), int(SR * FADE_MS / 1000))
     for i in range(fade_n):
-        samples[len(samples) - fade_n + i] *= 1.0 - i / fade_n
-    pcm = b"".join(struct.pack("<h", max(-32768, min(32767, int(s * 32767))))
-                   for s in samples)
+        l, r = samples[len(samples) - fade_n + i]
+        samples[len(samples) - fade_n + i] = (l * (1.0 - i / fade_n),
+                                              r * (1.0 - i / fade_n))
+    pcm = b"".join(struct.pack("<hh", max(-32768, min(32767, int(l * 32767))),
+                                        max(-32768, min(32767, int(r * 32767))))
+                   for l, r in samples)
     return pcm, len(samples) / SR
 
 
 def write_wav(path, pcm):
     path.parent.mkdir(parents=True, exist_ok=True)
     with wave.open(str(path), "wb") as w:
-        w.setnchannels(1)
+        w.setnchannels(2)
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes(pcm)

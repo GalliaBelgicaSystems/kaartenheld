@@ -22,7 +22,7 @@ from emulator import (EmulatorSession, STORY_FLAG_ID_MAP, DIALOGUE_ID_MAP,
                       CHARACTER_ID_TO_NAME, ITEM_ID_TO_NAME, ACTOR_ID_TO_NAME,
                       CURRENCY_ID_MAP, PROGRESSION_TARGET_MAP,
                        CURRENCY_ID_TO_NAME, PROG_TYPE_HERO, CARD_TYPE_MAP,
-                      FILTER_TYPE_MAP, SORT_MODE_MAP)
+                      FILTER_TYPE_MAP, FILTER_MAT_MAP, SORT_MODE_MAP)
 
 VALID_ASSERTION_TYPES = {
     "game_state", "player_position", "player_facing", "player_hp", "music_track",
@@ -30,13 +30,14 @@ VALID_ASSERTION_TYPES = {
     "battle_energy", "battle_draw_remaining", "battle_discard_count",
     "game_over_choice", "story_flag", "screen", "scene",
     "event_occurred", "event_not_occurred", "event_count", "event_arg", "dialogue_active", "dialogue_line", "dialogue_id",
-    "screen_row", "screen_row_not_contains", "vram_row", "actor_at",
-    "flag", "variable", "inventory", "party_hp", "party_level", "actor_state",
-    "currency", "progression_level", "progression_progress",
+    "screen_row", "screen_row_exact", "screen_row_not_contains", "vram_row", "vram_row_not_contains", "actor_at",
+    "flag", "variable", "inventory", "collection_count", "deck_contains",
+    "party_hp", "party_level", "actor_state",
+    "currency", "market_index", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
     "oam_tile", "oam_attr", "oam_bytes",
-    "sfx_count", "sfx_last",
+    "sfx_count", "sfx_last", "sfx_mute_ch2_max", "sfx_mute_ch4_max",
     "stack_margin_min",
 }
 
@@ -54,34 +55,60 @@ VALID_ACTOR_STATES = set(ACTOR_STATE_NAME_MAP)
 _AP_TILES_CACHE = None
 
 
-def _load_ap_tiles():
-    """Parse generated src/gfx/ap_tiles.h into {name: [16 bytes]}.
+def _parse_gfx_tiles(path, names):
+    """Parse a png2gb-generated header into {name: [16 bytes]}.
 
-    Tile order in the file is the png2gb --ap-coords order, which matches
-    AP_TILE_IDS: ap_1, ap_2, exclaim, question.  Comparing live OAM tile
-    data against this file (rather than hand-written hex) keeps one
-    source of truth: art changes update both sides together, while a
-    runtime VRAM clobber still fails loudly.  Anchored to the repo root
-    (not the cwd): a missing file is a loud error, never a silent {} that
-    misreads as 'unknown ap_tiles entry'.
+    Tile order in the file is the --tile-coords order; callers pass the
+    matching names.  Each tile must decode to exactly 16 bytes or the
+    file failed to regenerate (loud, never silently short).
     """
-    global _AP_TILES_CACHE
-    if _AP_TILES_CACHE is not None:
-        return _AP_TILES_CACHE
-    names = ["ap_1", "ap_2", "exclaim", "question"]
-    tiles = {}
-    ap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           "..", "src", "gfx", "ap_tiles.h")
-    try:
-        with open(ap_path) as f:
-            text = f.read()
-    except OSError as e:
-        raise FileNotFoundError(f"ap_tiles.h not found at {ap_path}: {e}")
+    with open(path) as f:
+        text = f.read()
     blocks = re.findall(r"/\* tile \d+ \*/(.*?)(?=/\* tile \d+ \*/|\Z)", text, re.S)
+    tiles = {}
     for name, block in zip(names, blocks):
         vals = [int(x, 16) for x in re.findall(r"0x([0-9A-Fa-f]{2})", block)]
         if len(vals) == 16:
             tiles[name] = vals
+    return tiles
+
+
+def _load_ap_tiles():
+    """Parse generated OAM art headers into {name: [16 bytes]}.
+
+    ap_tiles.h (AP_TILE_IDS order: ap_1..ap_5, exclaim, question),
+    hero_desolate_sprite_tile.h (compose order: hero_f0, hero_f1,
+    hero_idle_1, hero_idle_2), rider_tiles.h (--rider-coords order:
+    rider_fire, rider_ice, rider_poison) and enemy_ow_tiles.h (blob order,
+    named ow_00..ow_25 by index: pinned layout + the == 26 tail contract
+    keep indices stable; a layout change fails these asserts loudly).
+    Comparing live OAM tile data against these files (rather than
+    hand-written hex) keeps one source of truth: art changes update both
+    sides together, while a runtime VRAM clobber still fails loudly.
+    Anchored to the repo root (not the cwd): a missing file is a loud
+    error, never a silent {} that misreads as 'unknown ap_tiles entry'.
+    """
+    global _AP_TILES_CACHE
+    if _AP_TILES_CACHE is not None:
+        return _AP_TILES_CACHE
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", "src", "gfx")
+    tiles = {}
+    try:
+        tiles.update(_parse_gfx_tiles(
+            os.path.join(base, "ap_tiles.h"),
+            ["ap_1", "ap_2", "ap_3", "ap_4", "ap_5", "exclaim", "question"]))
+        tiles.update(_parse_gfx_tiles(
+            os.path.join(base, "hero_desolate_sprite_tile.h"),
+            ["hero_f0", "hero_f1", "hero_idle_1", "hero_idle_2"]))
+        tiles.update(_parse_gfx_tiles(
+            os.path.join(base, "rider_tiles.h"),
+            ["rider_fire", "rider_ice", "rider_poison"]))
+        tiles.update(_parse_gfx_tiles(
+            os.path.join(base, "enemy_ow_tiles.h"),
+            ["ow_%02d" % i for i in range(32)]))
+    except OSError as e:
+        raise FileNotFoundError(f"OAM art header missing: {e}")
     _AP_TILES_CACHE = tiles
     return tiles
 VALID_CURRENCY_NAMES = set(CURRENCY_ID_MAP)
@@ -98,7 +125,7 @@ VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 # scenarios that never ran NEW_GAME would under-report inventory by these
 # starter amounts.  If that use ever broadens, gate the delta on the
 # snapshot's actual origin instead.
-NEW_GAME_COLLECTION = {"WOOD_SWORD": 4, "WOODEN_SHIELD": 4, "FIRE_SWORD": 2}
+NEW_GAME_COLLECTION = {"WOOD_SWORD": 4, "WOODEN_SHIELD": 4, "BRONZE_SWORD": 2}
 
 def validate_scenario(data, filepath):
     for act in data.get("actions", []):
@@ -106,6 +133,19 @@ def validate_scenario(data, filepath):
             actor = act.get("actor")
             if actor and actor not in VALID_ENTITY_IDS:
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown interact actor '{actor}'. Valid entities: {sorted(list(VALID_ENTITY_IDS))}")
+        # set_deck only forwards type/value/ring to the ROM (cost, uses,
+        # status and chance are silently dropped -- the ROM pins cost = 1,
+        # uses = 0xFF, no rider).  Fail loudly so a scenario that stages
+        # those keys cannot pass while testing different cards than staged.
+        if act.get("type") == "set_deck":
+            for spec in act.get("cards", []):
+                dropped = [k for k in ("cost", "uses", "status", "chance")
+                           if k in spec]
+                if dropped:
+                    raise ValueError(
+                        f"SCENARIO ERROR in {filepath}: set_deck card "
+                        f"{spec} stages unsupported keys {dropped} "
+                        f"(only type/value/ring reach the ROM).")
 
     for a in data.get("assertions", []):
         a_type = a.get("type")
@@ -164,11 +204,15 @@ def validate_scenario(data, filepath):
         for cname, cval in (init.get("currency") or {}).items():
             if cname not in VALID_CURRENCY_NAMES:
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown currency '{cname}' in initial_state. Valid currencies: {sorted(list(VALID_CURRENCY_NAMES))}")
+        _mkt = init.get("market") or {}
+        for _mkey in _mkt:
+            if _mkey not in ("index", "gold_in", "gold_out", "battles"):
+                raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown market key '{_mkey}' in initial_state. Valid keys: index, gold_in, gold_out, battles")
         for iname, iqty in (init.get("inventory") or {}).items():
-            if iname not in VALID_ITEM_NAMES:
+            if iname not in VALID_ITEM_NAMES and not (iname.isdigit() and 96 <= int(iname) <= 255):
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown item '{iname}' in initial_state. Valid items: {sorted(list(VALID_ITEM_NAMES))}")
         for dname, dqty in (init.get("deck") or {}).items():
-            if dname not in VALID_ITEM_NAMES:
+            if dname not in VALID_ITEM_NAMES and not (dname.isdigit() and 96 <= int(dname) <= 255):
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown card '{dname}' in initial_state deck. Valid cards: {sorted(list(VALID_ITEM_NAMES))}")
         for aname, aval in (init.get("world") or {}).items():
             if aname not in VALID_ACTOR_NAMES:
@@ -234,10 +278,18 @@ def run_scenario(scenario):
             act_type = act.get("type")
             if act_type == "press":
                 session.press(act.get("button", "A"))
+            elif act_type == "press_buttons":
+                # Simultaneous D-pad mask (diagonal steps): one frame
+                # with every listed button held, like press() but ORed.
+                session.press_buttons(act.get("buttons", []))
             elif act_type == "wait":
                 session.wait(act.get("frames", 1))
             elif act_type == "hold":
                 session.hold(act.get("button", "A"), act.get("frames", 8))
+            elif act_type == "hold_buttons":
+                # Diagonal hold-to-move: the combined mask is rewritten
+                # before every stepped frame, like hold().
+                session.hold_buttons(act.get("buttons", []), act.get("frames", 8))
             elif act_type == "interact":
                 # Semantic interaction: the player must already be adjacent
                 # and facing the target (set via initial_state); press A.
@@ -260,8 +312,17 @@ def run_scenario(scenario):
                 session.debug_action(session.DBG_ACT_ADD_PROGRESS,
                                      ttype, tid, act.get("amount", 0))
             elif act_type == "buy_item":
+                # Curated cards by name; loot derived ids by number.
+                _buy = act.get("item")
+                if isinstance(_buy, int):
+                    _buy_id = _buy
+                else:
+                    _buy_id = ITEM_ID_MAP[_buy]
                 session.debug_action(session.DBG_ACT_BUY_ITEM,
-                                     ITEM_ID_MAP[act.get("item")], 0, 0)
+                                     _buy_id, 0, 0)
+            elif act_type == "set_market_index":
+                session.debug_action(session.DBG_ACT_SET_MARKET_INDEX,
+                                     act.get("index", 32), 0, 0)
             elif act_type == "save":
                 slot = act.get("slot", 1) - 1 if "slot" in act else 0
                 session.debug_action(session.DBG_ACT_SAVE, slot, 0, 0)
@@ -276,6 +337,33 @@ def run_scenario(scenario):
                 # an absolute GB address (save slot N base = 0xA000 +
                 # N*0x400; version byte at base+2).
                 session.write_mem(act.get("addr", 0), act.get("value", 0))
+            elif act_type == "set_hand":
+                # Stage a whole opening hand in one action.  `cards` is an
+                # ordered list of up to 5 specs: {type, value, cost, uses,
+                # status?, chance?, ring?}.  Applies the same ROM debug
+                # actions as set_hand_card / set_hand_card_meta (plus the
+                # optional rider ones), so the staged cards are ordinary
+                # mechanic state and assertions still read the real hand.
+                # Battle start shuffles the draw pile, so scenarios that
+                # assert specific card slots pin them here instead of
+                # trusting the dealt order.
+                for hand_idx, spec in enumerate(act.get("cards", [])[:5]):
+                    session.debug_action(session.DBG_ACT_SET_HAND_CARD,
+                                         hand_idx,
+                                         CARD_TYPE_MAP[spec.get("type", "SW")] & 0xFF,
+                                         spec.get("value", 1) & 0xFF)
+                    session.debug_action(session.DBG_ACT_SET_HAND_CARD_META,
+                                         hand_idx,
+                                         spec.get("cost", 1) & 0xFF,
+                                         spec.get("uses", 0xFF) & 0xFF)
+                    if "status" in spec:
+                        session.debug_action(session.DBG_ACT_SET_HAND_CARD_STATUS,
+                                             hand_idx,
+                                             int(spec["status"]) & 0xFF,
+                                             int(spec.get("chance", 255)) & 0xFF)
+                    if spec.get("ring"):
+                        session.debug_action(session.DBG_ACT_SET_HAND_RING,
+                                             hand_idx, 0, 0)
             elif act_type == "set_hand_card":
                 # Overwrite one battle hand slot (index 0-4) with a specific
                 # card (type like "SW"/"SH"/"BO"/"HE"/"DA", value 1-9).  Used by
@@ -295,6 +383,28 @@ def run_scenario(scenario):
                                      act.get("index", 0) & 0xFF,
                                      act.get("cost", 1) & 0xFF,
                                      act.get("uses", 0xFF) & 0xFF)
+            elif act_type == "set_deck":
+                # Stage the battle's UNDRAWN draw pile (the scripted-order
+                # counterpart to set_hand).  Battle start shuffles the pile,
+                # so scenarios that choreograph a specific draw/refill order
+                # restage it here: `cards` is the pile from the next card
+                # drawn onwards, `draw_idx` defaults to 0.  Only
+                # type/value/ring reach the ROM (cost, uses, status and
+                # chance are pinned by the debug action and rejected by
+                # validate_scenario) -- same ROM debug state writes as
+                # set_hand, no test-only gameplay path.
+                deck_cards = act.get("cards", [])[:20]
+                for deck_idx, spec in enumerate(deck_cards):
+                    session.debug_action(session.DBG_ACT_SET_DECK_CARD,
+                                         deck_idx,
+                                         CARD_TYPE_MAP[spec.get("type", "SW")] & 0xFF,
+                                         spec.get("value", 1) & 0xFF)
+                    if spec.get("ring"):
+                        session.debug_action(session.DBG_ACT_SET_DECK_RING,
+                                             deck_idx, 0, 0)
+                session.debug_action(session.DBG_ACT_SET_DECK_STATE,
+                                     len(deck_cards),
+                                     act.get("draw_idx", 0) & 0xFF, 0)
             elif act_type == "set_enemy_hp":
                 # Pin an enemy combatant's current HP in the active battle
                 # (scenario setup: deterministic fight lengths).
@@ -310,11 +420,18 @@ def run_scenario(scenario):
                                      act.get("status", 1) & 0xFF,
                                      act.get("chance", 255) & 0xFF)
             elif act_type == "deck_add":
-                # Direct deck_add_card() call (real mechanic, all validations:
-                # ownership, SPECIAL exclusion, max_copies, 20-card size).
-                # Emits CARD_ADDED_TO_DECK on success only.
+                # Direct deck_equip_card() call (real gated mechanic, all validations:
+                # ownership, SPECIAL exclusion, max_copies, 20-card size, uniform AP lock).
+                # Emits CARD_ADDED_TO_DECK on success, CARD_EQUIP_LOCKED on a card
+                # above the pool.  Raw card_id reaches derived loot-range CardIds
+                # (docs/loot.md §34) that have no ITEM_ID_MAP name, same as
+                # collection_add.
+                if "card_id" in act:
+                    deck_id = int(act["card_id"]) & 0xFF
+                else:
+                    deck_id = ITEM_ID_MAP[act.get("card")]
                 session.debug_action(session.DBG_ACT_DECK_ADD,
-                                     ITEM_ID_MAP[act.get("card")], 0, 0)
+                                     deck_id, 0, 0)
             elif act_type == "deck_remove":
                 # Direct deck_remove_card() call (real mechanic: membership +
                 # DECK_MIN_CARDS floor).  Emits CARD_REMOVED_FROM_DECK on
@@ -329,6 +446,9 @@ def run_scenario(scenario):
             elif act_type == "set_filter":
                 session.debug_action(session.DBG_ACT_SET_FILTER,
                                      FILTER_TYPE_MAP[act.get("filter", "ALL")] & 0xFF, 0, 0)
+            elif act_type == "set_filter_mat":
+                session.debug_action(session.DBG_ACT_SET_FILTER_MAT,
+                                     FILTER_MAT_MAP[act.get("filter", "ALL")] & 0xFF, 0, 0)
             elif act_type == "set_sort":
                 session.debug_action(session.DBG_ACT_SET_SORT,
                                      SORT_MODE_MAP[act.get("mode", "OFF")] & 0xFF, 0, 0)
@@ -362,7 +482,7 @@ def run_scenario(scenario):
         # get_screen_dump) would step game time after the snapshot was
         # taken and skew the two.  The guard is a no-op when the halt
         # already landed in HBlank/VBlank.
-        has_vram_assert = any(a.get("type") == "vram_row" for a in scenario.get("assertions", []))
+        has_vram_assert = any(a.get("type") in {"vram_row", "vram_row_not_contains"} for a in scenario.get("assertions", []))
         oam_needs_vblank = any(a.get("type") == "oam_bytes"
                                for a in scenario.get("assertions", []))
         if has_vram_assert or oam_needs_vblank:
@@ -382,6 +502,8 @@ def run_scenario(scenario):
         tilemap_attr_mirror = session.get_tilemap_attr_mirror() if has_tilemap_attr_assert else None
         has_sfx_assert = any(a.get("type") in ("sfx_count", "sfx_last") for a in scenario.get("assertions", []))
         sfx_count, sfx_last = session.get_sfx_state() if has_sfx_assert else (None, None)
+        has_sfx_mute_assert = any(a.get("type") in ("sfx_mute_ch2_max", "sfx_mute_ch4_max") for a in scenario.get("assertions", []))
+        sfx_mute_ch2, sfx_mute_ch4 = session.get_sfx_mute() if has_sfx_mute_assert else (None, None)
         if has_canary_assert:
             canary_depth, canary_margin = session.stack_canary_read(canary_base, canary_sp)
         else:
@@ -390,8 +512,8 @@ def run_scenario(scenario):
         # before disconnect: evaluation runs after the session closes.
         has_oam_assert = any(a.get("type") in ("oam_tile", "oam_attr", "oam_bytes") for a in scenario.get("assertions", []))
         oam_entries = {}
-        # Expected AP/mark tile bytes come from the generated ap_tiles.h
-        # (same file the ROM links): tile order is the --ap-coords order.
+        # Expected OAM tile bytes come from the generated gfx headers
+        # (same files the ROM links); see _load_ap_tiles for the set.
         ap_tiles = {}
         if has_oam_assert:
             ap_tiles = _load_ap_tiles()
@@ -407,7 +529,7 @@ def run_scenario(scenario):
                             a.get("addr", 0), 16)
 
         # Check if any assertion needs logical screen buffer
-        has_screen_assert = any(a.get("type") in ("screen_row", "screen_row_not_contains") for a in scenario.get("assertions", []))
+        has_screen_assert = any(a.get("type") in ("screen_row", "screen_row_not_contains", "screen_row_exact") for a in scenario.get("assertions", []))
         screen_lines = []
         if has_screen_assert:
             screen_buf = session.get_screen_buf()
@@ -564,8 +686,9 @@ def run_scenario(scenario):
             # Live OAM tile DATA (not just the tile id): gates VRAM-truth
             # vs tile-id-truth rendering bugs (AGENTS.md 52.22 family --
             # same class as vram_row).  Reads happen in VBlank; expected
-            # bytes come from the generated ap_tiles.h so art changes
-            # update both sides while a runtime clobber still fails.
+            # bytes come from the generated gfx headers (see
+            # _load_ap_tiles) so art changes update both sides while a
+            # runtime clobber still fails.
             addr = a.get("addr", 0)
             tile_name = a.get("tile", "")
             live = oam_entries.get((addr, tile_name))
@@ -574,7 +697,7 @@ def run_scenario(scenario):
                 actual = "oam-bytes unreadable"
                 passed = False
             elif want is None:
-                actual = f"unknown ap_tiles entry {tile_name!r}"
+                actual = f"unknown OAM art entry {tile_name!r}"
                 passed = False
             else:
                 actual = " ".join("%02X" % b for b in live)
@@ -593,6 +716,21 @@ def run_scenario(scenario):
             actual = sfx_last
             passed = (actual == int(expected))
             actual = f"sfx_last={actual}"
+
+        elif a_type == "sfx_mute_ch2_max":
+            # Mute-budget gate: passes when the music-muted CH2 dosound
+            # ticks stay at or under `expected`.  Pins the SFX policy
+            # (preemption + no same-blip restart): any change that mutes
+            # more music fails loudly instead of silently gutting the mix.
+            actual = sfx_mute_ch2
+            passed = (actual is not None and actual <= int(expected))
+            actual = f"sfx_mute_ch2={actual}"
+
+        elif a_type == "sfx_mute_ch4_max":
+            # Same budget for the CH4 (noise/drums) voice.
+            actual = sfx_mute_ch4
+            passed = (actual is not None and actual <= int(expected))
+            actual = f"sfx_mute_ch4={actual}"
 
         elif a_type == "stack_margin_min":
             # Stack high-water canary: passes when the untouched-pattern
@@ -689,6 +827,31 @@ def run_scenario(scenario):
             actual_row = vram_lines[row_idx] if row_idx < len(vram_lines) and vram_lines[row_idx] else ""
             passed = contains_str in actual_row
             actual = f"VRAM row {row_idx}: '{actual_row.strip()}'"
+
+        elif a_type == "vram_row_not_contains":
+            row_idx = a.get("row", 0)
+            contains_str = a.get("contains", expected)
+            if contains_str is None:
+                raise ValueError(
+                    f"vram_row_not_contains assertion row {row_idx} requires 'contains'")
+            expected = f"VRAM row {row_idx} does not contain '{contains_str}'"
+            actual_row = vram_lines[row_idx] if row_idx < len(vram_lines) and vram_lines[row_idx] else ""
+            passed = contains_str not in actual_row
+            actual = f"VRAM row {row_idx}: '{actual_row.strip()}'"
+
+        elif a_type == "screen_row_exact":
+            # Exact full-row comparison (trailing padding ignored): a
+            # stranded tail ("L. OF SLIMES CASTS TAIL") fails where
+            # `contains` would pass.  Leading spaces are significant.
+            row_idx = a.get("row", 0)
+            contains_str = a.get("contains", expected)
+            if contains_str is None:
+                raise ValueError(
+                    f"screen_row_exact assertion row {row_idx} requires 'contains'")
+            expected = f"row {row_idx} exactly '{contains_str}'"
+            actual_row = screen_lines[row_idx] if row_idx < len(screen_lines) and screen_lines[row_idx] else ""
+            passed = (actual_row.rstrip() == contains_str)
+            actual = f"row {row_idx}: '{actual_row.strip()}'"
 
         elif a_type == "screen_row_not_contains":
             row_idx = a.get("row", 0)
@@ -790,6 +953,27 @@ def run_scenario(scenario):
             actual = f"item {exp_item} == {qty}"
             passed = (qty == int(a.get("expected")))
 
+        elif a_type == "collection_count":
+            # Raw-id collection rows (loot twins have no ITEM_ID_MAP name):
+            # quantity of the exact row, 0 when the row is absent.
+            exp_id = int(a.get("card_id", 0)) & 0xFF
+            expected = f"collection row {exp_id} == {expected}"
+            items = (state_snap or {}).get("inventory", [])
+            qty = sum(it["quantity"] for it in items
+                      if it["item_id"] == exp_id)
+            actual = f"collection row {exp_id} == {qty}"
+            passed = (qty == int(a.get("expected")))
+
+        elif a_type == "deck_contains":
+            # Raw-id deck membership (loot twins have no ITEM_ID_MAP name):
+            # copies of the exact id currently decked.
+            exp_id = int(a.get("card_id", 0)) & 0xFF
+            expected = f"deck has {exp_id} x{expected}"
+            n = sum(1 for cid in (state_snap or {}).get("deck", [])
+                    if cid == exp_id)
+            actual = f"deck has {exp_id} x{n}"
+            passed = (n == int(a.get("expected")))
+
         elif a_type == "party_hp":
             expected = f"party member {a.get('member', 0)} hp == {expected}"
             party = (state_snap or {}).get("party", [])
@@ -819,6 +1003,11 @@ def run_scenario(scenario):
             exp_cur = a.get("currency")
             expected = f"currency {exp_cur} == {expected}"
             actual = (state_snap or {}).get("currency", {}).get(exp_cur)
+            passed = (actual == int(a.get("expected")))
+
+        elif a_type == "market_index":
+            expected = f"market index == {expected}"
+            actual = (state_snap or {}).get("market", {}).get("index")
             passed = (actual == int(a.get("expected")))
 
         elif a_type == "progression_level":
@@ -895,6 +1084,12 @@ def format_state(snap, state_snap):
     cur_str = " ".join(f"{k}={v}" for k, v in sorted(currency.items()))
     lines.append("CURRENCY: " + (cur_str if cur_str else "(none)"))
 
+    market = (state_snap or {}).get("market") or {}
+    if market:
+        lines.append("MARKET: index={} gold_in={} gold_out={} battles={}".format(
+            market.get("index"), market.get("gold_in"),
+            market.get("gold_out"), market.get("battles")))
+
     party = (state_snap or {}).get("party", [])
     for i, m in enumerate(party):
         name = CHARACTER_ID_TO_NAME.get(m.get("id"), f"ID{m.get('id')}")
@@ -962,6 +1157,15 @@ def build_initial_state_from_snapshot(snap, state_snap):
     if currency:
         initial["currency"] = currency
 
+    market = state_snap.get("market") or {}
+    if market:
+        initial["market"] = {
+            "index": market.get("index", 32),
+            "gold_in": market.get("gold_in", 0),
+            "gold_out": market.get("gold_out", 0),
+            "battles": market.get("battles", 0),
+        }
+
     party = {}
     for m in state_snap.get("party", []):
         name = CHARACTER_ID_TO_NAME.get(m.get("id"))
@@ -980,7 +1184,7 @@ def build_initial_state_from_snapshot(snap, state_snap):
             continue
         # Emit only the delta over the new-game starter grants
         # (game_new_game in src/game/content.c adds WOOD_SWORD x4,
-        # WOODEN_SHIELD x4, FIRE_SWORD x2 to the collection): the loader
+        # WOODEN_SHIELD x4, BRONZE_SWORD x2 to the collection): the loader
         # applies inventory additively, so re-emitting the full observed
         # collection would double-add the starters on reload.
         qty = it.get("quantity", 0) - NEW_GAME_COLLECTION.get(iname, 0)
@@ -1030,6 +1234,7 @@ def normalize_semantic_state(snap, state_snap):
         "flags": sorted((state_snap or {}).get("flags", [])),
         "variables": (state_snap or {}).get("variables", {}),
         "currency": (state_snap or {}).get("currency", {}),
+        "market": (state_snap or {}).get("market", {}),
         "party": sorted((m.get("id"), m.get("hp"), m.get("max_hp"))
                         for m in (state_snap or {}).get("party", [])),
         "inventory": sorted((it.get("item_id"), it.get("quantity"))

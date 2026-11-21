@@ -12,9 +12,11 @@ Supported Operations:
 - place_object: { operation: "place_object", id: "hermit", type: "npc", position: {x: 8, y: 6}, properties: {...} }
 - move_object: { operation: "move_object", id: "hermit", position: {x: 9, y: 6} }
 - delete_object: { operation: "delete_object", id: "hermit" }
-- create_exit: { operation: "create_exit", x: 12, y: 0, target_scene: "mountain_pass", target_x: 12, target_y: 10, direction: "NORTH" }
+- create_exit: { operation: "create_exit", x: 12, y: 0, target_scene: "mountain_pass", target_x: 12, target_y: 10, direction: "NORTH", target_entry: "stairs_up" }
 - delete_exit: { operation: "delete_exit", x: 12, y: 0 }
 - set_spawn: { operation: "set_spawn", x: 12, y: 10, facing: "UP" }
+- set_entry: { operation: "set_entry", entry: "west", x: 2, y: 7, facing: "RIGHT" }
+- clear_entry: { operation: "clear_entry", entry: "west" }
 - describe_region: { operation: "describe_region", id: "north_clearing", bounds: {x: 3, y: 2, width: 8, height: 6}, description: "...", gameplay: {...} }
 - delete_region: { operation: "delete_region", id: "north_clearing" }
 
@@ -196,6 +198,11 @@ def apply_op(level_data, op):
             "direction": direction,
             "tile_char": tile_char
         }
+        # Optional named-destination landing (stairs_up, ...): compile
+        # resolves it to the destination entry (or its spawn).
+        target_entry = (op.get("target_entry") or "").strip()
+        if target_entry:
+            new_exit["target_entry"] = target_entry
         if existing:
             existing.update(new_exit)
             return True, f"Updated exit at ({x},{y}) -> {target}"
@@ -216,6 +223,25 @@ def apply_op(level_data, op):
         facing = op.get("facing", "DOWN")
         level_data.setdefault("player", {})["spawn"] = {"x": x, "y": y, "facing": facing}
         return True, f"Set player spawn to ({x},{y}) facing {facing}"
+
+    elif action == "set_entry":
+        key = (op.get("entry") or "").strip()
+        if key not in ("north", "south", "east", "west", "stairs_up", "stairs_down"):
+            return False, f"Unknown entry '{key}' (want north/south/east/west/stairs_up/stairs_down)"
+        x = op.get("x", 0)
+        y = op.get("y", 0)
+        facing = op.get("facing", "DOWN")
+        level_data.setdefault("player", {}).setdefault("entry", {})[key] = {
+            "x": x, "y": y, "facing": facing}
+        return True, f"Set player entry '{key}' to ({x},{y}) facing {facing}"
+
+    elif action == "clear_entry":
+        key = (op.get("entry") or "").strip()
+        entry = (level_data.get("player", {}) or {}).get("entry", {})
+        if key in entry:
+            del entry[key]
+            return True, f"Cleared player entry '{key}' (falls back to main spawn)"
+        return True, f"Player entry '{key}' was already unset"
 
     elif action == "describe_region":
         rid = op.get("id")

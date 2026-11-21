@@ -1,0 +1,88 @@
+{
+ "name": "economy_scaled_sell",
+ "test": true,
+ "description": "Market-scaled sell quote (docs/economy.md §5): at index 48 the IRON_RING rarity cut (base 10) quotes S = (10*48+16)>>5 = 15, not the neutral 10 pinned by merchant_sell_curated. Selling one ring at the merchant till pays 15g; by construction still under the 45g buy quote at the same index.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  },
+  "market": {
+   "index": 48
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 0,
+   "value": 66
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 1,
+   "value": 15
+  },
+  {
+   "type": "currency",
+   "expected": 15,
+   "currency": "GOLD"
+  },
+  {
+   "type": "market_index",
+   "expected": 48
+  }
+ ]
+}

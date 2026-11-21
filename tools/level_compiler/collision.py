@@ -9,10 +9,16 @@ existing importers (decompile.py, route.py) keep working unchanged.
 
 The neighbor model (see docs/level-editor.md Phase 20): stepping onto a
 walkable cell of a linked border crosses to the neighbor scene.  The
-player lands one cell INSIDE the neighbor's opposite edge at the mirrored
-coordinate.  `mirrored_entry()` is the one Python mirror of the ROM's
-`world_edge_spawn_banked`; `edge_link_report()` checks that every crossing
-has a walkable landing cell, so a trap can never be built.
+player lands on the neighbor's side entry for the arrival side
+(player.entry.<side>, per-level Spawn-layer property), falling back to
+the main spawn (player.spawn) when that entry is unset -- no row
+mirroring, so linked levels need no edge alignment.
+`resolve_entry_spawn()` is the one Python mirror of the ROM's edge-entry
+rule (world_update_move's EDGE path); `edge_link_report()` checks that
+every crossing has a walkable source cell and every used entry has a
+walkable landing, so a trap can never be built.  Point exits (stairs,
+tunnels) keep explicit target_x/target_y, and may name a destination
+entry via `target_entry` instead of duplicating its coordinates.
 """
 
 from scene_registry import load_registry
@@ -184,25 +190,115 @@ def derive_collision(level_data, tileset):
 
 # ── Edge-neighbor pairing ────────────────────────────────────────────
 
-def _clamp(v, lo, hi):
-    return lo if hi < lo else max(lo, min(v, hi))
+# ── Named entry spawns ─────────────────────────────────────────────
+# player.entry holds optional per-arrival spawn points, each {x, y,
+# facing}.  Edge entries (north/south/east/west) are selected by the side
+# of the destination the player arrives on: crossing X's east edge into Y
+# lands on Y's WEST entry (opposite of the crossed direction).  Stair
+# entries (stairs_up/stairs_down) are selected explicitly by point exits
+# via target_entry.  A missing entry falls back to the main spawn
+# (player.spawn), which stays the new-game/initial spawn and the single
+# source of truth for unset arrivals.
+EDGE_ENTRY_KEYS = ("north", "south", "east", "west")
+STAIR_ENTRY_KEYS = ("stairs_up", "stairs_down")
+ENTRY_KEYS = EDGE_ENTRY_KEYS + STAIR_ENTRY_KEYS
+
+# Absent-entry facing byte in the compiled SceneDefinition row, mirroring
+# SCENE_ENTRY_ABSENT (src/world/scene.h).  Never a valid Direction value.
+ENTRY_ABSENT_FACING = 0xFF
 
 
-def mirrored_entry(direction, cross, target_w, target_h):
-    """Entry (x, y) one cell inside the target's opposite edge for a
-    crossing that leaves via `direction` at `cross` (x for N/S, y for
-    E/W).  Python mirror of src/world/edge_banked.c's spawn body,
-    including its >= 2 degenerate-dimension guard."""
-    w, h = target_w, target_h
-    xhi = (w - 2) if w >= 2 else 0
-    yhi = (h - 2) if h >= 2 else 0
-    if direction == "north":
-        return (_clamp(cross, 1, xhi), yhi)
-    if direction == "south":
-        return (_clamp(cross, 1, xhi), 1)
-    if direction == "east":
-        return (1, _clamp(cross, 1, yhi))
-    return (xhi, _clamp(cross, 1, yhi))
+def entry_side_for_link(direction):
+    """Entry key used on the destination for a link crossed via
+    `direction`: the arrival side (opposite of the crossed edge)."""
+    return _OPPOSITE[direction]
+
+
+def get_entry(level_data, key):
+    """The named entry dict for `key`, or None when unset/invalid."""
+    if key not in ENTRY_KEYS:
+        return None
+    entry = ((level_data.get("player", {}) or {}).get("entry", {}) or {}).get(key)
+    if not isinstance(entry, dict):
+        return None
+    try:
+        x, y = int(entry.get("x", -1)), int(entry.get("y", -1))
+    except (TypeError, ValueError):
+        return None
+    if x < 0 or y < 0:
+        return None
+    return entry
+
+
+def main_spawn(level_data):
+    """The level's main spawn dict (player.spawn, may be empty)."""
+    sp = (level_data.get("player", {}) or {}).get("spawn", {}) or {}
+    return sp if isinstance(sp, dict) else {}
+
+
+def resolve_entry_spawn(level_data, key):
+    """(x, y) landing for arrival `key`: the named entry when set,
+    else the main spawn.  Single source for edge landings (key = arrival
+    side) and exit target_entry landings."""
+    entry = get_entry(level_data, key)
+    if entry is not None:
+        return (int(entry.get("x", 0)), int(entry.get("y", 0)))
+    sp = main_spawn(level_data)
+    return (int(sp.get("x", 1)), int(sp.get("y", 1)))
+
+
+def resolve_exit_landing(exit, levels_by_id):
+    """(x, y, via_entry) landing for a point exit.
+
+    An exit naming a valid `target_entry` on a known destination lands on
+    that entry (or the destination spawn when the entry is unset); the
+    raw target_x/target_y are ignored.  Anything else (no key, unknown
+    key, unknown destination) lands on the raw coordinates.
+    """
+    key = (exit.get("target_entry") or "").strip()
+    target = exit.get("target_scene")
+    if key and key in ENTRY_KEYS and target in levels_by_id:
+        x, y = resolve_entry_spawn(levels_by_id[target], key)
+        return (x, y, True)
+    return (exit.get("target_x", -1), exit.get("target_y", -1), False)
+
+
+def used_entry_keys(levels_by_id):
+    """{level_name: set(keys)} entries consumed by links + target_entry
+    exits.  Used entry sides come from the SOURCE link direction (A.east
+    -> B consumes B.west); stair keys come from exit target_entry."""
+    used = {name: set() for name in levels_by_id}
+    for name, lvl in levels_by_id.items():
+        try:
+            targets = neighbor_targets(lvl)
+        except SystemExit:
+            continue
+        for direction in NEIGHBOR_DIRS:
+            target = targets.get(direction)
+            if target and target in used:
+                used[target].add(entry_side_for_link(direction))
+        for e in lvl.get("exits", []) or []:
+            key = (e.get("target_entry") or "").strip()
+            target = e.get("target_scene")
+            if key and key in ENTRY_KEYS and target in used:
+                used[target].add(key)
+    return used
+
+
+def unused_entry_warnings(levels_by_id):
+    """Warnings for defined entries nothing consumes (dead config)."""
+    warnings = []
+    used = used_entry_keys(levels_by_id)
+    for name in sorted(levels_by_id):
+        defined = [k for k in ENTRY_KEYS
+                   if get_entry(levels_by_id[name], k) is not None]
+        for key in defined:
+            if key not in used.get(name, set()):
+                warnings.append(
+                    f"{name}: entry '{key}' is defined but nothing lands on it "
+                    f"(no link arrives on that side and no exit names it) -- "
+                    f"remove it or wire an arrival.")
+    return warnings
 
 
 def edge_cells(direction, w, h):
@@ -216,10 +312,6 @@ def edge_cells(direction, w, h):
     return [(w - 1, y) for y in range(h)]
 
 
-def _cross_coord(direction, cell):
-    return cell[0] if direction in ("north", "south") else cell[1]
-
-
 def _grid(name, lvl, tilesets, cache):
     if cache is None:
         return derive_collision(lvl, tilesets.get(lvl["map"]["tileset"], {}))
@@ -228,21 +320,17 @@ def _grid(name, lvl, tilesets, cache):
     return cache[name]
 
 
-def _fmt_stuck(source, direction, into, stuck):
-    exs = ", ".join("%s->%s" % (c, e) for c, e in stuck[:4])
-    more = "" if len(stuck) <= 4 else " (+%d more)" % (len(stuck) - 4)
-    return (f"crossing {source} {direction} at {exs}{more} lands in a wall in "
-            f"{into}. Open {into} along that edge (whole-edge corridor) or wall "
-            f"{source}'s crossing cells.")
-
-
 def edge_link_report(name, lvl, levels_by_id, tilesets, grid_cache=None):
     """Per-direction diagnostics for one level's whole-edge links.
 
-    Returns a list of dicts {direction, target, ok, errors, warnings};
-    every message is fully self-describing (level + coordinates).  This is
-    the one implementation used by the validator, the compiler gate, and
-    the editor's /api/neighbor-check."""
+    Edge entry is the destination's arrival-side entry (falling back to
+    its main spawn): every crossing on one edge lands on the same cell,
+    so the check is per-link, not per-cell -- the source edge needs at
+    least one walkable crossing and the used entry must be walkable.
+    Returns a list of dicts {direction, target, entry_side, ok, errors,
+    warnings}; every message is fully self-describing (level +
+    coordinates).  This is the one implementation used by the validator,
+    the compiler gate, and the editor's /api/neighbor-check."""
     report = []
     try:
         targets = neighbor_targets(lvl)
@@ -254,43 +342,47 @@ def edge_link_report(name, lvl, levels_by_id, tilesets, grid_cache=None):
         target = targets.get(direction)
         if not target:
             continue
-        entry = {"direction": direction, "target": target, "ok": True,
+        side = entry_side_for_link(direction)
+        entry = {"direction": direction, "target": target,
+                 "entry_side": side, "ok": True,
                  "errors": [], "warnings": []}
         if target not in levels_by_id:
             entry["warnings"].append(
                 f"{name}: edge '{direction}' -> '{target}': target not in this "
-                f"compile set (cannot verify the landing cells)")
+                f"compile set (cannot verify the {side} entry)")
             report.append(entry)
             continue
         tlvl = levels_by_id[target]
-        tw, th = tlvl["map"]["width"], tlvl["map"]["height"]
         ag = _grid(name, lvl, tilesets, grid_cache)
         bg = _grid(target, tlvl, tilesets, grid_cache)
-        crossings = [(_cross_coord(direction, c), c)
-                     for c in edge_cells(direction, w, h) if ag[c[1]][c[0]]]
+        crossings = [c for c in edge_cells(direction, w, h)
+                     if ag[c[1]][c[0]]]
         if not crossings:
             entry["warnings"].append(
                 f"{name}: edge '{direction}' -> '{target}' never fires: "
                 f"{name}'s {direction} edge has no walkable cell "
                 f"(paint an opening or remove the link)")
-        stuck = []
-        for cross, cell in crossings:
-            ex, ey = mirrored_entry(direction, cross, tw, th)
-            if not bg[ey][ex]:
-                stuck.append((cell, (ex, ey)))
-        if stuck:
+        ex, ey = resolve_entry_spawn(tlvl, side)
+        tw, th = tlvl["map"]["width"], tlvl["map"]["height"]
+        if get_entry(tlvl, side) is None:
+            entry["warnings"].append(
+                f"{name}: edge '{direction}' -> '{target}' lands on the main "
+                f"spawn ({ex},{ey}): '{target}' defines no '{side}' entry.")
+        if not (0 <= ex < tw and 0 <= ey < th and bg[ey][ex]):
             entry["ok"] = False
             entry["errors"].append(
-                f"{name}: edge '{direction}' -> '{target}': "
-                + _fmt_stuck(name, direction, f"'{target}'", stuck))
+                f"{name}: edge '{direction}' -> '{target}' lands on the "
+                f"'{side}' entry ({ex},{ey}), which is not walkable -- move "
+                f"'{target}''s {side} entry (Spawn layer) onto walkable "
+                f"ground.")
         try:
             back = neighbor_targets(tlvl).get(_OPPOSITE[direction])
         except SystemExit:
             back = None
         if back == name:
             rdir = _OPPOSITE[direction]
-            rcross = [(_cross_coord(rdir, c), c)
-                      for c in edge_cells(rdir, tw, th) if bg[c[1]][c[0]]]
+            rcross = [c for c in edge_cells(rdir, tw, th)
+                      if bg[c[1]][c[0]]]
             if not rcross:
                 entry["ok"] = False
                 entry["errors"].append(
@@ -298,17 +390,14 @@ def edge_link_report(name, lvl, levels_by_id, tilesets, grid_cache=None):
                     f"the return link ({rdir} -> {name}) but its {rdir} edge has no "
                     f"walkable cell -- the player cannot return.")
             else:
-                rstick = []
-                for cross, cell in rcross:
-                    ex, ey = mirrored_entry(rdir, cross, w, h)
-                    if not ag[ey][ex]:
-                        rstick.append((cell, (ex, ey)))
-                if rstick:
+                sx, sy = resolve_entry_spawn(lvl, direction)
+                if not (0 <= sx < w and 0 <= sy < h and ag[sy][sx]):
                     entry["ok"] = False
                     entry["errors"].append(
-                        f"{name}: edge '{direction}' -> '{target}': "
-                        + _fmt_stuck(target, rdir, f"'{name}'", rstick)
-                        + f" (return)")
+                        f"{name}: edge '{direction}' -> '{target}' return lands "
+                        f"on '{name}''s '{direction}' entry ({sx},{sy}), which "
+                        f"is not walkable -- move the entry (Spawn layer) "
+                        f"onto walkable ground.")
         report.append(entry)
     return report
 
@@ -328,16 +417,13 @@ def edge_geometry_issues(levels_by_id, tilesets):
     """(errors, warnings) for border-cell geometry the pairing gate does
     not cover.
 
-    - Walkable corner cells are rejected: the engine resolves N/S before
-      E/W, so a walkable corner on two linked edges silently routes one
-      way (e.g. (19,0) with north+east linked always exits north), while
-      a walkable corner on unlinked edges is a dead alcove that reads as
-      a gate.  Either way the map lies about where its holes are.
-    - Reciprocal links must open at exactly the same cross-coordinates:
-      a wide-open edge paired with a narrow doorway lets the player cross
-      at cells whose mirrored landing sits deep inside the neighbor
-      (or facing a wall), because the entry clamps -- it never mirrors
-      the gate.  Matched openings keep both directions predictable.
+    Walkable corner cells are rejected: the engine resolves N/S before
+    E/W, so a walkable corner on two linked edges silently routes one
+    way (e.g. (19,0) with north+east linked always exits north), while
+    a walkable corner on unlinked edges is a dead alcove that reads as
+    a gate.  Either way the map lies about where its holes are.
+    No alignment check: edge entry is the neighbor spawn, so linked
+    edges need no matched openings.
     Scoped by the caller to real levels (test fixtures have no links)."""
     errors, warnings = [], []
     cache = {}
@@ -350,42 +436,6 @@ def edge_geometry_issues(levels_by_id, tilesets):
                     f"{name}: corner cell ({cx},{cy}) is walkable -- "
                     f"corners resolve N/S-before-E/W and dead-end alcoves "
                     f"read as gates; wall it or move the opening inward.")
-    seen = set()
-    for name, lvl in levels_by_id.items():
-        try:
-            targets = neighbor_targets(lvl)
-        except SystemExit as exc:
-            errors.append(str(exc))
-            continue
-        for direction in NEIGHBOR_DIRS:
-            target = targets.get(direction)
-            if not target or target not in levels_by_id:
-                continue
-            if (target, _OPPOSITE[direction]) in seen:
-                continue
-            seen.add((name, direction))
-            back = neighbor_targets(levels_by_id[target]).get(
-                _OPPOSITE[direction])
-            if back != name:
-                continue  # one-sidedness is reported (as an error) elsewhere
-            w, h = lvl["map"]["width"], lvl["map"]["height"]
-            tw, th = (levels_by_id[target]["map"]["width"],
-                      levels_by_id[target]["map"]["height"])
-            g = _grid(name, lvl, tilesets, cache)
-            bg = _grid(target, levels_by_id[target], tilesets, cache)
-            mine = sorted(_cross_coord(direction, c)
-                          for c in edge_cells(direction, w, h)
-                          if g[c[1]][c[0]])
-            theirs = sorted(_cross_coord(_OPPOSITE[direction], c)
-                            for c in edge_cells(_OPPOSITE[direction], tw, th)
-                            if bg[c[1]][c[0]])
-            if mine != theirs:
-                errors.append(
-                    f"{name}: edge '{direction}' opens at {mine} but the "
-                    f"return edge '{target}'.{_OPPOSITE[direction]} opens at "
-                    f"{theirs} -- crossings outside the overlap land the "
-                    f"player off-gate (entry clamps, never mirrors); align "
-                    f"the holes on both sides.")
     return errors, warnings
 
 
@@ -411,16 +461,24 @@ def is_portal_art(info):
 def point_exit_report(name, lvl, levels_by_id, tilesets, grid_cache=None):
     """Per-exit diagnostics: visibility + landing-cell walkability.
 
-    Returns a list of dicts {index, target, ok, errors, warnings}; every
-    message is fully self-describing (level + coordinates).  Mirrors the
-    engine: a point exit fires before terrain walkability, so a solid gate
-    is not blocked -- but it must look like a portal, and the destination
-    must be walkable or the player spawns stuck."""
+    Returns a list of dicts {index, target, landing, ok, errors,
+    warnings}; every message is fully self-describing (level +
+    coordinates).  Mirrors the engine: a point exit fires before terrain
+    walkability, so a solid gate is not blocked -- but it must look like
+    a portal, and the destination must be walkable or the player spawns
+    stuck.  An exit naming `target_entry` lands on that destination entry
+    (or its spawn); otherwise it lands on target_x/target_y."""
     out = []
     tset = tilesets.get(lvl["map"]["tileset"], {})
     for i, e in enumerate(lvl.get("exits", [])):
-        entry = {"index": i, "target": e.get("target_scene"), "ok": True,
-                 "errors": [], "warnings": []}
+        target = e.get("target_scene")
+        tx, ty, via_entry = (resolve_exit_landing(e, levels_by_id)
+                             if target in levels_by_id
+                             else (e.get("target_x", -1),
+                                   e.get("target_y", -1), False))
+        entry = {"index": i, "target": target,
+                 "landing": [tx, ty], "via_entry": via_entry,
+                 "ok": True, "errors": [], "warnings": []}
         info = cell_tile_info(lvl, tset, e.get("x", -1), e.get("y", -1))
         if not is_portal_art(info):
             art = info["id"] if info else "unpainted ground"
@@ -433,13 +491,14 @@ def point_exit_report(name, lvl, levels_by_id, tilesets, grid_cache=None):
         if target in levels_by_id:
             tlvl = levels_by_id[target]
             g = _grid(target, tlvl, tilesets, grid_cache)
-            tx, ty = e.get("target_x", -1), e.get("target_y", -1)
             if not (0 <= tx < tlvl["map"]["width"]
                     and 0 <= ty < tlvl["map"]["height"] and g[ty][tx]):
                 entry["ok"] = False
+                where = (f"entry '{e.get('target_entry')}'"
+                         if via_entry else f"({tx},{ty})")
                 entry["errors"].append(
                     f"{name}: exit #{i} at ({e.get('x')},{e.get('y')}) -> "
-                    f"'{target}' lands on ({tx},{ty}), which is not walkable "
+                    f"'{target}' lands on {where}, which is not walkable "
                     f"-- the player would spawn stuck.")
         out.append(entry)
     return out
@@ -499,7 +558,8 @@ def tunnel_report(levels_by_id):
 
     Contract mirror: tools/level_editor/vite.config.ts tunnelStatus()
     checks the same invariants (count == 2, different levels, mutual
-    targets, spawn-tracks-gate).  Keep both in sync; the parity corpus
+    targets, no target_entry, spawn-tracks-gate).  Keep both in sync;
+    the parity corpus
     in tools/level_compiler/tests/test_tunnel_parity.py guards drift."""
     out = []
     tunnels = collect_tunnels(levels_by_id)
@@ -540,6 +600,22 @@ def tunnel_report(levels_by_id):
                 f"{an}). Retarget the mouths so they point at each other.")
         agate = (a.get("x"), a.get("y"))
         bgate = (b.get("x"), b.get("y"))
+        # Named landings cannot ride a tunnel: a tunnel mouth must land ON
+        # the counterpart gate (spawn-tracks-gate), while target_entry
+        # resolves to a named arrival point.  The raw coordinates such a
+        # mouth carries are ignored at compile time, so the pairing check
+        # fails it here instead of comparing dead numbers.
+        a_named = (a.get("target_entry") or "").strip()
+        b_named = (b.get("target_entry") or "").strip()
+        if a_named or b_named:
+            entry["ok"] = False
+            entry["errors"].append(
+                f"tunnel '{tunnel}' cannot use target_entry "
+                f"({an} exit #{ai}: '{a_named or b_named}'): tunnel mouths "
+                f"must land on the counterpart gate (spawn-tracks-gate) -- "
+                f"remove target_entry or unlink the tunnel.")
+            out.append(entry)
+            continue
         if (a.get("target_x"), a.get("target_y")) != bgate or \
                 (b.get("target_x"), b.get("target_y")) != agate:
             entry["ok"] = False

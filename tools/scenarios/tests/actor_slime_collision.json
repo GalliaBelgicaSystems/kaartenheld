@@ -1,119 +1,87 @@
 {
- "name": "actor_slime_collision",
- "test": true,
- "description": "Walking into Carl (lesson tile) emits actor collision and opens his lesson first; closing it auto-starts the encounter battle",
- "actions": [
-  {
-   "type": "press",
-   "button": "RIGHT"
-  },
-  {
-   "type": "wait",
-   "frames": 8
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 20
+  "name": "actor_slime_collision",
+  "test": true,
+  "description": "Walking into Carl (lesson tile) emits actor collision and opens his spar offer; answering YES closes into the encounter battle",
+  "actions": [
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "screen",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "event_occurred",
+      "event": "ACTOR_COLLISION"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DIALOGUE_STARTED"
+    },
+    {
+      "type": "event_occurred",
+      "event": "ACTOR_COMBAT_START"
+    },
+    {
+      "type": "actor_at",
+      "entity": "CARL",
+      "x": 14,
+      "y": 8
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "seed": 12345,
+    "flags": {
+      "FIELD_CHEST": true
+    }
   }
- ],
- "assertions": [
-  {
-   "type": "game_state",
-   "expected": "BATTLE"
-  },
-  {
-   "type": "screen",
-   "expected": "BATTLE"
-  },
-  {
-   "type": "event_occurred",
-   "event": "ACTOR_COLLISION"
-  },
-  {
-   "type": "event_occurred",
-   "event": "DIALOGUE_STARTED"
-  },
-  {
-   "type": "event_occurred",
-   "event": "ACTOR_COMBAT_START"
-  },
-  {
-   "type": "actor_at",
-   "entity": "CARL",
-   "x": 14,
-   "y": 8
-  }
- ],
- "initial_state": {
-  "scene": "TEST_FIELD",
-  "player": {
-   "x": 13,
-   "y": 8,
-   "facing": "DOWN"
-  },
-  "seed": 12345,
-  "flags": {
-   "FIELD_CHEST": true
-  }
- }
 }

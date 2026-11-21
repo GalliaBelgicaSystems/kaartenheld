@@ -1,7 +1,7 @@
 {
  "name": "combo_pair_shield_fodder",
  "test": true,
- "description": "Pair of different types (SW2 + SH2) in attack phase: shield card still increments eff_count (2) and participates in straight/same-type chain (both become false), but its value is excluded from the power sum.  power=sum=2.  Carl at 10 HP -> HP 8.",
+ "description": "Pair of different types (SW2 + SH2) in attack phase: shield card still increments eff_count (2) and participates in straight/same-type chain (both become false), but its value is excluded from the power sum.  power=sum=2.  Carl at 30 HP -> HP 28.",
  "actions": [
   {
    "type": "set_hand_card",
@@ -55,7 +55,7 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 8
+   "expected": 28
   },
   {
    "type": "event_occurred",

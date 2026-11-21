@@ -1,0 +1,188 @@
+{
+ "name": "defend_dagger_burn",
+ "test": true,
+ "description": "Curated burn dagger counter applies once via the immediate path (no double-roll/double-apply in the post-swing bank-11 rider body) and keeps fresh g_effect_last.amount as its burn tick basis: suited DA2 pair (chance 255, status 2 = BURN) counters for 6 (14->8), emits exactly one STATUS_APPLIED(2, stacks=1) and zero STATUS_RESISTED while enemy swings 3 (10->7), then end-of-round burn ticks 1 (8->7).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "SW",
+   "value": 1
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 1,
+   "card_type": "DA",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 1,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "set_hand_card_status",
+   "index": 1,
+   "status": 2,
+   "chance": 255
+  },
+  {
+   "type": "set_hand_card",
+   "index": 2,
+   "card_type": "DA",
+   "value": 2
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 2,
+   "cost": 0,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 100
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 7
+  },
+  {
+   "type": "battle_enemy_hp",
+   "expected": 7
+  },
+  {
+   "type": "event_count",
+   "event": "DAMAGE_DEALT",
+   "count": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_DEALT",
+   "index": 0,
+   "value": 6
+  },
+  {
+   "type": "event_arg",
+   "event": "DAMAGE_RECEIVED",
+   "index": 0,
+   "value": 3
+  },
+  {
+   "type": "event_count",
+   "event": "STATUS_APPLIED",
+   "count": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_APPLIED",
+   "index": 1,
+   "value": 1
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "STATUS_RESISTED"
+  },
+  {
+   "type": "event_count",
+   "event": "STATUS_TICKED",
+   "count": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "STATUS_TICKED",
+   "index": 0,
+   "value": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 10
+   }
+  },
+  "seed": 5002,
+  "start_battle": true
+ }
+}

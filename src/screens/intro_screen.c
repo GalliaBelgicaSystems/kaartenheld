@@ -4,11 +4,12 @@
 #include "ui.h"
 #include "audio.h"
 #include "banked.h"
+#include "rpg/save.h"
 
 /* ASCII intro sequence shown when starting a NEW GAME from the title
  * screen.  Four scripted slides (mankind fallen, the Slime Lord, a
  * hero rising, the magic cards); A/START advances, the final slide drops
- * into a fresh overworld playthrough.  Rendering lives in the bank-4
+ * into a fresh overworld playthrough.  Rendering lives in the bank-9
  * intro_content body (title_content.c) to keep the fixed bank small. */
 
 #define INTRO_SLIDE_COUNT 4
@@ -16,7 +17,7 @@
 /* Shared slide-show renderer used by the intro, tutorial and splash
  * screens: a full clear, a banked content-body call staged on the address
  * of the renderer + slide byte, telemetry, and a render-cache commit.
- * `bank` selects the content body's ROM bank (4 = ASCII slides, 2 = the
+ * `bank` selects the content body's ROM bank (9 = ASCII slides, 2 = the
  * studio splash bitmap body).  Kept in the fixed bank to hold the fixed
  * _CODE/_HOME area within budget (make memmap). */
 
@@ -39,7 +40,7 @@ void slide_screen_render(Game *g, ScreenId scr, uint16_t content_target, uint8_t
 
 void intro_screen_render(Game *g)
 {
-    slide_screen_render(g, SCREEN_INTRO, (uint16_t)&intro_content_render, g->intro_slide, 4);
+    slide_screen_render(g, SCREEN_INTRO, (uint16_t)&intro_content_render, g->intro_slide, 9);
 }
 
 void intro_screen_update(Game *g)
@@ -50,6 +51,13 @@ void intro_screen_update(Game *g)
         if (g->intro_slide + 1 >= INTRO_SLIDE_COUNT) {
             g->intro_slide = 0;
             game_restart(g);
+            /* NEW-GAME slot claim: the fresh state saves to the active
+             * slot at once (GAME_SAVED emits inline in the banked body,
+             * debug builds), so the slot is never empty once a new game
+             * has started.  game_restart reseeds the world straight from
+             * the fresh state and no frame runs before the write, so no
+             * scene_sync is needed. */
+            save_claim_active();
         } else {
             g->intro_slide++;
             /* Force a redraw of the new slide. */

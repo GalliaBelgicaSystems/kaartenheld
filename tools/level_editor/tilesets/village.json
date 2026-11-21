@@ -438,7 +438,7 @@
       "palette": "town7",
       "label": "middle house open door",
       "gb_constant": "TILE_VILLAGE_43",
-      "walkable": false,
+      "walkable": true,
       "color": "#262014",
       "ascii": "#",
       "image_url": "/tiles/village/village_middle_house_open_door.png",

@@ -126,7 +126,7 @@
   {
    "type": "variable",
    "variable": "ENERGY_POOL",
-   "expected": 2
+   "expected": 3
   },
   {
    "type": "event_occurred",
@@ -152,6 +152,9 @@
   "flags": {
    "ARRIVED_TOWN": true
   },
+  "variables": {
+   "ENERGY_POOL": 2
+  },
   "party": {
    "HERO": {
     "hp": 60,
@@ -159,7 +162,7 @@
    }
   },
   "deck": {
-   "FIRE_SWORD": 20
+   "BRONZE_SWORD": 20
   }
  }
 }

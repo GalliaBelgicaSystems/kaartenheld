@@ -63,8 +63,14 @@
   },
   {
    "type": "screen_row",
+   "row": 7,
+   "contains": "@"
+  },
+  {
+   "type": "tilemap_cell",
    "row": 8,
-   "contains": "0 /"
+   "col": 4,
+   "expected": 250
   },
   {
    "type": "battle_energy",
@@ -85,6 +91,9 @@
    }
   },
   "seed": 7001,
-  "start_battle": true
+  "start_battle": true,
+  "flags": {
+   "TUTORIAL_SKIPPED": true
+  }
  }
 }

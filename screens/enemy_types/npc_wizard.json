@@ -4,11 +4,17 @@
   "label": "Wizard OW",
   "category": "minion",
   "sprite": null,
-  "overworld": { "cells": ["npc_wizard"], "palette": "sprites7" },
+  "overworld": {
+    "cells": [
+      "npc_wizard"
+    ],
+    "palette": "sprites7"
+  },
   "name": "WIZARD",
   "hp": 1,
   "max_hp": 1,
   "battle_id": "BATTLE_NONE",
+  "rank": 0,
   "gold_reward": 0,
   "reward_currency": "CURRENCY_ID_GOLD"
 }

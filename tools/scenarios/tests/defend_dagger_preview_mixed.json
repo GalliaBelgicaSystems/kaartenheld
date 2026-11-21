@@ -102,24 +102,61 @@
    "expected": "BATTLE"
   },
   {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "DMG 2"
-  },
-  {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "DEF 3"
-  },
-  {
    "type": "screen_row_not_contains",
    "row": 10,
    "contains": "CNT"
   },
   {
-   "type": "vram_row",
+   "type": "screen_row",
+   "row": 7,
+   "contains": "v3S"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 9,
+   "expected": 228
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 11,
+   "expected": 104
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 9,
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "D3^"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 9,
+   "expected": 105
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 11,
+   "expected": 110
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 8,
+   "col": 9,
+   "expected": 3
+  },
+  {
+   "type": "tilemap_cell",
    "row": 10,
-   "contains": "DEF 3"
+   "col": 8,
+   "expected": 0
   }
  ],
  "initial_state": {

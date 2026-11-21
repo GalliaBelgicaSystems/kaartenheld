@@ -1,0 +1,69 @@
+{
+ "name": "card_group_clear_counts",
+ "test": true,
+ "description": "Single-copy removal honesty on the deck side: one A press on the fully-decked first row removes exactly one copy (1 CARD_REMOVED_FROM_DECK, deck 4 -> 3), with no duplicate emit and no clear-all.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_REMOVED_FROM_DECK",
+   "count": 1
+  },
+  {
+   "type": "deck_contains",
+   "card_id": 71,
+   "expected": 3
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "A:TO PILE"
+  }
+ ]
+}

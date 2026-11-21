@@ -1,0 +1,69 @@
+{
+ "name": "quest_detail_shopkeys",
+ "test": true,
+ "description": "SELECT on the SHOP KEYS quest row opens its detail page: the giver (Merchant in Town), the objective (find the shop keys) and ACTIVE (a counter-less quest shows no progress line)",
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 3,
+   "contains": "SHOP KEYS"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "MERCHANT IN TOWN"
+  },
+  {
+   "type": "screen_row",
+   "row": 6,
+   "contains": "FIND THE SHOP KEYS"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "ACTIVE"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8410,
+  "variables": {
+   "MERCHANT_QUEST": 1
+  }
+ }
+}

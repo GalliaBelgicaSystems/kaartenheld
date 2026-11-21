@@ -72,11 +72,15 @@ typedef enum {
      * byte (compiled into the event row; drift-checked by
      * validate.py --spawn-refs).  First spawn action; generalize when
      * a second need appears (roadmap YAGNI). */
-    EVENT_ACTION_SPAWN_SLIME_TRIO = 10
+    EVENT_ACTION_SPAWN_SLIME_TRIO = 10,
     /* Heal-full and play-music actions were retired with the Heal Mage
      * YES/NO rework (the choice resolve heals + jingles through the
      * bank-5 body and the fixed dialogue-screen wrapper instead); their
      * ids stay unassigned. */
+    /* Stage an autosave: the game_update flush writes the active slot
+     * once, on canonical state.  Content-owned (game rows name it);
+     * the engine only stages the request (AGENTS.md §55.1). */
+    EVENT_ACTION_AUTOSAVE = 11
 } EventActionType;
 
 typedef struct {
@@ -86,7 +90,10 @@ typedef struct {
     int16_t arg2;   /* spawn y */
 } EventAction;
 
-#define MAX_EVENT_ACTIONS 4
+#define MAX_EVENT_ACTIONS 5   /* capped at 5: the AP/quest rows spend the
+                              * fifth on AUTOSAVE (quest completes and
+                              * pool grants save at once).  Rows stay far
+                              * under the banked_copy byte limit. */
 
 typedef struct {
     EventId id;

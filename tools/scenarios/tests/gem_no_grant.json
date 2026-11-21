@@ -1,7 +1,7 @@
 {
   "name": "gem_no_grant",
   "test": true,
-  "description": "Below the prize bar: leaving a sitting down gold (20 -> 19 loss, seed 12345 dice 2/6/3) opens the ordinary farewell with no gem owned.",
+  "description": "Below the prize bar: staking only 1 in a sitting (single BET=1 loss, seed 12345 dice 2/6/3) opens the ordinary farewell with no gem owned.",
   "actions": [
     {
       "type": "press",

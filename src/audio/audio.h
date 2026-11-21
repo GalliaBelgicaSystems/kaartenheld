@@ -6,9 +6,15 @@
 
 typedef enum {
     MUSIC_NONE,
-    MUSIC_OVERWORLD, /* opening theme (assets/music/opening.uge, loops) */
+    MUSIC_OVERWORLD, /* overworld theme (assets/music/opening more.uge,
+                        loops, bank 7): Wake Grove + Carl's field */
     MUSIC_BATTLE,
-    MUSIC_VICTORY,   /* one-shot 4-note fanfare; ends in silence */
+    MUSIC_VICTORY,   /* battle-victory fanfare (victory.uge, bank 7),
+                        played once: the ROM driver loops whole songs, so
+                        the bank-8 jingle body stops it in the song's
+                        silent tail (VICTORY_JINGLE_TICKS; frame backstop
+                        under the harness) and the track goes NONE until
+                        the result-screen exit restores the area track */
     MUSIC_TITLE,     /* title screen theme (title short.uge, bank 7):
                          plays ONCE per title visit (~2.5 s notes + decay),
                          then stops in silence (TITLE_SONG_FRAMES game frames,
@@ -21,7 +27,7 @@ typedef enum {
     MUSIC_DESOLATE,  /* desolate landscape theme (loops) */
     MUSIC_FOREST,    /* forest / plain theme (Forest.uge, loops) */
     MUSIC_CHEST,     /* chest-loot jingle (chest opening.uge, one-shot,
-                        bank 7); the overworld restores the scene track
+                        bank 6); the overworld restores the scene track
                         when it ends (audio_jingle_frame) */
     MUSIC_GAMEOVER,  /* game-over theme (game over.uge, loops, bank 7):
                         starts the instant the hero falls
@@ -35,6 +41,9 @@ typedef enum {
                         bank 9 with its own driver copy): plays on
                         Nis's table; the gamble body restores the scene
                         track on exit */
+    MUSIC_UNDERGROUND, /* underground tunnel theme (underground pass.uge,
+                        loops, bank 9 with the casino driver copy):
+                        plays on both underground tunnel maps */
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE
@@ -71,7 +80,7 @@ enum {
     SFX_HIT = 5,
     SFX_BLOCK = 6,
     /* Alert sting for pursuer levels (kobolds, slime knights): plays once
-     * on entry, then the level track resumes (screens/sfx.json ALERT). */
+     * on top of the running scene track (screens/sfx.json ALERT). */
     SFX_ALERT = 7,
     /* Chuck-a-luck win cue: the chest-opening arpeggio as an SFX (its .uge
      * transcribes to 3 CH2 tone steps), so the table theme keeps playing
@@ -82,9 +91,16 @@ enum {
      * Replaces the old always-on defend thump for those cases. */
     SFX_HURT = 9,
     /* Ring-heal cue (assets/sfx/sfx heal.uge): played when a ring
-     * converts an attack hand to healing.  Must stay the LAST id:
+     * converts an attack hand to healing. */
+    SFX_HEAL = 10,
+    /* Desperation-move cue (assets/sfx/explosion.uge): played when the
+     * Lord of Slimes casts his scripted reprisal (POWERFUL SPELL) on the
+     * A press during the SLIME_DESPAIR telegraph hold. */
+    SFX_EXPLOSION = 11,
+    /* Cash-register cue (assets/sfx/cash_register.uge): played when
+     * buying from or selling to the merchant.  Must stay the LAST id:
      * audio.c range-checks against it. */
-    SFX_HEAL = 10
+    SFX_CASH = 12
 };
 void audio_play_sfx(uint8_t sfx);
 void audio_update(void);
@@ -93,7 +109,7 @@ void audio_update(void);
  * restore, driven by game_update() every non-battle frame through the
  * game-layer bank-8 body (src/game/jingle_full_banked.c, which reads
  * the loot mask from game story state).  Mask bit 0 = field cache
- * open, bit 1 = amulet found. */
+ * open, bit 1 = shop keys found. */
 
 /* Current track (WRAM): readable directly from bank-2 code, which cannot
  * call this fixed-bank getter. */

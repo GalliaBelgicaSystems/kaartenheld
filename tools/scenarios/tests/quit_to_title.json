@@ -1,0 +1,62 @@
+{
+ "name": "quit_to_title",
+ "test": true,
+ "description": "QUEST-tab save & quit with an empty log: START opens the quick screen, RIGHT switches to QUEST, A opens the quit confirm, A on YES writes the active slot and lands on the title PRESS START.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 4247
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "TITLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "DIALOGUE_CHOICE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "GAME_SAVED"
+  }
+ ]
+}

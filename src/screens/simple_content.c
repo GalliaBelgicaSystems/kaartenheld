@@ -5,6 +5,7 @@
 #include "screen.h"
 #include "banked.h"
 #include <gb/gb.h>
+#include <gb/cgb.h>
 
 /* Bank-2 self-contained render bodies for the simple screens (thanks /
  * ending / game-over).  The fixed _CODE/_HOME area is at its size limit
@@ -22,19 +23,6 @@ extern uint8_t ui_font_tile_base;
 static void simple_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
     BANKED_VRAM_WRITE(dst, tile);
-}
-
-static void simple_put_char(uint8_t x, uint8_t y, char ch)
-{
-    if (y < 18 && x < 20) {
-        if (g_ui_screen_buf[y][x] != ch) {
-            uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
-            volatile uint8_t *dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
-            VBK_REG = 0;
-            simple_vram_sync_write(dst, tile);
-            g_ui_screen_buf[y][x] = ch;
-        }
-    }
 }
 
 static void simple_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
@@ -70,18 +58,42 @@ static void simple_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max
 void ending_content_render(void)
 {
     uint8_t i;
-    static const char * const s_lines[7] = {
+    static const char * const s_lines[9] = {
         "      THE END",
         "--------------------",
-        "The Hero cleared",
-        "the land of slimes!",
-        "Peace has returned!",
-        "Thanks for playing!",
+        "Congratulations on",
+        "beating the battle",
+        "demo of Kaartenheld!",
+        "Follow",
+        "@GBelgicaSystems",
+        "on X for updates!",
         "[A] RESTART"
     };
-    static const uint8_t s_rows[7] = { 1, 2, 4, 5, 7, 9, 14 };
+    static const uint8_t s_rows[9] = { 1, 2, 4, 5, 6, 8, 9, 10, 14 };
+    /* Ending page: pure white background, black text.  Program every BG
+     * slot to the document ramp (both light shades read white, both dark
+     * read black) so the whole screen is one sheet whatever attribute a
+     * cell carries -- no attribute rewrite needed.  The cleared tiles are
+     * shade-0 paper and the font ink is shade 3, so on DMG (BGP 0xE4 from
+     * boot, the only value the ROM ever programs) this is black on white
+     * with no CRAM write at all. */
+    if (g_is_cgb) {
+        static const uint8_t s_paper[8] = {
+            0xFF, 0x7F,   /* RGB8(255,255,255) */
+            0xFF, 0x7F,   /* light pair reads white: one sheet */
+            0x00, 0x00,   /* RGB8(0,0,0) */
+            0x00, 0x00    /* dark pair reads black: one ink */
+        };
+        uint8_t p;
+        for (p = 0; p < 8; p++) {
+            BCPS_REG = (uint8_t)(0x80u | (p << 3));
+            for (i = 0; i < 8; i++) {
+                BANKED_VRAM_WRITE(&BCPD_REG, s_paper[i]);
+            }
+        }
+    }
 
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < 9; i++) {
         simple_draw_text(0, s_rows[i], s_lines[i], 20);
     }
 }

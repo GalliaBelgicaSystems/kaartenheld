@@ -50,11 +50,18 @@ SHEETS = {
     "desolate_landscape": ("desolate-tile.png", "desolate_landscape"),
     "castle": ("castle-tile.png", "castle"),
     "village": ("village-tile.png", "village"),
+    "underground": ("underground.png", "underground"),
     "battle": ("battle_sprites.png", "base"),
     "enemy_ow": ("enemy_sprites.png", "obj"),
     "hero_ow": ("hero_sprites.png", "obj"),
     "card_frames": ("card_frames.png", "base"),
     "dice": ("dice.png", "base"),
+    "hands": ("hand_names.png", "base"),
+    "ap_pips": ("ap_pips_bg.png", "base"),
+    "menu_riders": ("menu_riders.png", "base"),
+    "menu_cursor": ("menu_cursor.png", "base"),
+    "menus_tile": ("menus-tile.png", "base"),
+    "materials": ("material_tiles.png", "obj"),
     "title": ("title-red.png", "title"),
 }
 
@@ -89,6 +96,34 @@ def load_slotmap():
             if slot in norm:
                 raise ValueError(f"palette_slots.json: set '{setname}': duplicate slot {slot}")
             norm[slot] = v
+        out[setname] = norm
+    return out
+
+
+def load_aliases(slotmap):
+    """{set: {ramp: slot}} from palette_slots.json "aliases".
+
+    An alias lets a second ramp share an existing hardware slot when the
+    two owners are never on screen together (dogs vs the merchant on OBJ
+    slot 6): the slot map keeps one canonical ramp (what boot programs),
+    and the alias only tells the encoder/OAM-attr resolver that this ramp
+    is slotted, so its colours stay exact instead of nearest-matched.
+    """
+    data = json.loads((REPO_ROOT / "tools" / "palette_slots.json").read_text())
+    raw = data.get("aliases") or {}
+    if not isinstance(raw, dict):
+        raise ValueError("palette_slots.json: 'aliases' wants an object")
+    out = {}
+    for setname, entries in raw.items():
+        if setname not in slotmap:
+            raise ValueError(f"palette_slots.json: alias set '{setname}' is not a slot set")
+        if not isinstance(entries, dict):
+            raise ValueError(f"palette_slots.json: aliases['{setname}'] wants an object")
+        norm = {}
+        for ramp, slot in entries.items():
+            if not isinstance(slot, int) or not (0 <= slot <= 7):
+                raise ValueError(f"palette_slots.json: alias '{ramp}' slot must be 0-7")
+            norm[ramp] = slot
         out[setname] = norm
     return out
 
@@ -221,10 +256,97 @@ def card_display_slots(skin, hud):
     return slots
 
 
+def write_obj_map_overrides(ramps):
+    """generated/tiles/obj_map_overrides.inc: per-map OBJ slot overrides.
+
+    Reads map.obj_palettes ({slot: ramp}, sparse) from levels/*.json plus
+    the frozen TEST fixtures. Emits one ObjMapOverride row per (map, slot)
+    with the full artist ramp colors, plus the union slot list (slots any
+    map overrides). The ROM loader programs a union slot from the row when
+    the current map declares it, else from the canonical cgb_obj_palettes
+    ramp -- so same-tileset gate crossings switch cleanly. Unknown sids,
+    out-of-range slots, or unknown ramps fail loudly here; validate.py
+    owns the gamer-facing messages, this owns byte-exactness.
+    """
+    lc_dir = REPO_ROOT / "tools" / "level_compiler"
+    if str(lc_dir) not in sys.path:
+        sys.path.insert(0, str(lc_dir))
+    from scene_registry import load_registry, test_scene_ids, is_level_file
+    registry = load_registry()
+    test_ids = test_scene_ids(registry)
+
+    rows = []  # (map_no, map_enum, sid, slot, ramp)
+    for path in sorted((REPO_ROOT / "levels").glob("*.json")):
+        if not is_level_file(path):
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        sid = data.get("id")
+        if sid not in registry["scenes"]:
+            raise SystemExit(
+                f"ERROR: levels/{path.name}: sid '{sid}' has no registry entry")
+        for slot_s, ramp in (((data.get("map") or {}).get("obj_palettes")) or {}).items():
+            rows.append((registry["scenes"][sid], f"MAP_{sid.upper()}", sid,
+                         int(slot_s), ramp))
+    fx_dir = REPO_ROOT / "tools" / "scenarios" / "fixtures" / "levels"
+    for path in sorted(fx_dir.glob("*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        sid = data.get("id")
+        if sid not in test_ids:
+            raise SystemExit(
+                f"ERROR: fixtures/{path.name}: sid '{sid}' is not in the TEST block")
+        for slot_s, ramp in (((data.get("map") or {}).get("obj_palettes")) or {}).items():
+            rows.append((test_ids[sid], f"MAP_{sid.upper()}", sid,
+                         int(slot_s), ramp))
+    for _, _, _, slot, ramp in rows:
+        if not 0 <= slot <= 7:
+            raise SystemExit(f"ERROR: obj_palettes slot {slot} outside 0-7")
+        if ramp not in ramps:
+            raise SystemExit(f"ERROR: obj_palettes: unknown OBJ ramp '{ramp}'")
+    rows.sort()
+
+    def c_quad(ramp):
+        return "{ %s }" % ", ".join("RGB8(%d,%d,%d)" % c for c in ramps[ramp])
+
+    out = ["/* Generated by tools/palette_compiler.py -- DO NOT EDIT DIRECTLY */",
+           "/* Per-map OBJ palette overrides (map.obj_palettes, sparse slot -> ramp).",
+           " * The loader (tiles_content.c) programs a union slot from the row when",
+           " * the current map declares it, else from the canonical cgb_obj_palettes",
+           " * ramp, so same-tileset gate crossings switch cleanly. */", ""]
+    if rows:
+        out.append("static const ObjMapOverride cgb_obj_map_overrides[] = {")
+        for num, enum, sid, slot, ramp in rows:
+            out.append(f"    /* {enum} ({sid}): slot {slot} = {ramp} */")
+            out.append(f"    {{ {num}, {slot}, {c_quad(ramp)} }},")
+        out.append("};")
+        out.append("")
+    else:
+        out.append("/* No map declares obj_palettes: one dummy row, never read. */")
+        out.append("static const ObjMapOverride cgb_obj_map_overrides[] = {")
+        out.append("    { 0xFF, 0, { RGB8(0,0,0), RGB8(0,0,0), RGB8(0,0,0), RGB8(0,0,0) } },")
+        out.append("};")
+        out.append("")
+    out.append(f"static const uint8_t cgb_obj_map_override_count = {len(rows)};")
+    out.append("")
+    union = sorted({slot for _, _, _, slot, _ in rows})
+    if union:
+        out.append("static const uint8_t cgb_obj_union_slots[] = {")
+        out.append(f"    {', '.join(str(s) for s in union)}")
+        out.append("};")
+    else:
+        out.append("static const uint8_t cgb_obj_union_slots[] = { 0 };")
+    out.append("")
+    out.append(f"static const uint8_t cgb_obj_union_slot_count = {len(union)};")
+    out.append("")
+    (GENERATED_DIR / "obj_map_overrides.inc").write_text("\n".join(out))
+    print(f"palette_compiler: {len(rows)} per-map OBJ overrides "
+          f"({len(union)} union slots)")
+
+
 def main():
     import PIL.Image  # noqa: F401 (clear error if Pillow is missing)
     _, ramps = parse_palette()
     slotmap = load_slotmap()
+    aliases = load_aliases(slotmap)
 
     for setname, slots in slotmap.items():
         for slot, ramp in slots.items():
@@ -234,7 +356,8 @@ def main():
     tables = {s: {i: ramps[r] for i, r in slots.items()} for s, slots in slotmap.items()}
 
     # World tileset tags: {tileset: ({tileid: ramp}, {tileid: coord})}.
-    world_sets = ["forest", "castle", "desolate_landscape", "village"]
+    world_sets = ["forest", "castle", "desolate_landscape", "village",
+                  "underground"]
     tags = {}
     for ts in world_sets:
         ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
@@ -267,7 +390,9 @@ def main():
     for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
         data = json.loads(path.read_text())
         pal = data.get("palette")
-        if pal not in ramps:
+        # BG palette is vestigial on OAM sets (encoder uses obj_palette;
+        # ramp-check fails it if present) -- require it only for BG stamps.
+        if not data.get("oam") and pal not in ramps:
             raise ValueError(f"combat_art/{path.name}: unknown palette ramp '{pal}'")
         obj = data.get("obj_palette")
         if obj is not None and obj not in ramps:
@@ -376,6 +501,9 @@ def main():
             raise ValueError(f"enemy_types/{path.name}: unknown ow ramp '{ramp}'")
         for cell in ow.get("cells", []):
             ow_declared[cell] = ramp
+        # Standing poses ride the same ramp as their walk cells.
+        for cell in ow.get("idle_cells", []) or []:
+            ow_declared[cell] = ramp
     hero_data = json.loads((REPO_ROOT / "screens" / "hero.json").read_text())
     hero_pal = (hero_data.get("overworld") or {}).get("palette", 0)
     hero_ramp = hero_pal if isinstance(hero_pal, str) else None
@@ -429,6 +557,13 @@ def main():
         for i in sorted(slot_names):
             if slot_names[i] not in [c[0] for c in cand]:
                 cand.append((slot_names[i], slots[i]))
+        # Aliased ramps share a slot with a never-co-resident owner; treat
+        # them as slotted so a declared ramp keeps its exact colours.
+        for _ramp in sorted(aliases.get(setname, {})):
+            if _ramp not in [c[0] for c in cand]:
+                if _ramp not in ramps:
+                    raise ValueError(f"palette_slots.json: alias '{_ramp}' is not a ramp")
+                cand.append((_ramp, ramps[_ramp]))
         cells = sheet_cells(ASSETS_DIR / fname)
         if isinstance(declared, str):
             declared = {c: declared for c in cells}
@@ -531,16 +666,80 @@ def main():
     # counters).  Base slot 5 is wood (fight2) per palette_slots.json.
     compile_sheet("dice", { (x, 0): "fight2" for x in range(10) },
                   require_slot=False)
+    # Battle poker-hand names (hand_names.png, 29x1: down arrow + the
+    # row-6/7 letter fragments + heal cross): brown numbers_icons ink on
+    # white paper is exactly the fight3 ramp (white/card_outline/dark-red/
+    # brown), while cell 28 (combat_health_icon_menu) uses #77e331 green
+    # (fighthealth shade 3, exact like menu_riders cell 3), so the encode
+    # is mismatch-free.  require_slot=False like dice: the declared ramp
+    # is the encode side, the row-7/10 spans paint the slot.
+    compile_sheet("hands",
+                  {(x, 0): "fight3" for x in range(28)} | {(28, 0): "fighthealth"},
+                  require_slot=False)
+    # Menu AP pips (ap_pips_bg.png, 5x1 cells, cost order 1-5): every
+    # cell encodes with the fightspider ramp (menu text black-on-white,
+    # base slot 6 = UI_COLOR_GOLD, the AP column color). Ink is exact
+    # black so there are zero mismatches.
+    compile_sheet("ap_pips", { (x, 0): "fightspider" for x in range(5) },
+                  require_slot=False)
+    # Card-menu rider icons (menu_riders.png, 4x1: fire, ice, poison,
+    # health) and the finger cursor (menu_cursor.png, 2x1: pointing right,
+    # pointing up).  Each rider cell encodes with the ramp of the hardware
+    # slot its element cell displays on (fire -> base 1, ice -> 2,
+    # poison -> 4, health -> the menu slot 7's green); the finger cells
+    # encode white/brown (fight3) and render in whatever ink slot the
+    # cursor cell carries, like the text glyph they replace.
+    # require_slot=False like dice/ap_pips: the declared ramps are the
+    # encode side, the runtime paints the cell slots above.
+    compile_sheet("menu_riders",
+                  {(0, 0): "fight4", (1, 0): "fight6", (2, 0): "fight5",
+                   (3, 0): "fighthealth"},
+                  require_slot=False)
+    compile_sheet("menu_cursor", {(0, 0): "fight3", (1, 0): "fight3"},
+                  require_slot=False)
+    # Menu chrome (menus-tile.png, 16x4: 12 single-cell UI icons on row 0,
+    # cols 0-11, plus the 4x4 hero-status portrait at cols 12-15, rows 0-3
+    # -- "hero status RC" cells in sheet order, including the two blank
+    # transparent corners (15,0)/(12,3), which encode as empty tiles).
+    # Cell map mirrors tools/level_editor/slice_menus_tile.py (CSV row/col
+    # == sheet cell).  Everything encodes with the card chrome ramp
+    # (fight1: brown ink on white paper, base slot 0), the same family as
+    # card_frames.  The sheet brown (#b59263) sits 5 red-digits off the
+    # ramp brown (#b09266), so every drawn cell lands in
+    # ramp_mismatches.json (allowlisted; artist repaint follow-up).
+    compile_sheet("menus_tile",
+                  {(x, 0): "fight1" for x in range(12)} |
+                  {(x, y): "fight1" for y in range(4) for x in
+                   range(12, 16)},
+                  require_slot=False)
+    # Card-menu material OAM icons (material_tiles.png, 5x1 cells: steel,
+    # bronze, iron, mythril icon art in that order, then the wood icon):
+    # each cell encodes with its material's inventory ramp (obj aliases,
+    # palette_slots.json -- the encoder treats aliases as slotted, so
+    # colors stay exact).  Steel takes OAM 117 so the bronze/iron/mythril/
+    # wood ids (118-121) never move.  The menu streams the sheet to OAM
+    # 117-121 on DECK renders (bank-2 menu body) and programs the alias
+    # slots with the same ramps; the canonical owners (overworld actors /
+    # battle scratch) are never co-resident (the menu hides actor OAM,
+    # overworld entry restores tiles + OBJ, battle entry reprograms its
+    # scratch).  require_slot=False like battle/dice (the inventory ramps
+    # hold no base-set slot); whole-obj-set transparency keeps shade 0
+    # transparent for OAM.
+    compile_sheet("materials", {(0, 0): "inventory5", (1, 0): "inventory1",
+                                (2, 0): "inventory2", (3, 0): "inventory3",
+                                (4, 0): "inventory4"},
+                  require_slot=False)
     compile_sheet("title", "title")
 
     # World manifests in VRAM-slot order (the ROM indexes g_tile_pal_*
     # by VRAM slot). Forest/village/desolate pack vram index == scan
-    # position; castle packs 8-wide against a 9-wide sheet, so its 16
-    # slots follow vram-index order, not scan order (encoding matches:
-    # see the castle gfx rule's --tile-coords).
+    # position; castle follows vram-index order (slot == scan index on
+    # the 9-wide sheet; encoding matches: see the castle gfx rule's
+    # --tile-coords).
     from PIL import Image as _Image
     set_of_ts = {"forest": "forest", "castle": "castle",
-                 "desolate_landscape": "desolate_landscape", "village": "village"}
+                 "desolate_landscape": "desolate_landscape", "village": "village",
+                 "underground": "underground"}
     for ts in world_sets:
         setname = set_of_ts[ts]
         fname, _ = SHEETS[ts]
@@ -549,18 +748,19 @@ def main():
         vram_id = world_vram[ts]
         if ts == "castle":
             ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
-            # Sort by vram `index`: the 9x4 sheet maps 1:1 to 36 VRAM
+            # Sort by vram `index`: the 9x5 sheet maps 1:1 to 45 VRAM
             # slots in scan order (slot == index), matching the gfx
             # rule's --tile-coords and ui.c.
             ordered = sorted((v["index"], (v["x"], v["y"]), v["tile"])
                              for v in (ts_data.get("vram_block") or {}).get("tiles", [])
-                             if "tile" in v and v.get("index", 99) < 36)
+                             if "tile" in v and v.get("index", 99) < 45)
             cells = [c for _, c, _ in ordered]
             ids = [t for _, _, t in ordered]
         else:
             ids = []
             cells = []
-            n = {"forest": 80, "desolate_landscape": 64, "village": 48}[ts]
+            n = {"forest": 80, "desolate_landscape": 64, "village": 48,
+                 "underground": 36}[ts]
             for i in range(n):
                 coord = (i % w, i // w)
                 cells.append(coord)
@@ -577,13 +777,125 @@ def main():
             {"tileset": ts, "palettes": palettes, "tile_ids": ids,
              "tile_palettes": tile_slots, "tile_ramps": tile_ramps}, indent=1))
 
-    # Set manifests for battle_compile + the editor.
+    # Set manifests for battle_compile + the editor.  "aliases" carries the
+    # ramps that share a slot with a never-co-resident owner (dogs -> slot 6),
+    # so battle_compile can resolve them to a palette index.
     for setname in ("base", "obj", "title"):
         (GENERATED_DIR / f"{setname}.json").write_text(json.dumps(
             {"set": setname,
+             "aliases": dict(aliases.get(setname, {})),
              "slots": {str(i): {"ramp": slotmap[setname][i],
                                 "colors": [_hex(c) for c in tables[setname][i]]}
                        for i in sorted(slotmap[setname])}}, indent=1))
+
+    # Card-menu material OAM icon header (src/game/..., committed): fixed
+    # OAM ids (time-share blob offsets 18-21, restored on overworld entry),
+    # OBJ slots (palette_slots.json obj aliases -- single source of truth,
+    # read here so code never hardcodes them), inventory ramp CRAM bytes
+    # (programmed on DECK renders, bank-2 menu body) and the canonical OBJ
+    # bytes for the borrowed slots (overworld-entry restore).
+    _mat_order = (("steel", "inventory5", 117),
+                  ("bronze", "inventory1", 118),
+                  ("iron", "inventory2", 119),
+                  ("mythril", "inventory3", 120),
+                  ("wood", "inventory4", 121))
+    _mat_alias = aliases.get("obj", {})
+    for _name, _ramp, _oam in _mat_order:
+        if _mat_alias.get(_ramp) is None:
+            raise ValueError(
+                f"material_tiles: obj alias '{_ramp}' missing from "
+                f"palette_slots.json (needed for the {_name} icon slot)")
+
+    def _cram_bytes(quad):
+        out = []
+        for (r, g, b) in quad:
+            v = ((r >> 3) | ((g >> 3) << 5) | ((b >> 3) << 10)) & 0x7FFF
+            out.append(f"0x{v & 0xFF:02X}, 0x{(v >> 8) & 0xFF:02X}")
+        return out
+
+    _mh = ["/* Generated by tools/palette_compiler.py -- DO NOT EDIT DIRECTLY */",
+           "/* Card-menu material OAM icons (assets/material_tiles.png, 5x1).",
+           " * Tiles stream to OAM 117-121 on DECK renders (bank-2 menu body);",
+           " * OBJ slots come from the palette_slots.json obj aliases.",
+           " * Canonical bytes restore the borrowed slots on overworld entry. */",
+           "",
+           "#ifndef MATERIAL_TILES_GENERATED_H",
+           "#define MATERIAL_TILES_GENERATED_H",
+           "",
+           "/* Fixed OAM tile ids (encode order = steel, bronze, iron, mythril, wood). */"]
+    for _name, _ramp, _oam in _mat_order:
+        _mh.append(f"#define MAT_TILE_{_name.upper()} {_oam}")
+    _mh.append("")
+    _mh.append("/* OBJ slots (alias resolution; mythril shares slot 6 and steel")
+    _mh.append(" * slot 7 with battle scratch + overworld actors -- never co-resident,")
+    _mh.append(" * see aliases; slots reprogrammed on menu render, restored on exit. */")
+    for _name, _ramp, _oam in _mat_order:
+        _mh.append(f"#define MAT_OBJ_{_name.upper()} {_mat_alias[_ramp]}")
+    _mh.append("")
+    _mh.append("/* Inventory ramp CRAM bytes (programmed on ITEM renders).")
+    _mh.append(" * Only emitted with MAT_NEED_RAMP_BYTES defined (bank-2 menu")
+    _mh.append(" * body); the bank-8 restore side never reads them. */")
+    _mh.append("#ifdef MAT_NEED_RAMP_BYTES")
+    for _name, _ramp, _oam in _mat_order:
+        _mh.append(f"static const uint8_t mat_ramp_{_name}[8] = {{")
+        _mh.append(f"    {', '.join(_cram_bytes(ramps[_ramp]))},")
+        _mh.append("};")
+    _mh.append("#endif")
+    _mh.append("")
+    _mh.append("/* Canonical OBJ bytes for the borrowed slots (restore order).")
+    _mh.append(" * Only emitted with MAT_NEED_RESTORE_BYTES defined (bank-8")
+    _mh.append(" * overworld-entry restore); the menu body never reads them. */")
+    _mh.append("#ifdef MAT_NEED_RESTORE_BYTES")
+    _mat_restore_slots = sorted({_mat_alias[_ramp] for _, _ramp, _ in _mat_order})
+    _mh.append("static const uint8_t mat_obj_restore_slots[] = {")
+    _mh.append(f"    {', '.join(str(s) for s in _mat_restore_slots)},")
+    _mh.append("};")
+    _mh.append("static const uint8_t mat_obj_restore_bytes[] = {")
+    for _s in _mat_restore_slots:
+        _mh.append(f"    /* slot {_s} {slotmap['obj'][_s]} */")
+        _mh.append(f"    {', '.join(_cram_bytes(tables['obj'][_s]))},")
+    _mh.append("};")
+    _mh.append("#endif")
+    _mh.append("")
+    _mh.append("#endif /* MATERIAL_TILES_GENERATED_H */")
+    _mh.append("")
+    (REPO_ROOT / "src" / "game" / "material_tiles_generated.h").write_text(
+        "\n".join(_mh))
+
+    # Card-menu slot-7 BG ramp (src/game/menu_palette_generated.h): the
+    # 'menu' slot set is the base set with slot 7 carrying the health
+    # green (fighthealth) -- no base ramp has a green.  Emitted as the
+    # single 8-byte CRAM ramp instead of a whole 64-byte palette table:
+    # the bank-2 menu bodies program it right after the UI CRAM load, and
+    # every battle/overworld full redraw programs its own set again, so
+    # the DIM grey-out always comes back.  Keeping the set in
+    # palette_slots.json (not a hand-written byte list here) keeps the
+    # ramp choice in the same place as every other slot assignment.
+    if "menu" not in slotmap:
+        raise ValueError("palette_slots.json: missing 'menu' slot set")
+    _menu_slots = slotmap["menu"]
+    _base_slots = slotmap["base"]
+    _diff = [s for s in sorted(_base_slots) if _menu_slots.get(s) != _base_slots[s]]
+    if _diff != [7]:
+        raise ValueError(
+            "palette_slots.json: 'menu' must differ from 'base' in slot 7 only "
+            f"(differs in {_diff}); the menu only emits slot 7's ramp")
+    _mh = ["/* Generated by tools/palette_compiler.py -- DO NOT EDIT DIRECTLY */",
+           "/* Card-menu BG slot 7 ramp (palette_slots.json 'menu' set: the base set",
+           " * with slot 7 = the heal-rider green, UI_COLOR_HEALTH).  Programmed by",
+           " * the bank-2 menu bodies after the UI CRAM load. */",
+           "",
+           "#ifndef MENU_PALETTE_GENERATED_H",
+           "#define MENU_PALETTE_GENERATED_H",
+           "",
+           "static const uint8_t menu_slot_health_ramp[8] = {"]
+    _mh.append(f"    {', '.join(_cram_bytes(tables['menu'][7]))},")
+    _mh.append("};")
+    _mh.append("")
+    _mh.append("#endif /* MENU_PALETTE_GENERATED_H */")
+    _mh.append("")
+    (REPO_ROOT / "src" / "game" / "menu_palette_generated.h").write_text(
+        "\n".join(_mh))
 
     # C includes.
     def c_ramp(quad):
@@ -591,9 +903,11 @@ def main():
 
     names = {"base": "cgb_bg_palettes", "forest": "cgb_bg_palettes_forest",
              "desolate_landscape": "cgb_bg_palettes_desolate",
-             "castle": "cgb_bg_palettes_castle", "village": "cgb_bg_palettes_village"}
+             "castle": "cgb_bg_palettes_castle", "village": "cgb_bg_palettes_village",
+             "underground": "cgb_bg_palettes_underground"}
     out = ["/* Generated by tools/palette_compiler.py -- DO NOT EDIT DIRECTLY */", ""]
-    for setname in ("base", "forest", "desolate_landscape", "castle", "village"):
+    for setname in ("base", "forest", "desolate_landscape", "castle", "village",
+                      "underground"):
         out.append(f"const palette_color_t {names[setname]}[8][4] = {{")
         for i in sorted(slotmap[setname]):
             out.append(f"    /* {i} {slotmap[setname][i]} */ {c_ramp(tables[setname][i])},")
@@ -610,6 +924,8 @@ def main():
     out.append("")
     (GENERATED_DIR / "cgb_obj_palettes.inc").write_text("\n".join(out))
 
+    write_obj_map_overrides(ramps)
+
     real = [m for m in mismatches if m["off_colors"] or m["used_ramp"] is None]
     (GENERATED_DIR / "ramp_mismatches.json").write_text(json.dumps(real, indent=1))
 
@@ -617,6 +933,8 @@ def main():
     write_ramp_export()
 
     slotted = {r for slots in slotmap.values() for r in slots.values()}
+    for ent in aliases.values():
+        slotted.update(ent.keys())
     spare = sorted(set(ramps) - slotted)
     print(f"palette_compiler: {len(ramps)} ramps, {len(slotted)} slotted, "
           f"{len(real)} reported tiles")
@@ -635,15 +953,23 @@ def render_ramp_export():
     _, ramps = parse_palette()
     refs = parse_palette_refs()
     slotmap = load_slotmap()
+    aliases = load_aliases(slotmap)
     ramp_obj = {}
     for name in sorted(ramps):
+        slots_list = [
+            f"{setname}:{slot}"
+            for setname, slots in slotmap.items()
+            for slot, ramp in slots.items() if ramp == name
+        ]
+        slots_list += [
+            f"{setname}:{slot}"
+            for setname, ent in aliases.items()
+            for ramp, slot in ent.items() if ramp == name
+        ]
         ramp_obj[name] = {
             "colors": [_hex(c) for c in ramps[name]],
             "refs": refs.get(name, []),
-            "slots": sorted(
-                f"{setname}:{slot}"
-                for setname, slots in slotmap.items()
-                for slot, ramp in slots.items() if ramp == name),
+            "slots": sorted(set(slots_list)),
         }
     slots_obj = {
         setname: {str(slot): ramp for slot, ramp in sorted(slots.items())}
@@ -712,10 +1038,14 @@ def write_accounting():
 
     _, ramps = parse_palette()
     slotmap = load_slotmap()
+    aliases = load_aliases(slotmap)
     slot_of = {}
     for setname, slots in slotmap.items():
         for i, r in sorted(slots.items()):
             slot_of.setdefault((setname, r), i)
+    for setname, ent in aliases.items():
+        for r, slot in ent.items():
+            slot_of.setdefault((setname, r), slot)
 
     # Battle OAM ramps are programmed into one scratch OBJ slot at battle
     # entry (BATTLE_OBJ_SCRATCH, src/battle/battle.h), not through the
@@ -775,7 +1105,7 @@ def write_accounting():
     L.append("| set | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |")
     L.append("|---|---|---|---|---|---|---|---|---|")
     for setname in ("forest", "desolate_landscape", "castle", "village",
-                    "base", "obj", "title"):
+                    "underground", "base", "obj", "title"):
         row = [setname] + [slotmap[setname].get(i, "–") for i in range(8)]
         L.append("| " + " | ".join(row) + " |")
     L.append("")
@@ -784,7 +1114,8 @@ def write_accounting():
     L.append("")
     for ts, setname in (("forest", "forest"), ("castle", "castle"),
                         ("desolate_landscape", "desolate_landscape"),
-                        ("village", "village")):
+                        ("village", "village"),
+                        ("underground", "underground")):
         ts_data = json.loads((TILESETS_DIR / f"{ts}.json").read_text())
         vram_coord = {}
         for v in (ts_data.get("vram_block") or {}).get("tiles", []):
@@ -964,6 +1295,8 @@ def write_accounting():
                      f"{', '.join(m['off_colors'])} |")
     L.append("")
     slotted = {r for slots in slotmap.values() for r in slots.values()}
+    for ent in aliases.values():
+        slotted.update(ent.keys())
     spare = sorted(set(ramps) - slotted)
     if spare:
         L.append(f"Unslotted ramps (parsed, no hardware slot, info only): "

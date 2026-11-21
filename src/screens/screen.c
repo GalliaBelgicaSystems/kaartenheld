@@ -4,6 +4,9 @@
 #include "telemetry.h"
 #include "world.h"
 #include "ui.h"
+#include "banked.h"
+
+void menus_entry_invalidate_banked(void);
 
 /* Sync Game.scene with the world's current map after a runtime map
  * change (walking through a gate).  Emits SCENE_CHANGED when it differs. */
@@ -89,13 +92,54 @@ void screen_change(Game *g, ScreenId screen)
 
     /* Screens that own VRAM block-1 art (battle enemy art shares slots
      * 128+ with world tiles) must not leak it into the next overworld
-     * redraw: force a tileset reload there. */
+     * redraw, and battles OAM-time-share tile ids with overworld art
+     * (AP pips 1-4 over hero idle/walk at 96-99, pip 5 plus riders over
+     * the blob tail at 122-125).  See the per-branch notes below. */
     if (screen == SCREEN_OVERWORLD) {
-        ui_invalidate_tileset();
+        if (old_screen != SCREEN_DIALOGUE) {
+            /* Non-dialogue screens may own VRAM block-1 art (battle
+             * enemy art shares slots 128+) or foreign CRAM, so force a
+             * reload.  Dialogue never touches either: an overlay box
+             * keeps the world tileset/CRAM, and a dialogue entered from
+             * battle/gamble reloads both itself when it repaints the
+             * backdrop (dialogue_screen.c).  Invalidating here would
+             * leave the caches cold for the rest of the map stay, so
+             * the next same-kind gate crossing could never hit them. */
+            ui_invalidate_tileset();
+        }
+        /* Unconditional: battles time-share OAM tile ids with overworld
+         * art (AP pips over hero idle/walk, pip 5 plus riders over the
+         * blob tail), and a dialogue entered from battle never restreams
+         * them. */
+        ui_restore_ow_oam();
+    }
+
+    /* BATTLE/ITEM/SHOP entry re-arms the time-shared OAM tile stream
+     * (AP pips over hero 96-99, pip 5 + riders over blob tail 122-125):
+     * the next tick restreams before the first render, so the hand
+     * never shows hero/blob pixels with correct OAM ids.  Covers boot-
+     * random flags (harness skips CRT0) and any clobber path that did
+     * not clear the flag.  Same-frame guarantee: screen_update runs
+     * before the tick, which runs before the render. */
+    if (screen == SCREEN_BATTLE || screen == SCREEN_ITEM ||
+        screen == SCREEN_SHOP) {
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&menus_entry_invalidate_banked;
+        banked_call_run();
     }
 
     telemetry_emit(EVENT_SCREEN_CHANGED, (uint8_t)old_screen, (uint8_t)screen, 0, 0);
     game_render_reset(g);
+
+    /* Demo finale entry (both routes: final-boss victory and the wake
+     * dialogue close): switch to the end-credits theme (demo
+     * complete.uge, loops) exactly at the transition -- and only then.
+     * Single hook for every ENDING entry, so the fixed bank pays one
+     * branch instead of one music call per entry path (AGENTS.md
+     * §52.18). */
+    if (screen == SCREEN_ENDING) {
+        audio_play_music(MUSIC_ENDING);
+    }
 }
 
 void screen_update(Game *g)
@@ -113,6 +157,7 @@ void screen_update(Game *g)
     case SCREEN_SAVE_LOAD: save_load_screen_update(g); break;
     case SCREEN_TITLE: title_screen_update(g); break;
     case SCREEN_SPLASH: splash_screen_update(g); break;
+    case SCREEN_NOTICE: notice_screen_update(g); break;
     case SCREEN_INTRO: intro_screen_update(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_update(g); break;
     case SCREEN_CREDITS: tutorial_screen_update(g); break; /* shared: see credits_screen.c */
@@ -138,6 +183,7 @@ void screen_render(Game *g)
     case SCREEN_SAVE_LOAD: save_load_screen_render(g); break;
     case SCREEN_TITLE: title_screen_render(g); break;
     case SCREEN_SPLASH: splash_screen_render(g); break;
+    case SCREEN_NOTICE: notice_screen_render(g); break;
     case SCREEN_INTRO: intro_screen_render(g); break;
     case SCREEN_TUTORIAL: tutorial_screen_render(g); break;
     case SCREEN_CREDITS: credits_screen_render(g); break;

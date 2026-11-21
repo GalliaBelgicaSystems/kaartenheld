@@ -14,18 +14,18 @@
 #define SCENE_CONTENT_BANK 5
 #endif
 
-extern const SceneExit g_all_exits[];
 extern const SceneDefinition g_scenes[];
 #ifndef TEST_LEVELS
 /* Overflow terrain stamp bodies (one per bank; see scenes_terrain_b*.c,
  * emitted by compile.py from OVERFLOW_TERRAIN_BANK). Keep the bank list
  * in sync with that map. */
 extern void terrain_stamp_b6_banked(void);
-extern void terrain_stamp_b7_banked(void);
+extern void terrain_stamp_b11_banked(void);
+extern void terrain_stamp_b9_banked(void);
+extern void terrain_stamp_b12_banked(void);
 #endif
 
 static SceneDefinition s_scene_scratch;
-static SceneExit s_exit_scratch;
 
 const SceneDefinition *scene_definition_for_map(MapId map_id)
 {
@@ -41,17 +41,26 @@ const SceneDefinition *scene_definition_for_map(MapId map_id)
     return &s_scene_scratch;
 }
 
-const SceneExit *scene_exit_at(const SceneDefinition *def, uint8_t x, uint8_t y)
+/* scene_exit_check() is a fixed-bank wrapper around the banked body in
+ * src/world/scene_load.c (ROM bank 5/4, same home bank as the exit
+ * tables it reads).  A point exit is an invisible trigger: stepping onto
+ * its gate tile moves the player to the target scene.  The wrapper
+ * stages the World + definition pointers and the gate tile into the
+ * _DATA globals (banked.c) and runs the banked no-arg function through
+ * the WRAM banked-call trampoline (crt0.s); the body stages the EXIT
+ * outcome straight through the World pointer on a hit and reports
+ * hit/miss in g_bk_byte_c.  A NULL def never hits. */
+uint8_t scene_exit_check(World *w, const SceneDefinition *def, uint8_t x, uint8_t y)
 {
-    uint8_t i;
-    if (!def) return NULL;
-    for (i = 0; i < def->exit_count; i++) {
-        banked_copy(SCENE_CONTENT_BANK, &s_exit_scratch, &def->exits[i], sizeof(SceneExit));
-        if (s_exit_scratch.gate_x == x && s_exit_scratch.gate_y == y) {
-            return &s_exit_scratch;
-        }
-    }
-    return NULL;
+    if (!w || !def || def->exit_count == 0) return 0;
+    g_bk_call_bank = SCENE_CONTENT_BANK;
+    g_bk_call_target = (uint16_t)&scene_exit_check_banked;
+    g_bk_ptr_a = (void *)w;
+    g_bk_ptr_b = (void *)def;
+    g_bk_byte_a = x;
+    g_bk_byte_b = y;
+    banked_call_run();
+    return g_bk_byte_c;
 }
 
 /* scene_load_tiles() is a fixed-bank wrapper around the banked body in
@@ -80,8 +89,14 @@ void scene_load_tiles(World *w, MapId map_id)
             if (d->terrain_bank == 6) {
                 g_bk_call_target = (uint16_t)&terrain_stamp_b6_banked;
                 banked_call_run();
-            } else if (d->terrain_bank == 7) {
-                g_bk_call_target = (uint16_t)&terrain_stamp_b7_banked;
+            } else if (d->terrain_bank == 11) {
+                g_bk_call_target = (uint16_t)&terrain_stamp_b11_banked;
+                banked_call_run();
+            } else if (d->terrain_bank == 9) {
+                g_bk_call_target = (uint16_t)&terrain_stamp_b9_banked;
+                banked_call_run();
+            } else if (d->terrain_bank == 12) {
+                g_bk_call_target = (uint16_t)&terrain_stamp_b12_banked;
                 banked_call_run();
             }
             /* Unknown overflow bank: leave prefilled floor. Never a hang;
@@ -101,5 +116,20 @@ void scene_spawn(MapId map_id)
     g_bk_call_bank = SCENE_CONTENT_BANK;
     g_bk_call_target = (uint16_t)&scene_spawn_banked;
     g_bk_byte_a = (uint8_t)map_id;
+    banked_call_run();
+}
+
+/* scene_entry() is a fixed-bank wrapper around the banked body in
+ * src/world/scene_load.c (ROM bank 5/4, same home bank as the scene
+ * tables it reads).  The wrapper stages the map id + crossed edge into
+ * the _DATA globals (banked.c) and runs the banked no-arg function
+ * through the WRAM banked-call trampoline (crt0.s); the entry comes
+ * back in g_bk_byte_b/c/d. */
+void scene_entry(MapId map_id, uint8_t crossed_edge)
+{
+    g_bk_call_bank = SCENE_CONTENT_BANK;
+    g_bk_call_target = (uint16_t)&scene_entry_banked;
+    g_bk_byte_a = (uint8_t)map_id;
+    g_bk_byte_b = crossed_edge;
     banked_call_run();
 }

@@ -50,8 +50,11 @@ void deck_init_default_banked(void)
         if (def) {
             d->cards[i].type = def->battle_type;
             d->cards[i].value = def->power;
+            /* Limited-arrows: bows never deplete per card (shared pool
+             * gates play + draw instead). */
             d->cards[i].uses_remaining =
-                (def->uses_per_battle == 0) ? 0xFF : def->uses_per_battle;
+                (def->battle_type == BATTLE_CARD_TYPE_BOW ||
+                 def->uses_per_battle == 0) ? 0xFF : def->uses_per_battle;
             d->cards[i].cost = def->cost;
             d->cards[i].effect = def->effect;
             d->cards[i].status_id = def->status_id;
@@ -70,6 +73,10 @@ void deck_init_default_banked(void)
             d->cards[i].ring = 0;
         }
     }
+
+    /* Same bank: shuffle the fixed-order fallback so the opening hand of
+     * a deck-less battle varies like every other fight. */
+    deck_shuffle_pile(d);
 }
 
 /* deck_reshuffle_banked and its card_copy/swap helpers used to live here;

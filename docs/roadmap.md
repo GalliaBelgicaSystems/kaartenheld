@@ -36,8 +36,9 @@ testable, save/load works, and the memory budget is understood.
 - **Camera / scroll — B3 + B4 DONE**: the overworld background scrolls
   smoothly with SCX/SCY (set every frame from the pixel camera; the tile
   window is redrawn only when the camera crosses a tile boundary).  The
-  viewport is full-screen (18 rows, no HUD overlay — the map occupies all
-  144px of vertical display).  B4 made the camera player-centred
+  viewport is 20x17 world rows plus the Window-layer status-bar HUD on
+  physical row 17 (the last map row scrolls into view instead of hiding
+  under the bar).  B4 made the camera player-centred
   (`camera_px = player_px - view/2`, clamped at the scene edges); covered by
   `large_map_scroll`, `field_east_scroll` and `camera_boundary_clamp`.
   Render verification: the overworld background uses a 32-column background ring
@@ -71,12 +72,13 @@ testable, save/load works, and the memory budget is understood.
     (clones of the struck actor; the final boss stands alone), regular
     enemy HP doubled (slimes 10-16, bats 8), boss tuned to 50 HP with a
     SET_ENEMY_HP scenario hook pinning it to 20 for deterministic tests.
-  - Energy pool defaults to 1/phase (`BATTLE_ENERGY_PER_TURN`; was 6 —
+  - Energy pool defaults to 1/phase (`BATTLE_ENERGY_PER_TURN`;
     combo scenarios select cost-0 or single cost-1 cards so the hand
     still fits);
     the live pool is the uncapped `ENERGY_POOL` variable
-    (staged at battle entry), raised by story events (+1 tutorial,
-    +1 chest, +1 Monster Hunt, +1 mimic from the base-1 pool, reaching 5);
+    (staged at battle entry), raised by story events (+1 tutorial spar,
+    +1 chest, +1 Monster Hunt, +1 mimic from the base-1 pool,
+    reaching 5);
     rejected selections flash NO ENERGY! / OUT OF USES! on
     the battle HUD.
   - COMBO row shows the pending hand tier LIVE while selecting (blanks on
@@ -127,6 +129,40 @@ objects mislead two earlier diagnoses, see AGENTS.md §52.2/§52.13):
   failures and for missing scenario files; `python3 tools/dev.py scenario`
   now exits 2 (not-found) vs 1 (fail) and suggests close names.  Do not
   treat make's rc alone as evidence.
+
+### SPAWN-SCAN POST-MORTEM (found 2026-11-03, card-AP-cost work;
+### corrected same day: the "miscompile" below was itself a misdiagnosis)
+
+`battle_slime_trio_spawn` lost its second fight (SAVE_LOAD instead of
+OVERWORLD, 32 instead of 37 gold, no SCRIPT_TRIGGERED): the slime-trio
+spawn silently no-op'd, so the round-3 inputs spilled into the overworld
+and a stray SELECT opened the save menu.  Bisected with temp scenarios
+(not by reading state): round 1 wins identically on both builds, the
+post-victory scripts/dialogue/loot match exactly.  First theory (wrong):
+a §52.19 layout-sensitive miscompile in the ow-resolve scan, "fixed" with
+function-local volatiles (3/3 present).  A review caught the real bug:
+the spawn body lives in ROM bank 2 but scanned `g_events[]`, which lives
+in ROM bank 10 — a cross-bank wild read of bank-2 machine code at the
+bank-10 offset.  In the debug ROM the scan happened to hit an accidental
+`0x0A` opcode (spawning with a garbage `ow_type` 216, proven by the F0
+probe's own `ow=0xD8` dump); in the release ROM it found nothing and the
+trio never spawned (the 5 `walk-e` failures).  The volatiles and the F0/F1
+instrumentation only re-shuffled which garbage byte got hit — the F0
+"proof" of a match was itself the layout shift that made it match.
+Real fix (option (a) in the review): the body moved from bank 2 to bank 10
+(`GAME_EVENT_BANK`, the event table's own bank) and the dispatch stages
+`g_bk_call_bank = 10`, so the row scan is a plain in-bank read again.  The
+staging variant (option (b), `g_bk_byte_a`) was tried first but the one
+extra store overflowed the fixed bank (§52.18: `_HOME` sits exactly at
+0x8000), so the file moved instead.  The volatiles were removed with it.
+(The slot-matching loop was genuinely innocent: forcing slot 2 spawned
+correctly in every layout.)  Lesson, sharpening AGENTS.md §52.19: when a
+"layout-sensitive" failure involves a direct ROM-table read from a
+banked body, verify the table's bank is actually mapped first (`.sym`
+bank byte + `#pragma bank` at both ends) before reaching for codegen
+remedies.  Lesson for the next bank-2 addition: run
+`battle_slime_trio_spawn` in the touched-build smoke set alongside the
+sentinels — it is the only scenario that executes this body.
 
 ### STATIC-WIPE POST-MORTEM (found 2026-10-11, Carl/chest work)
 

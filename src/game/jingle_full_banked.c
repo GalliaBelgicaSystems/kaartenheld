@@ -11,7 +11,7 @@ extern volatile uint8_t g_harness_mode;
 
 /* ── Chest-jingle full body (MUSIC_CHEST, one-shot) ────────────────────
  * Game-layer banked body: reads the loot mask from game story state
- * directly (field-cache and amulet-chest loot flags), so the fixed-bank engine never branches on game ids (§55.1) -- it only owns
+ * directly (field-cache and shop-keys-chest loot flags), so the fixed-bank engine never branches on game ids (§55.1) -- it only owns
  * the trampoline dispatch in game_update().  Ticks every non-battle
  * frame (menus, dialogue, shops included) so they can't freeze the
  * restore timer while the driver loops the one-shot song.  Returns
@@ -25,7 +25,7 @@ extern volatile uint8_t g_harness_mode;
  * round-trip per frame instead of two nested dispatches, which the
  * fixed-bank budget could no longer afford.
  *
- * Edge: loot mask bit 0 = field cache open, bit 1 = amulet found.
+ * Edge: loot mask bit 0 = field cache open, bit 1 = shop keys found.
  * The first frame a chest reads open starts the jingle once; the very
  * first call seeds the edge from the live mask (bit 7 flag), so a save
  * loaded with chests already open stays silent (re-armed by
@@ -54,6 +54,28 @@ extern volatile uint8_t g_harness_mode;
 #define CHEST_JINGLE_TICKS 80
 #define CHEST_JINGLE_BACKSTOP 240
 
+/* Battle-victory fanfare play-once (see audio.h MUSIC_VICTORY).  The ROM
+ * driver wraps a song's order list unconditionally (the ROM build ignores
+ * loop_order), so victory.uge -- one order, 64 rows at tick rate 4, with
+ * notes on rows 1..31 and silence on 32..63 -- would replay the fanfare
+ * every 256 tracker ticks (4.0 s at 64 Hz) for as long as the VICTORY!
+ * result screen stays up.  Nothing stopped it: the chest jingle and the
+ * title theme each have a restore/stop clock, the victory had none.
+ *
+ * Stop at 192 ticks (row 48): 1.0 s of ring-out silence after the last
+ * note onset (row 31 = tick 124), 1.0 s of margin before the wrap, so no
+ * musical content is ever clipped and the replay can never be heard.
+ * Counted by the tracker's own ÷4 divider in huge_music_update (same
+ * clock as the chest jingle), so LCD-off redraws cannot drift it against
+ * the song.  The stop lands in silence (byte_b = 3 -> MUSIC_NONE); the
+ * area track comes back when the battle exits.  The harness has no timer
+ * ISR, so there the frame backstop below stops instead. */
+#define VICTORY_JINGLE_TICKS 192
+/* Harness backstop in game frames.  Byte counter (like the chest's), so it
+ * must stay below 255; 240 is still past the ~179 frames the tick clock
+ * needs at 59.73 fps, i.e. real timing always stops on the song clock. */
+#define VICTORY_JINGLE_BACKSTOP 240
+
 /* Title-theme play-once clock (see audio.h MUSIC_TITLE): the ROM driver
  * loops whole songs, so the 6.0 s title song (384 tracker ticks @64 Hz
  * per `make music-size SONG=title`) would loop forever without an explicit stop.
@@ -77,6 +99,10 @@ uint16_t g_title_frames;  /* BSS zero (AGENTS.md 52.27) */
  * of margin).  Same BSS slot as the old frame-only counter, so the WRAM
  * layout does not move a byte. */
 volatile uint8_t g_jingle_frames;  /* BSS zero (AGENTS.md 52.27) */
+/* Victory stop clock (see VICTORY_JINGLE_TICKS).  Shared with the timer
+ * ISR (huge_music_update's divider branch increments while the fanfare
+ * owns the track): volatile for the same reason as g_jingle_frames. */
+volatile uint8_t g_victory_frames;  /* BSS zero (AGENTS.md 52.27) */
 /* Per-chest done bits (bit 7 = seeded flag).  Global (not file-static)
  * so load_game_slot() can re-arm the edge when a save replaces the
  * whole canonical state mid-session.  Written only here and in save.c
@@ -86,8 +112,24 @@ uint8_t g_jingle_done;  /* BSS zero (AGENTS.md 52.27) */
 void jingle_full_banked(void)
 {
     uint8_t mask;
-    uint8_t b;
     g_bk_byte_b = 0;
+    /* Victory fanfare play-once (see VICTORY_JINGLE_TICKS).  Runs BEFORE
+     * the battle guard below: the result screen is exactly where the
+     * fanfare plays, and this body owns every one-shot music clock. */
+    if (g_audio_current_track == MUSIC_VICTORY) {
+        if (g_harness_mode) {
+            /* No timer ISR: count exact game frames instead. */
+            if (++g_victory_frames > VICTORY_JINGLE_BACKSTOP) {
+                g_victory_frames = 0;
+                g_bk_byte_b = 3;
+            }
+        } else if (g_victory_frames > VICTORY_JINGLE_TICKS) {
+            g_victory_frames = 0;
+            g_bk_byte_b = 3;
+        }
+    } else {
+        g_victory_frames = 0;
+    }
     if (g_game.screen == SCREEN_BATTLE || g_game.screen == SCREEN_GAME_OVER) {
         return;
     }
@@ -96,8 +138,8 @@ void jingle_full_banked(void)
         (uint8_t)(1u << ((STORY_FLAG_ID_FIELD_CHEST - 1) & 7))) {
         mask |= 1u;
     }
-    if (g_game.state.flags.bytes[(STORY_FLAG_ID_AMULET_CHEST - 1) >> 3] &
-        (uint8_t)(1u << ((STORY_FLAG_ID_AMULET_CHEST - 1) & 7))) {
+    if (g_game.state.flags.bytes[(STORY_FLAG_ID_SHOPKEYS_CHEST - 1) >> 3] &
+        (uint8_t)(1u << ((STORY_FLAG_ID_SHOPKEYS_CHEST - 1) & 7))) {
         mask |= 2u;
     }
     if (!(g_jingle_done & 0x80)) {
@@ -108,17 +150,12 @@ void jingle_full_banked(void)
          * done bits, so no extra WRAM is spent. */
         g_jingle_done = (uint8_t)(0x80 | (mask & 0x03));
     }
-    for (b = 0; b < 2; b++) {
-        if (mask & (uint8_t)(1u << b)) {
-            if (!(g_jingle_done & (uint8_t)(1u << b)) &&
-                g_audio_current_track != MUSIC_CHEST) {
-                g_jingle_done |= (uint8_t)(1u << b);
-                g_bk_byte_b = 1;
-                return;
-            }
-        } else {
-            g_jingle_done &= (uint8_t)~(1u << b);
-        }
+    g_jingle_done &= (uint8_t)(0x80 | mask);
+    if ((mask & (uint8_t)~g_jingle_done) &&
+        g_audio_current_track != MUSIC_CHEST) {
+        g_jingle_done |= mask;
+        g_bk_byte_b = 1;
+        return;
     }
     /* Title-theme play-once (see TITLE_SONG_FRAMES): runs after the
      * chest logic so a loot edge on the same frame still wins the

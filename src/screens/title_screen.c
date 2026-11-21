@@ -10,9 +10,9 @@
  * area is at its size limit (see make memmap), so this file only runs a
  * thin input/transition wrapper around title_content_render().
  *
- * Flow: PRESS START -> NEW GAME / CONTINUE / SOUND.  SOUND toggles
- * g_sound_enabled (ON/OFF).  NEW GAME -> intro.  CONTINUE -> SAVE_LOAD
- * (load mode). */
+ * Flow: PRESS START -> CONTINUE / NEW GAME / SOUND.  SOUND toggles
+ * g_sound_enabled (ON/OFF).  CONTINUE -> SAVE_LOAD (load mode).
+ * NEW GAME -> slot picker -> intro. */
 
 void title_screen_render(Game *g)
 {
@@ -21,19 +21,27 @@ void title_screen_render(Game *g)
     rc = &g->render_cache;
     if (!rc->valid || rc->prev_screen != SCREEN_TITLE) {
         ui_clear_screen();
+        /* Own the full palette on entry (AGENTS.md §55.6): the boot
+         * notice leaves slot 0 white and DMG BGP white, and this body
+         * only programs the logo slot below.  Restore the base set
+         * (what ui_init left at boot) before the logo load. */
+        ui_set_cram_palette(0);
+        BGP_REG = 0xE4;
         /* Stream the bitmap logo into the world BG block before the bank-4
          * content body stamps its tilemap.  The loader's bank differs by
-         * build: bank 5 in the harness build (layout-pinned), bank 2 in
+         * build: bank 5 in the harness build (layout-pinned), bank 11 in
          * release (title_logo_content.c).  Runs inside the LCD-off full
          * redraw, so the raw VRAM writes are safe. */
 #ifdef DEBUG_BUILD
         g_bk_call_bank = 5;
 #else
-        g_bk_call_bank = 2;
+        g_bk_call_bank = 11;
 #endif
         g_bk_call_target = (uint16_t)&ui_title_logo_load_banked;
         banked_call_run();
-        g_bk_call_bank = 4;
+        /* Title content + data moved bank 4 -> 9 (release bank 4 overflowed
+         * on the enlarged-maps pass); same-bank direct reads preserved. */
+        g_bk_call_bank = 9;
         g_bk_call_target = (uint16_t)&title_content_render;
         g_bk_byte_a = g->title_menu_showing;
         g_bk_byte_b = g->title_menu_index;
@@ -47,13 +55,13 @@ void title_screen_render(Game *g)
 void title_content_render(void);
 void title_menu_step_banked(void);
 
-/* Targeted caret move (AGENTS.md 36).  The bank-4 body computes the next
+/* Targeted caret move (AGENTS.md 36).  The bank-9 body computes the next
  * index from the staged direction, writes it back through g_bk_ptr_a, and
  * repaints only the two '>' cells, so a pure UP/DOWN never touches the
  * render cache and the full title redraw is avoided. */
 static void title_menu_step(Game *g, uint8_t direction)
 {
-    g_bk_call_bank = 4;
+    g_bk_call_bank = 9;
     g_bk_call_target = (uint16_t)&title_menu_step_banked;
     g_bk_ptr_a = (void *)g;
     g_bk_byte_b = direction;
@@ -87,16 +95,22 @@ void title_screen_update(Game *g)
 
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         switch (g->title_menu_index) {
-        case 0: /* NEW GAME */
-            audio_play_sfx(SFX_CONFIRM);
-            telemetry_emit(EVENT_NEW_GAME_STARTED, 0, 0, 0, 0);
-            g->intro_slide = 0;
-            screen_change(g, SCREEN_INTRO);
-            break;
-        case 1: /* CONTINUE */
+        case 0: /* CONTINUE */
             audio_play_sfx(SFX_CONFIRM);
             telemetry_emit(EVENT_GAME_CONTINUED, 0, 0, 0, 0);
             g->save_slot_mode = 0; /* LOAD */
+            g->save_slot_index = 0;
+            screen_change(g, SCREEN_SAVE_LOAD);
+            break;
+        case 1: /* NEW GAME */
+            audio_play_sfx(SFX_CONFIRM);
+            telemetry_emit(EVENT_NEW_GAME_STARTED, 0, 0, 0, 0);
+            /* Slot pick first (the pick becomes the active autosave
+             * slot): the intro starts from the picker, and the fresh
+             * state saves to the slot when the last slide ends.
+             * save_slot_index resets to slot 1; every mode-0 and mode-2
+             * exit clears save_slot_message. */
+            g->save_slot_mode = 2; /* NEW-GAME slot pick */
             g->save_slot_index = 0;
             screen_change(g, SCREEN_SAVE_LOAD);
             break;

@@ -1,7 +1,7 @@
 {
  "name": "quest_no_nudge_before_accept",
  "test": true,
- "description": "Kills before accepting stay silent: with the quest NOT_STARTED and 4 kills staged, the 5th kill (Carl) counts to 5 but sets no HUNT_NOTIFIED -- no return notice fires before the accept; the first talk takes the early-turn-in path instead",
+ "description": "Kills before accepting stay silent: with the quest NOT_STARTED and 2 kills staged, the 3rd kill (Carl) counts to 3 but sets no HUNT_NOTIFIED -- no return notice fires before the accept; the first talk takes the early-turn-in path instead",
  "actions": [
   {
    "type": "wait",
@@ -46,6 +46,16 @@
   {
    "type": "wait",
    "frames": 20
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SW", "value": 3, "cost": 1, "uses": 255}
+   ]
   },
   {
    "type": "press",
@@ -181,7 +191,7 @@
   {
    "type": "variable",
    "variable": "MONSTERS_DEFEATED",
-   "expected": 5
+   "expected": 3
   },
   {
    "type": "variable",
@@ -212,7 +222,7 @@
    }
   },
   "variables": {
-   "MONSTERS_DEFEATED": 4
+   "MONSTERS_DEFEATED": 2
   }
  }
 }

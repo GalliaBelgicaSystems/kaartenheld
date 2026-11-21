@@ -192,6 +192,16 @@
       "ascii": "N",
       "image_url": "/tiles/enemies/slime_knight_frame2.png",
       "category": "enemy"
+    },
+    {
+      "id": "slime_knight_idle",
+      "label": "Slime knight idle",
+      "gb_constant": "TILE_ENEMIES_SLIME_KNIGHT_IDLE",
+      "walkable": false,
+      "color": "#3d6027",
+      "ascii": "N",
+      "image_url": "/tiles/enemies/slime_knight_idle.png",
+      "category": "enemy"
     }
   ]
 }

@@ -13,12 +13,13 @@ skipped, so it cannot exercise the write-drop path; g_ui_screen_buf only
 proves intent).
 
 Checks:
-  1. ly-in-vblank: at game_render entry LY must be inside VBlank (the main
-     loop waits for LY == 145 before rendering).  Catches a regression that
-     moves vsync() out of the loop or before game_update.
+  1. ly-in-vblank: at refresh_OAM (ui_sprite_commit) entry LY must be inside
+     VBlank (the main loop runs game_render, waits for vsync at LY == 144,
+     then commits camera and OAM).  Catches a regression that moves vsync()
+     out of the loop or after ui_sprite_commit.
   2. bg-mirror-match: every background ring cell in the view window written
      to the mirror must read back identical in VRAM.  Catches dropped writes
-     (LCD-off boot redraw reverted, vsync moved, PPU timing changed).
+     (LCD-off boot redraw reverted, Mode-3 sync dropped, PPU timing changed).
 
 Run inside the Nix dev shell:
     make verify-vram
@@ -104,8 +105,9 @@ def main():
         raise SystemExit("error: ROM not found: %s (make debug first)" % ROM)
 
     game_render = get_symbol("game_render")
+    refresh_oam = get_symbol("refresh_OAM")
     mirror = get_symbol("g_tilemap_mirror")
-    print(f"game_render @ 0x{game_render:04X}, g_tilemap_mirror @ 0x{mirror:04X}")
+    print(f"game_render @ 0x{game_render:04X}, refresh_OAM @ 0x{refresh_oam:04X}, g_tilemap_mirror @ 0x{mirror:04X}")
 
     master, slave = pty.openpty()
     tty.setraw(master, termios.TCSANOW)
@@ -178,9 +180,31 @@ def main():
         if hits < TARGET_HITS:
             raise SystemExit(f"FAIL: game_render only hit {hits}/{TARGET_HITS} times")
 
+        # Advance from game_render entry through game_render + vsync() to
+        # refresh_OAM (ui_sprite_commit) entry in ROM0 (< 0x4000).  At this
+        # point vsync() has just completed (LY >= 144, Mode 1 VBlank) and
+        # HRAM OAM DMA has not started yet, so LY proves VBlank-locked OAM
+        # commit and VRAM (0x8000-0x9FFF) is guaranteed readable.
+        out = cmd(f"break 0x{refresh_oam:04X}")
+        if "Added breakpoint" not in out:
+            raise SystemExit("FAIL: could not arm refresh_OAM breakpoint")
+        send("c")
+        oam_hit = False
+        deadline = time.time() + 5
+        while time.time() < deadline:
+            out = read_until(timeout=1.0)
+            if not out:
+                continue
+            if re.search(r"Hit breakpoint \d+ at 0x%08X" % refresh_oam,
+                         out.decode(errors="ignore")):
+                oam_hit = True
+                break
+        if not oam_hit:
+            raise SystemExit("FAIL: refresh_OAM breakpoint did not hit after game_render")
+
         ly_vals = re.findall(r"0x([0-9A-Fa-f]+)", cmd("r/1 0xFF44"))
         ly = int(ly_vals[-1], 16) if len(ly_vals) >= 2 else None
-        check("ly-in-vblank (game_render entry)", ly is not None and ly >= 144,
+        check("ly-in-vblank (refresh_OAM entry)", ly is not None and ly >= 144,
               f"LY={ly}")
 
         mismatches = []

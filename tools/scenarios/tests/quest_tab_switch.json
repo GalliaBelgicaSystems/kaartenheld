@@ -40,8 +40,8 @@
   },
   {
    "type": "screen_row",
-   "row": 4,
-   "contains": "WOOD SWORD"
+   "row": 5,
+   "contains": "S  1"
   }
  ],
  "initial_state": {

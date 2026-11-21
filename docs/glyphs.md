@@ -35,13 +35,13 @@ never share a glyph, so a screen cell names exactly one thing.
 | `C` | merchant |
 | `W` | wizard |
 | `?` | signpost |
-| `A` | amulet pickup |
+| `A` | shop-keys pickup |
 
 ## Rules
 
 1. One element, one glyph, everywhere (all maps, all screens, editor, ROM,
    harness display). Collisions (`M/M` mayor/merchant, `?/?`
-   signpost/amulet) were fixed by assigning `C` and `A`.
+   signpost/shop-keys) were fixed by assigning `C` and `A`.
 2. Glyphs carry identity, never mechanics: collision comes from `walkable`,
    behavior from `battle`/`ai`/`interaction`. Changing a glyph never
    changes gameplay (only `actor_name_for_visual` in `src/world/actor.c`

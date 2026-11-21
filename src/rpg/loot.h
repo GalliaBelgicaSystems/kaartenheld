@@ -32,10 +32,13 @@ enum {
 
 /* AP (VARIABLE_ID_ENERGY_POOL) gates which material tiers can drop.
  * Steel and above only appear at AP 5+; the weighted roll keeps them
- * rare even then.  docs/loot.md §34.5. */
+ * rare even then.  docs/loot.md §34.5.
+ * Mythril riders cost 6 (docs/card-ap-cost-formula.md §6.1): the
+ * generator withholds them until the pool reaches 6. */
 #define LOOT_AP_BRONZE 2
 #define LOOT_AP_IRON   4
 #define LOOT_AP_STEEL  5
+#define LOOT_AP_MYTHRIL_RIDER 6
 
 enum {
     EFF_PLAIN = 0, EFF_POISON, EFF_FIRE, EFF_ICE
@@ -46,14 +49,19 @@ enum {
 };
 
 /* Material power bands (docs/loot.md §34.1).  One shared definition so
- * the synth, battle-init and display paths cannot drift: sword/bow take
- * the high end of a band, shield/dagger/ring the low end.
- * Wood 1, bronze 2-3, iron 4-5, steel 6-7, mythril 8-9.
- * Closed form (no compare chains: `mat` is a runtime value, so nested
- * ternaries compile to branch ladders in every banked copy): base is
- * `mat ? mat<<1 : 1`, sword/bow take one more on non-wood. */
+ * the synth, battle-init and display paths cannot drift: swords take
+ * the high end of a band, shields/rings the low end; bows ride the
+ * dagger ladder below (harassers, not heavies -- on par with daggers,
+ * well under swords).
+ * Sword: wood 1, bronze 3, iron 5, steel 7, mythril 9.
+ * Bow/dagger: wood 1, bronze 2, iron 3, steel 5, mythril 7 (daggers
+ * counter for free, so the face value carries the whole nerf; bronze
+ * holds 2 so it always beats wood).
+ * Closed form (one compare per branch, like the sword test beside
+ * it): base is `mat ? mat<<1 : 1`, swords take one more on non-wood,
+ * daggers and bows give one back above bronze. */
 #define LOOT_POWER(mat, wpn) ((uint8_t)(((mat) == 0) ? 1 : \
-    (uint8_t)(((uint8_t)(mat) << 1) + ((((wpn) == WPN_SWORD) || ((wpn) == WPN_BOW)) ? 1 : 0))))
+    (uint8_t)(((uint8_t)(mat) << 1) + (((wpn) == WPN_SWORD) ? 1 : 0) - ((((wpn) == WPN_DAGGER) || ((wpn) == WPN_BOW)) && ((mat) > 1) ? 1 : 0))))
 
 /* Ring uses per battle (docs/loot.md §34.6): wood 1, bronze 2, iron 3,
  * steel 4, mythril 5 -- material tier + 1.  A wood ring stays
@@ -62,6 +70,37 @@ enum {
  * per charge.  The curated shop ring follows the same band as loot
  * iron (3 uses). */
 #define LOOT_RING_USES(mat) ((uint8_t)((mat) + 1))
+
+/* ── Card AP cost (docs/card-ap-cost-formula.md) ──
+ * One AP step = 8 value points: power 1, material tier 4, mythril
+ * premium 12 (plain mythril always costs 5), rider 8.  Never clamped at
+ * runtime: the largest legal input is 9 + 4·4 + 12 + 8 = 45 -> 6.
+ * CARD_AP_MAX is the specification ceiling -- make card-costs asserts
+ * every table-built combo against it -- not a clamp; it has no C
+ * call sites by design.  Pure shifts/compare, no div/mod (AGENTS.md
+ * §52.18); safe in every banked copy. */
+#define CARD_AP_MATERIAL_PTS 4
+#define CARD_AP_RIDER_PTS    8
+#define CARD_AP_MYTHRIL_PTS  12
+#define CARD_AP_MAX          6
+
+#define CARD_AP_VALUE(power, material, rider)                    \
+    ((uint8_t)((power) + ((material) << 2) + ((rider) << 3) +    \
+               (((material) == MAT_MYTHRIL) ? CARD_AP_MYTHRIL_PTS : 0)))
+
+#define CARD_AP(power, material, rider)                          \
+    ((uint8_t)((CARD_AP_VALUE(power, material, rider) + 7) >> 3))
+
+/* Bow uses per battle (docs/loot.md §34.6): AP-derived, inverse to power
+ * (wood 6 .. mythril 2, floored at 2).  The _FROM_AP form reads the
+ * already-computed AP cost byte instead of re-expanding CARD_AP --
+ * bank-2 call sites stage cost first and the bank-2 budget is tight
+ * (overflow corrupts bank 3, AGENTS.md §52.18).  Both forms agree by
+ * construction; card_costs.py asserts the ladder either way. */
+#define LOOT_BOW_USES_FROM_AP(ap) \
+    ((uint8_t)(((ap) >= 6) ? 2 : (uint8_t)(7 - (ap))))
+#define LOOT_BOW_USES(power, material, rider) \
+    (LOOT_BOW_USES_FROM_AP(CARD_AP(power, material, rider)))
 
 /* Derived-id helpers: pure arithmetic, safe as macros (no code emitted). */
 #define loot_is_loot_id(id)          ((id) >= LOOT_ID_BASE)
@@ -79,6 +118,18 @@ enum {
 extern uint8_t g_loot_id;
 extern uint16_t g_loot_rng_state;
 
+/* Shared isolated-loot xorshift step.  Banked bodies must inline the
+ * step (never a fixed-bank call, AGENTS.md 52.11.1); one spelling here
+ * so the loot drop, the arrow victory drop and future rollers cannot
+ * drift apart.  Statement macro (do/while) so it stays a single step
+ * anywhere it is used. */
+#define LOOT_RNG_STEP() \
+    do { \
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state << 7); \
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state >> 9); \
+        g_loot_rng_state ^= (uint16_t)(g_loot_rng_state << 8); \
+    } while (0)
+
 /* Sell value: synthesized loot defs carry it in CardDefinition.price
  * (set by loot_synth_banked -- the centralized formula,
  * docs/loot.md §16/§34.6); read via card_get_def() like any price.
@@ -89,6 +140,10 @@ extern uint16_t g_loot_rng_state;
  *                            (src/game/loot_drop_banked.c, bank 9),
  *                            dispatched by game_loot_drop() in
  *                            src/game/content.c.
+ * game_loot_first_victory_banked -- first-real-victory bronze shield
+ *                            override (src/game/loot_first_banked.c,
+ *                            bank 11: bank 9 is full), second leg of
+ *                            game_loot_drop().
  * loot_synth_banked       -- fills g_card_scratch for a derived id
  *                            (src/rpg/loot_banked.c, bank 3), dispatched
  *                            by card_get_def(). */

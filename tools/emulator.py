@@ -27,7 +27,7 @@ def _scene_id_maps():
         scenes, base = {}, 240
     test_names = ["test_field", "test_town", "test_forest",
                   "test_mountain_pass", "test_castle", "test_south_field",
-                  "test_gamble"]
+                  "test_gamble", "test_underground"]
     real = {num: sid.upper() for sid, num in scenes.items()
             if isinstance(num, int)}
     test = {base + i: sid.upper() for i, sid in enumerate(test_names)}
@@ -41,16 +41,16 @@ TELEMETRY_EVENT_SIZE = 13
 GAME_STATE_MAP = {0: "OVERWORLD", 1: "BATTLE", 2: "GAME_OVER", 3: "THANKS"}
 SCREEN_MAP = {0: "OVERWORLD", 1: "DIALOGUE", 2: "BATTLE", 3: "GAME_OVER", 4: "THANKS",
               5: "SHOP", 6: "ITEM", 7: "ENDING", 8: "SAVE_LOAD", 9: "TITLE", 10: "INTRO",
-              11: "TUTORIAL", 12: "SPLASH", 13: "CREDITS", 14: "GAMBLE"}
+              11: "TUTORIAL", 12: "SPLASH", 13: "CREDITS", 14: "GAMBLE", 15: "NOTICE"}
 SCENE_MAP = _scene_id_maps()
 MUSIC_TRACK_MAP = {0: "NONE", 1: "OVERWORLD", 2: "BATTLE", 3: "VICTORY",
                    4: "TITLE", 5: "TOWN", 6: "DUNGEON", 7: "BOSS", 8: "MIMIC",
                    9: "DESOLATE", 10: "FOREST", 11: "CHEST", 12: "GAMEOVER",
-                   13: "ENDING", 14: "CASINO"}
+                   13: "ENDING", 14: "CASINO", 15: "UNDERGROUND"}
 BATTLE_TURN_MAP = {0: "PLAYER", 1: "ENEMY_DELAY", 2: "ENEMY", 3: "RESULT"}
 BATTLE_RESULT_MAP = {0: "NONE", 1: "VICTORY", 2: "DEFEAT", 3: "FLED"}
 MAP_NAME_MAP = dict(SCENE_MAP)
-STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "AMULET_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON"}
+STORY_FLAG_ID_MAP = {1: "ARRIVED_TOWN", 2: "MET_MAYOR", 3: "FIELD_CHEST", 4: "SHOPKEYS_CHEST", 5: "HEAL_MAGE_USED", 6: "HUNT_NOTIFIED", 7: "RING_LESSON", 8: "TUTORIAL_SKIPPED", 9: "MET_DOG", 10: "BONE_TAKEN", 11: "DOG_KEY", 12: "TUTORIAL_SPAR_WON", 13: "SLIME_LORD_INTRO"}
 # Per-game content range base (mirrors *_FIRST_GAME in the engine headers).
 GAME_ID_BASE = 0x80
 
@@ -119,6 +119,7 @@ EVENT_TYPE_MAP = {
     62: "TARGET_CHANGED",
     63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
     65: "ACTOR_MOVED", 66: "DIALOGUE_CHOICE",
+    67: "CARD_EQUIP_LOCKED", 68: "MARKET_UPDATED",
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -131,18 +132,25 @@ EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 8: "BOSS_DEFEATED",
                 GAME_ID_BASE + 9: "MERCHANT_INTRO",
                 GAME_ID_BASE + 10: "MERCHANT_DELIVER",
-                GAME_ID_BASE + 11: "AMULET_PICKUP",
+                GAME_ID_BASE + 11: "SHOPKEYS_PICKUP",
                 GAME_ID_BASE + 12: "TUTORIAL_COMPLETE",
                 GAME_ID_BASE + 13: "FIELD_CHEST",
                 GAME_ID_BASE + 14: "MERCHANT_REMINDER",
                 GAME_ID_BASE + 15: "KNIGHT_SPLIT",
                 GAME_ID_BASE + 16: "HEAL_MAGE",
                 GAME_ID_BASE + 17: "HEAL_MAGE_REFUSED",
-                GAME_ID_BASE + 18: "CARL_CHEST_FIRST",
+                GAME_ID_BASE + 18: "CHEST_LOCKED",
                 GAME_ID_BASE + 19: "MIMIC_REWARD",
                 GAME_ID_BASE + 20: "QUEST_NUDGE",
                 GAME_ID_BASE + 21: "HEAL_MAGE_RING_LESSON",
-                GAME_ID_BASE + 22: "QUEST_EARLY_DONE"}
+                GAME_ID_BASE + 22: "QUEST_EARLY_DONE",
+                GAME_ID_BASE + 23: "VILLAGE_GUARDS",
+                GAME_ID_BASE + 24: "SKELETON_ASK",
+                GAME_ID_BASE + 25: "SKELETON_DESC",
+                GAME_ID_BASE + 26: "DOG_HINT",
+                GAME_ID_BASE + 27: "DOG_ASK",
+                GAME_ID_BASE + 28: "DOG_THANKS",
+}
 
 DIRECTION_MAP = {0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT"}
 
@@ -156,7 +164,7 @@ ACTOR_INFO_MAP = {
     "BAT":         {"visual": "V", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "BAT"},
     "SLIME_LORD":  {"visual": "L", "hostile": True,  "interaction": "COMBAT", "dialogue": "NONE", "battle": "NONE"},
     "MERCHANT":    {"visual": "C", "hostile": False, "interaction": "SHOP", "dialogue": "NONE", "battle": "NONE"},
-    "AMULET":      {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "AMULET_NOTHING", "battle": "NONE"},
+    "SHOPKEYS":     {"visual": "A", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SHOPKEYS_NOTHING", "battle": "NONE"},
     "WIZARD":      {"visual": "W", "hostile": False, "interaction": "SAVE", "dialogue": "NONE", "battle": "NONE"},
     "SIGNPOST":    {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SIGNPOST", "battle": "NONE"},
     "HEAL_MAGE":   {"visual": "W", "hostile": False, "interaction": "DIALOGUE", "dialogue": "HEAL_MAGE_ASK", "battle": "NONE"},
@@ -167,6 +175,8 @@ ACTOR_INFO_MAP = {
     "MIMIC":       {"visual": "T", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "MIMIC"},
     "SPIDER":      {"visual": "S", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SPIDER"},
     "SLIME_KNIGHT": {"visual": "K", "hostile": True, "interaction": "COMBAT", "dialogue": "NONE", "battle": "SLIME_KNIGHT"},
+    "SKELETON":    {"visual": "S", "hostile": False, "interaction": "DIALOGUE", "dialogue": "SKELETON_DESC", "battle": "NONE"},
+    "VILLAGE_DOG": {"visual": "?", "hostile": False, "interaction": "DIALOGUE", "dialogue": "DOG_HINT", "battle": "NONE"},
 }
 
 # Fallback button masks.  At connect() these are overridden by the ROM's
@@ -202,42 +212,50 @@ STATE_LOAD_DESC_PARTY_ENTRY_SIZE = 3
 STATE_LOAD_DESC_INVENTORY_COUNT_OFF = 93
 STATE_LOAD_DESC_INVENTORY_ENTRY_OFF = 94
 STATE_LOAD_DESC_INVENTORY_ENTRY_SIZE = 2
-STATE_LOAD_DESC_WORLD_COUNT_OFF = 126
-STATE_LOAD_DESC_WORLD_ENTRY_OFF = 127
+STATE_LOAD_DESC_WORLD_COUNT_OFF = 194
+STATE_LOAD_DESC_WORLD_ENTRY_OFF = 195
 STATE_LOAD_DESC_WORLD_ENTRY_SIZE = 3
-STATE_LOAD_DESC_PROGRESSION_COUNT_OFF = 175
-STATE_LOAD_DESC_PROGRESSION_ENTRY_OFF = 176
+STATE_LOAD_DESC_PROGRESSION_COUNT_OFF = 243
+STATE_LOAD_DESC_PROGRESSION_ENTRY_OFF = 244
 STATE_LOAD_DESC_PROGRESSION_ENTRY_SIZE = 6
-STATE_LOAD_DESC_DIALOGUE_ID_OFF = 224
-STATE_LOAD_DESC_START_BATTLE_OFF = 225
-STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF = 226
-STATE_LOAD_DESC_FONT_TEST_OFF = 227
-STATE_LOAD_DESC_EQUIPMENT_OFF = 228
-# Deck section (v4): only applied by the ROM when present=1; count may be 0
+STATE_LOAD_DESC_DIALOGUE_ID_OFF = 292
+STATE_LOAD_DESC_START_BATTLE_OFF = 293
+STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF = 294
+STATE_LOAD_DESC_FONT_TEST_OFF = 295
+STATE_LOAD_DESC_EQUIPMENT_OFF = 296
+# Deck section (v5): only applied by the ROM when present=1; count may be 0
 # for an intentionally empty deck (battle fallback-deck coverage).
-STATE_LOAD_DESC_DECK_PRESENT_OFF = 229
-STATE_LOAD_DESC_DECK_COUNT_OFF = 230
-STATE_LOAD_DESC_DECK_ENTRY_OFF = 231
+STATE_LOAD_DESC_DECK_PRESENT_OFF = 297
+STATE_LOAD_DESC_DECK_COUNT_OFF = 298
+STATE_LOAD_DESC_DECK_ENTRY_OFF = 299
 MAX_DESC_DECK_CARDS = 20
-# Status effects (v4): byte 251 = frozen bitmask (bit 0 = player, 1..3 = enemies)
-STATE_LOAD_DESC_STATUS_OFF = 251
-STATE_LOAD_DESC_SIZE = STATE_LOAD_DESC_STATUS_OFF + 1
-STATE_LOAD_DESC_VERSION = 0x04
+# Status effects: byte 319 = frozen bitmask (bit 0 = player, 1..3 = enemies)
+STATE_LOAD_DESC_STATUS_OFF = 319
+# Economy tail (v6, docs/economy.md 6.3, appended): index, gold_in LE,
+# gold_out LE, battles. Mirrors STATE_LOAD_DESC_* in telemetry.h.
+STATE_LOAD_DESC_MARKET_INDEX_OFF = 320
+STATE_LOAD_DESC_MARKET_GOLD_IN_OFF = 321
+STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF = 323
+STATE_LOAD_DESC_MARKET_BATTLES_OFF = 325
+STATE_LOAD_DESC_SIZE = STATE_LOAD_DESC_MARKET_BATTLES_OFF + 1
+STATE_LOAD_DESC_VERSION = 0x06
 
 SCENE_NAME_TO_ID = {v: k for k, v in SCENE_MAP.items()}
 SCREEN_NAME_TO_ID = {v: k for k, v in SCREEN_MAP.items()}
 DIRECTION_NAME_TO_ID = {v: k for k, v in DIRECTION_MAP.items()}
-STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "AMULET_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7}
+STATE_FLAG_ID_MAP = {"ARRIVED_TOWN": 1, "MET_MAYOR": 2, "FIELD_CHEST": 3, "SHOPKEYS_CHEST": 4, "HEAL_MAGE_USED": 5, "HUNT_NOTIFIED": 6, "RING_LESSON": 7, "TUTORIAL_SKIPPED": 8, "MET_DOG": 9, "BONE_TAKEN": 10, "DOG_KEY": 11, "TUTORIAL_SPAR_WON": 12}
 VARIABLE_ID_MAP = {"CHAPTER": 1, "MONSTERS_DEFEATED": 2,
-                   "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
-                   "MERCHANT_QUEST": 5, "ENERGY_POOL": 6,
-                   "GEM_OWNED": 7, "GEM_EQUIPPED": 8}
+                    "QUEST_MONSTER_HUNT": 3, "ENDING_SHOWN": 4,
+                    "MERCHANT_QUEST": 5, "ENERGY_POOL": 6,
+                    "GEM_OWNED": 7, "GEM_EQUIPPED": 8,
+                    "DOG_QUEST": 9}
 CHARACTER_ID_MAP = {"HERO": 1}
 ITEM_ID_MAP = {"NONE": 0,
                "IRON_SWORD": 0x40, "WOODEN_SHIELD": 0x41,
-               "IRON_RING": 0x42, "FIRE_SWORD": 0x43,
-               "POISON_DAGGER": 0x44, "AMULET": 0x45,
-               "BOW_9": 0x46, "WOOD_SWORD": 0x47}
+               "IRON_RING": 0x42, "BRONZE_SWORD": 0x43,
+               "POISON_DAGGER": 0x44, "SHOPKEYS": 0x45,
+               "BOW_9": 0x46, "WOOD_SWORD": 0x47,
+               "STEEL_SHIELD": 0x48, "BONE": 0x49, "OLD_KEY": 0x4A}
 ACTOR_ID_MAP = {"SLIME_FIELD": 1, "SLIME_FOREST": 2, "BAT_FOREST": 3,
                 "SPIDER_FIELD": 12, "CARL_FIELD": 1,
                 "SLIME_MOUNTAIN_PASS": 4, "BAT_CASTLE": 5}
@@ -253,14 +271,19 @@ STATUS_ID_MAP = {"NONE": 0, "POISON": 1, "BURN": 2, "FREEZE": 3}
 # Card type names -> CardType enum (src/battle/card.h):
 # SW=SWORD 0, SH=SHIELD 1, BO=BOW 2, HE=HEAL 3, DA=DAGGER 4.
 CARD_TYPE_MAP = {"SW": 0, "SH": 1, "BO": 2, "HE": 3, "DA": 4}
-# Deck-builder filter names -> CardType (src/rpg/cards.h), plus ALL.
-FILTER_TYPE_MAP = {"ALL": 0xFF, "ATTACK": 0, "DEFENSE": 1, "HEAL": 2,
-                   "STATUS": 3, "UTILITY": 4}
+# Deck-builder filter names.  WEAPON/MATERIAL picker rows (bank 13):
+# SWORD/SHIELD/BOW/DAGGER/RING are WPN_* ids, WOOD/BRONZE/IRON/STEEL/
+# MYTHRIL are MAT_* ids, ALL is 0xFF for either axis.  (The old
+# role-based ATTACK/DEFENSE/... set is retired with the picker.)
+FILTER_TYPE_MAP = {"ALL": 0xFF, "SWORD": 0, "SHIELD": 1, "BOW": 2,
+                   "DAGGER": 3, "RING": 4}
+FILTER_MAT_MAP = {"ALL": 0xFF, "WOOD": 0, "BRONZE": 1, "IRON": 2,
+                  "STEEL": 3, "MYTHRIL": 4}
 # Deck-builder sort modes (src/screens/item_screen.c).
 SORT_MODE_MAP = {"OFF": 0, "TYPE": 1, "POWER": 2, "COST": 3,
                  "POWER_DESC": 4, "COST_DESC": 5}
 DIALOGUE_NAME_TO_ID = {v: k for k, v in DIALOGUE_ID_MAP.items()}
-CURRENCY_ID_MAP = {"GOLD": 1}
+CURRENCY_ID_MAP = {"GOLD": 1, "ARROWS": 2}
 
 # Progression target names -> (target_type, target_id).  The engine never
 # branches on the type; the type only tags the owner of the progression.
@@ -342,16 +365,18 @@ def serialize_initial_state(initial_state):
     buf[STATE_LOAD_DESC_INVENTORY_COUNT_OFF] = len(items)
     for i, (name, qty) in enumerate(items):
         off = STATE_LOAD_DESC_INVENTORY_ENTRY_OFF + i * STATE_LOAD_DESC_INVENTORY_ENTRY_SIZE
-        buf[off] = ITEM_ID_MAP[name]
+        buf[off] = ITEM_ID_MAP[name] if name in ITEM_ID_MAP else int(name, 0)
         buf[off + 1] = qty
 
     if "deck" in initial_state:
         # Explicit deck construction: replaces the starter deck entirely.
         # An empty dict is meaningful (empty deck -> battle fallback path).
-        # {name: copies} expands to COUNT sequential card ids.
+        # {name: copies} expands to COUNT sequential card ids (name may be
+        # a curated ITEM_ID_MAP symbol or a numeric loot CardId).
         flat = []
         for name, qty in ((initial_state.get("deck") or {}).items()):
-            flat.extend([ITEM_ID_MAP[name]] * int(qty))
+            cid = ITEM_ID_MAP[name] if name in ITEM_ID_MAP else int(name, 0)
+            flat.extend([cid] * int(qty))
         if len(flat) > MAX_DESC_DECK_CARDS:
             raise ValueError(
                 f"deck expands to {len(flat)} cards; max is {MAX_DESC_DECK_CARDS}")
@@ -392,7 +417,7 @@ def serialize_initial_state(initial_state):
     buf[STATE_LOAD_DESC_GAME_OVER_CHOICE_OFF] = initial_state.get("game_over_choice", 0)
     if initial_state.get("font_test"):
         buf[STATE_LOAD_DESC_FONT_TEST_OFF] = 1
-    # Status effects (v4): frozen bitmask (bit 0 = player, 1..3 = enemies)
+    # Status effects: frozen bitmask (bit 0 = player, 1..3 = enemies)
     status = initial_state.get("status")
     if status:
         frozen_mask = 0
@@ -411,6 +436,16 @@ def serialize_initial_state(initial_state):
         elif isinstance(status, int):
             frozen_mask = status & 0xFF
         buf[STATE_LOAD_DESC_STATUS_OFF] = frozen_mask
+    # Economy tail (v6, docs/economy.md 6.3): {"index" (1/32 units),
+    # "gold_in", "gold_out", "battles"}. Omitted -> neutral 32 / zeros
+    # (the ROM clamps an out-of-band index to 32 on apply).
+    market = initial_state.get("market") or {}
+    buf[STATE_LOAD_DESC_MARKET_INDEX_OFF] = market.get("index", 32) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_GOLD_IN_OFF] = market.get("gold_in", 0) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_GOLD_IN_OFF + 1] = (market.get("gold_in", 0) >> 8) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF] = market.get("gold_out", 0) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_GOLD_OUT_OFF + 1] = (market.get("gold_out", 0) >> 8) & 0xFF
+    buf[STATE_LOAD_DESC_MARKET_BATTLES_OFF] = market.get("battles", 0) & 0xFF
     return buf
 
 def decode_story_flags(flags_mask):
@@ -802,6 +837,36 @@ class EmulatorSession:
             time.sleep(0.005)
             self.step(1)
 
+    def _mask_for_buttons(self, buttons):
+        """OR the injection masks for a list of button names (diagonal
+        movement needs UP+RIGHT etc. held on the same frames)."""
+        mask = 0
+        for b in buttons:
+            bu = b.upper()
+            if bu not in self.button_masks:
+                raise ValueError(f"Unknown button '{b}'")
+            mask |= self.button_masks[bu]
+        return mask
+
+    def press_buttons(self, buttons):
+        """Press several buttons on the same frame (e.g. ["UP", "RIGHT"]
+        for a diagonal step)."""
+        mask = self._mask_for_buttons(buttons)
+        addr = self.get_symbol("g_inp_mask")
+        self._memwrite(addr, mask)
+        time.sleep(0.005)
+        self.step(1)
+
+    def hold_buttons(self, buttons, frames):
+        """Hold several buttons down for N frames (diagonal hold-to-move).
+        Rewrites the combined mask before every stepped frame like hold()."""
+        mask = self._mask_for_buttons(buttons)
+        addr = self.get_symbol("g_inp_mask")
+        for i in range(frames):
+            self._memwrite(addr, mask)
+            time.sleep(0.005)
+            self.step(1)
+
     # ── Scenario loading ────────────────────────────────────────────
 
     def load_scenario(self, scenario):
@@ -881,33 +946,37 @@ class EmulatorSession:
             return parsed
         return self.current_snapshot
 
-    # Extended RPG state snapshot: parses g_state_snap_buf (210 bytes,
+    # Extended RPG state snapshot: parses g_state_snap_buf (300 bytes,
     # layout in src/debug/telemetry.h STATE_SNAP_*).
-    STATE_SNAP_SIZE = 210
-    STATE_SNAP_VERSION = 6
+    STATE_SNAP_SIZE = 300
+    STATE_SNAP_VERSION = 9
     STATE_SNAP_FLAGS_OFF = 1
     STATE_SNAP_FLAGS_SIZE = 8
     STATE_SNAP_VARIABLES_OFF = 9
-    STATE_SNAP_CURRENCY_COUNT_OFF = 25
-    STATE_SNAP_CURRENCY_ENTRY_OFF = 26
+    STATE_SNAP_CURRENCY_COUNT_OFF = 41
+    STATE_SNAP_CURRENCY_ENTRY_OFF = 42
     STATE_SNAP_CURRENCY_ENTRY_SIZE = 3
-    STATE_SNAP_PARTY_OFF = 38
+    STATE_SNAP_PARTY_OFF = 54
     STATE_SNAP_PARTY_ENTRY_SIZE = 3
-    STATE_SNAP_INVENTORY_OFF = 51
+    STATE_SNAP_INVENTORY_OFF = 67
     STATE_SNAP_INVENTORY_ENTRY_SIZE = 2
-    STATE_SNAP_WORLD_OFF = 84
+    STATE_SNAP_WORLD_OFF = 168
     STATE_SNAP_WORLD_ENTRY_SIZE = 3
-    STATE_SNAP_PROGRESSION_COUNT_OFF = 133
-    STATE_SNAP_PROGRESSION_ENTRY_OFF = 134
+    STATE_SNAP_PROGRESSION_COUNT_OFF = 217
+    STATE_SNAP_PROGRESSION_ENTRY_OFF = 218
     STATE_SNAP_PROGRESSION_ENTRY_SIZE = 6
-    STATE_SNAP_EQUIPMENT_OFF = 182
-    STATE_SNAP_SCROLL_X_OFF = 183
-    STATE_SNAP_SCROLL_Y_OFF = 184
-    STATE_SNAP_WORLD_WIDTH_OFF = 185
-    STATE_SNAP_WORLD_HEIGHT_OFF = 186
-    STATE_SNAP_CAMERA_PX_X_OFF = 187
-    STATE_SNAP_CAMERA_PX_Y_OFF = 188
-    STATE_SNAP_DECK_COUNT_OFF = 189
+    STATE_SNAP_EQUIPMENT_OFF = 266
+    STATE_SNAP_SCROLL_X_OFF = 267
+    STATE_SNAP_SCROLL_Y_OFF = 268
+    STATE_SNAP_WORLD_WIDTH_OFF = 269
+    STATE_SNAP_WORLD_HEIGHT_OFF = 270
+    STATE_SNAP_CAMERA_PX_X_OFF = 271
+    STATE_SNAP_CAMERA_PX_Y_OFF = 272
+    STATE_SNAP_DECK_COUNT_OFF = 273
+    STATE_SNAP_MARKET_INDEX_OFF = 294
+    STATE_SNAP_MARKET_GOLD_IN_OFF = 295
+    STATE_SNAP_MARKET_GOLD_OUT_OFF = 297
+    STATE_SNAP_MARKET_BATTLES_OFF = 299
 
     def state_snapshot(self):
         """Read g_state_snap_buf and return the canonical GameState as a dict."""
@@ -1002,6 +1071,16 @@ class EmulatorSession:
                 break
             deck.append(buf[off])
 
+        # Economy tail (v9, docs/economy.md 6.3, appended).
+        market = {
+            "index": buf[self.STATE_SNAP_MARKET_INDEX_OFF],
+            "gold_in": (buf[self.STATE_SNAP_MARKET_GOLD_IN_OFF] |
+                        (buf[self.STATE_SNAP_MARKET_GOLD_IN_OFF + 1] << 8)),
+            "gold_out": (buf[self.STATE_SNAP_MARKET_GOLD_OUT_OFF] |
+                         (buf[self.STATE_SNAP_MARKET_GOLD_OUT_OFF + 1] << 8)),
+            "battles": buf[self.STATE_SNAP_MARKET_BATTLES_OFF],
+        }
+
         return {
             "flags": flags,
             "variables": variables,
@@ -1011,6 +1090,7 @@ class EmulatorSession:
             "world": world,
             "progression": progression,
             "deck": deck,
+            "market": market,
             "scroll_x": buf[self.STATE_SNAP_SCROLL_X_OFF],
             "scroll_y": buf[self.STATE_SNAP_SCROLL_Y_OFF],
             "world_width": buf[self.STATE_SNAP_WORLD_WIDTH_OFF],
@@ -1042,6 +1122,11 @@ class EmulatorSession:
     DBG_ACT_SET_ENEMY_HP = 18
     DBG_ACT_APPLY_STATUS = 19
     DBG_ACT_SET_HAND_RING = 20
+    DBG_ACT_SET_DECK_CARD = 21
+    DBG_ACT_SET_DECK_STATE = 22
+    DBG_ACT_SET_DECK_RING = 23
+    DBG_ACT_SET_MARKET_INDEX = 24
+    DBG_ACT_SET_FILTER_MAT = 25
 
     def debug_action(self, action, a0=0, a1=0, a2=0):
         """Run a debug action through the ROM's real mechanic functions."""
@@ -1124,7 +1209,20 @@ class EmulatorSession:
         if stat is not None and (stat & 0x03) <= 1:
             return True
         for _ in range(max_frames):
-            self._cmd("frame")
+            out = self._cmd("frame").decode(errors="ignore")
+            # Under g_harness_mode=1 the frame runs free of vsync(), so
+            # game_render() + ui_sprite_commit() can straddle LY=144: if
+            # `frame` halts at LY=144 while PC sits inside the HRAM OAM
+            # DMA wait loop (0xFF80-0xFF87), the transfer is active and
+            # locks 0x0000-0xFE9F (WRAM/VRAM read as 0xFF) even though IO
+            # 0xFF41 (STAT) already reads Mode 1.  Step out of the loop
+            # (<= ~1.4 scanlines) so DMA finishes inside VBlank.
+            for _ in range(90):
+                m = re.search(r"PC:\s*([0-9A-Fa-f]+)", out)
+                pc = int(m.group(1), 16) if m else 0
+                if not (0xFF80 <= pc <= 0xFF87):
+                    break
+                out = self._cmd("next").decode(errors="ignore")
             try:
                 stat = self._memread(0xFF41)
             except Exception:
@@ -1157,6 +1255,20 @@ class EmulatorSession:
         hi = self._memread(count_addr + 1)
         count = (lo or 0) | ((hi or 0) << 8)
         return count, self._memread(last_addr)
+
+    def get_sfx_mute(self):
+        """Read the music-mute budget: dosound ticks charged per SFX
+        trigger against the CH2 / CH4 music voices (see audio.c).  The
+        core is halted at the frame breakpoint during harness reads,
+        so the 16-bit values cannot tear mid-read."""
+        def rd16(name):
+            addr = self.get_symbol(name)
+            lo = self._memread(addr)
+            hi = self._memread(addr + 1)
+            if lo is None or hi is None:
+                return None
+            return lo | (hi << 8)
+        return rd16("g_sfx_mute_ch2"), rd16("g_sfx_mute_ch4")
 
     # Stack high-water canary (AGENTS.md §52.24): the static stack-budget
     # model cannot see ISR nesting or layout-sensitive codegen, so this

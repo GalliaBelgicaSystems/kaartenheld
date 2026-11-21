@@ -11,7 +11,8 @@
  * fixed-bank code.
  *
  * Scaling: amount = base_power x multiplier / 100, where multiplier is
- * the tier percent (+25 suited) from the evaluator.  The multiply and
+ * the tier percent (+ COMBO_SUITED_BONUS when suited) from the
+ * evaluator.  The multiply and
  * divide are hand-rolled shift-add / subtract-loops because SDCC lowers
  * the operators to __mulint/__divuint -- library code that links into
  * the FIXED bank and cannot be called while bank 3 is mapped

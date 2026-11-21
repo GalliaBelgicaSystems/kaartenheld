@@ -6,7 +6,7 @@
 #include "rpg/state.h"
 
 /* Quest content types.  Quests are data: the registry lives in
- * src/game/quests_content.c (bank 8, shared with the bank-8 quest-tab
+ * src/game/quests_content.c (bank 13, shared with the bank-13 quest-tab
  * renderer in src/screens/item_quest_banked.c); quest state itself is
  * mutated by the generic event system (quests are events, not engine
  * code).  A quest tracks its progress in ONE status variable with
@@ -25,7 +25,7 @@ typedef struct {
     uint8_t id;                 /* stable quest id */
     char name[14];              /* display label, e.g. "MONSTER HUNT" */
     char giver[17];             /* quest giver, e.g. "MAYOR IN TOWN" */
-    char objective[20];         /* what to do, e.g. "KILL 5 MONSTERS" */
+    char objective[20];         /* what to do, e.g. "KILL 3 MONSTERS" */
     VariableId status_variable; /* quest status variable (see QuestStatus) */
     int16_t status_active;      /* var == this -> ACTIVE */
     int16_t status_complete;    /* var == this -> COMPLETE */
@@ -38,6 +38,6 @@ typedef struct {
                                  * "SHOP OPENED") */
 } QuestDefinition;
 
-#define GAME_QUEST_COUNT 2
+#define GAME_QUEST_COUNT 3
 
 #endif /* QUEST_H */

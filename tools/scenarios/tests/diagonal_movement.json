@@ -1,0 +1,42 @@
+{
+ "name": "diagonal_movement",
+ "test": true,
+ "description": "Move one tile diagonally via DOWN+RIGHT from open floor on TEST_FIELD",
+ "actions": [
+  {
+   "type": "press_buttons",
+   "buttons": [
+    "DOWN",
+    "RIGHT"
+   ]
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 5,
+   "expected_y": 5
+  },
+  {
+   "type": "event_occurred",
+   "event": "PLAYER_MOVED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 42
+ }
+}

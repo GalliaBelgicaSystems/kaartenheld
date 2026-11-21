@@ -15,6 +15,7 @@
 #include "rpg/progression.h"
 #include "rpg/save.h"
 #include "content.h"
+#include "economy.h"
 #include "game_ids.h"
 #include "ui.h"
 #include "battle.h"
@@ -146,10 +147,11 @@ static void scenario_load_state(void)
         audio_play_music(MUSIC_TITLE);
     }
     if (screen == SCREEN_SPLASH) {
-        /* Studio splash boot state (auto-advance / skip scenarios). */
+        /* Studio splash boot state (auto-advance / skip scenarios):
+         * matches hardware boot with silent splash until TITLE appears. */
         g_game.screen = SCREEN_SPLASH;
         g_game.prev_screen = SCREEN_SPLASH;
-        audio_play_music(MUSIC_TITLE);
+        audio_play_music(MUSIC_NONE);
     }
     /* NOTE: no SCREEN_GAMBLE boot branch (fixed budget, 52.18):
      * gamble scenarios reach the table through the real path (walk into
@@ -205,11 +207,17 @@ static void debug_run_action(void)
         case DBG_ACT_BUY_ITEM:
             {
                 const CardDefinition *def = card_get_def((CardId)a0);
-                if (def && def->price != 0 &&
-                    currency_get(&g_game.state, CURRENCY_ID_GOLD) >= def->price) {
+                uint8_t buy_price;
+                /* Real mechanic pricing (AGENTS.md §44): the same
+                 * market-scaled price the shop charges. */
+                if (def) buy_price = economy_quote(def->price, def->price_bias, 1);
+                else buy_price = 0;
+                if (def && buy_price != 0 &&
+                    currency_get(&g_game.state, CURRENCY_ID_GOLD) >= buy_price) {
                     if (deck_collection_add(&g_game.state.cards, (CardId)a0, 1)) {
-                        currency_add(&g_game.state, CURRENCY_ID_GOLD, -(int16_t)def->price);
-                        telemetry_emit(EVENT_CARD_PURCHASED, a0, (uint8_t)def->price, 0, 0);
+                        currency_add(&g_game.state, CURRENCY_ID_GOLD, -(int16_t)buy_price);
+                        economy_note_spent(&g_game.state, buy_price);
+                        telemetry_emit(EVENT_CARD_PURCHASED, a0, buy_price, 0, 0);
                     } else {
                         telemetry_emit(EVENT_CARD_PURCHASE_FAILED, a0, 2, 0, 0);
                     }
@@ -233,16 +241,9 @@ static void debug_run_action(void)
              * STATUS_APPLIED telemetry included): a0 = combatant slot
              * (0 = player, 1..n = enemy), a1 = StatusId, a2 = duration
              * (stacks 1).  Reaches targets no card rider can hit today
-             * (e.g. freezing the PLAYER).  Poison also triggers its grey-out. */
+             * (e.g. icing the PLAYER). */
             if (a0 < STATUS_ROUND_SLOTS && a1 != STATUS_NONE) {
                 bool ok = status_apply(status_slots(a0), a0, a1, 1, a2);
-                telemetry_emit(EVENT_STATUS_RESISTED, 0xEE, a0, ok ? 1 : 0,
-                               g_status_frozen_mask); /* PROBE */
-                if (ok && a1 == STATUS_POISON) {
-                    uint8_t pool = (a0 == 0) ? BATTLE_HAND_SIZE
-                                             : g_game.battle.enemy_deck.count;
-                    status_grey_apply(a0, pool);
-                }
                 /* Repaint the tinted row: on hardware every apply is
                  * followed by a phase change (DIRTY_ALL), but debug-action
                  * applies land mid-phase with no widely-dirty redraw. */
@@ -254,14 +255,34 @@ static void debug_run_action(void)
             break;
 
         case DBG_ACT_DECK_ADD:
-            /* Real mechanic call: all deck_add_card validations apply
-             * (ownership, SPECIAL exclusion, max_copies, size). */
+            /* Real gated mechanic (docs/enemies_ranking.md §4.8): the same
+             * deck_equip_card wrapper the quick screen uses, with the live
+             * pool -- so scenarios drive the real gate (AGENTS.md §44).
+             * CARD_EQUIP_LOCKED fires inside the wrapper on a card above
+             * the pool; CARD_ADDED_TO_DECK fires here on success only.
+             * EQUIP_CLEAR mirrors the UI's count-up-then-clear (removal
+             * loop + per-copy events); EQUIP_MIN is a silent refusal like
+             * the UI's DECK MIN message. */
 #ifdef DEBUG_BUILD
-            if (deck_add_card(&g_game.state.cards, (CardId)a0)) {
-                telemetry_emit(EVENT_CARD_ADDED_TO_DECK, a0, 0, 0, 0);
+            {
+                uint8_t deck_pool = 1;
+                uint8_t deck_r;
+                int16_t deck_pv =
+                    g_game.state.variables.values[
+                        VARIABLE_ID_ENERGY_POOL - 1];
+                if (deck_pv > 1) deck_pool = (uint8_t)(deck_pv > 255 ? 255 : deck_pv);
+                deck_r = deck_equip_card(&g_game.state.cards, (CardId)a0,
+                                         deck_pool);
+                if (deck_r == EQUIP_OK) {
+                    telemetry_emit(EVENT_CARD_ADDED_TO_DECK, a0, 0, 0, 0);
+                } else if (deck_r == EQUIP_CLEAR) {
+                    while (deck_remove_card(&g_game.state.cards, (CardId)a0))
+                        telemetry_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                       a0, 0, 0, 0);
+                }
             }
 #else
-            (void)deck_add_card(&g_game.state.cards, (CardId)a0);
+            (void)deck_equip_card(&g_game.state.cards, (CardId)a0, 1);
 #endif
             break;
         case DBG_ACT_DECK_REMOVE:
@@ -308,6 +329,9 @@ void scenario_check_and_load(void)
     if (g_debug_action_pending) {
         g_debug_action_pending = 0;
         debug_run_action();
+        if (g_game.screen == SCREEN_OVERWORLD && g_game.render_cache.valid) {
+            ui_draw_ow_hud();
+        }
     }
     g_scen_load = 0;
 }

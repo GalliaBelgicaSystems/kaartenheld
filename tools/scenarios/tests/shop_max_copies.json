@@ -1,7 +1,7 @@
 {
  "name": "shop_max_copies",
  "test": true,
- "description": "Buying a card up to its max_copies limit succeeds; a 4th POISON_DAGGER purchase is rejected with ITEM_PURCHASE_FAILED and gold unchanged",
+ "description": "Ownership is uncapped: four POISON_DAGGER purchases all succeed (70-32=38g, owned 4), no CARD_PURCHASE_FAILED.",
  "actions": [
   {
    "type": "buy_item",
@@ -24,19 +24,19 @@
   {
    "type": "currency",
    "currency": "GOLD",
-   "expected": 46
+   "expected": 38
   },
   {
    "type": "inventory",
    "item": "POISON_DAGGER",
-   "expected": 3
+   "expected": 4
   },
   {
    "type": "event_occurred",
    "event": "CARD_PURCHASED"
   },
   {
-   "type": "event_occurred",
+   "type": "event_not_occurred",
    "event": "CARD_PURCHASE_FAILED"
   }
  ],

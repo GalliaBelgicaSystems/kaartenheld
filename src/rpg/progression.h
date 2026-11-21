@@ -28,9 +28,6 @@ const ProgressionDefinition *progression_get_def(uint8_t target_type);
 
 ProgressionState *progression_get(GameState *state, uint8_t target_type, uint16_t target_id);
 
-bool progression_ensure(GameState *state, uint8_t target_type, uint16_t target_id,
-                        uint8_t level, uint16_t progress);
-
 bool progression_add(GameState *state, uint8_t target_type, uint16_t target_id,
                      uint16_t amount, ProgressionAddResult *out_result);
 

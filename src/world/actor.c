@@ -74,10 +74,6 @@ ActorEngageResult actor_engage(const StaticActorDefinition *actor, DialogueState
         return ENGAGE_SHOP;
     }
 
-    if (actor->interaction == INTERACTION_SAVE) {
-        return ENGAGE_SAVE;
-    }
-
     return ENGAGE_NONE;
 }
 

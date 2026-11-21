@@ -1,7 +1,7 @@
 {
  "name": "merchant_reminder",
  "test": true,
- "description": "Talking to the merchant mid-quest (accepted, amulet not yet found) re-briefs instead of opening his locked shop: INTRO dialogue again, quest stays ACTIVE",
+ "description": "Talking to the merchant mid-quest (accepted, shop keys not yet found) re-briefs instead of opening his locked shop: INTRO dialogue again, quest stays ACTIVE",
  "actions": [
   {
    "type": "interact",
@@ -24,7 +24,7 @@
   },
   {
    "type": "inventory",
-   "item": "AMULET",
+   "item": "SHOPKEYS",
    "expected": 0
   },
   {

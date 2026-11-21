@@ -1,7 +1,7 @@
 {
   "name": "gem_combo_pair_run",
   "test": true,
-  "description": "Short straight precedence (gem equipped): pair + run (SW3 + SW3 + BO4 + SW5) upgrades from PAIR to SHORT STRAIGHT -- run cards 3+4+5=12 score, damage 12*130/100=15. Kills the 5 HP slime.",
+  "description": "Short straight precedence (gem equipped): pair + run (SW3 + SW3 + BO4 + SW5) upgrades from PAIR to SHORT STRAIGHT -- run cards 3+4+5=12 score, damage 12*130/100=15. Kills Carl (staged HP; unkillable at 99 in real play).",
   "initial_state": {
    "scene": "TEST_FIELD",
    "player": {
@@ -21,6 +21,11 @@
     "frames": 5
    },
    {
+    "type": "set_enemy_hp",
+    "index": 0,
+    "hp": 15
+  },
+  {
     "type": "set_hand_card",
     "index": 0,
     "card_type": "SW",

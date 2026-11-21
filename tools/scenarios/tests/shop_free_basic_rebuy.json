@@ -1,0 +1,179 @@
+{
+ "name": "shop_free_basic_rebuy",
+ "test": true,
+ "description": "Starter basics are rebuyable for free with no ownership cap: with 0 gold the third BRONZE SWORD buys at price 0 (CARD_PURCHASED(67,0)) and two WOOD SWORD buys land (owned 6), no refusal, gold stays 0.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "SWORD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 18,
+   "expected": 118
+  },
+  {
+   "type": "oam_attr",
+   "entry": 18,
+   "expected": 0
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "0G"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASED"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_PURCHASED",
+   "index": 0,
+   "value": 67
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_PURCHASED",
+   "index": 1,
+   "value": 0
+  },
+  {
+   "type": "inventory",
+   "item": "BRONZE_SWORD",
+   "expected": 3
+  },
+  {
+   "type": "inventory",
+   "item": "WOOD_SWORD",
+   "expected": 6
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_PURCHASE_FAILED"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 17,
+   "contains": "Already owned!"
+  },
+  {
+   "type": "currency",
+   "expected": 0,
+   "currency": "GOLD"
+  }
+ ]
+}

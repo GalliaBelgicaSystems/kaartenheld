@@ -1,0 +1,130 @@
+{
+ "name": "arrows_shop_cap",
+ "test": true,
+ "description": "A full quiver (30 arrows, limited-arrows) cannot buy more: the purchase is refused, gold and arrows are unchanged, and the row-17 message reads Quiver full!",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_not_occurred",
+   "event": "CURRENCY_SPENT"
+  },
+  {
+   "type": "currency",
+   "expected": 50,
+   "currency": "GOLD"
+  },
+  {
+   "type": "currency",
+   "expected": 30,
+   "currency": "ARROWS"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "[A] Buy  [B] Leave"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 15,
+   "contains": "Don't forget to"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 16,
+   "contains": "equip your cards"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "Quiver full!"
+  },
+  {
+   "type": "sfx_last",
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50,
+   "ARROWS": 30
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ }
+}

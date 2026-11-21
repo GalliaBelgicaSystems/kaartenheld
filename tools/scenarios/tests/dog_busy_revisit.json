@@ -1,0 +1,60 @@
+{
+ "name": "dog_busy_revisit",
+ "test": true,
+ "description": "Bumping the village dog after the trade shows it is busy gnawing the bone (DOG_BUSY), not the handover thanks: the thanks belongs to the trade moment only, with no duplicate key",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "VILLAGE_DOG"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "DOG_BUSY"
+  },
+  {
+   "type": "inventory",
+   "item": "OLD_KEY",
+   "expected": 1
+  },
+  {
+   "type": "flag",
+   "flag": "DOG_KEY",
+   "expected": true
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 4,
+   "y": 7,
+   "facing": "DOWN"
+  },
+  "seed": 4242,
+  "flags": {
+   "MET_DOG": true,
+   "BONE_TAKEN": true,
+   "DOG_KEY": true
+  },
+  "inventory": {"OLD_KEY": 1}
+ }
+}

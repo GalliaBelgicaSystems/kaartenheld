@@ -7,11 +7,12 @@ ordering code, what palette each VRAM slot SHOULD get and compares that with
 generated/tiles/<tileset>.json (which becomes g_tile_pal_* in tile_palette.h,
 indexed by VRAM slot at runtime: g_active_tile_palette[i] = pal_src[i]).
 
-Checks, per world tileset (forest, desolate_landscape, castle, village):
+Checks, per world tileset (forest, desolate_landscape, castle, village,
+underground):
 
   1. Length equals the C array size declared in src/gfx/rpg_tile_lookup.h.
   2. VRAM slot i sits at the sheet cell the gfx rule encodes into slot i:
-     row-major over the sheet width (castle is 9x4 = 36 slots, scan order
+     row-major over the sheet width (castle is 9x5 = 45 slots, scan order
      like the rest). A tileset whose vram_block index disagrees fails.
   3. tile_ids[i] is the tile the vram_block puts at index i.
   4. tile_palettes[i] is a slot whose colors equal the shade-map ramp that
@@ -49,12 +50,13 @@ LOOKUP_H = REPO_ROOT / "src" / "gfx" / "rpg_tile_lookup.h"
 PAPER_SLOT = 4  # UI_COLOR_PAPER in src/ui/ui.h
 
 # tileset -> (sheet png, C array suffix in rpg_tile_lookup.h, VRAM pack width)
-# pack width None = the sheet's own width (all four sets scan order).
+# pack width None = the sheet's own width (all five sets scan order).
 WORLD = {
     "forest": ("forest-tile.png", "forest", None),
     "desolate_landscape": ("desolate-tile.png", "desolate", None),
     "castle": ("castle-tile.png", "castle", None),
     "village": ("village-tile.png", "village", None),
+    "underground": ("underground.png", "underground", None),
 }
 
 
@@ -162,15 +164,15 @@ def main():
         slot_colors = {p["index"]: p["colors"] for p in man["palettes"]}
 
         # All four sets pack slot i = vram index i in sheet scan order
-        # (castle is 9x4 = 36 slots; the gfx rule encodes the same scan
+        # (castle is 9x5 = 45 slots; the gfx rule encodes the same scan
         # order). Slot order must match the Makefile gfx rule's
         # --tile-coords verbatim.
         if ts == "castle":
-            if n != 36:
-                errors.append(f"{ts}: expected 36 loaded slots (9x4 scan order), got {n}")
+            if n != 45:
+                errors.append(f"{ts}: expected 45 loaded slots (9x5 scan order), got {n}")
                 continue
             slot_vram = list(range(n))
-            enc_cells = [(x, y) for y in range(4) for x in range(9)]
+            enc_cells = [(x, y) for y in range(5) for x in range(9)]
         else:
             slot_vram = list(range(n))
             enc_cells = None

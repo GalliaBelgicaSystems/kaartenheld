@@ -1,3 +1,4 @@
+#include <gb/gb.h>
 #include "game.h"
 #include "screen.h"
 #include "scene.h"
@@ -7,6 +8,12 @@
 #include "audio.h"
 #include "content.h"
 #include "game_ids.h"
+#include "banked.h"
+#include "carl_tutorial.h"
+
+/* Bank-12 town/castle entry autosave probe (src/game/autosave_banked.c):
+ * stages nothing, sets g_autosave_pending on town/castle gates. */
+void game_map_autosave_banked(void);
 
 void start_battle_from_world(Game *g)
 {
@@ -40,6 +47,19 @@ void start_battle_from_world(Game *g)
         battle_add_enemy(&g->battle,
                          act->display_name ? act->display_name : "ENEMY",
                          act->hp, act->max_hp);
+    }
+
+    /* Carl's lesson hands over its +1 AP when the spar STARTS, not on
+     * the win: on the first spar the opening coaching box announces it
+     * ("TAKE THIS AP TO DO POKER HANDS!"); re-spars open the no-grant
+     * coaching variant.  The bank-5 body owns the one-shot (shared
+     * with the leave-the-field skip) and refreshes the live pool the
+     * entry dispatch just staged; the fixed bank pays only staging +
+     * one dispatch (AGENTS.md 52.18). */
+    if (act->battle_type == BATTLE_CARL) {
+        g_bk_call_bank = 5;
+        g_bk_call_target = (uint16_t)&carl_spar_grant_banked;
+        banked_call_run();
     }
 
     /* Boss actors carry no enemy deck (BATTLE_NONE) and stand alone;
@@ -89,6 +109,11 @@ void overworld_screen_update(Game *g)
         g->world.map_changed = false;
         scene_update_from_map(g);
         event_resolve_map_enter(g, g->world.map_id);
+        /* Town/castle entries checkpoint the active slot (the bank-12
+         * probe owns the map list; the game_update flush writes). */
+        g_bk_call_bank = 12;
+        g_bk_call_target = (uint16_t)&game_map_autosave_banked;
+        banked_call_run();
         return;
     }
     if (move_res == MOVE_RESULT_ENCOUNTER) {
@@ -108,25 +133,24 @@ void overworld_screen_update(Game *g)
         screen_change(g, SCREEN_ITEM);
         return;
     }
-    if (input_pressed(INPUT_SELECT)) {
-        g->save_slot_mode = 0;
-        g->save_slot_index = 0;
-        g->save_slot_message = 0;
-        screen_change(g, SCREEN_SAVE_LOAD);
-        return;
-    }
 
     /* Hold-to-move: input_held starts a move whenever the previous one has
      * finished animating; a held button stays active across frames (a fresh
      * press is just the first held frame). */
-    if (g->world.move_state == MOVE_STATE_MOVING) {
+    if (g->world.move_state != MOVE_STATE_IDLE) {
         return;
     }
 
-    if (input_held(INPUT_UP)) dy = -1;
-    else if (input_held(INPUT_DOWN)) dy = 1;
-    else if (input_held(INPUT_LEFT)) dx = -1;
-    else if (input_held(INPUT_RIGHT)) dx = 1;
+    /* Diagonal movement: one vertical plus one horizontal axis combine
+     * (UP+LEFT etc). Direct pad reads keep the fixed bank under budget
+     * (AGENTS.md 52.18); J_ bits equal the input_held bits by the
+     * input.c layout check. N/S wins over the opposite vertical, W/E
+     * over the opposite horizontal; facing keeps N/S priority in
+     * world_try_begin_move. */
+    if (g_inp_pad & J_UP) dy = -1;
+    else if (g_inp_pad & J_DOWN) dy = 1;
+    if (g_inp_pad & J_LEFT) dx = -1;
+    else if (g_inp_pad & J_RIGHT) dx = 1;
 
     if (dx != 0 || dy != 0) {
         move_res = world_try_begin_move(&g->world, dx, dy, &g->state);
@@ -146,12 +170,10 @@ void overworld_screen_update(Game *g)
         } else if (engage == ENGAGE_SHOP) {
             g->item_menu_index = 0;
             g->item_menu_scroll = 0;
+            /* Shop tabs ride item_menu_tab (0 = BUY): always enter on
+             * BUY; the item screen resets it on its own open. */
+            g->item_menu_tab = 0;
             screen_change(g, SCREEN_SHOP);
-        } else if (engage == ENGAGE_SAVE) {
-            g->save_slot_mode = 1;
-            g->save_slot_index = 0;
-            g->save_slot_message = 0;
-            screen_change(g, SCREEN_SAVE_LOAD);
         }
     }
 }
@@ -165,9 +187,6 @@ void overworld_screen_render(Game *g)
     if (!g) return;
     rc = &g->render_cache;
     w = &g->world;
-
-    px = (uint8_t)(world_player_px(w) - w->camera_px_x);
-    py = (uint8_t)(world_player_py(w) - w->camera_px_y);
 
     if (!rc->valid || rc->prev_screen != SCREEN_OVERWORLD ||
         w->map_id != rc->prev_map_id) {
@@ -183,6 +202,10 @@ void overworld_screen_render(Game *g)
              * redraw fallback inside, same end state). */
             ui_draw_world_transition(w);
         }
+        /* Bottom-row status bar on the Window layer (0x9C00, WY=136):
+         * painted only on transitions (boot, map change, battle/shop/
+         * menu/dialogue returns) so steady frames do zero VRAM work. */
+        ui_draw_ow_hud();
         telemetry_emit(EVENT_RENDER_SCREEN, (uint8_t)SCREEN_OVERWORLD, 0,
                        (uint8_t)w->map_id, 0);
         rc->valid = true;
@@ -198,6 +221,8 @@ void overworld_screen_render(Game *g)
      * re-syncs mid-way while the screen is black). */
     ui_update_camera(w);
 
+    px = (uint8_t)(world_player_px(w) - w->camera_px_x);
+    py = (uint8_t)(world_player_py(w) - w->camera_px_y);
     ui_sprite_move(px, py);
     ui_draw_actors_sprites(w);
     rc->prev_player_x = px;

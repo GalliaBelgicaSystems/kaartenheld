@@ -1,10 +1,11 @@
 /** Whole-edge neighbor pairing check via the vite dev API.
  *
- *  The engine drops the player one cell inside the target's opposite edge,
- *  so a crossing must always land on walkable ground or the player is stuck
- *  in a wall.  The pairing logic lives once in tools/level_compiler/
- *  collision.py; this call runs it through validate.py --neighbor-check for
- *  the editor's current (possibly unsaved) level.
+ *  The engine drops the player on the destination's arrival-side entry
+ *  (or its main spawn when unset), so a crossing needs a walkable
+ *  source cell and the used entry must be walkable.  The pairing logic
+ *  lives once in tools/level_compiler/collision.py; this call runs it
+ *  through validate.py --neighbor-check for the editor's current
+ *  (possibly unsaved) level.
  */
 
 import { EditorLevel, editorToLevelData } from '../model/Level';

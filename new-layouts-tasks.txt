@@ -1,7 +1,0 @@
-1. wire the new mountain_pass level. don't change anything, leave all as-is. the kobold doesn't move and guards the reasure.
-
-the health mage in town only heals the hero once. The health mage should ask "do you want me to heal your wounds" and the player should select yes or no. if yes, the jingle plays and the hero is healed. if no, the mage says "come back when you're hurt". afterwards, interacting with the mage doesn't play the jingle and the mage says "You need another heal? Are you the hero or what?" and don't do it.
-
-3. when the hero is done with the quest of the mayor (killing 5 ennemies) the mayor should say: "I see you hate these monsters as much as we do! They have tormented us enough!" and the hero gets his increased AP (+1)
-
-finding the amulet unlocks the shop. make sure the shop has 1 ring card for haling, but only 1, as well as the bow. then it's out of stock. Also, replace the gold glyph curretnly being used by a single capital G from the fonts.

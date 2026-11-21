@@ -1,7 +1,7 @@
 {
  "name": "menu_cursor_scroll_quest",
  "test": true,
- "description": "Targeted menu updates (AGENTS.md 36) on the QUEST tab: moving the cursor repaints only the caret cells (row y = 3 + 2*index), no full render-cache invalidate. Both quests are ACTIVE so the visible list has entries at rows 3, 5, ... with the caret at column 0.",
+ "description": "Targeted menu updates (AGENTS.md 36) on the QUEST tab: moving the cursor repaints only the caret cells (row y = 3 + 3*index), no full render-cache invalidate. Both quests are ACTIVE so the visible list has entries at rows 3, 6, ... with the caret at column 0.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -53,7 +53,7 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
+   "row": 6,
    "contains": ">"
   },
   {
@@ -65,6 +65,11 @@
    "type": "screen_row",
    "row": 16,
    "contains": "SEL:INFO"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "QUIT"
   }
  ]
 }

@@ -38,8 +38,8 @@ never refuses a covered bet.
   title banner row 0, identity row 2, outcome row 5 (result
   announcement directly below the kobold), `CHOOSE BET` / `CHOOSE
   NUMBER` / `GOLD OWNED` rows 7-9 (replacing the battle HP/AP rows),
-  match-detail row 10, three card-frame dice boxes (rows 11-14, cols
-  2/8/14), controls row 16. The `>` caret marks the active choose row
+  stake-progress row 10 (`STAKED:n/50` while choosing, match detail after
+  a roll), three card-frame dice boxes (rows 11-14, cols 2/8/14), controls row 16. The `>` caret marks the active choose row
   (UP/DOWN switches BET/NUMBER, LEFT/RIGHT changes the value: number
   wraps 1-6, bet cycles 1/5/10 clamped to owned gold), A rolls (SELECT
   also works), B leaves.
@@ -100,26 +100,27 @@ build is the tight one (~50 B).
 
 ## Gem prize (STRAIGHT gem)
 
-Nis's invite teases it (`+20 NET WINS A GEM`): leaving the table **+20
-net or more up in one sitting** (exit purse minus entry purse) wins the
-STRAIGHT gem -- once.  Winning only sets OWNED; the hero equips it
+Nis's invite teases it (`STAKE 50 TOTAL: GEM`): staking **50 or more
+in one sitting** (total gold wagered across the sitting's rolls, win or
+lose) wins the STRAIGHT gem -- once.  Winning only sets OWNED; the hero equips it
 manually on the GEM tab, which unlocks short straights in battle
 (docs/short-straight.md).
 
-* Tracking: `GambleState.entry_gold` is recorded on table entry; on B
-  exit the banked body compares the net and, when the bar is met and the
-  gem is not yet owned, sets the `VARIABLE_ID_GEM_OWNED` bit directly
+* Tracking: `GambleState.staked` accumulates every covered bet
+  (saturating at 255) and resets on table entry; on B exit the banked
+  body compares the stake and, when the bar is met and the gem is not
+  yet owned, sets the `VARIABLE_ID_GEM_OWNED` bit directly
   (same v1 gap as the table's gold moves: no `VARIABLE_SET` event) and
   stages the prize dialogue instead of the farewell.
 * Grant signal: the distinct prize dialogue (`screens/dialogue/kobold_prize.json`,
   `DIALOGUE_STARTED KOBOLD_PRIZE`) IS the observable grant -- a second
-  +20 sitting with the gem already owned gets the ordinary farewell, so
+  50-staked sitting with the gem already owned gets the ordinary farewell, so
   the dialogue id alone distinguishes grant from no-grant.  The owned bit
   itself is snapshot-assertable (`GEM_OWNED`).
 * No auto-equip anywhere on this path (manual equip is the rule).
-* Scenarios: `gem_grant_net20` (+30 net → prize + owned bit), 
-  `gem_grant_norepeat` (owned already → farewell), `gem_no_grant`
-  (net loss → farewell, no bit).
+* Scenarios: `gem_grant_stake50` (5 x BET=10 from 100 gold → prize +
+  owned bit), `gem_grant_norepeat` (owned already → farewell),
+  `gem_no_grant` (single BET=1 loss → farewell, no bit).
 
 ## Observability contract
 

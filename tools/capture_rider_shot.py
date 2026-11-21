@@ -32,7 +32,7 @@ STATUS_BURN = 2
 STATUS_FREEZE = 3
 # Battle struct: player(14) + enemies[3](42) + enemy_count + target_idx,
 # then the dirty byte.
-DIRTY_OFF = 14 + 3 * 14 + 2
+DIRTY_OFF = 15 + 3 * 15 + 2  # Combatant is 15 B (hp+max+name[13]); dirty sits at +62
 BATTLE_DIRTY_HAND = 0x10
 CARD_STATUS = 5
 CARD_CHANCE = 6

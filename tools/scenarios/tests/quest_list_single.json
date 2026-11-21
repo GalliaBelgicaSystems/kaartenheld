@@ -1,7 +1,7 @@
 {
  "name": "quest_list_single",
  "test": true,
- "description": "Single tracked quest: LOST AMULET alone on the QUEST tab while MONSTER HUNT stays hidden; UP/DOWN wrap on the one entry without repainting",
+ "description": "Single tracked quest: SHOP KEYS alone on the QUEST tab while MONSTER HUNT stays hidden; UP/DOWN wrap on the one entry without repainting",
  "actions": [
   {
    "type": "press",
@@ -44,7 +44,7 @@
   {
    "type": "screen_row",
    "row": 3,
-   "contains": "LOST AMULET"
+   "contains": "SHOP KEYS"
   },
   {
    "type": "screen_row",

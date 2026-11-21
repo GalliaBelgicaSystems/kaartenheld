@@ -13,8 +13,9 @@
 /* A per-shop stock list (game content).  id matches the WorldActorDefinition
  * shop_id of the actor that runs the shop.  Prices are read from the
  * CardDefinition.price field — single source of truth.  `buys` marks a
- * CARD MERCHANT (docs/loot.md §34.6): the SELL mode lists the player's
- * owned loot cards at their centralized sell value. */
+ * CARD MERCHANT (docs/loot.md §34.6): while engaged, any owned
+ * non-SPECIAL card with a sell value lists in the shop's SELL tab
+ * (loot at its formula value, curated below buy on a rarity cut). */
 typedef struct {
     uint8_t id;
     uint8_t count;
@@ -25,8 +26,5 @@ typedef struct {
 /* Generated shop table (src/game/shops_content.c): id/count/buys/items. */
 extern const ShopDefinition g_shops[];
 extern const uint8_t g_shop_count;
-
-/* Look up a shop's stock by its id, or NULL if unknown. */
-const ShopDefinition *game_shop_for_id(uint8_t id);
 
 #endif /* GAME_SHOPS_H */

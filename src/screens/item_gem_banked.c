@@ -1,4 +1,4 @@
-#pragma bank 8
+#pragma bank 13
 #pragma disable_warning 110
 
 #include <gb/gb.h>
@@ -8,17 +8,17 @@
 #include "ui.h"
 #include "banked.h"
 
-/* ── GEM-tab content, bank-8 body ──────────────────────────────────
+/* ── GEM-tab content, bank-13 body ─────────────────────────────────
  * The gem list renderer + equip navigator live here (not bank 2 with the
  * cards renderer) for the same structural reason as the quest tab
  * (item_quest_banked.c): the registry (g_gems[] in gems_content.c) is
  * banked content, and a banked body must share its tables' bank
- * (AGENTS.md 52.11.1).  Bank 8 is the overflow bank (AGENTS.md 55.5)
- * with room for the feature to grow (more gems, per-gem detail).
+ * (AGENTS.md 52.11.1).  Bank 13 is free in both builds (bank 8 filled
+ * up) with room for the feature to grow (more gems, per-gem detail).
  *
  * ABI: the fixed dispatch in item_screen.c sends the GEM tab here and
  * the QUEST tab to item_quest_nav_banked (same bank); the GEM page
- * renders here in bank 8 with its registry (never bank 2).  Reads only
+ * renders here in bank 13 with its registry (never bank 2).  Reads only
  * this bank's data, the staged Game*, and always-mapped WRAM; calls no
  * fixed-bank functions (variable writes go straight to GameState --
  * same v1 gap as the gamble table's gold moves, no VARIABLE_SET event;
@@ -81,7 +81,11 @@ static void gem_draw_text_fast(void)
         } else {
             ch = ' ';
         }
-        if (*s_ic_buf != ch) {
+        /* Unconditional VRAM write (no skip guard): icon/chrome tiles
+         * carry space buffers, so a guarded paint would leave stale
+         * art in VRAM while the buffer looks correct.  Row-local
+         * blank+paint never shows a full-screen wipe (AGENTS.md 36). */
+        {
             uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
             BANKED_VRAM_WRITE(s_ic_dst, tile);
             *s_ic_buf = ch;
@@ -96,12 +100,16 @@ static void gem_draw_text_fast(void)
     gem_draw_text_fast(); \
 } while(0)
 
-/* Tab header (banked: fixed _HOME is nearly full, AGENTS.md 52.18) --
- * same row as the other tabs: row 0 labels, row 1 caret under GEM. */
+/* Tab header: single source of truth is menu_tabs_snippet.h ──────────
+ * (compiled per bank: banked bodies cannot call across banks,
+ * AGENTS.md 52.11.1).  GEMS cursor col 16. */
+#define MENU_NEED_ATTR_CLEAR
+#define MENU_TAB_DRAW_TEXT GEM_DRAW_TEXT
+#include "menu_tabs_snippet.h"
+
 static void gem_draw_header(void)
 {
-    GEM_DRAW_TEXT(0, 0, "DECK QUEST HERO GEM", 19);
-    GEM_DRAW_TEXT(16, 1, "^", 1);
+    menu_draw_tabs(16);
 }
 
 /* Rider OAM sweep for the GEM tab (entries 1-12): the CARDS list paints
@@ -162,22 +170,19 @@ static void gem_draw_gem(Game *g, uint8_t bit, uint8_t y, uint8_t selected)
     uint8_t reg = gem_ptr_bit(bit);
     int16_t equipped;
     equipped = g->state.variables.values[VARIABLE_ID_GEM_EQUIPPED - 1];
-    if (selected) GEM_DRAW_TEXT(0, y, ">", 1);
-    else GEM_DRAW_TEXT(0, y, " ", 1);
-    GEM_DRAW_TEXT(2, y, g_gems[reg].name, 12);
-    if ((equipped & (int16_t)(1 << bit)) != 0) {
-        GEM_DRAW_TEXT(15, y, "ON", 2);
-    } else {
-        GEM_DRAW_TEXT(15, y, "OFF", 3);
-    }
-    GEM_DRAW_TEXT(2, (uint8_t)(y + 1), g_gems[reg].skill, 15);
+    GEM_DRAW_TEXT(0, y, selected ? ">" : " ", 2);
+    GEM_DRAW_TEXT(2, y, g_gems[reg].name, 13);
+    GEM_DRAW_TEXT(15, y, ((equipped & (int16_t)(1 << bit)) != 0) ? "ON" : "OFF", 5);
+    GEM_DRAW_TEXT(0, (uint8_t)(y + 1), NULL, 2);
+    GEM_DRAW_TEXT(2, (uint8_t)(y + 1), g_gems[reg].skill, 18);
 }
 
 /* Tab ids mirror item_screen.c (fixed bank): TAB_DECK 0, TAB_QUEST 1,
  * TAB_HERO 2, TAB_GEM 3.  KEEP IN SYNC -- the router branches below and
  * the fixed dispatch both depend on them. */
 #define GEM_TAB_QUEST 1
-#define GEM_TAB_GEM 3
+#define GEM_TAB_HERO  2
+#define GEM_TAB_GEM   3
 
 /* Detail mode shares the fixed-bank MODE_QUEST_DETAIL value (2): the
  * fixed dispatch early-returns for it (no LR interference) and the fixed
@@ -185,37 +190,86 @@ static void gem_draw_gem(Game *g, uint8_t bit, uint8_t y, uint8_t selected)
  * fixed bank nothing (AGENTS.md 52.18). */
 #define GEM_MODE_DETAIL 2
 
-/* QUEST-tab bodies (same bank: direct call, no trampoline).  The fixed
- * dispatch routes both side tabs here; GEM handles its own tab and
- * forwards QUEST back, so the fixed bank pays no extra branch. */
+/* QUEST/HERO bodies (same bank: direct call, no trampoline).  The fixed
+ * dispatch routes every non-DECK tab here; GEM handles its own tab and
+ * forwards QUEST and HERO, so the fixed bank pays no extra branch. */
 void item_quest_nav_banked(void);
 void item_quest_render_banked(void);
+void item_status_render_banked(void);
 
 /* ── Gem detail (SELECT on a gem row) ─────────────────────────────
  *   row 3: gem name
  *   row 5: what it unlocks (skill)
  *   rows 6-8: per-gem explainer from the registry (GemDefinition.detail,
  *             so gem #2's text never hard-codes gem #1's rules)
- *   row 9: "SEL:BACK" (B closes via the fixed handler, same as quests) */
+ *   row 15: bottom box border (same as every list tab)
+ *   row 16: "B:BACK" (B closes via the fixed handler, same as quests) */
 static void gem_draw_detail(uint8_t bit)
 {
     uint8_t reg = gem_ptr_bit(bit);
     uint8_t r;
-    GEM_DRAW_TEXT(0, 3, g_gems[reg].name, 12);
-    GEM_DRAW_TEXT(0, 5, g_gems[reg].skill, 15);
+    uint8_t i;
+    GEM_DRAW_TEXT(0, 2, NULL, 20);
+    GEM_DRAW_TEXT(0, 3, g_gems[reg].name, 20);
+    GEM_DRAW_TEXT(0, 4, NULL, 20);
+    GEM_DRAW_TEXT(0, 5, g_gems[reg].skill, 20);
     for (r = 0; r < 3; r++) {
         GEM_DRAW_TEXT(0, (uint8_t)(6 + r), g_gems[reg].detail[r], 20);
     }
-    GEM_DRAW_TEXT(0, 9, "SEL:BACK", 8);
+    for (r = 9; r <= 14; r++)
+        GEM_DRAW_TEXT(0, r, NULL, 20);
+    for (i = 0; i < 20; i++)
+        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
+    GEM_DRAW_TEXT(0, 16, "B:BACK", 20);
+    GEM_DRAW_TEXT(0, 17, NULL, 20);
+}
+
+/* Gem-block window: same geometry as the QUEST tab (AGENTS.md 52.11.1
+ * lets both renderers share bank 13, but the row content differs, so
+ * the layout is mirrored, not shared).  Each owned gem takes 3 rows
+ * (name, skill, quests-separator rule), rows 3-14 hold exactly 4
+ * blocks.  Longer pockets scroll via item_menu_scroll (reset on tab
+ * switch).  Rows 2/15 are free for the scroll indicators; row 15 also
+ * carries the bottom box border like every other list tab; row 16
+ * keeps the footer. */
+#define GEM_WINDOW  4
+#define GEM_ROW_TOP 3
+#define GEM_BLOCK   3
+
+/* Title row for a window slot (shifts/adds only: no multiply, which
+ * would pull the SDCC mult lib into fixed _CODE, AGENTS.md 52.18). */
+static uint8_t gem_slot_row(uint8_t slot)
+{
+    return (uint8_t)(GEM_ROW_TOP + (uint8_t)((uint8_t)(slot << 1) + slot));
+}
+
+/* Scroll-indicator cell (VRAM list-scroll tiles: the 180-degree
+ * rotated copy for the row-2 up caret, the sheet art for the row-15
+ * down caret; buffer keeps '^' up / 'v' down for harness asserts).
+ * Hiding restores hide_tile (font space on row 2, the bottom border
+ * on row 15 so the rule stays unbroken when nothing sits below the
+ * window). */
+static void gem_stamp_scroll(uint8_t y, uint8_t x, uint8_t show,
+                             char letter, uint8_t show_tile,
+                             uint8_t hide_tile)
+{
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    *s_ic_buf = show ? letter : ' ';
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE(s_ic_dst, show ? show_tile : hide_tile);
 }
 
 /* GEM-tab input behind the thin fixed dispatch in item_screen.c.
  * Pad edges come straight from WRAM (always mapped, like the staged
- * Game*).  UP/DOWN moves an inline caret (no scroll: the owned list is
- * short); A toggles the equip bit manually (never auto-equipped --
- * winning the gem only sets OWNED).  The toggle writes GameState
- * directly (no fixed-bank call, no telemetry event -- same v1 gap as
- * the gamble table's gold) and forces a full redraw so ON/OFF flips. */
+ * Game*).  UP/DOWN moves an inline caret; A toggles the equip bit
+ * manually (never auto-equipped -- winning the gem only sets OWNED).
+ * Longer pockets scroll a 4-block window (item_menu_scroll, reset on
+ * tab switch): the cursor repaint stays inline while the window holds,
+ * and a window move takes the full redraw instead.  The toggle writes
+ * GameState directly (no fixed-bank call, no telemetry event -- same
+ * v1 gap as the gamble table's gold) and forces a full redraw so
+ * ON/OFF flips. */
 void item_gem_nav_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -225,6 +279,7 @@ void item_gem_nav_banked(void)
     int16_t equipped;
     uint8_t old_index;
     uint8_t new_index;
+    uint8_t old_scroll;
     uint8_t old_row;
     uint8_t new_row;
     if (!g) return;
@@ -277,8 +332,25 @@ void item_gem_nav_banked(void)
         return;
     }
     g->item_menu_index = new_index;
-    old_row = (uint8_t)(3 + (old_index << 1));
-    new_row = (uint8_t)(3 + (new_index << 1));
+    /* Blip only on a real move: with a single owned gem UP/DOWN wraps
+     * back onto the same row, and a no-op press must stay silent. */
+    if (new_index != old_index) {
+        g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+    }
+    /* Scroll follow: keep the selection inside the 4-block window
+     * (wraps land back at the edges, so no separate wrap case). */
+    old_scroll = g->item_menu_scroll;
+    if (new_index < old_scroll) {
+        g->item_menu_scroll = new_index;
+    } else if (new_index > (uint8_t)(old_scroll + (GEM_WINDOW - 1))) {
+        g->item_menu_scroll = (uint8_t)(new_index - (GEM_WINDOW - 1));
+    }
+    if (g->item_menu_scroll != old_scroll) {
+        g->render_cache.valid = false;
+        return;
+    }
+    old_row = gem_slot_row((uint8_t)(old_index - old_scroll));
+    new_row = gem_slot_row((uint8_t)(new_index - old_scroll));
     if (old_row != new_row) {
         GEM_DRAW_TEXT(0, old_row, " ", 1);
         GEM_DRAW_TEXT(0, new_row, ">", 1);
@@ -291,18 +363,34 @@ void item_gem_render_banked(void)
     uint8_t e;
     uint8_t total = 0;
     uint8_t v;
+    uint8_t vis;
+    uint8_t drawn;
+    uint8_t y;
+    uint8_t i;
+    uint8_t max_scroll;
     uint8_t bit;
     int16_t owned;
     if (!g) return;
 
-    /* The other side tab (QUEST) belongs to the quest renderer. */
+    /* The other side tabs belong to their own renderers (same bank). */
+    if (g->item_menu_tab == GEM_TAB_HERO) {
+        item_status_render_banked();
+        return;
+    }
     if (g->item_menu_tab != GEM_TAB_GEM) {
         item_quest_render_banked();
         return;
     }
 
-    /* Sweep the card rider entries (same as the quest tab). */
-    for (e = 1; e <= 12; e++) {
+    /* No pre-blank: each path below covers its rows in one pass (see
+     * DECK list), so tab switches never show an all-blank
+     * intermediate.  (Forwarded tabs cover for themselves.) */
+
+    menu_clear_content_attrs();
+
+    /* Sweep the card rider entries (same as the quest tab, plus the
+     * DECK material ingots on entries 12-34). */
+    for (e = 1; e <= 34; e++) {
         gem_rider_hide(e);
     }
 
@@ -313,27 +401,65 @@ void item_gem_render_banked(void)
     for (v = 0; v < GEM_COUNT; v++) {
         if ((owned & (int16_t)(1 << v)) != 0) total++;
     }
-
     if (g->item_menu_mode == GEM_MODE_DETAIL) {
         if (total != 0) {
             bit = gem_owned_bit(g, g->item_menu_index, &total);
             gem_draw_detail(bit);
         }
-    } else if (total == 0) {
-        GEM_DRAW_TEXT(2, 3, "NO GEMS YET", 11);
+        return;
+    }
+
+    max_scroll = (total > GEM_WINDOW) ?
+        (uint8_t)(total - GEM_WINDOW) : 0;
+    if (g->item_menu_scroll > max_scroll)
+        g->item_menu_scroll = max_scroll;
+    /* Row 2: spaces + up caret at col 19 (strict top-to-bottom order). */
+    GEM_DRAW_TEXT(0, 2, NULL, 19);
+    gem_stamp_scroll(2, 19, (uint8_t)(g->item_menu_scroll > 0), '^',
+                     UI_TILE_MENUS_LIST_SCROLL_UP, ui_font_tile_base);
+
+    if (total == 0) {
+        GEM_DRAW_TEXT(0, 3, "  NO GEMS YET", 20);
+        for (i = 4; i <= 14; i++)
+            GEM_DRAW_TEXT(0, i, NULL, 20);
     } else {
-        v = 0;
+        drawn = 0;
+        vis = 0;
         for (bit = 0; bit < GEM_COUNT; bit++) {
             if ((owned & (int16_t)(1 << bit)) == 0) continue;
-            gem_draw_gem(g, bit, (uint8_t)(3 + (v << 1)),
-                         (g->item_menu_index == v) ? 1 : 0);
-            v++;
+            if (vis < g->item_menu_scroll ||
+                vis >= (uint8_t)(g->item_menu_scroll + GEM_WINDOW)) {
+                vis++;
+                continue;
+            }
+            y = gem_slot_row(drawn);
+            gem_draw_gem(g, bit, y, (g->item_menu_index == vis) ? 1 : 0);
+            GEM_DRAW_TEXT(0, (uint8_t)(y + 2), NULL, 2);
+            for (i = 2; i <= 10; i++)
+                menu_stamp_chrome((uint8_t)(y + 2),
+                                  i, UI_TILE_MENUS_QUESTS_SEPARATOR);
+            GEM_DRAW_TEXT(11, (uint8_t)(y + 2), NULL, 9);
+            drawn++;
+            vis++;
+        }
+        for (; drawn < GEM_WINDOW; drawn++) {
+            y = gem_slot_row(drawn);
+            GEM_DRAW_TEXT(0, y, NULL, 20);
+            GEM_DRAW_TEXT(0, (uint8_t)(y + 1), NULL, 20);
+            GEM_DRAW_TEXT(0, (uint8_t)(y + 2), NULL, 20);
         }
     }
+    for (i = 0; i < 19; i++)
+        menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
+    gem_stamp_scroll(15, 19,
+        (uint8_t)((uint8_t)(g->item_menu_scroll + GEM_WINDOW) < total),
+        'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
+        UI_TILE_MENUS_BOTTOM_BORDER);
     if (g->item_menu_message == GEM_MSG_MAX)
-        GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 10);
+        GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 20);
     else if (total == 0)
-        GEM_DRAW_TEXT(0, 16, "B:BACK", 6);
+        GEM_DRAW_TEXT(0, 16, "B:BACK", 20);
     else
-        GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 16);
+        GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 20);
+    GEM_DRAW_TEXT(0, 17, NULL, 20);
 }

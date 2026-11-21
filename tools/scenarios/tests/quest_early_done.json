@@ -1,7 +1,7 @@
 {
  "name": "quest_early_done",
  "test": true,
- "description": "Kills done before accepting: with the quest NOT_STARTED and 5 monsters already slain, the first talk takes the early-turn-in path (MAYOR_EARLY, not MAYOR_INTRO): MET_MAYOR set, +1 AP, quest jumps straight to COMPLETE",
+ "description": "Kills done before accepting: with the quest NOT_STARTED and 3 monsters already slain, the first talk takes the early-turn-in path (MAYOR_EARLY, not MAYOR_INTRO): MET_MAYOR set, +1 AP, quest jumps straight to COMPLETE",
  "actions": [
   {
    "type": "interact",
@@ -21,7 +21,7 @@
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "slain 5 monsters!"
+   "contains": "slain 3 monsters!"
   },
   {
    "type": "screen_row",
@@ -60,7 +60,7 @@
    "ARRIVED_TOWN": true
   },
   "variables": {
-   "MONSTERS_DEFEATED": 5,
+   "MONSTERS_DEFEATED": 3,
    "ENERGY_POOL": 3
   }
  }

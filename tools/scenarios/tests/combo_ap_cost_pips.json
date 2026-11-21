@@ -102,6 +102,16 @@
    "expected": 0
   },
   {
+   "type": "oam_bytes",
+   "addr": 34304,
+   "tile": "ap_1"
+  },
+  {
+   "type": "oam_bytes",
+   "addr": 34320,
+   "tile": "ap_2"
+  },
+  {
    "type": "event_not_occurred",
    "event": "DAMAGE_DEALT"
   }

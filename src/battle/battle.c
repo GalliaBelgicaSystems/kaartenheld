@@ -1,18 +1,63 @@
 #include "battle.h"
+#include "combo.h"
 #include "telemetry.h"
 #include "audio.h"
 #include "banked.h"
+#include "game.h"
 #include "rpg/cards.h"
+#include "rpg/currency.h"
 #include "rpg/deck.h"
 #include "rpg/effects.h"
 #include "rpg/loot.h"
 #include "rpg/status.h"
-#include "rpg/loot.h"
 #include "rng.h"
 #include "game/game_ids.h"
 #include "content.h"
 #include "battle_data.h"
 #include <string.h>
+
+/* Limited-arrows shared pool: live arrow count for the banked nav/draw
+ * bodies, staged through g_bk_byte_d so those engine bodies stay
+ * game-id-free (AGENTS.md 55.1).  Clamped: debug pokes can drive the
+ * slot negative, and the staging byte is 8-bit. */
+static uint8_t battle_arrows_now(void)
+{
+    int16_t a = g_game.state.currency.amount[CURRENCY_ID_ARROWS - 1];
+    if (a < 0) return 0;
+    if (a > 255) return 255;
+    return (uint8_t)a;
+}
+
+static bool battle_turn_draw(Battle *b);
+
+/* Iced hero (ice): outgoing damage lands halved (rounded up), mirroring
+ * the iced-enemy telegraph softening.  Healing is untouched -- only
+ * damage dealing is halved.  Linear scan (max 2 slots, no bank switch). */
+static bool battle_player_iced(void)
+{
+    StatusSlots *slots = status_slots(0);
+    uint8_t i;
+    if (!slots) return false;
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_FREEZE) return true;
+    }
+    return false;
+}
+
+/* Confused hero (poison): the auto-staged random hand is game-validated
+ * (no input exists), so the unvalidated-timeout rule below never
+ * applies while this is true.  Same live-status read as the banked
+ * confuse gate (nav_confuse_auto). */
+static bool battle_player_confused(void)
+{
+    StatusSlots *slots = status_slots(0);
+    uint8_t i;
+    if (!slots) return false;
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) return true;
+    }
+    return false;
+}
 
 /* Per-enemy battle art (see battle.h): uninitialized WRAM arrays (bss, so
  * no _INITIALIZER cost); written by the bank-4 battle art loader at every
@@ -29,8 +74,33 @@ uint8_t g_battle_enemy_art_h[MAX_BATTLE_ENEMIES];
 uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 /* Per-slot OAM flag (1 = sprite via BATTLE_OBJ_SCRATCH, 0 = BG stamp). */
 uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+/* Hero badge tile id (BG VRAM): the bank-4 art loader streams the OW idle
+ * frame into the first free slot past enemy art at every battle entry and
+ * caches the id here for the bank-3 hero-row stamper.  BSS zero-init. */
+uint8_t g_battle_hero_tile;
 /* Live pool max staged for the bank-3 HUD badge (see battle.h). */
 uint8_t g_battle_pool_max;
+
+/* Confusion hold (poison, docs/loot.md §34.6): frames remaining before
+ * a staged confused hand executes.  The auto-stage holds its beat so
+ * the Confused! message and the random hand stay readable (and
+ * harness-assertable) instead of flashing for a single frame.  Written
+ * by the fixed screen hook, read the next frames until it hits zero.
+ * Uninitialized WRAM (bss); meaningful only while the hero is confused
+ * in a decision phase. */
+uint8_t g_battle_confuse_hold;
+/* Battle-scoped confusion routing (poison, docs/loot.md §34.6): set by
+ * the banked defend-resolve body when the telegraphed attacker's swing
+ * turns on its allies.  0xFF = no confusion this resolve (normal hero
+ * defense); otherwise the victim's combatant slot (0..n-1, may equal
+ * the attacker when alone -- self-harm).  Uninitialized WRAM (bss);
+ * rewritten by every defend resolve, so no battle-start init needed. */
+uint8_t g_battle_confuse_victim;
+/* Confused-attacker message outcome: 1 = no live ally, so the swing will
+ * hurt the attacker itself (0 = it has an ally to hit).  Staged by the
+ * telegraph body (bank 12) with the same rule the resolve uses, read by
+ * the bank-3 combo-row render when it names the acknowledgement. */
+uint8_t g_battle_confuse_self;
 /* Nonzero when anything in the battle animates on the 16-frame clock:
  * multi-frame art rows (staged by the bank-4 art loader) or a glow-mask
  * set (ORed by the bank-5 alt loader).  Uninitialized WRAM (bss);
@@ -56,6 +126,16 @@ HudSkinDef g_hud_skin_wram;
  * battle_hud_load_banked to pick the single-enemy boss screen. */
 uint8_t g_battle_solo;
 
+/* Slime-lord desperation (see battle.h): BSS zero, set once per battle
+ * when the desperation boss hits its game-table threshold. */
+uint8_t g_slime_despair;
+/* Desperation slot cache + staged message text (see battle.h): WRAM,
+ * BSS zero.  The bank-8 game body re-derives the slot every call. */
+uint8_t g_despair_slot;
+char g_despair_banner[16];
+char g_despair_row9[19];
+char g_despair_row10[20];
+
 /* ── Bridge: persistent DeckState → battle Deck ───────────────────
  * When a DeckState is provided (player has cards), build the battle
  * deck from the player's owned cards.  When NULL, fall back to the
@@ -77,25 +157,25 @@ static void battle_init_from_deck_state(Battle *b, const DeckState *ds)
  * bar cells and whole seconds: every '=' drains one cell per
  * BATTLE_TIMER_SECONDS frames with no fractional remainder (which would make
  * tiles drain over uneven frame counts).  Same array-size trap as input.c. */
-static const int g_battle_timer_cadence_ok[
+typedef char g_battle_timer_cadence_ok[
     (BATTLE_TIMER_MAX_FRAMES % BATTLE_TIMER_BAR_LENGTH == 0) &&
-    (BATTLE_TIMER_BAR_DIVISOR == BATTLE_TIMER_MAX_FRAMES / BATTLE_TIMER_BAR_LENGTH) ? 1 : 0
+    (BATTLE_TIMER_BAR_DIVISOR == BATTLE_TIMER_MAX_FRAMES / BATTLE_TIMER_BAR_LENGTH) ? 1 : -1
 ];
 
 /* Compile-time guarantee that the deck-removal floor equals the dealt hand
  * size: every battle must open with DECK_MIN_CARDS real cards, so a battle
  * hand-size change that forgets rpg/deck.h would silently reintroduce the
  * phantom-card fallback path.  Same array-size trap as above. */
-static const int g_deck_min_matches_hand_size[
-    (DECK_MIN_CARDS == BATTLE_HAND_SIZE) ? 1 : 0
+typedef char g_deck_min_matches_hand_size[
+    (DECK_MIN_CARDS == BATTLE_HAND_SIZE) ? 1 : -1
 ];
 
 /* Pack-range guards (see COMBO_PACK in combo.h): battle_play_hand encodes
  * the phase in bit 0 and the effect id in bits 1..7 of the staging byte.
  * Tested against the COUNT sentinel so a future effect outgrows the byte
  * loudly (decode-side twins live in combo_content.c). */
-static const int g_combo_pack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : 0];
-static const int g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
+typedef char g_combo_pack_phase_ok[(COMBO_PHASE_DEFEND <= 1) ? 1 : -1];
+typedef char g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : -1];
 
 /* Victim name snapshot for the ANIM banner ("ATTACK <name>"): resolution
  * may kill the target and auto-advance target_idx before the banner
@@ -104,6 +184,21 @@ static const int g_combo_pack_effect_ok[(CARD_EFFECT_COUNT <= 128) ? 1 : 0];
  * banner then falls back to "PLAYER ATTACK!".  WRAM (fixed bank stays
  * lean); read by the bank-3 renderer. */
 char g_battle_anim_target_name[13];
+
+/* Hit feedback state (see battle.h): BSS zero, owned entirely by the
+ * bank-9 frame tick (HP deltas arm the timers, the tick counts them
+ * down).  Fixed-bank resolve paths never touch these. */
+uint8_t g_battle_shake_mask;
+uint8_t g_battle_shake_timer;
+uint8_t g_battle_shake_wipe;
+uint8_t g_battle_heal_flash;
+uint8_t g_battle_heal_phase;
+uint8_t g_battle_deck_timer;
+uint8_t g_battle_deck_wipe;
+uint8_t g_battle_fx_epoch;
+uint8_t g_battle_fx_seen;
+uint8_t g_battle_fx_php;
+uint8_t g_battle_fx_ehp[MAX_BATTLE_ENEMIES];
 
 void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
                   uint8_t player_max_hp,
@@ -129,8 +224,9 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
 
     /* Combat loot roll happens HERE, at battle start (docs/loot.md
      * §34.5): the isolated loot RNG is consumed deterministically once
-     * per battle, and the synthesized identity sits ready in
-     * g_card_scratch for the VICTORY reveal message.  Grant happens at
+     * per battle and the derived id sits ready in g_loot_id for the
+     * VICTORY reveal (battle_screen.c synthesizes the identity via
+     * card_get_def at reveal time).  Grant happens at
      * world_on_battle_end() (victory only). */
     g_loot_id = game_loot_drop(battle_id);
 
@@ -139,9 +235,14 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
     } else {
         deck_init_default(&b->deck);
     }
+    /* Filtered opening deal (limited-arrows never-draw-empty): empty the
+     * hand and run the same banked refill the turn start uses, so bows
+     * enter only with arrow backing (cheapest first).  Cheaper fixed
+     * than the old per-card deck_draw loop. */
     for (i = 0; i < BATTLE_HAND_SIZE; i++) {
-        deck_draw(&b->deck, &b->hand[i]);
+        b->hand[i].type = BATTLE_CARD_TYPE_EMPTY;
     }
+    (void)battle_turn_draw(b);
 
     /* Stage the active screen's layout (rows/cols/positions) into WRAM
      * for the bank-3 renderer.  Game layer picks the screen by battle
@@ -153,6 +254,17 @@ void battle_start(Battle *b, const char *enemy_name, uint8_t player_hp,
      * which re-stages g_bk_byte_a for its own dispatch. */
     g_battle_solo = solo;
     g_battle_multiframe = 0;
+    g_slime_despair = 0;
+    g_despair_slot = 0xFF;
+    /* Feedback epoch: the bank-9 frame tick re-arms its HP caches on a
+     * mismatch, so a new fight never inherits stale deltas.  The hand
+     * tile window re-arms the same way (off-battle ticks reset it, but
+     * the harness skips CRT0 so BSS may power up dirty: entry itself
+     * must clear it).  One store each; everything else the tick owns
+     * (fixed-bank budget, 52.18). */
+    g_battle_fx_epoch++;
+    g_hand_shown_tier = 0xFF;
+    g_hand_want_tier = HAND_NONE;
     g_bk_byte_a = b->enemy_battle_id;
     g_bk_call_bank = 4;
     g_bk_call_target = (uint16_t)&battle_hud_load_banked;
@@ -196,9 +308,9 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp)
  * the overflowing fixed bank (AGENTS.md §52.18); these thin WRAM-facing
  * wrappers stage the dispatch through the banked-call trampoline and keep
  * the public API (battle.h) stable.  The bodies are self-contained: they
- * read/write only the staged Battle* (plus the battle-scoped grey masks),
- * never call fixed-bank functions -- telemetry that the moved logic needs
- * (EVENT_TARGET_CHANGED) is emitted here after the dispatch returns. */
+ * read/write only the staged Battle*, never call fixed-bank functions --
+ * telemetry that the moved logic needs (EVENT_TARGET_CHANGED) is emitted
+ * here after the dispatch returns. */
 static void battle_nav(Battle *b, uint8_t op, uint8_t arg)
 {
     g_bk_call_bank = 4;
@@ -206,6 +318,7 @@ static void battle_nav(Battle *b, uint8_t op, uint8_t arg)
     g_bk_ptr_a = (void *)b;
     g_bk_byte_a = op;
     g_bk_byte_b = arg;
+    g_bk_byte_d = battle_arrows_now();
     banked_call_run();
 }
 
@@ -216,12 +329,10 @@ bool battle_is_card_selected(const Battle *b, uint8_t hand_idx)
     return g_bk_byte_c != 0;
 }
 
-/* A hand card can be added to the current combo only while it has uses left,
- * is not greyed out by poison, AND its cost fits in the phase energy not yet
- * reserved by the pending combo (deck.md Phase 10, docs/combo-system.md
- * Phase D).  The grey/unplayable decision lives in the banked body; this
- * fixed-clone wrapper keeps battle_execute_combo's auto-play fallback in
- * the fixed bank. */
+/* A hand card can join an empty combo while it has uses left AND its
+ * cost fits the phase energy pool (deck.md Phase 10).  The
+ * unplayable decision lives in the banked body; this fixed clone
+ * serves the explicit-SELECT auto-play below. */
 static bool hand_card_playable(const Battle *b, uint8_t hand_idx)
 {
     if (!b) return false;
@@ -277,6 +388,21 @@ void battle_card_select(Battle *b)
     }
 }
 
+/* Confused-hero auto-stage (poison, docs/loot.md §34.6): stages a random
+ * playable hand through the banked nav body.  Returns 0 when the hero is
+ * not confused (read input normally), 2 when a hand was just staged
+ * (hold the beat -- the player reads the Confused! message), 1 when a
+ * staged hand is already pending (execute now, even empty: the no-play
+ * path runs instead of handing back control the hero cannot use).
+ * Fixed-bank cost is one dispatch; the staging logic lives banked
+ * (AGENTS.md §52.18). */
+uint8_t battle_confuse_auto(Battle *b)
+{
+    if (!b) return 0;
+    battle_nav(b, NAV_OP_CONFUSE_AUTO, 0);
+    return g_bk_byte_c;
+}
+
 void battle_set_result(Battle *b, uint8_t res)
 {
     b->result = (BattleResult)res;
@@ -299,8 +425,15 @@ void battle_set_result(Battle *b, uint8_t res)
         /* Game-over theme starts the instant the hero falls, so the
          * DEFEATED! result screen already carries it; it keeps playing
          * over the game-over choice menu until a map load restores the
-         * scene track (world_init plays it on every map load). */
-        audio_play_music(MUSIC_GAMEOVER);
+         * scene track (world_init plays it on every map load).  The
+         * slime-lord desperation hold is exempt (g_slime_despair is
+         * engine battle state, cleared by battle_start): its reprisal
+         * routes to the wake/ending outro, never the choice menu, so no
+         * game-over music may start -- the result screen plays out in
+         * silence under the explosion tail. */
+        if (!g_slime_despair) {
+            audio_play_music(MUSIC_GAMEOVER);
+        }
     }
 }
 
@@ -314,7 +447,7 @@ void battle_card_undo(Battle *b)
 #ifdef DEBUG_BUILD
     prev_result = b->result;
 #endif
-    g_bk_call_bank = 3;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&battle_card_undo_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();
@@ -341,11 +474,12 @@ void battle_card_undo(Battle *b)
 void battle_defend_resolve(Battle *b)
 {
     if (!b) return;
-#ifdef DEBUG_BUILD
-    g_bk_call_bank = 5;
-#else
-    g_bk_call_bank = 4;
-#endif
+    /* Confusion routing starts cleared every resolve: only the banked
+     * friendly-fire branch below sets a victim (see battle_execute_combo's
+     * confused-attacker gate).  Without this reset a stale victim would
+     * misroute the next normal rider. */
+    g_battle_confuse_victim = 0xFF;
+    g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&battle_defend_resolve_banked;
     g_bk_ptr_a = (void *)b;
     banked_call_run();
@@ -369,15 +503,27 @@ void battle_defend_resolve(Battle *b)
 
     /* Organic enemy status rider (Phase D): g_bk_byte_c = status id the
      * banked body rolled (0 = none).  Apply through the REAL mechanic
-     * (status_apply emits STATUS_APPLIED); poison also greys the player's
-     * hand via status_grey_apply.  A lethal counter leaves the player at
-     * 0 HP: the rider must not apply to a corpse (same guard as the
-     * on-hit rider in battle_execute_combo) -- no STATUS_APPLIED, no
-     * hand grey-out. */
-    if (g_bk_byte_c != 0 && b->player.hp != 0) {
-        status_apply(status_slots(0), 0, g_bk_byte_c, 1, 0);
-        if (g_status_applied.id == STATUS_POISON) {
-            status_grey_apply(0, BATTLE_HAND_SIZE);
+     * (status_apply emits STATUS_APPLIED).  Routed at the confusion
+     * victim when this resolve ran the friendly-fire branch
+     * (g_battle_confuse_victim), else at the player.  A lethal hit
+     * leaves a corpse the rider must not apply to (same guard as the
+     * on-hit rider in battle_execute_combo) -- no STATUS_APPLIED.
+     * Burn basis needs no staging here: no enemy card carries burn,
+     * and the apply body reads g_effect_last (status.h). */
+    if (g_bk_byte_c != 0) {
+        uint8_t rslot = 0;
+        uint8_t alive = (uint8_t)(b->player.hp != 0);
+        if (g_battle_confuse_victim != 0xFF) {
+            rslot = (uint8_t)(g_battle_confuse_victim + 1);
+            alive = (uint8_t)(g_battle_confuse_victim < b->enemy_count &&
+                              b->enemies[g_battle_confuse_victim].hp != 0);
+        }
+        if (alive) {
+            if (status_apply(status_slots(rslot), rslot, g_bk_byte_c, 1, 0)) {
+                if (g_status_applied.id == STATUS_POISON) {
+                    g_poison_grace_mask |= (uint8_t)(1u << rslot);
+                }
+            }
         }
     }
 }
@@ -389,6 +535,12 @@ static void battle_resolve_hand_discard(Battle *b)
     for (i = 0; i < b->combo_count; i++) {
         idx = b->selected_indices[i];
         cost += b->hand[idx].cost;
+        /* Limited-arrows: every played bow spends 1 from the shared pool
+         * (never restored; victory drops + shop buys refill it).  The
+         * card itself stays in combat circulation (bows never exile). */
+        if (b->hand[idx].type == BATTLE_CARD_TYPE_BOW) {
+            currency_add(&g_game.state, CURRENCY_ID_ARROWS, -1);
+        }
         if (b->hand[idx].uses_remaining != 0xFF && b->hand[idx].uses_remaining > 0) {
             b->hand[idx].uses_remaining--;
         }
@@ -415,19 +567,19 @@ static void battle_resolve_hand_discard(Battle *b)
  * and dagger counters, docs/combo-system.md §10/§13): rolls the
  * eval-scaled chance staged in g_bk_byte_c (effect_resolve_into scales
  * cards[0].status_chance by the full 16-bit multiplier, capped at 255)
- * and applies status_id through status_apply, with poison also greying
- * the victim's pool (Phase D).  slot = target combatant slot (1..n);
- * grey_n = shared enemy-deck width.  Callers guarantee the victim
+ * and applies status_id through status_apply.  slot = target combatant
+ * slot (1..n); grey_n is retained for signature compatibility and
+ * ignored (ice grey-out is retired -- iced combatants deal halved
+ * damage instead).  Burn basis comes from
+ * g_effect_last (see status.h).  Callers guarantee the victim
  * stands.  One copy keeps the fixed bank small (AGENTS.md 52.18). */
 static void battle_leader_rider(uint8_t slot, uint8_t status_id,
                                 uint8_t grey_n)
 {
+    (void)grey_n;
     if (status_id == STATUS_NONE) return;
     if ((uint8_t)rng_next() < g_bk_byte_c) {
-        if (status_apply(status_slots(slot), slot, status_id, 1, 0) &&
-            status_id == STATUS_POISON) {
-            status_grey_apply(slot, grey_n);
-        }
+        status_apply(status_slots(slot), slot, status_id, 1, 0);
     } else {
         /* Roll failed: resisted (docs/combo-system.md §19). */
         telemetry_emit(EVENT_STATUS_RESISTED, status_id, slot, 0, 0);
@@ -437,16 +589,36 @@ static void battle_leader_rider(uint8_t slot, uint8_t status_id,
 /* Dagger counterattack (defend phase): daggers are the only weapon that
  * can be played on defense.  A daggers-only selection (at least one
  * dagger; no shields, swords or bows; rings allowed and unchanged) hits
- * the telegraphed attacker back with an attack-phase poker evaluation
- * over the dagger subset, while the hero still takes the (unblocked)
- * incoming swing.  Mixed selections lose the daggers: the block
- * evaluation above already ignored them, and the prep body reports 0.
- * Returns 1 when counter damage was dealt (the caller gates its victory
- * check on this so defend flows without a counter emit no new
- * telemetry).  Victory is NOT set here: the caller checks it after the
- * phase advance.  Precedence note: the prep skips dead heroes, so a
- * lethal swing always ends in defeat with no counter; a living hero
- * whose counter drops the last enemy wins.
+ * the telegraphed attacker back with a full attack-phase poker
+ * evaluation over the dagger subset: the counter deals exactly what the
+ * cards show, no scaling.  Daggers are already the weakest face damage
+ * per tier (docs/loot.md §34.1: bronze 2v3, iron 3v5, steel 5v7,
+ * mythril 7v9), so the free extra attack needs no further nerf -- the
+ * stat gap IS the balance against the sword.  The counter lands FIRST:
+ * when it kills the attacker, the incoming swing never lands (the
+ * caller skips the net resolution).  Otherwise the hero still takes the
+ * resolved swing on top of the counter.  Mixed selections lose the
+ * daggers: the block evaluation ignores them, and the prep body reports
+ * 0 without touching the staged combo.
+ * Returns 0 when no counter fired, 1 when counter damage was dealt
+ * (without a deferred poison rider), or 2 when counter damage was
+ * dealt AND a non-killing poison rider is staged in g_bk_byte_e for
+ * post-swing dispatch (truthy for the caller's victory check either
+ * way; 0-HP victims -- including a floored despair boss -- never return
+ * 2, matching the attack path and avoiding stale g_bk_byte_e).  A
+ * killing counter needs no special return: the following net resolution
+ * observes the dead attacker and degrades to a no-op block on its own
+ * (see the resolve body).  Victory is NOT set here: the caller checks
+ * it after the phase advance.
+ *
+ * The poison on-hit rider does NOT run here: the eval-scaled chance
+ * is stashed in g_bk_byte_e for the caller's post-swing dispatch
+ * (bank 11, battle_rider_banked.c).  A poison applied by this counter
+ * must not confuse the swing it rode in on -- the attacker still hits
+ * the hero this turn; the poison counts from the next defend on.  Only
+ * pre-existing poison redirects (see the resolve body).  Non-poison
+ * riders keep the legacy immediate path below (loot legality keeps
+ * organic counters poison-only).
  *
  * Fixed-bank budget (AGENTS.md 52.18): the prep body stages everything
  * the resolve needs (count, attacker, rider, deck width) because every
@@ -464,9 +636,10 @@ static uint8_t battle_defend_counter(Battle *b)
      * (fixed-bank budget -- every branch counts, AGENTS.md 52.18). */
     /* Prep dispatch (bank 5 in both builds -- see battle_counter_banked.c):
      * dagger-only detection, subset compaction into the front of
-     * last_combo.cards (dead since the defend resolution above; the
-     * discard below reads hand/selected_indices), and full staging.
-     * g_bk_byte_a = dagger count (0 = no counter). */
+     * last_combo.cards (the defend resolution below only needs the block
+     * sum, restored by the caller, plus a ring scan that is vacuous for
+     * daggers-only hands; the discard below reads hand/selected_indices),
+     * and full staging.  g_bk_byte_a = dagger count (0 = no counter). */
     g_bk_call_bank = 5;
     g_bk_call_target = (uint16_t)&battle_counter_prep_banked;
     g_bk_ptr_a = (void *)b;
@@ -487,8 +660,12 @@ static uint8_t battle_defend_counter(Battle *b)
     /* Counter telemetry is DAMAGE only (no COMBO/EFFECT event): the
      * poker-scaled amount (a pair out-damages its flat face sum, suited
      * bonus included) already proves the evaluation ran, and the rider
-     * below reports through the shared STATUS channels. */
+     * below reports through the shared STATUS channels.  Iced hero:
+     * the counter lands halved like any attack swing (rounded up). */
     counter_dmg = g_effect_last.amount;
+    if (battle_player_iced()) {
+        counter_dmg = (uint8_t)((counter_dmg + 1) >> 1);
+    }
     /* amount is always >= 1 here (n >= 1 daggers at face >= 1 through a
      * >= 100% multiplier), so there is no empty-hand early-out.  The
      * victim pointer is hoisted: SDCC recomputes the 16-bit indexed
@@ -496,18 +673,32 @@ static uint8_t battle_defend_counter(Battle *b)
     victim = &b->enemies[atk];
     combatant_take_damage(victim, counter_dmg);
     telemetry_emit(EVENT_DAMAGE_DEALT, counter_dmg, 0, 0, 0);
-    /* On-hit poison rider from the leading dagger (shared helper; rid is
-     * the prep-staged status id, g_bk_byte_c the eval-scaled chance).
-     * Guarded like the attack path: a killing counter must not poison
-     * (or grey the deck for) a corpse. */
-    if (victim->hp != 0) {
+    /* Stash the eval-scaled rider chance for the caller's post-swing
+     * dispatch (g_bk_byte_e staging scratch: untouched by the resolve/
+     * discard/telemetry path; read now, before the resolve below
+     * clobbers g_bk_byte_c with SFX ids).  Non-poison riders apply
+     * immediately, exactly as before: only a poison counter-rider
+     * confuses, so only poison defers to the post-swing bank-11 body
+     * (loot legality: poison is dagger-only, fire/ice are bow-only --
+     * a counter can never roll burn/freeze organically, and curated
+     * burn/freeze daggers keep the legacy immediate path).  Guarded
+     * like the attack path: a killing counter must not poison a corpse. */
+    if (victim->hp == 0) {
+#ifdef DEBUG_BUILD
+        /* No defeat telemetry for the unkillable desperation boss (its slot
+         * is cached in WRAM, 0xFF when no such battle): the floor keeps it
+         * at 1 HP and the hold opens instead.  Reporting a defeat that never
+         * happened breaks AGENTS.md §8/§22. */
+        if (atk != g_despair_slot) {
+            telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
+        }
+#endif
+    } else if (rid == STATUS_POISON) {
+        g_bk_byte_e = g_bk_byte_c;
+        return 2;
+    } else {
         battle_leader_rider((uint8_t)(atk + 1), rid, deck_n);
     }
-#ifdef DEBUG_BUILD
-    else {
-        telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(atk + 1), 0, 0, 0);
-    }
-#endif
     return 1;
 }
 
@@ -527,31 +718,20 @@ static uint8_t battle_defend_counter(Battle *b)
  * (pile + hand + discard == total deck size minus exiled spent cards, and
  * the reshuffle preserves the undrawn remainder), so an empty discard
  * pile implies the pile covers every open slot.  The only dry-pile loop
- * entry is the fully-dry case handled by the early return above. */
+ * entry is the fully-dry case handled by the early return above.
+ *
+ * Thin fixed-bank wrapper: the decision body lives in ROM bank 14
+ * (src/battle/battle_turn_draw_banked.c), dispatched via the WRAM
+ * trampoline; the boolean result returns in g_bk_byte_c.  Moved out of
+ * the fixed bank which sits hard against 0x8000 (AGENTS.md 52.18). */
 static bool battle_turn_draw(Battle *b)
 {
-    uint8_t i, need = 0;
-    for (i = 0; i < BATTLE_HAND_SIZE; i++) {
-        if (b->hand[i].type == BATTLE_CARD_TYPE_EMPTY) need++;
-    }
-    if (need == 0) return true;
-    if (b->deck.draw_idx >= b->deck.count) {
-        return (b->deck.discard_count == 0);
-    }
-    /* Partial cover plus a non-empty discard: deal nothing so the caller
-     * reshuffles first (see header comment).  Additive form keeps the
-     * 8-bit compare cheap (draw_idx + need cannot wrap: both are tiny). */
-    if (b->deck.discard_count != 0 &&
-        (uint8_t)(b->deck.draw_idx + need) > b->deck.count) {
-        return false;
-    }
-    for (i = 0; i < BATTLE_HAND_SIZE && need > 0; i++) {
-        if (b->hand[i].type == BATTLE_CARD_TYPE_EMPTY) {
-            deck_draw(&b->deck, &b->hand[i]);
-            need--;
-        }
-    }
-    return true;
+    g_bk_call_bank = 14;
+    g_bk_call_target = (uint16_t)&battle_turn_draw_banked;
+    g_bk_ptr_a = (void *)b;
+    g_bk_byte_d = battle_arrows_now();
+    banked_call_run();
+    return g_bk_byte_c != 0;
 }
 
 /* Evaluate the pending selection AND resolve its effect in one banked
@@ -566,11 +746,16 @@ static bool battle_turn_draw(Battle *b)
 static void battle_play_hand(Battle *b, bool attack_phase, EffectResult *out)
 {
     ComboPhase phase = attack_phase ? COMBO_PHASE_ATTACK : COMBO_PHASE_DEFEND;
-    uint8_t i, fx;
+    uint8_t fx;
 
-    for (i = 0; i < b->combo_count; i++) {
-        b->last_combo.cards[i] = b->hand[b->selected_indices[i]];
-    }
+    /* Combo staging lives in the bank-4 body (fixed _HOME budget,
+     * AGENTS.md 52.18): hand -> last_combo copies via the WRAM
+     * trampoline.  The dispatch staging below still runs here (a banked
+     * body cannot nest another trampoline call). */
+    g_bk_call_bank = 4;
+    g_bk_call_target = (uint16_t)&battle_stage_combo_banked;
+    g_bk_ptr_a = (void *)b;
+    banked_call_run();
     fx = attack_phase ? b->last_combo.cards[0].effect
                       : (uint8_t)CARD_EFFECT_BLOCK_DAMAGE;
     /* Single-level dispatch (stack discipline): the combo_resolve()
@@ -601,32 +786,21 @@ void battle_execute_combo(Battle *b)
     uint8_t j;
     if (!b || b->battle_over) return;
 
-    /* STATUS_FREEZE on the player (docs/combo-system.md §12): the whole
-     * offense is skipped -- no hand play this cycle, the enemy attack
-     * follows via the ANIM phase.  FREEZE never stacks: it lasts
-     * def->duration rounds, during which the player can neither attack nor
-     * defend.  The frozen-mask bit 0 (set by status_apply, re-armed by the
-     * banked tick body each round) is TESTED here and in the defend gate
-     * at BATTLE_PHASE_PLAYER_DEFEND, but never consumed -- the tick body
-     * clears it each round and re-sets it while a freeze instance remains. */
-    if ((g_status_frozen_mask & 1u) != 0 &&
-        b->phase == BATTLE_PHASE_PLAYER_SELECT) {
-        telemetry_emit(EVENT_TURN_SKIPPED, 0, STATUS_FREEZE, 0, 0);
-        b->combo_count = 0;
-        b->phase = BATTLE_PHASE_PLAYER_ANIM;
-        b->delay_timer = 30;
-        b->dirty = BATTLE_DIRTY_ALL;
-        g_battle_anim_target_name[0] = '\0';
-        return;
-    }
-
     if (b->phase == BATTLE_PHASE_PLAYER_SELECT) {
+        /* Empty explicit SELECT still auto-plays the highlighted card
+         * (quick-attack convenience; status_ice_reshuffle and the burn
+         * kill in victory_music_once ride it).  A TIMER expiry never
+         * reaches here with anything staged -- battle_update unstages
+         * unvalidated combos first and turns the empty select into a
+         * MISSED! whiff instead (Florent: unvalidated highlight must
+         * not attack).  combo_count == 0 also proves nothing is
+         * selected, so the first-playable search needs no is_selected
+         * guard. */
         if (b->combo_count == 0) {
             if (!hand_card_playable(b, b->cursor_pos)) {
                 uint8_t s;
                 for (s = 0; s < BATTLE_HAND_SIZE; s++) {
-                    if (hand_card_playable(b, s) &&
-                        !battle_is_card_selected(b, s)) {
+                    if (hand_card_playable(b, s)) {
                         b->cursor_pos = s;
                         break;
                     }
@@ -683,10 +857,17 @@ void battle_execute_combo(Battle *b)
             } else {
                 /* Damage hand: only poker-hand cards deal (extras add 0) --
                  * only HEAL_HP heals.  The slash sound plays when the player
-                 * lands a damaging attack. */
+                 * lands a damaging attack.  Iced hero: the swing lands
+                 * halved (rounded up), mirroring the iced-enemy telegraph
+                 * softening -- the EFFECT_RESOLVED above keeps the full
+                 * value, only the damage softens. */
+                uint8_t dmg = res.amount;
+                if (battle_player_iced()) {
+                    dmg = (uint8_t)((dmg + 1) >> 1);
+                }
                 audio_play_sfx(SFX_ATTACK);
-                combatant_take_damage(&b->enemies[b->target_idx], res.amount);
-                telemetry_emit(EVENT_DAMAGE_DEALT, res.amount, 0, 0, 0);
+                combatant_take_damage(&b->enemies[b->target_idx], dmg);
+                telemetry_emit(EVENT_DAMAGE_DEALT, dmg, 0, 0, 0);
                 /* On-hit status rider (Phase C): the leading card's data
                  * decides; the deterministic RNG roll decides landing
                  * (docs/combo-system.md §13/§17).  Shared helper (see
@@ -702,61 +883,76 @@ void battle_execute_combo(Battle *b)
         b->phase = BATTLE_PHASE_PLAYER_ANIM;
         b->delay_timer = 30;
         b->dirty = BATTLE_DIRTY_ALL;
+        /* Desperation (unwinnable final battle): the check + HP floor
+         * live in the game-owned bank-8 body (fixed _HOME budget,
+         * AGENTS.md 52.18); a trigger opens the telegraph hold below
+         * instead of ending the fight at once.  battle_update re-runs
+         * the same body every frame, so counter and status-tick damage
+         * trigger uniformly there. */
+        g_bk_call_bank = 8;
+        g_bk_call_target = (uint16_t)&game_despair_check_banked;
+        banked_call_run();
+        if (g_bk_byte_c != 0) {
+            /* Telegraph hold: the boss flashes (shared telegraph blink,
+             * re-armed below), rows 9+10 announce the focus, and the
+             * phase waits for A (never auto-advances).  The 99-damage
+             * reprisal lands on the A press, not here. */
+            /* Concentration hush: stop the boss track the moment the
+             * focus starts, so the later explosion cue plays over
+             * silence (one-shot: the banked body reports the edge only
+             * on the staging frame).  No restore needed on this path:
+             * the hold can only exit through the A-press defeat, which
+             * skips the game-over music by design, and any other scene
+             * change restores its own track. */
+            audio_play_music(MUSIC_NONE);
+            b->phase = BATTLE_PHASE_SLIME_DESPAIR;
+            b->msg_id = 10;
+            b->msg_ttl = 0;
+            b->dirty = BATTLE_DIRTY_ALL;
+        } else {
 #ifdef DEBUG_BUILD
-        if (b->enemies[b->target_idx].hp == 0) {
-            telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
-        }
+            if (b->enemies[b->target_idx].hp == 0) {
+                telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(b->target_idx + 1), 0, 0, 0);
+            }
 #endif
-        if (battle_all_enemies_dead(b)) {
-            battle_set_result(b, BATTLE_RESULT_VICTORY);
+            if (battle_all_enemies_dead(b)) {
+                battle_set_result(b, BATTLE_RESULT_VICTORY);
+            }
         }
     } else if (b->phase == BATTLE_PHASE_PLAYER_DEFEND) {
-        /* STATUS_FREEZE on the player (see the attack gate above): a frozen
-         * player cannot defend either.  The enemy's already-telegraphed
-         * swing lands unblocked (full enemy_incoming_dmg), the defend hand
-         * is skipped, and we move straight to DEFENSE_RESOLVE.  An
-         * undefended hit plays the hurt cue.  Test-only, never consumes
-         * bit 0 -- the tick body re-arms it each round. */
-        if ((g_status_frozen_mask & 1u) != 0) {
-            uint8_t dmg = b->enemy_incoming_dmg;
-            telemetry_emit(EVENT_TURN_SKIPPED, 0, STATUS_FREEZE, 0, 0);
-            if (dmg != 0) {
-                uint8_t hp_before = b->player.hp;
-                combatant_take_damage(&b->player, dmg);
-                uint8_t hp_after = b->player.hp;
-                dmg = hp_before - hp_after;
-                audio_play_sfx(SFX_HURT);
-            }
-            telemetry_emit(EVENT_DAMAGE_RECEIVED, dmg, 0, 0, 0);
-            b->combo_count = 0;
-            b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
-            b->delay_timer = 30;
-            b->dirty = BATTLE_DIRTY_ALL;
-            if (b->player.hp == 0) {
-                telemetry_emit(EVENT_ENTITY_DEFEATED, 0, 0, 0, 0);
-                battle_set_result(b, BATTLE_RESULT_DEFEAT);
-            }
-            return;
-        }
+        /* Confusion is decided in exactly one place: the banked resolve
+         * below reads the telegraph attacker's live status and either
+         * redirects (poisoned: friendly-fire branch, victim reported
+         * through g_battle_confuse_victim) or resolves normally.  A
+         * poison applied by this phase's counter lands only after the
+         * swing (see below), so the attacker still hits the hero this
+         * turn; from the next defend on the poison counts.  The hero
+         * always pays for the staged hand (play + discard below run
+         * either way); only the incoming damage changes address.
+         * Empty defend still resolves below (empty block = full hit).
+         * MISSED! is an attack-side message (see the SELECT gate
+         * above); defend keeps its BLOCKED ATTACK! banner. */
         battle_play_hand(b, false, &res);
         /* Net-damage defense (docs/loot.md §34.4): computed and applied in
          * the banked body (battle_defend_content.c) to keep the fixed bank
-         * small; the wrapper above emits the damage/heal telemetry.
+         * small; the wrapper emits the damage/heal telemetry.
          *
-         * Contract for the banked body: the immediately-preceding
-         * battle_play_hand() populated last_combo (count == combo_count,
-         * cards[0..combo_count) are the defend hand) and resolved the block
-         * sum into g_effect_last.amount.  The banked body relies on both --
-         * its ring scan walks last_combo.cards[0..combo_count) and its net
-         * uses g_effect_last.amount -- so nothing may run between this call
-         * and battle_defend_resolve(). */
-        battle_defend_resolve(b);
-        /* Dagger counterattack (see battle_defend_counter): a daggers-only
-         * selection hits the attacker back on top of the resolved swing.
-         * Runs before the discard so the played daggers still pay their
-         * energy cost and leave play like any other staged cards. */
+         * The dagger counter lands FIRST (see battle_defend_counter): a
+         * daggers-only selection hits the attacker back before the swing,
+         * and a killing counter degrades the resolve below to a no-op
+         * block (the body observes the dead attacker).  The counter eval
+         * overwrites g_effect_last, so the prep stashes the block sum for
+         * the body; its whitelist pass leaves last_combo.cards pristine
+         * on a mixed abort, and a daggers-only run needs no ring scan
+         * (daggers/rings block nothing, so net can never go negative and
+         * no heal path exists). */
         {
-            uint8_t counter_hit = battle_defend_counter(b);
+            uint8_t counter_hit;
+            counter_hit = battle_defend_counter(b);
+            battle_defend_resolve(b);
+            /* Runs before the discard so the played cards pay their
+             * energy cost and leave play like any other staged hand --
+             * confusion redirects the swing, it never refunds it. */
             battle_resolve_hand_discard(b);
             b->phase = BATTLE_PHASE_DEFENSE_RESOLVE;
             b->delay_timer = 30;
@@ -764,8 +960,32 @@ void battle_execute_combo(Battle *b)
             if (b->player.hp == 0) {
                 telemetry_emit(EVENT_ENTITY_DEFEATED, 0, 0, 0, 0);
                 battle_set_result(b, BATTLE_RESULT_DEFEAT);
-            } else if (counter_hit && battle_all_enemies_dead(b)) {
-                battle_set_result(b, BATTLE_RESULT_VICTORY);
+            } else {
+                /* Deferred poison counter rider (bank-11 body,
+                 * battle_rider_banked.c): lands AFTER the swing
+                 * resolves (so fresh poison never confuses its own
+                 * swing) and only while the hero survives (never emits
+                 * post-mortem status telemetry on a fatal swing). */
+                if (counter_hit == 2) {
+                    g_bk_call_bank = 11;
+                    g_bk_call_target = (uint16_t)&battle_counter_rider_banked;
+                    banked_call_run();
+                }
+#ifdef DEBUG_BUILD
+                /* Friendly-fire kill (non-target victim): the normal and
+                 * counter paths only emit for the targeted attacker, so
+                 * the redirected kill needs its own report -- including
+                 * on a battle-ending blow (unlike the old else-if, which
+                 * swallowed it under the victory).  The guard + emit live
+                 * in bank 12 (fixed bank is full, AGENTS.md 52.18). */
+                g_bk_call_bank = 12;
+                g_bk_call_target = (uint16_t)&battle_ff_defeat_banked;
+                banked_call_run();
+#endif
+                if ((counter_hit || g_battle_confuse_victim != 0xFF) &&
+                    battle_all_enemies_dead(b)) {
+                    battle_set_result(b, BATTLE_RESULT_VICTORY);
+                }
             }
         }
     }
@@ -782,27 +1002,21 @@ static void battle_tick_statuses(Battle *b)
 
     for (i = 0; i < b->enemy_count; i++) {
         if (b->enemies[i].hp == 0) {
-            /* A poisoned victim's grey-out must drain even after death:
-             * the shared enemy deck reads the union of every slot's mask,
-             * so a frozen corpse mask would jam the draw position and lock
-             * all surviving enemies out of attacking forever. */
-            status_grey_tick((uint8_t)(i + 1));
             continue;
         }
         dmg = status_tick(status_slots((uint8_t)(i + 1)), (uint8_t)(i + 1));
-        /* Poison grey-out duration drains each round (Phase D). */
-        status_grey_tick((uint8_t)(i + 1));
         if (dmg == 0) continue;
         combatant_take_damage(&b->enemies[i], dmg);
 #ifdef DEBUG_BUILD
-        if (b->enemies[i].hp == 0) {
+        /* Same unkillable-boss rule as the counter path above: the floor
+         * keeps the boss at 1 HP, so a defeat event here would be false. */
+        if (b->enemies[i].hp == 0 && (i != g_despair_slot)) {
             telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)(i + 1), 0, 0, 0);
         }
 #endif
     }
     if (b->player.hp != 0) {
         dmg = status_tick(status_slots(0), 0);
-        status_grey_tick(0);
         if (dmg != 0) {
             combatant_take_damage(&b->player, dmg);
 #ifdef DEBUG_BUILD
@@ -832,6 +1046,28 @@ void battle_update(Battle *b)
 
     if (!b || vb->battle_over) return;
 
+    /* Desperation trigger for non-attack damage (dagger counters,
+     * status ticks): the attack tail above only covers the SELECT
+     * attack path.  This re-runs the same game-owned check every
+     * frame, so any source that drops the boss to its threshold opens
+     * the hold on the next frame.  The body itself is one-shot per
+     * battle and refuses a dead hero (mutual KO takes the normal
+     * defeat exit), so this stays a bare dispatch. */
+    g_bk_call_bank = 8;
+    g_bk_call_target = (uint16_t)&game_despair_check_banked;
+    banked_call_run();
+    if (g_bk_byte_c != 0) {
+        /* Same concentration hush as the attack-tail staging site above:
+         * the check body reports the staging edge once, whichever path
+         * drops the boss to its threshold (attack vs counters/ticks/
+         * debug setup), so both consumers must stop the track. */
+        audio_play_music(MUSIC_NONE);
+        vb->phase = BATTLE_PHASE_SLIME_DESPAIR;
+        vb->msg_id = 10;
+        vb->msg_ttl = 0;
+        vb->dirty = BATTLE_DIRTY_ALL;
+    }
+
     if (vb->phase == BATTLE_PHASE_PLAYER_SELECT || vb->phase == BATTLE_PHASE_PLAYER_DEFEND) {
         if (vb->msg_ttl > 0 && --vb->msg_ttl == 0) {
             vb->msg_id = 0;
@@ -853,88 +1089,57 @@ void battle_update(Battle *b)
                 vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
             }
         } else {
-            battle_execute_combo(b);
+            /* Unvalidated timeout is a miss even with a staged combo:
+             * selection only counts once SELECT validates it.  Unstage
+             * (combo_count = 0, nothing discarded, no energy spent) and
+             * take the exact empty path below -- MISSED! on attack, an
+             * empty block on defend.  The confused hero is exempt: its
+             * auto-staged hand is game-validated (no input exists), and
+             * its hold beat resolves before the timer can expire anyway.
+             * (The ANIM banner keys MISSED! off the empty victim
+             * snapshot, so no msg_id store is needed here.) */
+            if (!battle_player_confused()) {
+                vb->combo_count = 0;
+            }
+            if (vb->combo_count == 0 &&
+                vb->phase == BATTLE_PHASE_PLAYER_SELECT) {
+                vb->phase = BATTLE_PHASE_PLAYER_ANIM;
+                vb->delay_timer = 30;
+                vb->dirty = BATTLE_DIRTY_ALL;
+                g_battle_anim_target_name[0] = '\0';
+            } else {
+                battle_execute_combo(b);
+            }
+        }
+    } else if (vb->phase == BATTLE_PHASE_SLIME_DESPAIR) {
+        /* Telegraph hold: the battle clock keeps running as the flash
+         * cadence (the stamper blinks on the timer edges, same as the
+         * defend telegraph) and re-arms silently on expiry instead of
+         * auto-advancing -- only A continues (below).  The message never
+         * expires (ttl 0 skips the SELECT/DEFEND tick above). */
+        if (vb->timer_ticks > 0) {
+            vb->timer_ticks--;
+        } else {
+            vb->timer_ticks = BATTLE_TIMER_MAX_FRAMES;
+        }
+        if (((vb->timer_ticks & 15) == 15) ||
+            ((vb->timer_ticks & 15) == 0)) {
+            vb->dirty |= (BATTLE_DIRTY_BLINK | BATTLE_DIRTY_ENEMIES);
         }
     } else if (vb->delay_timer > 0) {
         vb->delay_timer--;
     } else {
         if (vb->phase == BATTLE_PHASE_PLAYER_ANIM ||
             vb->phase == BATTLE_PHASE_SHUFFLE) {
-            uint8_t grey_mask = 0;
-            uint8_t gi;
-            vb->phase = BATTLE_PHASE_ENEMY_TELEGRAPH;
-            vb->turn = BATTLE_TURN_ENEMY;
-            /* gi doubles as the advance counter (stack discipline). */
-            gi = 0;
-            while (gi < vb->enemy_count && vb->enemies[vb->attacking_enemy_idx].hp == 0) {
-                /* Wrap instead of % -- keeps the SDCC int-mod library
-                 * out of the tight fixed bank. */
-                vb->attacking_enemy_idx++;
-                if (vb->attacking_enemy_idx >= vb->enemy_count) {
-                    vb->attacking_enemy_idx = 0;
-                }
-                gi++;
-            }
-            /* The enemy deck and its draw position are SHARED by the whole
-             * hostile party (every encounter engages as a trio).  A poisoned
-             * victim's grey-out therefore applies to the shared deck, not to
-             * one attacker's slot: a greyed deck position never plays, no
-             * matter which enemy is up.  OR the per-victim masks (they carry
-             * independent durations, so the union is only the currently
-             * active grey set). */
-            for (gi = 1; gi <= vb->enemy_count; gi++) {
-                grey_mask |= s_grey_mask[gi];
-            }
-            /* STATUS_FREEZE (docs/combo-system.md §12): the frozen-mask
-             * bit is TESTED here but never consumed -- status_apply sets
-             * it and status_tick_banked clears it each round and re-sets
-             * it while a freeze instance remains (see the player attack
-             * gate above).  Mask bits follow status SLOTS (player = 0,
-             * enemies = 1..n).  A frozen attacker skips its swing: no
-             * enemy card, nothing incoming this cycle. */
-            if ((g_status_frozen_mask &
-                 (uint8_t)(1u << (vb->attacking_enemy_idx + 1))) != 0 &&
-                vb->enemies[vb->attacking_enemy_idx].hp != 0) {
-                vb->enemy_incoming_dmg = 0;
-                telemetry_emit(EVENT_TURN_SKIPPED,
-                               (uint8_t)(vb->attacking_enemy_idx + 1),
-                               STATUS_FREEZE, 0, 0);
-            } else if (vb->enemy_deck.count > 0 &&
-                       /* Poison grey-out (Phase D): a greyed deck position
-                        * never plays -- the enemy skips its swing while its
-                        * current draw position is greyed (no card, nothing
-                        * incoming).  The draw position does NOT advance, so
-                        * an enemy whose lead card is greyed is locked out
-                        * for the grey-out duration.  Bit = shared deck
-                        * position; the union of per-victim masks is tested
-                        * because the deck is shared by the whole party. */
-                       (grey_mask &
-                        (uint8_t)(1u << vb->enemy_deck.draw_idx)) != 0 &&
-                       vb->enemies[vb->attacking_enemy_idx].hp != 0) {
-                vb->enemy_incoming_dmg = 0;
-                telemetry_emit(EVENT_TURN_SKIPPED,
-                               (uint8_t)(vb->attacking_enemy_idx + 1),
-                               STATUS_POISON, 0, 0);
-            } else if (vb->enemy_deck.count > 0) {
-                vb->enemy_played_card = vb->enemy_deck.cards[vb->enemy_deck.draw_idx];
-                vb->enemy_incoming_dmg = vb->enemy_played_card.value;
-                telemetry_emit(EVENT_ENEMY_CARD_PLAYED,
-                               vb->enemy_deck.draw_idx,
-                               vb->enemy_played_card.type,
-                               vb->enemy_played_card.value, 0);
-                vb->enemy_deck.draw_idx++;
-                if (vb->enemy_deck.draw_idx >= vb->enemy_deck.count) {
-                    vb->enemy_deck.draw_idx = 0;
-                }
-            } else {
-                vb->enemy_incoming_dmg = 4;
-                /* No enemy card: the fallback flat 4-damage swipe still
-                 * marks an inbound strike.  Only deckless battlers (the
-                 * Lord of Slimes) reach this: two SH2 shields block it
-                 * exactly. */
-            }
-            /* The enemy swung -- play its strike sound (shared tail:
-             * both branches above mark an inbound strike). */
+            /* Enemy telegraph card draw (bank-12 body: normal /
+             * deckless branches, confusion msg staging, telemetry).
+             * The SFX tail and the delay stay fixed (shared tail: every
+             * telegraph path above marks an inbound strike, and the SFX
+             * id needs no staging). */
+            g_bk_call_bank = 12;
+            g_bk_call_target = (uint16_t)&battle_telegraph_banked;
+            g_bk_ptr_a = (void *)b;
+            banked_call_run();
             audio_play_sfx(SFX_HIT);
             vb->delay_timer = 20;
         } else {

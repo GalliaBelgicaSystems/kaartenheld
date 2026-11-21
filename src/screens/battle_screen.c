@@ -4,10 +4,12 @@
 #include "scene.h"
 #include "telemetry.h"
 #include "audio.h"
+#include "banked.h"
 #include "content.h"
 #include "ui.h"
 #include "rpg/cards.h"
 #include "rpg/loot.h"
+#include "rpg/status.h"
 
 void battle_screen_update(Game *g)
 {
@@ -20,6 +22,13 @@ void battle_screen_update(Game *g)
     volatile Game *vg = g;
 
     if (!g) return;
+
+    /* Carl's sparring tutorial (game layer): opens each coaching dialogue
+     * box once at the right phase.  True means a dialogue opened this
+     * frame -- yield, the dialogue screen owns input now. */
+    if (game_carl_tutorial_update(g)) {
+        return;
+    }
 
     if (vg->battle.battle_over) {
         /* Grant combat loot exactly once, when the VICTORY screen first
@@ -62,22 +71,31 @@ void battle_screen_update(Game *g)
                     world_on_battle_end(g, true);
                     /* Deferred victory dialogue (e.g. Carl's reward
                      * speech, started by the ACTOR_DEFEATED event inside
-                     * world_on_battle_end): show it before leaving. */
+                     * world_on_battle_end): show it before leaving.  A
+                     * final-boss victory exits to the ENDING screen, whose
+                     * end-credits theme starts inside screen_change. */
                     screen_change(g, vg->dialogue.active ? SCREEN_DIALOGUE :
                         game_screen_after_victory(g));
-                    /* Final-boss victory exits to the ending screen (THE
-                     * END credits): switch from the area track to the
-                     * end-credits theme (demo complete.uge, loops). */
-                    if (g->screen == SCREEN_ENDING) {
-                        audio_play_music(MUSIC_ENDING);
-                    }
                 } else {
                     world_on_battle_fled(g);
                     screen_change(g, SCREEN_OVERWORLD);
                 }
             } else {
+                /* Slime-lord desperation outro (unwinnable final battle):
+                 * game-owned flow in content.c (own function keeps this
+                 * frame lean, AGENTS.md 52.18); the flag stays set for the
+                 * dialogue close (which routes to THANKS) and battle_start
+                 * clears it for the next fight. */
+                if (g_slime_despair != 0) {
+                    game_slime_despair_outro();
+                    return;
+                }
                 world_on_battle_end(g, false);
                 vg->game_over_choice = 0;
+                /* Stop everything: the per-frame tick is gated off on
+                 * terminal screens, so without this the game-over theme
+                 * from the defeat would drone on under GAME_OVER. */
+                audio_play_music(MUSIC_NONE);
                 screen_change(g, SCREEN_GAME_OVER);
             }
         }
@@ -86,21 +104,95 @@ void battle_screen_update(Game *g)
 
     if (vg->battle.phase == BATTLE_PHASE_PLAYER_SELECT ||
         vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND) {
+        /* Confused hero: a random hand gets played -- no input this turn
+         * (except START, which stays reachable while the staged hand
+         * waits out the visit).  The banked body stages the random hand
+         * when the hero is poisoned: a fresh stage holds its beat (the
+         * player reads the Confused! message), an already-pending stage
+         * counts the hold down and executes at zero.  The WRAM slot
+         * check up front keeps decision frames with no live status out
+         * of the banked call entirely (any hero status opens the gate;
+         * the body itself stages only for poison). */
+        uint8_t confuse_stage = 0;
         if (input_pressed(INPUT_START)) {
             item_screen_reset(g);
             screen_change(g, SCREEN_ITEM);
-        } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-            audio_play_sfx(SFX_CURSOR);
-            battle_cursor_move((Battle *)&vg->battle, input_pressed(INPUT_LEFT) ? -1 : 1);
-        } else if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
-            audio_play_sfx(SFX_CURSOR);
-            battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
-        } else if (input_pressed(INPUT_A)) {
-            battle_card_select((Battle *)&vg->battle);
-        } else if (input_pressed(INPUT_B)) {
-            battle_card_undo((Battle *)&vg->battle);
-        } else if (input_pressed(INPUT_SELECT)) {
-            battle_execute_combo((Battle *)&vg->battle);
+        } else {
+            if (s_battle_status[0].count != 0) {
+                confuse_stage = battle_confuse_auto((Battle *)&vg->battle);
+            }
+            if (confuse_stage == 2) {
+                g_battle_confuse_hold = 30;
+            } else if (confuse_stage == 1) {
+                if (g_battle_confuse_hold != 0) {
+                    g_battle_confuse_hold--;
+                } else {
+                    battle_execute_combo((Battle *)&vg->battle);
+                }
+            } else if (input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
+                audio_play_sfx(SFX_CURSOR);
+                battle_cursor_move((Battle *)&vg->battle, input_pressed(INPUT_LEFT) ? -1 : 1);
+            } else if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN)) {
+                audio_play_sfx(SFX_CURSOR);
+                battle_target_move((Battle *)&vg->battle, input_pressed(INPUT_UP) ? -1 : 1);
+            } else if (input_pressed(INPUT_A) &&
+                       vg->battle.phase == BATTLE_PHASE_PLAYER_DEFEND &&
+                       vg->battle.msg_id >= BATTLE_MSG_CONFUSED_FOE &&
+                       vg->battle.msg_id <= BATTLE_MSG_CONFUSED_OUTCOME) {
+                /* Acknowledgement beats (msg ids 6-7 are contiguous).
+                 * Confused: the FIRST A reveals who takes the redirected
+                 * swing (6 -> 7), the SECOND resolves it.  SELECT and the
+                 * timer resolve through the same shared combo call
+                 * (the banked resolve promotes a beat-1 msg itself),
+                 * so no path strands on stale text.  The hero stages
+                 * nothing either way: every A press is consumed here,
+                 * so no card selection is reachable during the beat.
+                 * Cursor/target drift stays reachable but is
+                 * cosmetic-only -- it cannot stage (A is consumed), it
+                 * cannot retarget the swing (the victim is fixed slot
+                 * order in the banked resolve), and both positions
+                 * persist across turns by design.  Gating it too would
+                 * cost fixed-bank bytes the budget does not have
+                 * (AGENTS.md 52.18: the fixed bank links hard against
+                 * 0x8000), for no gameplay effect. */
+                if (vg->battle.msg_id == BATTLE_MSG_CONFUSED_FOE) {
+                    vg->battle.msg_id = BATTLE_MSG_CONFUSED_OUTCOME;
+                    vg->battle.dirty = BATTLE_DIRTY_ALL;
+                } else {
+                    battle_execute_combo((Battle *)&vg->battle);
+                }
+            } else if (input_pressed(INPUT_A)) {
+                battle_card_select((Battle *)&vg->battle);
+            } else if (input_pressed(INPUT_B)) {
+                battle_card_undo((Battle *)&vg->battle);
+            } else if (input_pressed(INPUT_SELECT)) {
+                battle_execute_combo((Battle *)&vg->battle);
+            }
+        }
+    } else if (vg->battle.phase == BATTLE_PHASE_SLIME_DESPAIR) {
+        /* The telegraph waits for A: the fixed 99-damage reprisal lands
+         * here (not at trigger time), then the normal defeat exit routes
+         * the outro.  All other buttons are ignored while he focuses.
+         * The spell message + damage are applied by the bank-8 body
+         * (literals and the damage clamp would eat fixed-bank budget).
+         * The explosion cue plays over the boss track, which keeps
+         * playing underneath.  No explicit return: the defeat result
+         * makes battle_update return at once, otherwise it keeps
+         * ticking the flash cadence below. */
+        if (input_pressed(INPUT_A)) {
+            g_bk_call_bank = 8;
+            g_bk_call_target = (uint16_t)&game_despair_reprisal_banked;
+            banked_call_run();
+            telemetry_emit(EVENT_DAMAGE_RECEIVED, 99, 0, 0, 0);
+            /* Desperation move: the Lord of Slimes casts POWERFUL SPELL
+             * (assets/sfx/explosion.uge, SFX_EXPLOSION) over silence --
+             * the boss track was already stopped when the telegraph
+             * staged, so the cue lands clean.  No game-over music starts
+             * on this path (battle_set_result skips it for the despair
+             * hold): the DEFEATED! result screen plays out in silence
+             * under the explosion tail. */
+            audio_play_sfx(SFX_EXPLOSION);
+            battle_set_result((Battle *)&vg->battle, BATTLE_RESULT_DEFEAT);
         }
     }
 

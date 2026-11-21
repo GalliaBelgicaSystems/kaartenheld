@@ -1,0 +1,9 @@
+{
+  "id": "dog_thanks",
+  "speaker": "DOG:",
+  "lines": [
+    "Bark! You got",
+    "the OLD KEY!"
+  ],
+  "completion_flag": "STORY_FLAG_ID_DOG_KEY"
+}

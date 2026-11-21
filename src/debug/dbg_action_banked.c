@@ -55,6 +55,13 @@ void debug_action_leaf_banked(void)
                 g_game.battle.hand[a0].type = (BattleCardType)t;
                 g_game.battle.hand[a0].value = a2;
                 g_game.battle.hand[a0].effect = fx;
+                /* Baseline cost 1, like DBG_ACT_SET_DECK_CARD: without
+                 * this the overwritten slot inherits whatever the dealt
+                 * card cost (1 or 2 now that the starter deck mixes
+                 * W/F swords), making scenarios seed-dependent.
+                 * SET_HAND_CARD_META overrides it when a scenario wants
+                 * a specific cost. */
+                g_game.battle.hand[a0].cost = 1;
                 /* Injected cards carry no status rider; reset both fields
                  * so a previously injected rider cannot leak into a slot
                  * that was played earlier in the same battle. */
@@ -99,13 +106,67 @@ void debug_action_leaf_banked(void)
                 g_game.battle.hand[a0].uses_remaining = a2;
             }
             break;
+        case DBG_ACT_SET_DECK_CARD:
+            /* Stage one card of the battle draw pile: a0 = pile index,
+             * a1 = BattleCardType, a2 = value.  Battle start now shuffles
+             * the pile, so scenarios that choreograph a draw/refill order
+             * restage the pile they want (same state-write semantics as
+             * SET_HAND_CARD: no telemetry, effect derived from the type). */
+            if (a0 < MAX_DECK_SIZE) {
+                uint8_t t = (uint8_t)((uint16_t)a1 & 0xFF);
+                uint8_t fx = CARD_EFFECT_DAMAGE_TARGET;
+                if (t == BATTLE_CARD_TYPE_SHIELD) {
+                    fx = CARD_EFFECT_BLOCK_DAMAGE;
+                } else if (t == BATTLE_CARD_TYPE_HEAL) {
+                    fx = CARD_EFFECT_HEAL_HP;
+                }
+                g_game.battle.deck.cards[a0].type = (BattleCardType)t;
+                g_game.battle.deck.cards[a0].value = a2;
+                g_game.battle.deck.cards[a0].uses_remaining = 0xFF;
+                g_game.battle.deck.cards[a0].cost = 1;
+                g_game.battle.deck.cards[a0].effect = fx;
+                g_game.battle.deck.cards[a0].status_id = STATUS_NONE;
+                g_game.battle.deck.cards[a0].status_chance = 0;
+                g_game.battle.deck.cards[a0].ring = 0;
+            }
+            break;
+
+        case DBG_ACT_SET_DECK_RING:
+            /* Loot-RING flag on a staged pile card (docs/loot.md §34.3). */
+            if (a0 < MAX_DECK_SIZE) {
+                g_game.battle.deck.cards[a0].ring = 1;
+            }
+            break;
+
+        case DBG_ACT_SET_DECK_STATE:
+            /* Pile size + draw cursor: a0 = count, a1 = draw_idx.  The
+             * staged cards[0..count) are the UNDRAWN pile, so draw_idx
+             * 0 with count N means "the next N draws are exactly these". */
+            if (a0 <= MAX_DECK_SIZE) {
+                g_game.battle.deck.count = a0;
+                g_game.battle.deck.draw_idx = (a1 < a0) ? a1 : 0;
+            }
+            break;
+
         case DBG_ACT_SET_FILTER:
             g_game.item_menu_filter = a0;
+            g_game.render_cache.valid = false;
+            break;
+        case DBG_ACT_SET_FILTER_MAT:
+            g_game.item_menu_filter_mat = a0;
             g_game.render_cache.valid = false;
             break;
         case DBG_ACT_SET_SORT:
             g_game.item_menu_sort = a0;
             g_game.render_cache.valid = false;
+            break;
+        case DBG_ACT_SET_MARKET_INDEX:
+            /* Pin the market index (docs/economy.md §5.1): out-of-band
+             * resets to neutral 32 (unlike the live update, which steps
+             * within the band -- a debug pin has no previous index to
+             * clamp from). */
+            if (a0 < 24 || a0 > 48) a0 = 32;
+            g_game.state.economy.market_index = a0;
             break;
         default:
             g_bk_byte_a = 0;

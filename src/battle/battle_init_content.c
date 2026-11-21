@@ -34,8 +34,12 @@ void battle_init_deck_banked(void)
         if (def) {
             b->deck.cards[i].type = def->battle_type;
             b->deck.cards[i].value = def->power;
+            /* Limited-arrows: bows never deplete per card (0xFF) -- play
+             * gating is the shared arrow pool (nav + draw), and bow
+             * cards stay in combat circulation across the fight. */
             b->deck.cards[i].uses_remaining =
-                (def->uses_per_battle == 0) ? 0xFF : def->uses_per_battle;
+                (def->battle_type == BATTLE_CARD_TYPE_BOW ||
+                 def->uses_per_battle == 0) ? 0xFF : def->uses_per_battle;
             b->deck.cards[i].cost = def->cost;
             b->deck.cards[i].effect = def->effect;
             b->deck.cards[i].status_id = def->status_id;
@@ -61,10 +65,11 @@ void battle_init_deck_banked(void)
 
             b->deck.cards[i].value = LOOT_POWER(mat, wi);
             /* Rings deplete per the material band (LOOT_RING_USES);
-             * every other loot card is unlimited-use. */
+             * every other loot card is unlimited-use -- limited-arrows
+             * bows gate on the shared pool instead of per-card uses,
+             * so no bow restage follows the rider anymore. */
             b->deck.cards[i].uses_remaining =
                 (wpn == WPN_RING) ? LOOT_RING_USES(mat) : 0xFF;
-            b->deck.cards[i].cost = (wpn <= WPN_RING) ? 1 : 0;
             b->deck.cards[i].status_id = STATUS_NONE;
             b->deck.cards[i].status_chance = 0;
 
@@ -94,21 +99,28 @@ void battle_init_deck_banked(void)
 
             /* Status rider: wood carries none; otherwise only legal
              * (effect, weapon) pairs.  Poison = dagger only; fire/ice =
-             * sword only. */
+             * bow only (swords never ride).  Chances match the synth
+             * tables (loot_banked.c / deck_merge_banked.c). */
             if (mat >= MAT_BRONZE) {
                 if (eff == EFF_POISON && wpn == WPN_DAGGER) {
                     b->deck.cards[i].status_id = STATUS_POISON;
-                    b->deck.cards[i].status_chance = 128;
-                } else if (eff == EFF_FIRE && wpn == WPN_SWORD) {
+                    b->deck.cards[i].status_chance = 208;
+                } else if (eff == EFF_FIRE && wpn == WPN_BOW) {
                     b->deck.cards[i].status_id = STATUS_BURN;
-                    b->deck.cards[i].status_chance = 128;
-                } else if (eff == EFF_ICE && wpn == WPN_SWORD) {
+                    b->deck.cards[i].status_chance = 208;
+                } else if (eff == EFF_ICE && wpn == WPN_BOW) {
                     b->deck.cards[i].status_id = STATUS_FREEZE;
-                    b->deck.cards[i].status_chance = 96;
+                    b->deck.cards[i].status_chance = 176;
                 }
             }
 
             b->deck.cards[i].ring = (wpn == WPN_RING) ? 1 : 0;
+            /* Derived AP cost (docs/card-ap-cost-formula.md), staged after
+             * the rider above so the status bit is final; reserved weapon
+             * ids keep cost 0 (not playable, §5.3). */
+            b->deck.cards[i].cost = (wpn <= WPN_RING)
+                ? CARD_AP(b->deck.cards[i].value, mat,
+                          b->deck.cards[i].status_id != STATUS_NONE) : 0;
         } else {
             /* Unknown id: safety-net sword, mirroring the phantom draw. */
             b->deck.cards[i].type = BATTLE_CARD_TYPE_SWORD;
@@ -121,4 +133,9 @@ void battle_init_deck_banked(void)
             b->deck.cards[i].ring = 0;
         }
     }
+
+    /* Shuffle the draw pile before battle_start deals the hand: the
+     * persistent order is the DECK-menu order, so dealing from index 0
+     * would open every fight with the same hand.  Same bank, direct call. */
+    deck_shuffle_pile(&b->deck);
 }

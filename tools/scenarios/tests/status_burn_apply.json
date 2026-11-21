@@ -1,7 +1,7 @@
 {
  "name": "status_burn_apply",
  "test": true,
- "description": "On-hit status rider Phase D: a SW1 hand card carrying BURN (chance 255=guaranteed) applies BURN (stacks 1, duration 3) to the slime; burn ticks 1 damage per round for 3 rounds and then expires",
+ "description": "On-hit status rider Phase D: a SW1 hand card carrying BURN (chance 255=guaranteed) applies BURN (stacks 1, duration 3) to the slime; a 1-damage hit burns at the min-1 floor, ticking 1 per round for 3 rounds and then expiring (scaled burns are pinned by status_burn_scaled)",
  "actions": [
   {
    "type": "wait",

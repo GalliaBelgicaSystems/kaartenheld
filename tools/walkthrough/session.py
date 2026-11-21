@@ -99,12 +99,43 @@ class Session:
         # of the Game struct): the splash renders a bitmap logo whose BG
         # tiles read as non-text, so the text markers alone cannot detect it.
         screen = self.pb.memory[self.reader.g_game]
-        if screen in (9, 10, 11, 12, 13):  # TITLE, INTRO, TUTORIAL, SPLASH, CREDITS
+        if screen in (9, 10, 11, 12, 13, 15):  # TITLE, INTRO, TUTORIAL, SPLASH, CREDITS, NOTICE
             return True
         return any(m in r for r in self.bg_text() for m in TITLE_LINES)
 
     def quick_open(self):
-        return self.text_has("DECK QUEST")
+        # Header row 0 reads DECK?QUEST?HERO?GEMS in bg_text (the gaps
+        # are category-separator chrome tiles): GEMS is the unique font
+        # marker for the open quick screen.
+        return self.text_has("GEMS")
+
+    def battle_hud_up(self):
+        # Battle screen with the hero row painted: g_game.screen is
+        # SCREEN_BATTLE (2) and the row-7 col-0 cell holds the hero
+        # sprite tile (dynamic VRAM id >= 96; the old "DECK:" text
+        # marker moved off the HUD in the icon-row rework).
+        # Reader-based, so icon tiles and mid-redraw torn text reads
+        # cannot fool it (same class as verify_oam's frame-halt hazard,
+        # AGENTS.md 52.26).
+        if self.pb.memory[self.reader.g_game] != 2:
+            return False
+        scx = self.pb.memory[0xFF43]
+        scy = self.pb.memory[0xFF42]
+        t = self.pb.memory[0x9800 + ((scy // 8 + 7) % 32) * 32
+                           + (scx // 8 + 0) % 32]
+        return t >= 96
+
+    def menu_cursor_col(self):
+        """Row-1 tab cursor column: the cursor-category tile (211,
+        UI_TILE_MENUS_CURSOR_CAT) sits at the active tab (0 DECK,
+        5 QUEST, 11 HERO, 16 GEMS); -1 when the menu is closed."""
+        scx = self.pb.memory[0xFF43]
+        scy = self.pb.memory[0xFF42]
+        for c in (0, 5, 11, 16):
+            if self.pb.memory[0x9800 + ((scy // 8 + 1) % 32) * 32
+                               + (scx // 8 + c) % 32] == 211:
+                return c
+        return -1
 
     def on_overworld(self):
         return (not self.quick_open()) and not self.on_title_or_intro()
@@ -131,6 +162,8 @@ class Session:
             self.wait_for(lambda: self.screen_alnum(), ticks=360)
             if self._stable_overworld():
                 return True
+            if self.text_has("> CONTINUE"):
+                self.press("down", settle=15)
             self.press("start", settle=40)
             if self.wait_for(self._stable_overworld, ticks=120):
                 return True
@@ -144,8 +177,15 @@ class Session:
     def bg_text(self):
         """Visible BG tilemap as 18 rows x 20 chars (font tiles read as
         ASCII; terrain tiles become '?').  SCX/SCY-aware (the same read
-        the old walkthrough used, AGENTS.md §56.2)."""
+        the old walkthrough used, AGENTS.md §56.2).  Forces the VRAM
+        bank latch to 0 first: tilemaps live in bank 0, and a stale
+        bank-1 select (any attr span runs with VBK=1; PyBoy exposes
+        the latch to CPU-side reads) would decode palettes as text."""
         pb = self.pb
+        try:
+            pb.memory[0xFF4F] = 0
+        except Exception:
+            pass
         scx = pb.memory[0xFF43]
         scy = pb.memory[0xFF42]
         rows = []
@@ -242,12 +282,13 @@ class Session:
         """Discrete one-tile presses until goal() holds; a press that
         produced no movement is retried, so the route converges
         regardless of host timing (same mechanics as the old walk()).
-        Bails immediately on DECK: (ambush started) instead of burning
-        all 600 presses (~16,800 frames) into the battle screen."""
+        Bails immediately on battle entry (ambush started) instead of
+        burning all 600 presses (~16,800 frames) into the battle
+        screen."""
         for _ in range(budget):
             if goal():
                 return True
-            if self.text_has("DECK:"):
+            if self.battle_hud_up():
                 return False
             x0, y0 = self.pos()
             self.pb.button_press(btn)
@@ -257,28 +298,24 @@ class Session:
                 self.tick()
                 if self.pos() != (x0, y0):
                     break
-                if self.text_has("DECK:"):
+                if self.battle_hud_up():
                     break
         return bool(goal())
 
-    def wiped(self, frames=90):
-        for _ in range(frames):
-            self.tick()
-            if not self.screen_alnum():
-                return True
-        return False
-
     def cross_exit(self, btn, expect_scene, tries=4):
-        """Step onto an exit tile and ride out the transition wipe.  A
-        dropped press leaves us unmoved — only the wipe tells them
-        apart, so a wipe-free arrival is retried, never trusted.
-        A 4-tick press that lands fully inside an LCD-off blackout
-        (arrival redraws, transition wipes) never samples, so a wipe
-        seen WITHOUT the scene changing must also retry: only return
-        early on an actual scene match, never on a wipe alone."""
+        """Step onto an exit tile and ride out the transition.  A dropped
+        press leaves us unmoved -- only an actual scene change counts:
+        the LCD-off gate redraw writes final tiles straight through, so
+        VRAM never blanks and wipe-watching cannot see the crossing.
+        An ambush overrides the crossing (battle HUD appears instead
+        of the new scene); the caller fights and retries."""
         for _ in range(tries):
             self.press(btn, settle=12)
-            if self.wiped() and self.settle_scene():
+            for _ in range(90):
+                self.tick()
+                if self.reader.scene_state()["scene_id"] == expect_scene:
+                    break
+            if self.settle_scene():
                 if self.reader.scene_state()["scene_id"] == expect_scene:
                     return True
         return self.reader.scene_state()["scene_id"] == expect_scene

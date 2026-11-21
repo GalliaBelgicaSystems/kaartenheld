@@ -1,0 +1,55 @@
+{
+ "name": "arrows_energy_beats_arrows",
+ "test": true,
+ "description": "Message priority (limited-arrows): a bow that fails on energy while arrows remain flashes NO ENERGY!, not NO ARROWS!. The NO ARROWS message fires only for the arrows condition itself (staged bows at/over the pool).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "BO",
+   "value": 3
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 9,
+   "uses": 255
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 12
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "NO ENERGY!"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 7102,
+  "currency": {
+   "ARROWS": 1
+  },
+  "start_battle": true
+ }
+}

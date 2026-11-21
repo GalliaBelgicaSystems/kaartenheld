@@ -8,12 +8,16 @@
 #include "banked.h"
 #include "battle/card.h"
 #include "rpg/cards.h"
+#include "rpg/loot.h"
 #include "rpg/status.h"
-#include "rider_tiles_generated.h"
 #include "shops.h"
 #include "menu.h"
 #include "rpg/save.h"
+#include "rpg/deck.h"
 #include "game_ids.h"
+#include "economy.h"
+#include "telemetry.h"
+#include "telemetry_ring.h"
 
 /* Bank-2 self-contained shop / save-load render bodies (AGENTS.md 52.11.1):
  * the fixed _CODE/_HOME area is at its size limit (see make memmap), so the
@@ -34,6 +38,28 @@ extern uint8_t g_is_cgb;
 
 extern const CardDefinition g_cards[];
 extern const ShopDefinition g_shops[];
+/* Loot identity synthesis (item_content_banked.c, same ROM bank 2:
+ * plain call, no trampoline).  Needed here so the one-copy shop map
+ * counts ownership by card identity, not row id (docs/loot.md §34.6):
+ * a loot twin already owned hides the curated one-copy row even though
+ * no curated row exists to merge it under yet. */
+extern const CardDefinition *ic_loot_synth(CardId id);
+/* Card-menu element rider icon tile (item_content_banked.c, same ROM
+ * bank 2: the dedicated menu art, 0 = no rider). */
+extern uint8_t ic_rider_menu_tile(const CardDefinition *def);
+
+/* Card-menu material icons (item_content_banked.c, same bank 2): tile +
+ * OBJ stream plus per-row OAM show/hide.  Shop rows stamp the same
+ * tinted ingots over their col-3 cell (entries 13-22). */
+extern void ic_mat_stream(void);
+extern void ic_mat_show(uint8_t entry, uint8_t x, uint8_t y, uint8_t mat);
+extern void ic_mat_hide(uint8_t entry);
+/* Card-menu slot-7 heal-rider green (item_content_banked.c, same bank 2). */
+extern void ic_menu_cram(void);
+/* Material/weapon resolver (same file): full "<MAT> <WPN>" shop names.
+ * Sets *is_special for quest items (never listed, never sold). */
+extern void ic_card_mat_wpn_pub(CardId id, uint8_t *mat, uint8_t *wpn,
+                                uint8_t *is_special);
 extern const uint8_t g_shop_count;
 
 /* Shop message states (mirror shop_screen.c). */
@@ -41,10 +67,15 @@ extern const uint8_t g_shop_count;
 #define SC_SHOP_MSG_BOUGHT 1
 #define SC_SHOP_MSG_NO_GOLD 2
 #define SC_SHOP_MSG_MAX_COPIES 3
+#define SC_SHOP_MSG_ARROWS_FULL 4
+#define SC_SHOP_MSG_MASK 0x0Fu
+#define SC_SHOP_MSG_BOUGHT_BIT 0x80u
 
-/* Item menu navigation layout constants (mirror item_screen.c). */
-#define ITEM_FIRST_CARD 1
-#define ITEM_VISIBLE_CARD 11
+/* Limited-arrows virtual BUY row: appended last by sc_shop_remap_buy,
+ * never part of ShopDefinition stock (check_economy.py never sees it).
+ * 0xFE cannot collide with a stock index (SHOP_MAX_ITEMS is 50). */
+#define SHOP_ARROW_ROW 0xFE
+
 
 static uint8_t s_sc_txt_i;
 static uint8_t s_sc_col_i;
@@ -53,20 +84,11 @@ static uint8_t s_sc_shop_scroll;
 static uint8_t s_sc_def_i;
 static uint8_t s_sc_shop_pos;
 static uint8_t s_sc_stock_pos;
-static uint8_t s_sc_save_pos;
 
 static uint8_t s_sc_y;
 static uint8_t s_sc_pos;
-static uint8_t s_sc_mode;
-static uint8_t s_sc_old_index;
-static uint8_t s_sc_new_index;
-static uint8_t s_sc_old_row;
-static uint8_t s_sc_new_row;
-static uint8_t s_sc_need_scroll;
-static uint8_t s_sc_present;
 static uint8_t s_sc_tile_elem;
 static uint8_t s_sc_tile_wpn;
-static uint16_t s_sc_gold;
 static const ShopDefinition *s_sc_shop_def;
 static const CardDefinition *s_sc_card_def;
 static char s_sc_str[8];
@@ -74,6 +96,7 @@ static char s_sc_code[8];
 static volatile uint8_t *s_sc_dst;
 static char *s_sc_buf;
 static Game *s_sc_game;
+static uint8_t s_sc_idx;
 
 static const uint16_t s_sc_p10[4] = { 10000, 1000, 100, 10 };
 
@@ -146,6 +169,14 @@ static void sc_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_cha
     }
 }
 
+/* WRAM attribute mirror (ui.c): the harness asserts CGB palette bytes
+ * via tilemap_attr.  Kept in sync here (DEBUG only, like the item and
+ * battle spans) -- without it the shop's tilemap_attr reads go stale
+ * (the mirror keeps whatever the previous screen wrote). */
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
+
 static void sc_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
 {
     if (!g_is_cgb) return;
@@ -156,8 +187,35 @@ static void sc_color_span(uint8_t x, uint8_t y, uint8_t len, uint8_t palette)
     VBK_REG = 1;
     for (s_sc_col_i = 0; s_sc_col_i < len; s_sc_col_i++) {
         sc_vram_sync_write(&s_sc_dst[s_sc_col_i], (uint8_t)(palette & 0x07));
+#ifdef DEBUG_BUILD
+        g_tilemap_attr_mirror[(uint16_t)y * 32 + s_sc_col_i + x] =
+            (uint8_t)(palette & 0x07);
+#endif
     }
     VBK_REG = 0;
+}
+
+/* x + zero-padded 3-digit count (cols x..x+3, e.g. x003, x025):
+ * the BUY ARROWS quiver readout and the SELL owned counts.  No
+ * division (bank 2): repeated subtraction only.  Counts above 999
+ * saturate (quiver caps at 30, collection stacks at 255). */
+static void sc_draw_xddd(uint8_t x, uint8_t y, uint16_t v)
+{
+    uint8_t h = 0;
+    uint8_t t = 0;
+    if (v > 999) v = 999;
+    while (v >= 100) {
+        v = (uint8_t)(v - 100);
+        h++;
+    }
+    while (v >= 10) {
+        v = (uint8_t)(v - 10);
+        t++;
+    }
+    sc_put_char(x, y, 'x');
+    sc_put_char((uint8_t)(x + 1), y, (char)('0' + h));
+    sc_put_char((uint8_t)(x + 2), y, (char)('0' + t));
+    sc_put_char((uint8_t)(x + 3), y, (char)('0' + (uint8_t)v));
 }
 
 static const ShopDefinition *sc_shop_active(const Game *g)
@@ -176,7 +234,64 @@ static const CardDefinition *sc_card_get_def(CardId id)
     return NULL;
 }
 
+/* ── Full card names (docs/loot.md §34.1 short code -> "<MAT> <WPN>") ──
+ * The shop used to print the 3-letter battle code ("RG4"); rows now
+ * print the weapon with the OAM material ingot ("IRON RING" reads as
+ * ingot + "RING", element-colored),
+ * drawn in two parts so no WRAM name buffer is needed (stack-gap
+ * budget, AGENTS.md §52.24).  Tables mirror item_content_banked.c;
+ * keep in sync (same order, same strings). */
+static const char *sc_wpn_str(uint8_t w, uint8_t *len)
+{
+    switch (w) {
+        case 1: *len = 6; return "SHIELD";
+        case 2: *len = 3; return "BOW";
+        case 3: *len = 6; return "DAGGER";
+        case 4: *len = 4; return "RING";
+        default: *len = 5; return "SWORD";
+    }
+}
+
 static const char s_card_bt_codes[] = "SW\0SH\0BO\0RG\0DA";
+
+/* Market-scaled quote S (docs/economy.md §4): bank-2-local copy of the
+ * bank-11 quote body (a banked body must never call a fixed-bank fn,
+ * AGENTS.md §52.11.1).  The shop BUY row and the BUY quote body share
+ * it (same bank: plain call, no trampoline -- the ic_loot_synth
+ * precedent) so the row shows what the till charges.
+ * Same shape as economy_quote_banked: zero guard (price 0 = free basic,
+ * always quotes 0 however biased -- the gate in tools/check_economy.py
+ * keeps price-0 rows bias-free), 8-bit saturating base, repeated-add
+ * multiply, one rounding, same index clamp (out-of-band reads neutral:
+ * index 0 would otherwise quote (b*0+16)>>5 = 0, i.e. FREE, for every
+ * priced row -- a single clamp here covers all readers even if a path
+ * ever runs game_state_zero without game_new_game).  Render rows pass
+ * the live index (read once at render entry into s_sc_idx); the quote
+ * body reads it from the staged game. */
+static uint8_t s_sc_market_quote(uint8_t price, int8_t bias, uint8_t idx)
+{
+    uint16_t p;
+    uint16_t q;
+    uint8_t i;
+    uint8_t b;
+    if (price == 0) return 0;
+    if (idx < ECONOMY_INDEX_MIN || idx > ECONOMY_INDEX_MAX)
+        idx = ECONOMY_INDEX_NEUTRAL;
+    if (bias >= 0) {
+        b = (uint8_t)(price + bias);
+        if (b < price) b = 255;
+    } else {
+        uint8_t neg = (uint8_t)(0 - bias);
+        b = (neg >= price) ? 1 : (uint8_t)(price - neg);
+    }
+    p = 0;
+    for (i = idx; i != 0; i--) p = (uint16_t)(p + b);
+    /* Saturate, never truncate: base 255 at high inflation exceeds 255
+     * (255*48+16 >> 5 = 383) and a narrowing cast would wrap the quote
+     * to garbage.  p itself cannot overflow (max 12240 < 65535). */
+    q = (uint16_t)(((uint16_t)(p + 16)) >> 5);
+    return (q > 255) ? 255 : (uint8_t)q;
+}
 
 static void sc_card_code_str(uint8_t battle_type, uint8_t power, char *out)
 {
@@ -200,93 +315,58 @@ static void sc_card_code_str(uint8_t battle_type, uint8_t power, char *out)
     }
 }
 
-static uint8_t bm_mode(const Game *g)
+static uint8_t sc_nm_mat;
+static uint8_t sc_nm_wpn;
+static uint8_t sc_nm_special;
+static uint8_t sc_nm_wlen;
+
+/* Draw the weapon name at (x, y) in a w-wide field (cols x..x+w-1),
+ * element-colored like the CARDS list.  The material shows as the OAM
+ * ingot over the col-x cell (entries 13-22, tinted per material via
+ * the inventory ramps; steel shares iron's) instead of a word, so the
+ * buffer keeps a space there.  Quest items / unknown ids fall back to
+ * the short battle code with no icon (those never appear in shop stock
+ * or the loot-only SELL list; the fallback keeps the row readable). */
+static void sc_draw_full_name(uint8_t x, uint8_t y,
+                              const CardDefinition *def, uint8_t w)
 {
-    return (g->screen == SCREEN_SHOP) ? 2 : (uint8_t)g->item_menu_tab;
-}
-
-static uint8_t bm_cursor_row(uint8_t mode, uint8_t index, uint8_t scroll)
-{
-    if (mode == 2) return (uint8_t)(5u + (uint8_t)(index - scroll));
-    /* DECK tab: row 0 tabs, row 1 caret, row 2 FILTER/SORT, row 3
-     * column header, one card per row at rows 4-14. */
-    if (index == 0) return 2;
-    s_sc_pos = (uint8_t)(index - ITEM_FIRST_CARD);
-    return (uint8_t)(4u + (uint8_t)(s_sc_pos - scroll));
-}
-
-void item_menu_cursor_banked(void)
-{
-    s_sc_game = (Game *)g_bk_ptr_a;
-
-    if (!s_sc_game) return;
-    s_sc_mode = bm_mode(s_sc_game);
-    s_sc_old_index = g_bk_byte_a;
-    s_sc_new_index = g_bk_byte_b;
-    s_sc_game->item_menu_index = s_sc_new_index;
-
-    if (s_sc_mode == 0) {
-        s_sc_need_scroll = s_sc_game->item_menu_scroll;
-        if (s_sc_new_index <= ITEM_FIRST_CARD)
-            s_sc_need_scroll = 0;
-        else {
-            s_sc_pos = (uint8_t)(s_sc_new_index - ITEM_FIRST_CARD);
-            if (s_sc_pos < s_sc_need_scroll)
-                s_sc_need_scroll = s_sc_pos;
-            else if (s_sc_pos > (uint8_t)(s_sc_need_scroll + ITEM_VISIBLE_CARD - 1))
-                s_sc_need_scroll = (uint8_t)(s_sc_pos - (ITEM_VISIBLE_CARD - 1));
-        }
-        if (s_sc_need_scroll != s_sc_game->item_menu_scroll) {
-            s_sc_game->item_menu_scroll = s_sc_need_scroll;
-            s_sc_game->render_cache.valid = false;
-            return;
-        }
-    } else if (s_sc_mode == 2) {
-        /* Shop list: index is a direct stock position (0-based).  Keep the
-         * cursor inside the SHOP_VISIBLE window; a window shift needs a
-         * full redraw (the banked body cannot repaint scrolled rows). */
-        s_sc_need_scroll = s_sc_game->item_menu_scroll;
-        if (s_sc_new_index < s_sc_need_scroll)
-            s_sc_need_scroll = s_sc_new_index;
-        else if (s_sc_new_index > (uint8_t)(s_sc_need_scroll + SHOP_VISIBLE - 1))
-            s_sc_need_scroll = (uint8_t)(s_sc_new_index - (SHOP_VISIBLE - 1));
-        if (s_sc_need_scroll != s_sc_game->item_menu_scroll) {
-            s_sc_game->item_menu_scroll = s_sc_need_scroll;
-            s_sc_game->render_cache.valid = false;
-            return;
-        }
+    const char *ws;
+    uint8_t total;
+    ic_card_mat_wpn_pub(def->id, &sc_nm_mat, &sc_nm_wpn, &sc_nm_special);
+    if (!sc_nm_special) {
+        ic_mat_show((uint8_t)(13 + (y - 5)), x, y, sc_nm_mat);
+        sc_draw_text(x, y, NULL, 2);
+        ws = sc_wpn_str(sc_nm_wpn, &sc_nm_wlen);
+        sc_draw_text((uint8_t)(x + 2), y, ws, sc_nm_wlen);
+        /* Blank the rest of the w-wide name field (a shorter name must
+         * not leave a longer previous row's tail). */
+        total = (uint8_t)(2 + sc_nm_wlen);
+        if (total < w)
+            sc_draw_text((uint8_t)(x + total), y, NULL, (uint8_t)(w - total));
+        if (def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+            def->effect == CARD_EFFECT_HEAL_HP)
+            total = UI_COLOR_FIELD;
+        else if (def->status_id == STATUS_BURN)
+            total = UI_COLOR_FIRE;
+        else if (def->status_id == STATUS_POISON)
+            total = UI_COLOR_POISON;
+        else if (def->status_id == STATUS_FREEZE)
+            total = UI_COLOR_ICE;
+        else
+            total = UI_COLOR_NONE;
+        /* Cover the full 6-col weapon name slot so a shorter neutral row
+         * (e.g. BOW) clears a longer colored row's tail on LCD-on redraw. */
+        sc_color_span((uint8_t)(x + 2), y, 6, total);
+        return;
     }
-
-    s_sc_old_row = bm_cursor_row(s_sc_mode, s_sc_old_index, s_sc_game->item_menu_scroll);
-    s_sc_new_row = bm_cursor_row(s_sc_mode, s_sc_new_index, s_sc_game->item_menu_scroll);
-    if (s_sc_old_row != s_sc_new_row) {
-        sc_put_char(0, s_sc_old_row, ' ');
-        sc_put_char(0, s_sc_new_row, '>');
-    }
+    sc_card_code_str(def->battle_type, def->power, s_sc_code);
+    sc_draw_text(x, y, s_sc_code, w);
 }
 
-/* Rider OAM for the shop list (entries 1-10, one per visible stock row):
- * icon over the col-1 elem cell for cards carrying a rider, hidden
- * otherwise.  Transition-hide covers screen changes; the full render
- * repaints rows on every state change, and out-of-range rows hide, so
- * scrolled-away/emptied rows never go stale.  Same bank (2), WRAM
- * shadow OAM only; rider tiles/palettes are boot-resident (ui_init) and
- * shop screens never reprogram OBJ slots. */
-static void shop_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
-{
-    *tile = 0;
-    *slot = 0;
-    if (status == STATUS_BURN) {
-        *tile = RIDER_TILE_BURN;
-        *slot = RIDER_OBJ_BURN;
-    } else if (status == STATUS_FREEZE) {
-        *tile = RIDER_TILE_FREEZE;
-        *slot = RIDER_OBJ_FREEZE;
-    } else if (status == STATUS_POISON) {
-        *tile = RIDER_TILE_POISON;
-        *slot = RIDER_OBJ_POISON;
-    }
-}
+/* Shared cursor repaint moved to bank 11 (src/screens/menu_cursor_banked.c):
+ * bank 2's switchable area is full, and the cursor is pure WRAM math.
+ * The render below keeps its own row geometry (bm_cursor_row comment
+ * moved with it -- keep in sync). */
 
 /* One-copy stock visible map (docs/loot.md §34.6): rebuilt by the
  * bank-2 render on every full redraw (entry, purchase) into WRAM; the
@@ -298,31 +378,278 @@ static void shop_rider_tile(uint8_t status, uint8_t *tile, uint8_t *slot)
 uint8_t g_shop_vis_map[SHOP_MAX_ITEMS];
 uint8_t g_shop_vis_count;
 
-/* Visible-map rebuild (one-copy stock): runs at every full shop redraw
- * (entry, purchase) -- the only moments ownership can have changed, so
- * the map the cursor reads is never stale.  The scan mirrors
- * collection_find (rpg/deck.c): a line shows only while the player owns
- * no copy (banked bodies cannot call the fixed-bank counter).  Clamps
- * the cursor into the visible list (a purchase can hide the row under
- * it) before anything paints. */
-static void sc_shop_remap(void)
+/* Shop tabs (row 4 header, LEFT/RIGHT flips): TAB_BUY lists the stock,
+ * TAB_SELL lists the player's sellable cards.  The active tab rides
+ * g->item_menu_tab (0/1; the item screen owns the other values and
+ * always resets on open, so the shop entry setting 0 is unambiguous).
+ * One WRAM map serves both tabs (rebuilt per redraw for the active
+ * tab, so no second 50-byte map is needed): BUY holds STOCK positions,
+ * SELL holds COLLECTION positions of sellable rows. */
+#define SHOP_TAB_BUY  0
+#define SHOP_TAB_SELL 1
+
+/* Sell value of an owned card (0 = not sellable, never listed):
+ * - loot ids sell at their full synthesized price (docs/loot.md §34:
+ *   power + 2·material, +2 poison dagger) -- loot has no buy value,
+ *   so the formula IS the merchant's appraisal;
+ * - curated cards sell below their buy value on a rarity-scaled cut of
+ *   the BIASED base (matched pair with the BUY quote, which scales
+ *   price + bias: a cut from the raw price would sit above the buy
+ *   quote on negative-bias rows): base × (5−tier)/6 (wood 5/6 …
+ *   mythril 1/6), min 1 for any priced card.  Commons sell near buy
+ *   price, mythril for a small fraction.
+ *   The cut is market-scaled like every till price (docs/economy.md
+ *   §4-§5): at the same index the cut stays under the buy quote
+ *   (cut ≤ biased base and the quote is monotonic), so a same-visit
+ *   buy-then-sell never prints gold.  Across visits the market moves,
+ *   so a later sale at a higher index can exceed the earlier buy --
+ *   that is market risk, not arbitrage (see docs/economy.md §5.1).
+ * - price-0 basics (free starter rebuys) and SPECIAL quest items never
+ *   sell -- selling a free card would print money (buy 0, sell 1,
+ *   rebuy 0, repeat), so the SELL tab excludes them entirely.
+ * No division library: banked bodies use repeated subtraction
+ * (AGENTS.md §52.18); n is uint16_t (base ≤ 255, ×5 ≤ 1275), q fits
+ * a byte. */
+static uint8_t sc_sell_price(CardId id)
+{
+    const CardDefinition *d;
+    uint8_t mat, wpn, special;
+    uint8_t k, q;
+    uint16_t n;
+    uint8_t base;
+    if (loot_is_loot_id(id)) {
+        d = ic_loot_synth(id);
+        /* Loot appraisal scales with the market like every till price;
+         * at neutral this is the bare formula value. */
+        return d ? s_sc_market_quote(d->price, 0,
+                                     s_sc_game->state.economy.market_index)
+                 : 0;
+    }
+    d = sc_card_get_def(id);
+    if (!d || d->type == CARD_TYPE_SPECIAL || d->price == 0) return 0;
+    ic_card_mat_wpn_pub(id, &mat, &wpn, &special);
+    if (special || mat > 4) return 0;
+    /* Biased base first (same 8-bit saturating shape as the quote
+     * bodies, floored at 1 so the cut below stays ≥ 1): the cut must
+     * sit under the BUY quote's base, not the raw price. */
+    if (d->price_bias >= 0) {
+        base = (uint8_t)(d->price + d->price_bias);
+        if (base < d->price) base = 255;
+    } else {
+        uint8_t neg = (uint8_t)(0 - d->price_bias);
+        base = (neg >= d->price) ? 1 : (uint8_t)(d->price - neg);
+    }
+    /* n = base × (5−tier) via repeated addition (k = 5..1). */
+    k = (uint8_t)(5 - mat);
+    n = 0;
+    while (k--) n = (uint16_t)(n + base);
+    /* q = n/6 via repeated subtraction. */
+    q = 0;
+    while (n >= 6) {
+        n = (uint16_t)(n - 6);
+        q++;
+    }
+    q = q ? q : 1;
+    /* Market scale (docs/economy.md §4): the SELL tab and its quote
+     * body share this, so the row shows what the till pays. */
+    return s_sc_market_quote(q, 0,
+                             s_sc_game->state.economy.market_index);
+}
+
+/* Banked row quote for the fixed-side BUY/SELL apply (shop_screen.c):
+ * g_bk_ptr_a = Game*, g_bk_byte_a = VISIBLE row.  Resolves the row
+ * through the active tab's map and stages the verdict:
+ * g_bk_byte_b = price (0 = refuse), g_bk_byte_c = card id,
+ * g_bk_byte_d = owned-after (SELL, for CARD_SOLD telemetry) or the BUY
+ * verdict (0 = proceed, 1 = identity cap already reached, 2 = not
+ * enough gold).  Refusal UX lives here, not fixed: the message,
+ * telemetry and cancel blip ride the same dispatch (fixed-bank _CODE
+ * budget, AGENTS.md 52.18; the SFX goes through the mailbox -- a
+ * banked body must never call audio_play_sfx, §52.28 -- and gold
+ * refusals stay silent, as before).  BUY rows quote the market-scaled
+ * catalog price (0 = free basic, always affordable); SELL rows the
+ * sc_sell_price value after the decked-backing guard (a fully decked
+ * card refuses: selling it would strand the deck).  WRAM-direct scans
+ * only (banked bodies must never call fixed-bank functions); the fixed
+ * side applies blindly. */
+void shop_row_quote_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t row = g_bk_byte_a;
+    CardId id = CARD_NONE;
+    const CardDefinition *d;
+    uint8_t i;
+    uint8_t owned = 0;
+    uint8_t in_deck = 0;
+    g_bk_byte_b = 0;
+    g_bk_byte_c = CARD_NONE;
+    g_bk_byte_d = 0;
+    s_sc_game = g;
+    if (!g) return;
+    s_sc_shop_def = sc_shop_active(g);
+    if (!s_sc_shop_def || row >= g_shop_vis_count) return;
+    /* Fresh message per A-press (keep the per-visit bought bit): a
+     * stale refusal must not linger over the next attempt. */
+    s_sc_game->shop_message &= (uint8_t)SC_SHOP_MSG_BOUGHT_BIT;
+    if (g->item_menu_tab == SHOP_TAB_SELL) {
+        uint8_t e = g_shop_vis_map[row];
+        uint8_t price;
+        if (e >= g->state.cards.collection.count) return;
+        id = g->state.cards.collection.entries[e].id;
+        price = sc_sell_price(id);
+        if (!price) return;
+        owned = g->state.cards.collection.entries[e].count;
+        if (owned == 0) return;
+        for (i = 0; i < g->state.cards.deck.count; i++) {
+            if (g->state.cards.deck.cards[i] == id) in_deck++;
+        }
+        /* Auto-undeck one copy for the sale only after confirming a
+         * nonzero sell price and that the deck can stay above the
+         * MIN floor (swap-with-last, like deck_remove_card). */
+        if (owned <= in_deck) {
+            if (g->state.cards.deck.count <= DECK_MIN_CARDS || in_deck == 0)
+                return;
+            for (i = 0; i < g->state.cards.deck.count; i++) {
+                if (g->state.cards.deck.cards[i] == id) {
+                    g->state.cards.deck.cards[i] =
+                        g->state.cards.deck.cards[--g->state.cards.deck.count];
+                    in_deck--;
+                    telemetry_ring_emit(EVENT_CARD_REMOVED_FROM_DECK,
+                                        id, 0, 0, 0);
+                    break;
+                }
+            }
+            if (owned <= in_deck) return;
+        }
+        g_bk_byte_b = price;
+        g_bk_byte_c = id;
+        g_bk_byte_d = (uint8_t)(owned - 1);
+    } else {
+        uint8_t s = g_shop_vis_map[row];
+        if (s == SHOP_ARROW_ROW) {
+            /* Limited-arrows purchase: 1 gold -> 1 arrow, capped at
+             * ARROWS_MAX.  Fully applied here (gold check + spend +
+             * grant + message + telemetry) so the fixed applier only
+             * needs its `byte_d != 0` skip -- no fixed-bank growth.
+             * Silent on gold refusal (like card rows); the quiver-full
+             * case reports through the row-17 message. */
+            int16_t gold = s_sc_game->state.currency.amount[CURRENCY_ID_GOLD - 1];
+            int16_t arrows = s_sc_game->state.currency.amount[CURRENCY_ID_ARROWS - 1];
+            uint16_t go;
+            g_bk_byte_b = ARROW_PRICE_GOLD;
+            g_bk_byte_c = CARD_NONE;
+            /* Quiver-full first: gold cannot fix it, so it is the more
+             * informative refusal when both apply.  Telemetry d1 is a
+             * new append-only reason (3 = quiver full; 1 = no gold and
+             * 2 = max copies keep their existing meanings). */
+            if (arrows < 0) arrows = 0;
+            if (arrows >= ARROWS_MAX) {
+                g_bk_byte_d = 4;
+                s_sc_game->shop_message =
+                    (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                              SC_SHOP_MSG_ARROWS_FULL);
+                telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, CARD_NONE, 3, 0, 0);
+                return;
+            }
+            if (gold < (int16_t)ARROW_PRICE_GOLD) {
+                g_bk_byte_d = 2;
+                s_sc_game->shop_message =
+                    (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                              SC_SHOP_MSG_NO_GOLD);
+                telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, CARD_NONE, 1, 0, 0);
+                return;
+            }
+            s_sc_game->state.currency.amount[CURRENCY_ID_GOLD - 1] =
+                (int16_t)(gold - (int16_t)ARROW_PRICE_GOLD);
+            /* Shop-spend note (mirrors economy_note_spent, which this
+             * banked body must not call): the market update prices
+             * arrow gold like any other till gold. */
+            go = (uint16_t)(s_sc_game->state.economy.gold_out + (uint16_t)ARROW_PRICE_GOLD);
+            if (go < s_sc_game->state.economy.gold_out) go = 0xFFFF;
+            s_sc_game->state.economy.gold_out = go;
+            s_sc_game->state.currency.amount[CURRENCY_ID_ARROWS - 1] =
+                (int16_t)(arrows + 1);
+            telemetry_ring_emit(EVENT_CURRENCY_SPENT, CURRENCY_ID_GOLD,
+                                (uint8_t)ARROW_PRICE_GOLD, 0, 0);
+            telemetry_ring_emit(EVENT_CURRENCY_ADDED, CURRENCY_ID_ARROWS, 1, 0, 0);
+            g_bk_byte_d = 3;
+            s_sc_game->shop_message =
+                (uint8_t)(SC_SHOP_MSG_BOUGHT_BIT | SC_SHOP_MSG_BOUGHT);
+            return;
+        }
+        if (s >= s_sc_shop_def->count) return;
+        id = s_sc_shop_def->items[s];
+        d = sc_card_get_def(id);
+        if (!d) return;
+        /* Market-scaled BUY price (docs/economy.md §4): the till charges
+         * what the row shows (SELL rows scale the same way inside
+         * sc_sell_price). */
+        g_bk_byte_b = s_sc_market_quote(d->price, d->price_bias,
+                                        s_sc_game->state.economy.market_index);
+        g_bk_byte_c = id;
+        /* No ownership cap: the collection is uncapped, only the deck
+         * enforces the uniform 5-per-identity limit at equip time. */
+        /* Refusal UX (message + telemetry + cancel blip): answered
+         * here so the fixed applier pays no branch for it.  Only gold
+         * can refuse now. */
+        if (g_bk_byte_d == 0 &&
+            g->state.currency.amount[CURRENCY_ID_GOLD - 1] < (int16_t)g_bk_byte_b) {
+            g_bk_byte_d = 2;
+        }
+        if (g_bk_byte_d == 2) {
+            s_sc_game->shop_message =
+                (uint8_t)((s_sc_game->shop_message & SC_SHOP_MSG_BOUGHT_BIT) |
+                          SC_SHOP_MSG_NO_GOLD);
+            telemetry_ring_emit(EVENT_CARD_PURCHASE_FAILED, id, 1, 0, 0);
+        }
+    }
+}
+
+/* Visible-map rebuild: the BUY list always shows the full stock plus
+ * the limited-arrows ARROWS row last.  Remap runs on every full redraw
+ * (entry, purchase); it only clamps the cursor into the visible list. */
+static void sc_shop_remap_buy(void)
 {
     uint8_t i;
-    uint8_t e;
-    uint8_t owned;
     g_shop_vis_count = 0;
     if (!s_sc_game || !s_sc_shop_def) return;
     for (i = 0; i < s_sc_shop_def->count; i++) {
-        owned = 0;
+        g_shop_vis_map[g_shop_vis_count] = i;
+        g_shop_vis_count++;
+    }
+    /* Guarded: g_shop_vis_map holds SHOP_MAX_ITEMS entries, so a full
+     * 50-stock shop drops the arrow row instead of overrunning it. */
+    if (g_shop_vis_count < SHOP_MAX_ITEMS) {
+        g_shop_vis_map[g_shop_vis_count] = SHOP_ARROW_ROW;
+        g_shop_vis_count++;
+    }
+    if (s_sc_game->item_menu_index >= g_shop_vis_count) {
+        s_sc_game->item_menu_index = g_shop_vis_count > 0 ? (uint8_t)(g_shop_vis_count - 1) : 0;
+    }
+    if (s_sc_game->item_menu_scroll > s_sc_game->item_menu_index) {
+        s_sc_game->item_menu_scroll = s_sc_game->item_menu_index;
+    }
+    if (g_shop_vis_count == 0) {
+        s_sc_game->item_menu_scroll = 0;
+    }
+}
+
+/* SELL-tab remap: the map holds COLLECTION positions of owned,
+ * sellable rows (sc_sell_price > 0) -- quest items and free basics
+ * never list.  Only at a buying merchant (buys flag); elsewhere the
+ * tab is empty.  Same cursor-clamp contract as the BUY remap. */
+static void sc_shop_remap_sell(void)
+{
+    uint8_t e;
+    g_shop_vis_count = 0;
+    if (!s_sc_game || !s_sc_shop_def) return;
+    if (s_sc_game->item_menu_tab == SHOP_TAB_SELL && s_sc_shop_def->buys) {
         for (e = 0; e < s_sc_game->state.cards.collection.count; e++) {
-            if (s_sc_game->state.cards.collection.entries[e].id == s_sc_shop_def->items[i]) {
-                owned = s_sc_game->state.cards.collection.entries[e].count;
-                break;
+            if (sc_sell_price(
+                    s_sc_game->state.cards.collection.entries[e].id)) {
+                g_shop_vis_map[g_shop_vis_count] = e;
+                g_shop_vis_count++;
             }
-        }
-        if (!owned) {
-            g_shop_vis_map[g_shop_vis_count] = i;
-            g_shop_vis_count++;
         }
     }
     if (s_sc_game->item_menu_index >= g_shop_vis_count) {
@@ -336,69 +663,68 @@ static void sc_shop_remap(void)
     }
 }
 
-static void shop_rider_draw(void)
-{
-    uint8_t k;
-    uint8_t tile, slot;
-    volatile uint8_t *re;
-
-    /* Entries 1-12: shop rows 1-10 plus the DECK-only 11-12 (stale
-     * card riders must not survive entering the shop, so out-of-range
-     * entries hide). */
-    for (k = 0; k < 12; k++) {
-        re = (volatile uint8_t *)(0xC000u + ((uint16_t)(1 + k) << 2));
-        tile = 0;
-        slot = 0;
-        if (s_sc_shop_def != 0 &&
-            (uint8_t)(s_sc_shop_scroll + k) < g_shop_vis_count) {
-            s_sc_card_def = sc_card_get_def(
-                s_sc_shop_def->items[g_shop_vis_map[(uint8_t)(s_sc_shop_scroll + k)]]);
-            if (s_sc_card_def != 0) {
-                shop_rider_tile(s_sc_card_def->status_id, &tile, &slot);
-                if (tile == 0 &&
-                    (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL ||
-                     s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)) {
-                    tile = RIDER_TILE_HEALTH;
-                    slot = RIDER_OBJ_HEALTH;
-                }
-            }
-        }
-        if (tile) {
-            re[0] = (uint8_t)(((5 + k) << 3) + 16);
-            re[1] = (uint8_t)((1 << 3) + 8);
-            re[2] = tile;
-            re[3] = slot;
-        } else {
-            re[0] = 0;
-            re[2] = 0;
-        }
-    }
-}
-
 void shop_content_render(void)
 {
+    uint8_t e;
     s_sc_game = (Game *)g_bk_ptr_a;
 
     if (!s_sc_game) return;
-    s_sc_shop_def = sc_shop_active(s_sc_game);
-    sc_shop_remap();
-    s_sc_gold = (uint16_t)s_sc_game->state.currency.amount[0];
 
-    sc_draw_text(0, 3, "  GOLD: ", 8);
-    sc_format_uint(s_sc_gold, s_sc_str);
-    sc_draw_text(8, 3, s_sc_str, 10);
+    /* Heal-rider green in BG slot 7 (the wrapper's ui_set_cram_palette(0)
+     * just restored the base set), then the material tiles + alias OBJ
+     * ramps for the row ingots below (same
+     * time-share as the DECK list; idempotent per redraw).  Sweep the
+     * OAM entries the shop can inherit first: entries 1-12 held the
+     * rider sprites (now BG art, so they simply stay hidden) and 13-34
+     * the row ingots plus any DECK-list material leftovers (9 rows) --
+     * tab flips and emptied rows must not keep a stale icon. */
+    if (!g_menu_riders_loaded) {
+        ic_menu_cram();
+        ic_menu_riders_load();
+        ic_mat_stream();
+    }
+    for (e = 1; e <= 34; e++) {
+        ic_mat_hide(e);
+    }
+    /* Live market index, read once: every row's quote shares it
+     * (s_sc_market_quote takes it as a param so the per-row path pays
+     * no struct read).  Trusted 24-48 like every other reader. */
+    s_sc_idx = s_sc_game->state.economy.market_index;
+    s_sc_shop_def = sc_shop_active(s_sc_game);
+    if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
+        sc_shop_remap_sell();
+    else
+        sc_shop_remap_buy();
+
+    /* Row 3 (GOLD) and row 17 (status message) are painted by the
+     * bank-15 post-pass (shop_clean_tail_banked / shop_refresh_in_place_banked)
+     * so bank 2 keeps no duplicate strings or format code. */
+
+    /* Tab header (row 4): BUY | SELL with a '>' caret before the
+     * active tab.  LEFT/RIGHT flips (fixed-side, caret repaint via
+     * full redraw). */
+    sc_draw_text(1, 4, "BUY", 3);
+    sc_draw_text(6, 4, "SELL", 4);
+    if (s_sc_game->item_menu_tab == SHOP_TAB_SELL) {
+        sc_put_char(0, 4, ' ');
+        sc_put_char(5, 4, '>');
+    } else {
+        sc_put_char(0, 4, '>');
+        sc_put_char(5, 4, ' ');
+    }
 
     if (!s_sc_shop_def) {
         sc_draw_text(0, 5, "(nothing)", 9);
         sc_draw_text(0, 7, "[B] Leave", 9);
-        shop_rider_draw();
         return;
     }
 
     if (g_shop_vis_count == 0) {
-        sc_draw_text(0, 5, "(out of stock)", 14);
+        if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
+            sc_draw_text(0, 5, "(nothing to sell)", 17);
+        else
+            sc_draw_text(0, 5, "(out of stock)", 17);
         sc_draw_text(0, 7, "[B] Leave", 9);
-        shop_rider_draw();
         return;
     }
 
@@ -408,16 +734,44 @@ void shop_content_render(void)
          s_sc_shop_pos < (uint8_t)(s_sc_shop_scroll + SHOP_VISIBLE);
          s_sc_shop_pos++) {
         s_sc_stock_pos = g_shop_vis_map[s_sc_shop_pos];
-        s_sc_card_def = sc_card_get_def(s_sc_shop_def->items[s_sc_stock_pos]);
         s_sc_y = (uint8_t)(5 + (uint8_t)(s_sc_shop_pos - s_sc_shop_scroll));
         sc_put_char(0, s_sc_y, (s_sc_game->item_menu_index == s_sc_shop_pos) ? '>' : ' ');
+        /* Limited-arrows virtual row (BUY only; the SELL remap never
+         * emits the sentinel): status-bar arrow icon at col 2,
+         * ARROW label from col 5, flat 1G price.  No count here
+         * (BUY shows no counts).  Checked BEFORE indexing
+         * s_sc_shop_def->items so the 0xFE sentinel never reads
+         * past the 50-item stock array. */
+        if (s_sc_game->item_menu_tab != SHOP_TAB_SELL &&
+            s_sc_stock_pos == SHOP_ARROW_ROW) {
+            s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 1);
+            VBK_REG = 0;
+            sc_vram_sync_write(s_sc_dst, ui_font_tile_base);
+            sc_vram_sync_write(s_sc_dst + 1, UI_TILE_MENUS_STATUS_ARROW);
+            sc_color_span(1, s_sc_y, 9, UI_COLOR_NONE);
+            sc_draw_text(3, s_sc_y, "  ARROW", 7);
+            sc_draw_text(10, s_sc_y, NULL, 6);
+            sc_draw_text(16, s_sc_y, "  1G", 4);
+            continue;
+        }
+        /* SELL rows resolve through the owned collection (loot ids
+         * synthesize through the shared bank-2 synth); BUY rows
+         * through the stock list. */
+        if (s_sc_game->item_menu_tab == SHOP_TAB_SELL) {
+            CardId sell_id = s_sc_game->state.cards.collection.entries[
+                s_sc_stock_pos].id;
+            s_sc_card_def = loot_is_loot_id(sell_id) ?
+                ic_loot_synth(sell_id) : sc_card_get_def(sell_id);
+        } else {
+            s_sc_card_def = sc_card_get_def(
+                s_sc_shop_def->items[s_sc_stock_pos]);
+        }
         if (s_sc_card_def) {
             /* Icon tiles mirror the battle hand (screens/cards_skin.json):
-             * weapon icon only.  Element rider OAM is painted per row by
-             * shop_rider_draw below (over the col-1 elem cell): the cell
-             * itself stays blank and the element also reads from the
-             * color span below (FIRE/POISON/ICE slots). */
-            s_sc_tile_elem = 0;
+             * weapon icon plus the card-menu element rider icon (BG art,
+             * stamped over the col-1 elem cell).  The element also reads
+             * from the color span below (FIRE/POISON/ICE/HEALTH slots). */
+            s_sc_tile_elem = ic_rider_menu_tile(s_sc_card_def);
 
             if (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL || s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)
                 s_sc_tile_wpn = UI_TILE_CARD_RING;
@@ -430,8 +784,20 @@ void shop_content_render(void)
             else
                 s_sc_tile_wpn = UI_TILE_CARD_SWORD;
 
-            sc_card_code_str(s_sc_card_def->battle_type, s_sc_card_def->power, s_sc_code);
-            sc_draw_text(3, s_sc_y, s_sc_code, 4);
+            /* Full "<MAT> <WPN>" name (docs/loot.md §34.1), same as
+             * the CARDS list -- the old 3-letter code is gone.  BUY
+             * keeps the 14-wide name (cols 3-16); SELL shortens to 9
+             * (cols 3-11) and shows the owned count as xDDD at
+             * cols 12-15 instead. */
+            if (s_sc_game->item_menu_tab == SHOP_TAB_SELL) {
+                sc_draw_full_name(3, s_sc_y, s_sc_card_def, 9);
+                sc_draw_xddd(12, s_sc_y,
+                    (uint16_t)s_sc_game->state.cards.collection.entries[
+                        s_sc_stock_pos].count);
+                sc_put_char(16, s_sc_y, ' ');
+            } else {
+                sc_draw_full_name(3, s_sc_y, s_sc_card_def, 14);
+            }
 
             s_sc_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)s_sc_y << 5) + 1);
             VBK_REG = 0;
@@ -441,59 +807,66 @@ void shop_content_render(void)
             /* Icon palettes mirror the battle-hand display slots
              * (generated card_display_slots.json: weapons all WOOD/5,
              * fire 1, ice 2, poison 4): the element cell takes its
-             * element slot, the weapon cell WOOD.  Code/price text
-             * stays on the default paper slot.  Bank-2 bodies cannot
-             * read the bank-4 skin const, so the skin mapping is
-             * mirrored here -- keep in sync with cards_skin.json. */
+             * element slot; the weapon cell takes the FIELD slot
+             * (fight3 white background, menu only -- battle keeps the
+             * wood slot).  Code/price text stays on the default paper
+             * slot.  Bank-2 bodies cannot read the bank-4 skin const,
+             * so the skin mapping is mirrored here -- keep in sync
+             * with cards_skin.json. */
             if (s_sc_card_def->status_id == STATUS_BURN)
-                sc_color_span(1, s_sc_y, 1, UI_COLOR_FIRE);
+                s_sc_pos = UI_COLOR_FIRE;
             else if (s_sc_card_def->status_id == STATUS_POISON)
-                sc_color_span(1, s_sc_y, 1, UI_COLOR_POISON);
+                s_sc_pos = UI_COLOR_POISON;
             else if (s_sc_card_def->status_id == STATUS_FREEZE)
-                sc_color_span(1, s_sc_y, 1, UI_COLOR_ICE);
-            sc_color_span(2, s_sc_y, 1, UI_COLOR_WOOD);
+                s_sc_pos = UI_COLOR_ICE;
+            else if (s_sc_card_def->battle_type == BATTLE_CARD_TYPE_HEAL ||
+                     s_sc_card_def->effect == CARD_EFFECT_HEAL_HP)
+                s_sc_pos = UI_COLOR_HEALTH;
+            else
+                s_sc_pos = UI_COLOR_NONE;
+            sc_color_span(1, s_sc_y, 1, s_sc_pos);
+            sc_color_span(2, s_sc_y, 1, UI_COLOR_FIELD);
         } else {
             sc_draw_text(1, s_sc_y, "???", 3);
         }
-        sc_format_uint(s_sc_card_def ? (uint16_t)s_sc_card_def->price : 0, s_sc_str);
-        sc_draw_text(12, s_sc_y, s_sc_str, 4);
-        /* Gold price in plain font capitals (no coin tile): the semantic
-         * buffer keeps ASCII 'G' and VRAM shows the font glyph on the
-         * default paper slot, matching the price digits (the gold CRAM
-         * slot renders black ink, not the text brown). */
-        sc_put_char(16, s_sc_y, 'G');
+        /* Price right-aligned ending col 18 ('G' at col 19): BUY rows
+         * show the market-scaled stock price (free basics read FREE
+         * instead of 0G),
+         * SELL rows the rarity-cut value from sc_sell_price.  All cells
+         * write every row, so a shorter price never leaves a longer
+         * one's tail. */
+        if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
+            s_sc_pos = sc_sell_price(s_sc_card_def ? s_sc_card_def->id : CARD_NONE);
+        else
+            s_sc_pos = s_sc_card_def ? s_sc_market_quote(s_sc_card_def->price, s_sc_card_def->price_bias, s_sc_idx) : 0;
+        if (s_sc_pos == 0 &&
+            s_sc_game->item_menu_tab == SHOP_TAB_BUY) {
+            sc_draw_text(16, s_sc_y, "  0G", 4);
+        } else {
+            sc_format_uint((uint16_t)s_sc_pos, s_sc_str);
+            s_sc_pos = 0;
+            while (s_sc_str[s_sc_pos] != 0) s_sc_pos++;
+            if (s_sc_pos >= 2) {
+                sc_draw_text(17, s_sc_y, s_sc_str, 2);
+            } else if (s_sc_pos == 1) {
+                sc_put_char(17, s_sc_y, ' ');
+                sc_put_char(18, s_sc_y, s_sc_str[0]);
+            } else {
+                sc_draw_text(17, s_sc_y, "  ", 2);
+            }
+            sc_put_char(19, s_sc_y, 'G');
+        }
     }
 
     /* Hints always show: the post-shop equip tip moved to a normal
      * dialogue box on exit (docs/loot.md §34.6), so buying no longer
-     * changes these lines.  Only failures print a message row: a buy
-     * leaves it blank (the bought row vanishing + gold dropping is
-     * the confirmation). */
-    sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
-    if (s_sc_game->shop_message == SC_SHOP_MSG_NO_GOLD) {
-        sc_draw_text(0, 17, "Not enough!", 12);
-    } else if (s_sc_game->shop_message == SC_SHOP_MSG_MAX_COPIES) {
-        sc_draw_text(0, 17, "Too many!", 12);
-    }
-    shop_rider_draw();
+     * changes these lines.  Row 17 (failure message) is painted by the
+     * bank-15 post-pass. */
+    if (s_sc_game->item_menu_tab == SHOP_TAB_SELL)
+        sc_draw_text(0, 16, "[A]Sell [B]Leave", 18);
+    else
+        sc_draw_text(0, 16, "[A] Buy  [B] Leave", 18);
 }
 
-void save_load_content_render(void)
-{
-    s_sc_game = (Game *)g_bk_ptr_a;
-
-    if (!s_sc_game) return;
-    s_sc_present = g_bk_byte_a;
-
-    for (s_sc_save_pos = 0; s_sc_save_pos < SAVE_SLOT_COUNT; s_sc_save_pos++) {
-        s_sc_y = (uint8_t)(4 + (s_sc_save_pos << 1));
-        sc_put_char(0, s_sc_y, (s_sc_game->save_slot_index == s_sc_save_pos) ? '>' : ' ');
-        sc_draw_text(1, s_sc_y, (s_sc_save_pos == 0) ? "SLOT 1:" : ((s_sc_save_pos == 1) ? "SLOT 2:" : "SLOT 3:"), 7);
-        sc_draw_text(9, s_sc_y, (s_sc_present & (1 << s_sc_save_pos)) ? "SAVED" : "(EMPTY)", 7);
-    }
-    sc_draw_text(0, 11, (s_sc_game->save_slot_mode == 1) ? "[A] SAVE  " : "[A] LOAD  ", 10);
-    sc_draw_text(10, 11, "[B] BACK", 8);
-    if (s_sc_game->save_slot_message != 0) {
-        sc_draw_text(2, 13, (s_sc_game->save_slot_message == 1) ? "Game Saved!" : "Slot is empty!", 14);
-    }
-}
+/* save_load_content_render now lives in save_load_banked.c (ROM bank 11);
+ * the fixed wrapper in save_load_screen.c dispatches there directly. */

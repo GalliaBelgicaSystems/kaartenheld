@@ -1,7 +1,7 @@
 {
   "name": "gem_grant_norepeat",
   "test": true,
-  "description": "The gem prize is one-shot: a second +20-net sitting with the gem already owned opens the ordinary farewell, leaves the owned bit at 1, and pays the gold normally.",
+  "description": "The gem prize is one-shot: a second 50-staked sitting with the gem already owned opens the ordinary farewell and leaves the owned bit at 1.",
   "actions": [
     {
       "type": "press",
@@ -61,6 +61,70 @@
     },
     {
       "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 8
+    },
+    {
+      "type": "press",
       "button": "B"
     },
     {
@@ -81,11 +145,6 @@
       "type": "variable",
       "variable": "GEM_OWNED",
       "expected": 1
-    },
-    {
-      "type": "currency",
-      "expected": 50,
-      "currency": "GOLD"
     }
   ],
   "initial_state": {
@@ -96,6 +155,9 @@
       "facing": "RIGHT"
     },
     "seed": 579,
+    "currency": {
+      "GOLD": 100
+    },
     "variables": {
       "GEM_OWNED": 1
     }

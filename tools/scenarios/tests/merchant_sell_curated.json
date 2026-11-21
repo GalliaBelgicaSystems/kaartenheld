@@ -1,0 +1,91 @@
+{
+ "name": "merchant_sell_curated",
+ "test": true,
+ "description": "Sell a curated card at the card merchant (docs/loot.md §34.6): the IRON_RING (id 66, buy 20) sells from the shop's SELL tab at its rarity-cut value -- iron tier 2 keeps price x (5-2)/6 = 10 gold, below the 20 buy price -- emitting CARD_SOLD(66,10,0) and removing the copy. Companion to merchant_sell_loot (loot formula value).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "collection_add",
+   "card_id": 66,
+   "quantity": 1
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_SOLD"
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 0,
+   "value": 66
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 1,
+   "value": 10
+  },
+  {
+   "type": "event_arg",
+   "event": "CARD_SOLD",
+   "index": 2,
+   "value": 0
+  },
+  {
+   "type": "currency",
+   "expected": 10,
+   "currency": "GOLD"
+  }
+ ]
+}

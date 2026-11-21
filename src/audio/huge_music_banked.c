@@ -37,16 +37,13 @@ extern volatile uint8_t g_jingle_frames;
 static void huge_stop_inline(void)
 {
     /* Sole stop implementation (the fixed-bank twin was removed to fund
-     * the farewell dialogue): identical register writes, no __critical.  Banked bodies must not emit
-     * di/ei (lint gate; a held di would stall the music clock), and none
-     * is needed: the banked mapping body stops playback first
+     * the farewell dialogue).  Stops playback first
      * (g_huge_playing = 0) before resolving the new track, so a
      * preempting timer ISR always sees either silence or a fully-switched
      * song.  This body is the only stop path left, so every channel it
      * silences here is the whole contract. */
     g_huge_playing = 0;
     g_huge_current_song = 0;
-    /* Silence active sound channels */
     NR12_REG = 0x00;
     NR14_REG = 0x80;
     NR22_REG = 0x00;
@@ -54,6 +51,14 @@ static void huge_stop_inline(void)
     NR32_REG = 0x00;
     NR42_REG = 0x00;
     NR44_REG = 0x80;
+    /* Reset stereo panning: songs using the 8xy pan effect (the overworld
+     * theme's ping-pong) leave NR51 lateralized, and nothing else in the
+     * stop path, the driver init, or any track switch touches it -- without
+     * this, the residue leaks into the next track and e.g. a battle
+     * entered mid-ping-pong plays with pulse channels stuck left or right.
+     * Every song is authored centered and re-pans itself per row if needed,
+     * so restoring the audio_init() default here is always correct. */
+    NR51_REG = 0xFF;
 }
 
 /* Track -> (song, bank) + stop + set, one round-trip.  Reads the track
@@ -70,13 +75,20 @@ void music_play_banked(void)
     huge_stop_inline();
     if (track == MUSIC_TITLE) g_title_frames = 0;
     if (track == MUSIC_BATTLE) {
+        /* Bank 7: the re-scored Battle BGM overflowed bank 6 (driver +
+         * six songs, full); bank 9 is nearly full too, so it uses the
+         * second driver copy. */
         song = &song_battle;
+        bank = HUGE_MUSIC_BANK_B7;
     } else if (track == MUSIC_OVERWORLD) {
-        song = &song_opening;
+        /* Re-scored opening theme (opening more.uge) for Wake Grove
+         * and Carl's field; still bank 7 through the _b7 driver copy. */
+        song = &song_opening_more;
         bank = HUGE_MUSIC_BANK_B7;
     } else if (track == MUSIC_CHEST) {
+        /* Bank 6 (home bank): the one-shot jingle moved off bank 7 to
+         * make room for the longer overworld theme. */
         song = &song_chest_opening;
-        bank = HUGE_MUSIC_BANK_B7;
         g_jingle_frames = 0;
     } else if (track == MUSIC_DESOLATE) {
         song = &song_desolate_landscape;
@@ -107,6 +119,11 @@ void music_play_banked(void)
     } else if (track == MUSIC_CASINO) {
         song = &song_casino;
         bank = HUGE_MUSIC_BANK_B9;
+    } else if (track == MUSIC_UNDERGROUND) {
+        /* Bank 6 (home bank): moved back from bank 9 to make room for
+         * the re-scored Battle BGM — bank 6 regained ~3 KB when battle
+         * left for bank 9. */
+        song = &song_underground;
     }
     g_audio_current_track = track;
     g_bk_ptr_a = (void *)song;

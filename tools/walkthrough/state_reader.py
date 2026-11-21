@@ -29,18 +29,20 @@ OFF_STATE = 2
 OFF_SCENE = 0            # SceneState: SceneId, x, y, facing (4 B)
 OFF_PARTY = 4            # PartyState: members[1]x(id,hp,max)=3 + count = 4
 OFF_CARDS = 8            # CardState: collection + deck
-OFF_CARDS_COLLECTION = OFF_CARDS         # entries[12]x(id,count)=24 + count
-OFF_CARDS_DECK = OFF_CARDS + 25          # cards[20] + count = 21
-OFF_FLAGS = OFF_CARDS + 46               # bytes[8]
+OFF_CARDS_COLLECTION = OFF_CARDS         # entries[50]x(id,count)=100 + count
+OFF_CARDS_DECK = OFF_CARDS + 101         # cards[20] + count = 21
+OFF_FLAGS = OFF_CARDS + 122              # bytes[8]
 OFF_VARIABLES = OFF_FLAGS + 8            # int16 x 16 = 32
-OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 1 = 2
-OFF_WORLD = OFF_CURRENCY + 2             # GameState.world: count + actors[16]x3 = 49
+OFF_CURRENCY = OFF_VARIABLES + 32        # int16 x 2 (gold + arrows) = 4
+OFF_WORLD = OFF_CURRENCY + 4             # GameState.world: count + actors[16]x3 = 49
 OFF_PROGRESSION = OFF_WORLD + 49         # ProgressionStore: count + entries[2]x6 = 13
-STATE_SIZE = OFF_PROGRESSION + 13        # == sizeof(GameState); locates World/Battle
+OFF_ECONOMY = OFF_PROGRESSION + 13       # EconomyState: index + gold_in + gold_out + battles = 6
+STATE_SIZE = OFF_ECONOMY + 6             # == sizeof(GameState); locates World/Battle
 
 # CardDefinition (src/rpg/cards.h): id type power cost uses max_copies
-# effect battle_type price status_id status_chance name[12] = 23 B.
-CARD_DEF_SIZE = 23
+# effect battle_type price price_bias status_id status_chance
+# name[12] = 24 B (bias added by the economy, docs/economy.md §4.1).
+CARD_DEF_SIZE = 24
 CARD_DEF_PRICE = 8
 CARD_DEF_ID = 0
 
@@ -57,7 +59,7 @@ CHARACTER_STATE_MAX_HP = 2
 
 # ── World (src/world/world.h) — needed to reach g_game.battle ────────
 # Packed layout: width, height, map_id, encounter_actor_index,
-# map_changed(bool), player Entity, actors[4], map[18][32], camera_px_x,
+# map_changed(bool), player Entity, actors[7], map[32][32], camera_px_x,
 # camera_px_y, scroll_x, scroll_y, move_state, move_target_x,
 # move_target_y, move_progress, move_outcome, tileset_kind, move_param,
 # move_dir, move_exit_x, move_exit_y, encounter_cooldown.
@@ -65,9 +67,9 @@ CHARACTER_STATE_MAX_HP = 2
 # facing, id = 7 bytes (validated at boot: it is exactly the pattern
 # the old PLAYER_BOOT locate found).
 ENTITY_SIZE = 7
-MAX_WORLD_ACTORS = 4        # src/world/world.h
-WORLD_WIDTH = 32            # src/world/world.h (32x18 renderer limit)
-WORLD_HEIGHT = 18
+MAX_WORLD_ACTORS = 7        # src/world/world.h
+WORLD_WIDTH = 32            # src/world/world.h (32x32 renderer limit)
+WORLD_HEIGHT = 32
 
 def _world_actor_runtime_size(name_ptr_size):
     # WorldActorRuntime (src/world/world.h): actor_id(u16), id, active,
@@ -110,6 +112,10 @@ BATTLE_SELECTED = BATTLE_HAND + 5 * CARD_SIZE
 BATTLE_COMBO = BATTLE_SELECTED + 5          # selected_indices[5], then count
 BATTLE_CURSOR = BATTLE_COMBO + 1
 BATTLE_ENERGY = BATTLE_CURSOR + 1
+# timer_ticks (2) + timer_max (2) + phase (1) + turn (1) + result (1) +
+# delay_timer (1) + msg_id (1) + msg_ttl (1) + battle_over (1) +
+# ComboResult last_combo (5*8 + 1 + 1 + 1 + 1 + 2 + 2 = 48) -> enemy_incoming_dmg
+BATTLE_INCOMING_DMG = BATTLE_ENERGY + 1 + 11 + 48   # 493
 
 # BattleCardType (src/battle/card.h)
 BT_SWORD = 0
@@ -142,6 +148,8 @@ SCENE_GRASSY_FOREST = 16
 SCENE_VILLAGE_AREA = 17
 SCENE_DESOLATE_FIELD = 18
 SCENE_WAKE_GROVE = 19
+SCENE_UNDERGROUND_TUNNEL = 20
+SCENE_UNDERGROUND_TUNNEL_SOUTH = 21
 
 # MusicTrack (src/audio/audio.h)
 MUSIC_NONE = 0
@@ -158,6 +166,8 @@ MUSIC_FOREST = 10
 MUSIC_CHEST = 11
 MUSIC_GAMEOVER = 12
 MUSIC_ENDING = 13
+MUSIC_CASINO = 14
+MUSIC_UNDERGROUND = 15
 
 # SFX ids (src/audio/audio.h) + engine idle value (audio.c SFX_NONE)
 SFX_ALERT = 7
@@ -166,6 +176,10 @@ SFX_NONE = 0xFF
 # Story flags (src/game/game_ids.h)
 STORY_FLAG_ID_ARRIVED_TOWN = 1
 STORY_FLAG_ID_MET_MAYOR = 2
+STORY_FLAG_ID_FIELD_CHEST = 3
+STORY_FLAG_ID_MET_DOG = 9
+STORY_FLAG_ID_BONE_TAKEN = 10
+STORY_FLAG_ID_DOG_KEY = 11
 
 # Variables (src/game/game_ids.h)
 VARIABLE_ID_QUEST_MONSTER_HUNT = 3
@@ -174,6 +188,8 @@ VARIABLE_ID_ENERGY_POOL = 6
 
 # Currency (src/game/game_ids.h) — dense slots indexed by id-1.
 CURRENCY_ID_GOLD = 1
+CURRENCY_ID_ARROWS = 2
+ARROWS_MAX = 30
 
 # Cards (src/rpg/cards.h + src/game/game_ids.h)
 CARD_FIRST_GAME = 0x40
@@ -181,11 +197,16 @@ CARD_IRON_SWORD = CARD_FIRST_GAME + 0
 CARD_WOOD_SWORD = CARD_FIRST_GAME + 7
 CARD_WOODEN_SHIELD = CARD_FIRST_GAME + 1
 CARD_IRON_RING = CARD_FIRST_GAME + 2
+CARD_BOW_9 = CARD_FIRST_GAME + 6
+CARD_STEEL_SHIELD = CARD_FIRST_GAME + 8
 CARD_POISON_DAGGER = CARD_FIRST_GAME + 4
-CARD_AMULET = CARD_FIRST_GAME + 5
+CARD_SHOPKEYS = CARD_FIRST_GAME + 5
+CARD_BONE = CARD_FIRST_GAME + 9
+CARD_OLD_KEY = CARD_FIRST_GAME + 10
 
 # Hero boot constants (src/game/content.c)
 HERO_START_GOLD = 20
+HERO_START_ARROWS = 3
 HERO_START_HP = 15
 # Spawn-facing bytes (Direction enum, src/world/entity.h: UP=0, DOWN=1,
 # LEFT=2, RIGHT=3).  Keyed by the level JSON player.spawn facing string;
@@ -296,6 +317,11 @@ class StateReader:
         raw = self.rd(self.state + OFF_CURRENCY + 2 * slot, 2)
         return int.from_bytes(raw, "little", signed=True)
 
+    def arrows(self):
+        slot = CURRENCY_ID_ARROWS - 1
+        raw = self.rd(self.state + OFF_CURRENCY + 2 * slot, 2)
+        return int.from_bytes(raw, "little", signed=True)
+
     def flags(self):
         return self.rd(self.state + OFF_FLAGS, 8)
 
@@ -310,9 +336,9 @@ class StateReader:
     def collection(self):
         """List of (card_id, count) pairs in the collection."""
         base = self.state + OFF_CARDS_COLLECTION
-        n = self.rd(base + 24, 1)[0]
+        n = self.rd(base + 100, 1)[0]
         out = []
-        for i in range(min(n, 12)):
+        for i in range(min(n, 50)):
             e = self.rd(base + 2 * i, 2)
             out.append((e[0], e[1]))
         return out
@@ -474,6 +500,8 @@ class StateReader:
                             % (h["hp"], h["max_hp"], HERO_START_HP))
         if self.gold() != HERO_START_GOLD:
             problems.append("gold=%d != %d" % (self.gold(), HERO_START_GOLD))
+        if self.arrows() != HERO_START_ARROWS:
+            problems.append("arrows=%d != %d" % (self.arrows(), HERO_START_ARROWS))
         if self.flag(STORY_FLAG_ID_ARRIVED_TOWN):
             problems.append("ARRIVED_TOWN set at boot")
         # World mirror: the player Entity must sit exactly at

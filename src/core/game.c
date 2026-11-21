@@ -9,7 +9,12 @@
 #include "scene.h"
 #include "rpg/progression.h"
 #include "rpg/party.h"
+#include "rpg/save.h"
 #include "banked.h"
+
+/* Autosave request staging (see game.h): set by AP/quest/map triggers,
+ * flushed once per frame below. */
+uint8_t g_autosave_pending;
 
 /* Reset the render cache so the next render takes the full-redraw path.
  * Inline (not banked): pure WRAM writes, and the fixed bank has room
@@ -27,6 +32,9 @@ void game_render_reset(Game *g)
     g->render_cache.prev_screen = g->prev_screen;
     g->render_cache.prev_map_id = g->world.map_id;
     g->battle.dirty = BATTLE_DIRTY_ALL;
+    /* Hide the overworld HUD window on screen switches / resets;
+     * overworld_screen_render re-enables it after painting 0x9C00. */
+    LCDC_REG &= (uint8_t)~0x20u;
 }
 
 /* Reset the world to a fresh new-game state: canonical state, the runtime
@@ -38,10 +46,25 @@ static void game_prepare_new_game(Game *g)
     g->frame = 0;
     g->game_over_choice = 0;
     g->shop_id = 0;
+    g->notice_frame = 0;
     game_new_game(&g->state);
     world_init(&g->world, &g->state);
     dialogue_init(&g->dialogue);
     game_render_reset(g);
+}
+
+/* Staged menu blip (banked nav bodies cannot call audio_play_sfx):
+ * a cursor move stages (SFX id + 1) in g_bk_sfx_req; this runs right
+ * after screen_update() and plays + clears it the same frame.  Own
+ * tiny frame (not inlined into game_update): the big update frame
+ * spills registers around any added call (AGENTS.md §52.19 family),
+ * costing ~2x the body itself. */
+static void game_consume_sfx(void)
+{
+    if (g_bk_sfx_req != 0) {
+        audio_play_sfx((uint8_t)(g_bk_sfx_req - 1));
+        g_bk_sfx_req = 0;
+    }
 }
 
 /* Start a fresh playthrough at the overworld (ENDING restart, GAME_OVER
@@ -49,19 +72,21 @@ static void game_prepare_new_game(Game *g)
 void game_restart(Game *g)
 {
     if (!g) return;
-    g->screen = SCREEN_OVERWORLD;
-    g->prev_screen = SCREEN_OVERWORLD;
     game_prepare_new_game(g);
+    /* Go through the real overworld screen change instead of assigning
+     * the screen: it restores the overworld OAM (battles time-share tile
+     * ids 96-99 with the hero's idle/walk frames, so a battle -> death ->
+     * restart used to idle with the AP pips), drops the stale tileset
+     * cache (battle art owns VRAM block 1) and reseeds the render cache
+     * for the full redraw. */
+    screen_change(g, SCREEN_OVERWORLD);
 }
 
 void game_init(Game *g)
 {
     if (!g) return;
-    /* Install the WRAM banked-copy trampoline before any banked content
-     * (event/dialogue tables) can be read.  Runs here rather than in CRT0
-     * init because the harness jumps straight to main(). */
-    banked_copy_init();
-    banked_call_init();
+    /* WRAM banked-copy/call trampolines are already installed at the top of
+     * main() before ui_init() and game_init(). */
     telemetry_init();
     telemetry_set_frame_ptr(&g->frame);
     /* Boot into the studio splash, which auto-advances (or is skipped)
@@ -77,9 +102,10 @@ void game_init(Game *g)
      * by CRT0's .data copy; the debug harness skips CRT0 and jumps straight
      * to main(), so re-assert the sound-on default here (matches the
      * hardware boot state).  Without this, audio_play_music() no-ops under
-     * the harness and music_track assertions report NONE. */
+     * the harness and music_track assertions report NONE.  Boot stays silent
+     * (MUSIC_NONE from audio_init) through SPLASH and NOTICE; notice_screen
+     * starts MUSIC_TITLE when Kaartenheld appears on SCREEN_TITLE. */
     g_sound_enabled = 1;
-    audio_play_music(MUSIC_TITLE);
     game_render(g);
 
 #ifdef DEBUG_BUILD
@@ -97,39 +123,66 @@ void game_update(Game *g)
     g->frame++;
 
     screen_update(g);
+    game_consume_sfx();
     /* Chest-jingle edge + restore (MUSIC_CHEST, one-shot) plus the
-     * overworld HUD marker refresh (quest "?" / pursuer "!"): one
-     * bank-8 round-trip per frame through the game-layer bodies
-     * (game_frame_tick_banked runs the marks refresh then the jingle:
-     * marks must observe the jingle's pre-seed edge to re-arm the
-     * entry alert on real loads).  Same position as the old standalone jingle dispatch (after
-     * screen_update): the edge sees this frame's state, which the
-     * 240-frame harness backstop race depends on.  Ticks here rather
-     * than in the overworld screen so menus, dialogue and shops don't
-     * freeze the restore timer while the driver loops the one-shot
-     * song.  Engine-generic restore (scene track lookup); action codes
-     * come back through g_bk_byte_b (jingle) and the pursuit alert through
-     * g_bk_byte_c (1 = entry: hold the scene track; 2 = sting now, once
-     * the level is loaded and pursuers start moving) and the held-track
-     * replay through g_bk_byte_d (scene track restarts after the sting
-     * so the alert is heard first, then the music). */
-    {
+     * overworld HUD marker refresh (quest "?" / pursuer "!") and Carl's
+     * leave-the-field offer: two banked round-trips per frame through the
+     * game-layer bodies (game_frame_tick_banked runs the marks refresh
+     * then the jingle: marks must observe the jingle's pre-seed edge to
+     * re-arm the entry alert on real loads; the bank-10 offer body runs
+     * second and stages only the dialogue request).  Same position as
+     * the old standalone jingle dispatch (after screen_update): the edge
+     * sees this frame's state, which the 240-frame harness backstop race
+     * depends on.  Ticks here rather than in the overworld screen so
+     * menus, dialogue and shops don't freeze the restore timer while
+     * the driver loops the one-shot song.  Engine-generic restore
+     * (scene track lookup); action codes come back through g_bk_byte_b
+     * (jingle) and the pursuit alert through g_bk_byte_c (2 = sting
+     * now, once the chaser is awake and moving, over the still-playing
+     * scene track).  The alert never stops, pauses, or replays the track,
+     * so the old hold/replay codes are gone: byte_b == 3 is
+     * the title play-once stop only.
+     *
+     * Terminal screens (GAME_OVER / THANKS / ENDING) run no world
+     * simulation: the tick is skipped there, or a re-armed pursuit
+     * alert would count down over the death screen and fire its sting
+     * behind it (the banked body excludes battle/game-over/ending, but
+     * not THANKS). */
+    if (g->screen != SCREEN_GAME_OVER && g->screen != SCREEN_THANKS &&
+        g->screen != SCREEN_ENDING) {
         const SceneDefinition *def;
         extern void game_frame_tick_banked(void);
+        extern void carl_skip_offer_banked(void);
         g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&game_frame_tick_banked;
         banked_call_run();
-        /* byte_b == 2 (jingle restore) and byte_d == 1 (held-track
-         * replay) are the same action: restart the scene track. */
+        /* Carl's leave-the-field offer (bank 10: bank 8 sits hard
+         * against 16 KB, so the tick cannot host it).  Own dispatch:
+         * a banked body can never nest another trampoline call
+         * (AGENTS.md 52.11.1).  Stages only g_bk_dlg_id, consumed
+         * below with the other post-tick requests. */
+        if (g->screen == SCREEN_OVERWORLD) {
+            g_bk_call_bank = 10;
+            g_bk_call_target = (uint16_t)&carl_skip_offer_banked;
+            banked_call_run();
+        }
+        /* Battle hit feedback (bank 9 body, no staging: it reads the
+         * live battle straight from g_game).  Own dispatch like the
+         * tick above -- HP deltas arm the shake/flash timers and the
+         * countdown re-arms dirty bits here, every non-terminal frame.
+         * Fixed-bank resolve paths pay nothing (AGENTS.md 52.18). */
+        g_bk_call_bank = 9;
+        g_bk_call_target = (uint16_t)&battle_feedback_tick_banked;
+        banked_call_run();
+        /* byte_b == 2 (jingle restore) restarts the scene track. */
         if (g_bk_byte_b == 1) {
             audio_play_music(MUSIC_CHEST);
-        } else if (g_bk_byte_b == 2 || g_bk_byte_d == 1) {
+        } else if (g_bk_byte_b == 2) {
             def = scene_definition_for_map(g->world.map_id);
             audio_play_music(def ? def->music : MUSIC_OVERWORLD);
-        } else if (g_bk_byte_b == 3 || g_bk_byte_c == 1) {
-            /* Title play-once stop, or the pursuit-alert hold: stop
-             * in silence (the sting fires later via byte_c == 2; the
-             * byte_d replay restarts the track from the top). */
+        } else if (g_bk_byte_b == 3) {
+            /* Title play-once stop: silence (the sting fires later via
+             * byte_c == 2). */
             audio_play_music(MUSIC_NONE);
         }
         /* byte_c == 2 is the one-shot SFX slot: the id rides byte_d.
@@ -145,12 +198,21 @@ void game_update(Game *g)
             audio_play_music(MUSIC_CASINO);
         }
         /* Post-tick dialogue request (e.g. Nis's farewell after leaving
-         * the table): the banked producer cannot call dialogue_start_def,
-         * so it stages the id here.  Generic engine data -- the id is an
-         * opaque value, never a fixed-bank game branch (AGENTS.md 55.1). */
+         * the table, Carl's in-battle coaching boxes): the banked producer
+         * cannot call dialogue_start_def, so it stages the id here.
+         * Generic engine data -- the id is an opaque value, never a
+         * fixed-bank game branch (AGENTS.md 55.1).  The single-line
+         * override (non-zero count) shows one page instead of the full
+         * text; both bytes clear with the id. */
         if (g_bk_dlg_id != 0) {
             dialogue_start_def(&g->dialogue, (DialogueId)g_bk_dlg_id);
+            if (g_bk_dlg_count != 0) {
+                g->dialogue.current_line = g_bk_dlg_line;
+                g->dialogue.line_count = g_bk_dlg_count;
+            }
             g_bk_dlg_id = 0;
+            g_bk_dlg_line = 0;
+            g_bk_dlg_count = 0;
             screen_change(g, SCREEN_DIALOGUE);
         }
     }
@@ -159,6 +221,13 @@ void game_update(Game *g)
      * overworld HUD and the core snapshot reflect healing immediately. */
     g->world.player.hp = g->state.party.members[0].hp;
     g->world.player.max_hp = g->state.party.members[0].max_hp;
+
+    /* Autosave + save-spin upkeep (bank 12): a staged request flushes
+     * here, on canonical state (scene synced above).  One dispatch
+     * covers the flush and the future spinner upkeep. */
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&save_upkeep_banked;
+    banked_call_run();
 
 #ifdef DEBUG_BUILD
     debug_snapshot();
@@ -198,11 +267,13 @@ void game_render(Game *g)
      * for the whole fight/discussion on real hardware. */
     full_redraw = (!rc->valid || rc->prev_screen != g->screen ||
                    g->world.map_id != rc->prev_map_id);
-    /* LCD-on transitions (no wipe white-flash): overworld -> dialogue
+    /* LCD-on transitions (no white flash): overworld -> dialogue
      * entry paints the box over the live map; dialogue -> overworld exit
      * restores just the box rows; an overworld map crossing runs the
-     * black-wipe + invisible-load + row-reveal transition.  Every other
-     * full redraw (battle, menus, boot) blanks via LCD-off.
+     * black-wipe + invisible-load + row-reveal transition, with sprites
+     * committed ahead of the reveal so they stand on the sweep instead
+     * of appearing after it.  Every other full redraw (battle, menus,
+     * boot) blanks via LCD-off.
      *
      * Exit classification reads rc->prev_screen (the last RENDERED
      * screen), never g->prev_screen (the last CHANGED-FROM screen, which
@@ -214,15 +285,17 @@ void game_render(Game *g)
      * follows a synchronous screen_change, which refreshes it -- see
      * the exemption disjunct below.)
      * A dialogue exit that somehow lands on a different map still takes
-     * the LCD-on path: overworld_screen_render() routes any map mismatch
-     * to the full transition repaint (which reloads the tileset), so no
-     * white flash and no stale tiles either way. */
+     * the transition path: overworld_screen_render() routes any map
+     * mismatch to the full transition repaint (which reloads the
+     * tileset), so no stale tiles either way. */
     if (full_redraw &&
         !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
-          (rc->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD))) {
+          (rc->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD) ||
+          (rc->prev_screen == SCREEN_ITEM && g->screen == SCREEN_ITEM) ||
+          (rc->prev_screen == SCREEN_SHOP && g->screen == SCREEN_SHOP))) {
         /* A full redraw hides the sprite in real OAM first: the redraw
-         * spans several display sweeps, and the sprite must not float
-         * over it at a stale position.  The frame-boundary commit
+         * runs synchronously inside this frame, and the sprite must not
+         * float over it at a stale position.  The frame-boundary commit
          * (ui_sprite_commit in main.c) reveals it at the new position. */
         ui_sprite_begin_transition();
         if (rc->prev_screen != SCREEN_OVERWORLD || g->screen != SCREEN_OVERWORLD) {

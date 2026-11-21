@@ -1,7 +1,7 @@
 {
   "name": "gamble_invite",
   "test": true,
-  "description": "Bumping Nis the kobold opens his rules dialogue (not the table): speaker tag, rules page, choice page with the +20 prize teaser and YES default.",
+  "description": "Bumping Nis the kobold opens his rules dialogue (not the table): speaker tag, rules page, choice page with the stake-50 prize teaser and YES default.",
   "actions": [
     {
       "type": "press",
@@ -49,7 +49,7 @@
     {
       "type": "screen_row",
       "row": 15,
-      "contains": "+20 NET WINS A GEM"
+      "contains": "STAKE 50 TOTAL: GEM"
     },
     {
       "type": "screen_row",

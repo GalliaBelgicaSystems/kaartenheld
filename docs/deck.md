@@ -227,7 +227,7 @@ from `GameState`.
 Create:
 
 ```c
-#define MAX_CARD_COLLECTION 64
+#define MAX_CARD_COLLECTION 50
 #define MAX_DECK_CARDS 20
 ```
 
@@ -856,7 +856,7 @@ ITEM_POTION
 ITEM_BOMB
 ITEM_ETHER
 ITEM_SWORD
-ITEM_AMULET
+ITEM_SHOPKEYS
 ITEM_NUT
 ```
 
@@ -898,7 +898,7 @@ There should be no:
 ```text
 weapon
 armor
-amulet
+shop keys
 equipment slot
 ```
 
@@ -1246,7 +1246,7 @@ per-battle availability, deterministic reset) with these deliberate
 divergences, driven by Game Boy memory limits and the engine/game layer split
 (AGENTS.md §55):
 
-- **Sizes**: `MAX_CARD_COLLECTION` is 12 (not 64); the battle deck is 20
+- **Sizes**: `MAX_CARD_COLLECTION` is 50 (not 64); the battle deck is 20
   (`MAX_DECK_SIZE`, `src/battle/deck.h`). Card ids start at
   `CARD_FIRST_GAME = 0x40` (`src/rpg/cards.h`), not 0x80 — the card range
   shares the item-id space convention of the game layer.
@@ -1269,9 +1269,9 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
   (default 1 = `BATTLE_ENERGY_PER_TURN`), staged at battle entry and
   refreshed to full at every decision-phase entry rather than a
   per-combat budget. Story
-  events raise the variable with `ADD_VARIABLE` (no cap; tutorial +1,
-  chest +1, Monster Hunt +1, mimic +1 from the base-1 pool, reaching 5
-  in any order);
+  events raise the variable with `ADD_VARIABLE` (no cap; tutorial +1 on
+  a win, chest +1, Monster Hunt +1, mimic +1 from the base-1 pool,
+  reaching 5 in any completion order); fleeing the lesson grants nothing.
   battles stage the
   pool at entry and reuse it for the whole fight. Affordability is checked
   at selection time against `energy - combo_reserved_cost()` and paid at
@@ -1280,14 +1280,17 @@ divergences, driven by Game Boy memory limits and the engine/game layer split
 - **Deck-size ceiling**: the 20-card deck limit is reachable by stacking
   repeated loot drops (loot cards have no copy limit).  The fixed catalog
   alone provides 16 guaranteed copies (WOOD_SWORD ×4 + WOODEN_SHIELD ×4 +
-  IRON_RING ×1 + FIRE_SWORD ×3 + POISON_DAGGER ×3 + BOW_9 ×1; AMULET is
+  IRON_RING ×1 + FIRE_SWORD ×3 + POISON_DAGGER ×3 + BOW_9 ×1; SHOPKEYS is
   SPECIAL and not deckable).  The catalog `CARD_IRON_SWORD` is excluded
   from that count: it is a test/legacy entry that never appears in normal
   play (in-play iron swords are derived loot ids, e.g. `0xA0`).
 - **Starter deck granted at new game**: a new game grants the collection
   WOOD_SWORD ×4 + WOODEN_SHIELD ×4 + FIRE_SWORD ×2 (and decks all
-  ten, deal order SW SW SH SH SW first so the opening hand is SW1 SW1 SH1 SH1 SW3),
-  so the first battle already draws from the real deck system. The engine's
+  ten), so the first battle already draws from the real deck system.
+  Battle start shuffles the battle copy of the pile (seeded
+  Fisher–Yates, `deck_shuffle_pile`), so the opening hand is a random five
+  — the persistent deck order is only the DECK-menu order and is never
+  mutated by a battle. The engine's
   fallback battle deck (`deck_init_default`) mirrors the same ten cards so
   legacy and empty states behave identically. The grant is silent by design:
   `deck_add_card` emits no telemetry; callers do.

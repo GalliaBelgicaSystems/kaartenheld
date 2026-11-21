@@ -9,7 +9,7 @@ defines + GAME_DIALOGUE_COUNT).  Ids assign by sorted filename order
 
 Render contract (see ui_draw_dialogue / dialogue_screen.c): the box draws
 the speaker + one line at a time, 18 chars wide; WRAM staging is
-speaker[12] / lines[8][21].  Violations fail loudly here, never silently
+speaker[16] / lines[11][21].  Violations fail loudly here, never silently
 in ROM.
 
 Usage:
@@ -28,8 +28,8 @@ from dialogue_ids import (
     dialogue_files, load_dialogue_json, dialogue_id_map, load_story_flags,
 )
 
-MAX_LINES = 8
-STAGE_SPEAKER = 11   # g_dlg_speaker[12] incl NUL
+MAX_LINES = 11
+STAGE_SPEAKER = 15   # g_dlg_speaker[16] incl NUL
 STAGE_LINE = 20      # g_dlg_lines[][21] incl NUL
 RENDER_WIDTH = 18    # dialogue box text width
 
@@ -87,11 +87,15 @@ def validate_dialogue(data, path, story_flags):
     if choice == "yes_no":
         # Engine contract (dialogue_screen.c): the choice cursor only
         # repaints the option row's two cursor cells (cols 0 and 7), so a
-        # choice dialogue must end with the exact option row.
-        if not lines or lines[-1] != "> YES   NO":
+        # choice dialogue must end with a known option row.  The classic
+        # row is "> YES   NO"; Carl's leave-the-field offer uses
+        # "> STAY  LEAVE" (same cursor cells: second option starts at
+        # col 8, so the col-7 repaint still lands on its blank).
+        if not lines or lines[-1] not in ("> YES   NO", "> STAY  LEAVE"):
             errors.append(
                 f"{path}: choice dialogue must end with the option row "
-                f"'> YES   NO' (cursor cols 0/7)")
+                f"'> YES   NO' (or '> STAY  LEAVE' for the stay/leave offer; "
+                f"cursor cols 0/7)")
     return errors, warnings
 
 
@@ -136,9 +140,10 @@ def build_content_output(rows, id_map):
     lines.append('#include "game_ids.h"')
     lines.append("")
     lines.append("/* ── Dialogue table (game content, banked ROM) ─────────────────────")
-    lines.append(" * Compiled into MBC5 ROM bank 7 (the `#pragma bank 7`")
-    lines.append(" * below) so the fixed bank 0 / _HOME area stays small.  Bank 7")
-    lines.append(" * has room (bank 2, home of the event/card/shop tables, is full).")
+    lines.append(" * Compiled into MBC5 ROM bank 10 (the `#pragma bank 10`")
+    lines.append(" * below) so the fixed bank 0 / _HOME area stays small.  Bank 10")
+    lines.append(" * has room (bank 2, home of the event/card/shop tables, is full,")
+    lines.append(" * and bank 7 filled with tracker songs).")
     lines.append(" * The engine never")
     lines.append(" * reads this table directly: core/dialogue.c copies the matching row and")
     lines.append(" * its text into WRAM staging in dialogue_start_def(), so the banked layout")
@@ -149,7 +154,7 @@ def build_content_output(rows, id_map):
     lines.append(" * render 18 chars wide.  Unused line slots are left NULL by the")
     lines.append(" * partial initializer; dialogue_start_def() only reads the first")
     lines.append(" * line_count slots. */")
-    lines.append("#pragma bank 7")
+    lines.append("#pragma bank 10")
     lines.append("")
     lines.append("const DialogueDefinition g_dialogues[] = {")
     order = sorted(id_map.keys(), key=lambda k: id_map[k])

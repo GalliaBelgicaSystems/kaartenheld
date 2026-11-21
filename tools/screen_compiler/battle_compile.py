@@ -47,14 +47,18 @@ def _load_ramp_slots():
     global _ramp_slots
     if _ramp_slots is None:
         try:
-            base = json.loads((REPO_ROOT / "generated" / "tiles" / "base.json").read_text())["slots"]
-            obj = json.loads((REPO_ROOT / "generated" / "tiles" / "obj.json").read_text())["slots"]
+            base_doc = json.loads((REPO_ROOT / "generated" / "tiles" / "base.json").read_text())
+            obj_doc = json.loads((REPO_ROOT / "generated" / "tiles" / "obj.json").read_text())
         except (OSError, ValueError, KeyError) as e:
             raise SystemExit(f"ERROR: ramp manifests missing (run make manifest first): {e}")
-        _ramp_slots = (
-            {v["ramp"]: int(k) for k, v in base.items()},
-            {v["ramp"]: int(k) for k, v in obj.items()},
-        )
+        base = base_doc["slots"]
+        obj = obj_doc["slots"]
+        base_map = {v["ramp"]: int(k) for k, v in base.items()}
+        obj_map = {v["ramp"]: int(k) for k, v in obj.items()}
+        # Aliased ramps share an existing slot (never-co-resident owners).
+        for ramp, slot in (obj_doc.get("aliases") or {}).items():
+            obj_map[ramp] = int(slot)
+        _ramp_slots = (base_map, obj_map)
     return _ramp_slots
 
 
@@ -155,8 +159,8 @@ OW_ORDER_PINNED = ['bat', 'kobold', 'mimic', 'slime', 'slime_lord', 'spider',
                    'npc_wizard', 'npc_heal_mage', 'slime_knight',
                    'treasure_chest']
 
-# Enemies precede riders in the shared OW blob (see ow_blob_layout);
-# riders append at the tail.  Never reorder the pinned list; append-only.
+# Riders stream separately at fixed ids (see build_rider_output), never
+# in the shared OW blob.  Never reorder the pinned list; append-only.
 
 
 def load_combat_art():
@@ -170,9 +174,14 @@ def load_combat_art():
         with open(path) as f:
             data = json.load(f)
         sid = data.get('id', path.stem)
-        for field in ['order', 'width', 'height', 'palette', 'frame0']:
+        for field in ['order', 'width', 'height', 'frame0']:
             if field not in data:
                 print("WARNING: %s: missing required field '%s'" % (path.name, field))
+        # BG palette is required only for BG-stamped sets; OAM sets must
+        # NOT carry it (ramp-check fails vestigial BG palettes on OAM sets:
+        # the encoder ignores them, display uses obj_palette).
+        if not data.get('oam') and 'palette' not in data:
+            print("WARNING: %s: missing required field 'palette' (BG-stamped set)" % path.name)
         w, h = data.get('width', 0), data.get('height', 0)
         if not (1 <= w <= 6):
             print("WARNING: %s: width %d must be 1-6" % (path.name, w))
@@ -345,10 +354,15 @@ def validate_enemy_type(path: Path, art_ids) -> dict:
         data = json.load(f)
 
     # Basic validation
-    required = ['id', 'label', 'category', 'sprite', 'name', 'hp', 'max_hp', 'battle_id', 'gold_reward', 'reward_currency']
+    required = ['id', 'label', 'category', 'sprite', 'name', 'hp', 'max_hp', 'battle_id', 'rank', 'gold_reward', 'reward_currency']
     for field in required:
         if field not in data:
             print("WARNING: %s: missing required field '%s'" % (path.name, field))
+
+    # Validate rank (docs/enemies_ranking.md §4.1/Phase 0): required 0-6.
+    rank = data.get('rank')
+    if not isinstance(rank, int) or not (0 <= rank <= 6):
+        print("WARNING: %s: rank %r must be an integer 0-6" % (path.name, rank))
 
     # Validate category
     if data.get('category') not in ['minion', 'elite', 'boss']:
@@ -538,36 +552,39 @@ def _find_cell_run(cells, names):
     return None
 
 
-def ow_blob_layout(enemy_types, rider_types=None):
-    """Shared overworld blob layout: returns (offsets, cells) where offsets
-    maps id -> blob tile offset and cells is the ordered tile-name
-    list (pinned prefix OW_ORDER_PINNED, then any remaining ids in sorted
-    order: append-only, pinned tiles never move; identical cell runs are
-    shared, never duplicated).
+def ow_blob_layout(enemy_types):
+    """Shared overworld blob layout: returns (offsets, idle_offsets, cells)
+    where offsets maps id -> walk-row blob tile offset, idle_offsets maps
+    id -> idle-row blob tile offset (only ids with idle_cells), and cells
+    is the ordered tile-name list (walk rows in pinned-prefix order, then
+    idle rows in the same type order, then nothing else).
     Overworld sprites may be multi-tile grids (width*height cells per frame,
     frame-major): each type contributes width*height*frames cells, and the
-    per-type base is the cumulative tile offset.
-    Returns (None, None) on budget overflow (error already printed)."""
+    per-type base is the cumulative tile offset.  An idle row holds exactly
+    width*height cells (ONE standing frame); the runtime shows it whenever
+    the actor is not moving between tiles.
+    Riders are DELIBERATELY absent: battle per-card OAM icons ride their
+    own stream at fixed OAM ids (RIDER_TILE_BASE, see build_rider_output),
+    time-sharing blob-tail ids 123-125 with the last walk cell + idle rows
+    (restored on overworld entry).  The blob is enemies only, exactly 26
+    cells (OAM 100-125): the tail contract below fails loudly otherwise.
+    Returns (None, None, None) on budget overflow (error already printed).
+    Append-only: pinned prefix OW_ORDER_PINNED covers the shipped walk
+    rows; a new walk row appends in sorted order among the unlisted (never
+    shifting pinned tiles); idle rows append after every walk row (never
+    shifting any walk row).  Never reorder; riders never move (fixed ids).
+    """
     offsets = {}
+    idle_offsets = {}
     cells = []
     at = 0
 
     # Enemies in pinned-prefix order, then any unlisted ids sorted:
     # new content appends at the tail and can never shift pinned tiles.
-    # Rider HUD icons (screens/rider_icons.json: per-card OAM, not
-    # enemies, never spawned) append AFTER every enemy under their cell
-    # names (not sorted among them: "rider_*" would otherwise wedge before
-    # "slime_*" and renumber the blob) so their offsets stay computed,
-    # never hand-written, and enemy offsets never move.
     merged = dict(enemy_types)
-    _rider_ids = []
-    if rider_types:
-        for _rid, _rramp in sorted(rider_types.items()):
-            merged[_rid] = {"overworld": {"cells": [_rid], "palette": _rramp}}
-            _rider_ids.append(_rid)
     et_ids = ([i for i in OW_ORDER_PINNED if i in merged] +
-              sorted(i for i in merged.keys() if i not in OW_ORDER_PINNED
-                     and i not in _rider_ids) + _rider_ids)
+              sorted(i for i in merged.keys() if i not in OW_ORDER_PINNED))
+    # Phase 1: walk rows.
     for et_id in et_ids:
         ow = (merged[et_id].get('overworld') or None)
         if ow is None:
@@ -590,24 +607,57 @@ def ow_blob_layout(enemy_types, rider_types=None):
         offsets[et_id] = at
         cells.extend(names)
         at += len(names)
+    # Phase 2: idle rows (standing poses), after every walk row.
+    for et_id in et_ids:
+        ow = (merged[et_id].get('overworld') or None)
+        if ow is None:
+            continue
+        idle = ow.get('idle_cells') or []
+        if not idle:
+            continue
+        w = ow.get('width', 1) or 1
+        h = ow.get('height', 1) or 1
+        if len(idle) != w * h:
+            print("ERROR: %s: overworld.idle_cells has %d entries, need exactly width*height=%d (one standing frame)"
+                  % (et_id, len(idle), w * h), file=sys.stderr)
+            return None, None, None
+        for name in idle:
+            if name not in ENEMY_TILE_COORDS:
+                print("ERROR: %s: unknown idle tile '%s'" % (et_id, name), file=sys.stderr)
+                return None, None, None
+        reuse = _find_cell_run(cells, idle)
+        if reuse is not None:
+            idle_offsets[et_id] = reuse
+            continue
+        idle_offsets[et_id] = at
+        cells.extend(idle)
+        at += len(idle)
     if ENEMY_OW_BASE + at > ENEMY_OW_LIMIT:
         print("ERROR: overworld blob needs %d OAM tiles, budget is %d (base %d, limit %d)"
               % (at, ENEMY_OW_LIMIT - ENEMY_OW_BASE, ENEMY_OW_BASE, ENEMY_OW_LIMIT), file=sys.stderr)
-        return None, None
-    # OAM 126-127 are reserved for battle HUD pips (AP cost + !/? marks,
-    # streamed separately -- see build_ap_output): the blob must stop at 26
-    # so a future enemy addition fails loudly here instead of silently
-    # clobbering them.  (128+ is BG world/enemy art and equally hard.)
+        return None, None, None
+    # OAM 126-127 are reserved for battle HUD marks (streamed separately --
+    # see build_ap_output): the blob must stop at 26 so a future enemy
+    # addition fails loudly here instead of silently clobbering them.
+    # (128+ is BG world/enemy art and equally hard.)
     if at > 26:
         print("ERROR: overworld blob needs %d tiles but OAM 126-127 are reserved"
-              " for battle HUD pips (AP cost, !/? marks); move or drop a blob"
-              " cell first" % at, file=sys.stderr)
-        return None, None
-    return offsets, cells
+              " for battle HUD marks; move or drop a blob cell first" % at, file=sys.stderr)
+        return None, None, None
+    # Time-share tail contract (riders, see build_rider_output): battle
+    # streams rider icons over blob-tail OAM ids 123-125 and overworld
+    # entry restores them, so the blob must reach exactly offset 26
+    # (cells 23,24,25 exist to be clobbered and restored).
+    if at != 26:
+        print("ERROR: overworld blob has %d tiles, need exactly 26: rider "
+              "icons time-share blob-tail OAM ids 123-125 (see "
+              "build_rider_output); grow/shrink the blob and the tail "
+              "contract together" % at, file=sys.stderr)
+        return None, None, None
+    return offsets, idle_offsets, cells
 
 
-def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets,
-                           rider_types=None):
+def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets):
     """Generate C code for enemy type definitions + hero data."""
     lines = []
 
@@ -632,7 +682,7 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets,
     cat_map = {'minion': 0, 'elite': 1, 'boss': 2}
 
     et_ids = sorted(enemy_types.keys())
-    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, rider_types)
+    ow_offsets, ow_idle_offsets, _ow_cells = ow_blob_layout(enemy_types)
     if ow_offsets is None:
         return None, None
     for et_id in et_ids:
@@ -645,12 +695,27 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets,
             ow_frames = (len(cells) // (ow_w * ow_h)) if (ow_w * ow_h) else 0
             ow_palette = resolve_obj_palette(ow.get('palette', 0),
                                              "%s overworld.palette" % et_id)
+            if et_id in ow_idle_offsets:
+                ow_idle_tile = ENEMY_OW_BASE + ow_idle_offsets[et_id]
+            else:
+                ow_idle_tile = 0
+            if ow.get('blink'):
+                # Asymmetric reveal blink: exactly 2 cells on a 1x1
+                # sprite (frame0 rest, frame1 flash); the blink bit rides
+                # ow_frames bit 7 (frame counts never reach it), read by
+                # the bank-4 sprite body against the staged anim phase.
+                if ow_w * ow_h != 1 or len(cells) != 2:
+                    print("ERROR: %s: overworld.blink needs exactly 2 cells on a 1x1 sprite"
+                          % et_id, file=sys.stderr)
+                    return None, None
+                ow_frames |= 0x80
         else:
             ow_tile = 0xFF
             ow_w = 0
             ow_h = 0
             ow_frames = 0
             ow_palette = 0
+            ow_idle_tile = 0
         et = enemy_types[et_id]
         sprite = et.get('sprite') or {}
         art_id = sprite.get('art')
@@ -696,7 +761,9 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets,
         lines.append('    %d,' % ow_w)
         lines.append('    %d,' % ow_h)
         lines.append('    %d,' % ow_frames)
-        lines.append('    %d' % ow_palette)
+        lines.append('    %d,' % ow_palette)
+        lines.append('    %d,' % ow_idle_tile)
+        lines.append('    %d' % et.get('rank', 0))
         lines.append("};")
         lines.append("")
 
@@ -709,11 +776,12 @@ def build_enemy_types_output(enemy_types, art_sets, art_order, art_offsets,
     lines.append("")
     # Shared overworld blob size (tiles) for the ui_init OAM stream.
     # Enemies only: the hero overworld sprite is loaded separately via
-    # HERO_DESOLATE_SPRITE_TILE_ID and never from this blob.  Rider HUD
-    # icons ride the same stream at the blob tail, so the count DOES
-    # include them.  Reuses the single layout computed above (one call:
-    # riders append after every enemy, so enemy offsets are identical
-    # either way and a rider-driven overflow is still caught).
+    # HERO_DESOLATE_SPRITE_TILE_ID and never from this blob.  Idle rows
+    # ride the same stream at the blob tail, so the count DOES include
+    # them.  Reuses the single layout computed above.  Battle rider icons
+    # are NOT in this blob anymore (own stream at fixed RIDER_TILE_BASE,
+    # time-sharing the tail); the == 26 tail contract in ow_blob_layout
+    # keeps the clobbered cells populated.
     _ow_enemy = len(_ow_cells) if _ow_cells is not None else 0
     # NOTE: g_enemy_ow_tile_count is intentionally NOT emitted here.
     # battle_types.c lives in bank 4 while the blob (enemy_ow_tiles.h)
@@ -749,9 +817,75 @@ def build_ow_count_output(ow_count):
     lines.append(" * separately via HERO_DESOLATE_SPRITE_TILE_ID and never from")
     lines.append(" * this blob, so the blob and this count must not include hero")
     lines.append(" * cells (they would shift every enemy ow_tile offset by 2).")
-    lines.append(" * Rider HUD icons ride the same stream at the blob tail, so")
-    lines.append(" * the count DOES include them. */")
+    lines.append(" * Idle rows ride the same stream at the blob tail, so the")
+    lines.append(" * count DOES include them.  Rider icons are NOT in this blob")
+    lines.append(" * (own battle-entry stream at fixed RIDER_TILE_BASE, sharing")
+    lines.append(" * tail ids 123-125). */")
     lines.append("const uint8_t g_enemy_ow_tile_count = %d;" % ow_count)
+    lines.append("")
+    return "\n".join(lines)
+
+
+# BattleId -> rank table (docs/enemies_ranking.md §4.2/Phase 0).
+# The loot roll only knows the BattleId (actor.h enum), never the enemy's
+# HP/damage, so the rank is keyed by battle: BATTLE_SLIME_TRIO shares the
+# slime row, BATTLE_CARL is rank 0 (lesson: no drop), BATTLE_NONE resolves
+# to the slime lord (rank 6 -- only the Lord reaches the loot path with
+# BATTLE_NONE; NPCs/dogs/chests never start battles).  Mirrors
+# game_battle_enemy_type_id() in src/game/enemy_art_content.c; when that
+# hand-written switch is replaced by compiler output, both tables should
+# come from one mapping.
+BATTLE_RANK_ORDER = [
+    ("BATTLE_NONE", "slime_lord"),
+    ("BATTLE_SLIME", "slime"),
+    ("BATTLE_BAT", "bat"),
+    ("BATTLE_SLIME_TRIO", "slime"),
+    ("BATTLE_MIMIC", "mimic"),
+    ("BATTLE_KOBOLD", "kobold"),
+    ("BATTLE_SPIDER", "spider"),
+    ("BATTLE_CARL", None),
+    ("BATTLE_SLIME_KNIGHT", "slime_knight"),
+]
+
+
+def build_loot_rank_output(enemy_types):
+    """Generate src/game/loot_rank_content.c: the BattleId -> rank byte
+    row (bank 9, with the loot drop body that reads it).  Ranks come from
+    the enemy_type JSONs (validated 0-6 above); battles with no owning
+    enemy type use the authored mapping (BATTLE_SLIME_TRIO -> slime,
+    BATTLE_CARL -> 0, BATTLE_NONE -> slime_lord)."""
+    ranks = []
+    for battle_id, et_id in BATTLE_RANK_ORDER:
+        if et_id is None:
+            ranks.append(0)
+            continue
+        et = enemy_types.get(et_id)
+        if et is None:
+            sys.stderr.write("ERROR: loot rank: enemy type '%s' missing "
+                             "(needed for %s)\n" % (et_id, battle_id))
+            return None
+        r = et.get('rank', 0)
+        if not isinstance(r, int) or not (0 <= r <= 6):
+            sys.stderr.write("ERROR: loot rank: %s rank %r out of 0-6\n"
+                             % (et_id, r))
+            return None
+        ranks.append(r)
+    lines = []
+    lines.append("/**")
+    lines.append(" * Generated by tools/screen_compiler/battle_compile.py.")
+    lines.append(" * Do not edit directly -- edit screens/enemy_types/ and re-run.")
+    lines.append(" */")
+    lines.append("")
+    lines.append("#pragma bank 9")
+    lines.append("")
+    lines.append('#include <stdint.h>')
+    lines.append("")
+    lines.append("/* BattleId -> enemy rank R0-R6 (docs/enemies_ranking.md §4.2).")
+    lines.append(" * Index is the BattleId enum (actor.h): 0 NONE, 1 SLIME,")
+    lines.append(" * 2 BAT, 3 SLIME_TRIO, 4 MIMIC, 5 KOBOLD, 6 SPIDER, 7 CARL,")
+    lines.append(" * 8 SLIME_KNIGHT.  Read by game_loot_drop_banked (same bank). */")
+    lines.append("const uint8_t g_enemy_rank_by_battle[%d] = { %s };"
+                 % (len(ranks), ", ".join(str(r) for r in ranks)))
     lines.append("")
     return "\n".join(lines)
 
@@ -801,10 +935,11 @@ def _load_icon_table(filename, required):
 def load_ap_types():
     """Load + validate screens/ap_icons.json (battle AP-cost OAM pips).
 
-    Returns {cell: ramp} or None on error.  One icon per energy cost 1-2
-    (cost 0 shows none); the three-ap art stays staged in the sheet until
-    a 3-cost card exists (no free OAM tile below the BG-art aliasing)."""
-    return _load_icon_table("ap_icons.json", ["ap_1", "ap_2"])
+    Returns {cell: ramp} or None on error.  One icon per energy cost 1-5
+    (cost 0 shows none).  The pips time-share OAM ids with overworld art
+    (1-2 over hero idle 96-97, 3-4 over hero walk 98-99, 5 over blob
+    cell 122); battle entry streams them, overworld entry restores."""
+    return _load_icon_table("ap_icons.json", ["ap_1", "ap_2", "ap_3", "ap_4", "ap_5"])
 
 
 def load_mark_types():
@@ -815,21 +950,22 @@ def load_mark_types():
     return _load_icon_table("mark_icons.json", ["exclaim", "question"])
 
 
+RIDER_TILE_BASE = 123
+
 def build_rider_output(enemy_types, rider_types):
     """Generate src/game/rider_tiles_generated.h: battle per-card OAM icons.
 
     Selected-card element riders (STATUS_POISON/BURN/FREEZE) render as OAM
-    sprites, not BG tiles.  Their VRAM ids are blob offsets computed by
-    ow_blob_layout (append-only, never hand-written); their OBJ slots come
-    from the rider_icons.json ramp (slotted OBJ ramps only, resolved here
-    so a typo fails the compile, not the battle).  Compile-time constants:
-    zero ROM/RAM cost, no cross-bank reads, no staging.
+    sprites, not BG tiles.  Their VRAM ids are FIXED (RIDER_TILE_BASE..+2 =
+    OAM 123-125): they time-share blob-tail ids with the last walk cell +
+    idle rows (see ow_blob_layout), streaming over them at battle entry and
+    restored on overworld entry -- so they must never move.  Their OBJ slots
+    come from the rider_icons.json ramp (slotted OBJ ramps only, resolved
+    here so a typo fails the compile, not the battle).  Compile-time
+    constants: zero ROM/RAM cost, no cross-bank reads, no staging.
     """
     if not rider_types:
         sys.stderr.write("ERROR: missing rider HUD declaration\n")
-        return None
-    ow_offsets, _ow_cells = ow_blob_layout(enemy_types, rider_types)
-    if ow_offsets is None:
         return None
     lines = []
     lines.append("/**")
@@ -837,19 +973,25 @@ def build_rider_output(enemy_types, rider_types):
     lines.append(" * Do not edit directly -- edit screens/rider_icons.json and re-run.")
     lines.append(" * Battle per-card OAM rider icons: VRAM tile ids + OBJ palette slots")
     lines.append(" * for the selected-card element riders.")
+    lines.append(" *")
+    lines.append(" * TIME-SHARE: ids 123-125 alias blob-tail offsets 23-25 (the")
+    lines.append(" * last walk cell + idle rows).  Battle entry streams rider art")
+    lines.append(" * here (marks_load_battle_tiles); overworld entry restores the")
+    lines.append(" * blob tail.  ow_blob_layout's == 26 contract keeps the tail")
+    lines.append(" * populated on both sides of the share.")
     lines.append(" */")
     lines.append("")
     lines.append("#ifndef RIDER_TILES_GENERATED_H")
     lines.append("#define RIDER_TILES_GENERATED_H")
     lines.append("")
-    for _rid, _elem in (("rider_fire", "BURN"), ("rider_ice", "FREEZE"),
-                        ("rider_poison", "POISON")):
+    for _rid, _elem, _off in (("rider_fire", "BURN", 0), ("rider_ice", "FREEZE", 1),
+                              ("rider_poison", "POISON", 2)):
         _ramp = rider_types.get(_rid)
-        if _ramp is None or _rid not in ow_offsets:
+        if _ramp is None:
             sys.stderr.write("ERROR: rider_icons.json missing '%s'\n" % _rid)
             return None
         _slot = resolve_obj_palette(_ramp, "rider_icons.%s" % _rid)
-        lines.append("#define RIDER_TILE_%s %d" % (_elem, ENEMY_OW_BASE + ow_offsets[_rid]))
+        lines.append("#define RIDER_TILE_%s %d" % (_elem, RIDER_TILE_BASE + _off))
         lines.append("#define RIDER_OBJ_%s %d" % (_elem, _slot))
     lines.append("")
     lines.append("#endif /* RIDER_TILES_GENERATED_H */")
@@ -859,11 +1001,14 @@ def build_rider_output(enemy_types, rider_types):
 
 # Fixed OAM tile ids for the battle HUD pips.  Below the BG-art aliasing
 # (OAM 128+ shares physical tiles with BG 128+), clear of the font dup
-# (OAM 0-95) and the hero tiles (98-99); the enemy blob streams to 100+.
-# AP_1/2 sit at 96-97, the marks at 126-127 (blob-adjacent spare); the
+# (OAM 0-95).  AP_1/2 sit at 96-97 (time-share hero idle, restored on
+# overworld entry), AP_3/4 at 98-99 (time-share hero walk, same restore),
+# AP_5 at 122 (time-shares blob offset 22, restored with the rider tail),
+# the marks at 126-127 (blob-adjacent spare, always resident); the
 # blob is capped at 26 tiles so growth fails loudly instead of
 # clobbering them (see ow_blob_layout).
-AP_TILE_IDS = {"ap_1": 96, "ap_2": 97, "exclaim": 126, "question": 127}
+AP_TILE_IDS = {"ap_1": 96, "ap_2": 97, "ap_3": 98, "ap_4": 99, "ap_5": 122,
+               "exclaim": 126, "question": 127}
 
 
 def build_ap_output(ap_types, mark_types):
@@ -892,7 +1037,8 @@ def build_ap_output(ap_types, mark_types):
     lines.append("#ifndef AP_TILES_GENERATED_H")
     lines.append("#define AP_TILES_GENERATED_H")
     lines.append("")
-    for _cell, _vid in (("ap_1", "1"), ("ap_2", "2")):
+    for _cell, _vid in (("ap_1", "1"), ("ap_2", "2"), ("ap_3", "3"),
+                        ("ap_4", "4"), ("ap_5", "5")):
         _ramp = ap_types.get(_cell)
         if _ramp is None:
             sys.stderr.write("ERROR: ap_icons.json missing '%s'\n" % _cell)
@@ -1084,15 +1230,16 @@ ICON_TILES = {
     'combat_ap_dot': 111,
     'combat_timer_bar_filled': 117, 'combat_timer_bar_empty': 127,
     # Limited-use arrow counters (bow floor row + HEAL rings sharing it):
-    # remaining-uses glyphs 0..5, plus the power-row nine icon.  VRAM ids
+    # remaining-uses glyphs 0..6, plus the power-row nine icon.  VRAM ids
     # must match the tail of s_card_tile_vram_ids
-    # (src/ui/ui_battle_content.c) — free BG fetch slots 97/98-103,
-    # nothing else ever writes them.  5_arrows reuses the trailing blank
-    # slot 103 (same overwrite trick as 4_arrows on 97).
+    # (src/ui/ui_battle_content.c) — free BG fetch slots 97/98-103 plus
+    # the former menu blank 112, nothing else ever writes them.
+    # 5_arrows reuses the trailing blank slot 103 (same overwrite trick
+    # as 4_arrows on 97); 6_arrows takes 112 outright.
     'combat_0_arrows_left': 98, 'combat_1_arrow_left': 99,
     'combat_2_arrows_left': 100, 'combat_3_arrows_left': 101,
     'combat_nine_icon': 102, 'combat_4_arrows_left': 97,
-    'combat_5_arrows_left': 103,
+    'combat_5_arrows_left': 103, 'combat_6_arrows_left': 112,
 }
 SKIN_COLORS = {'none': 0, 'fire': 1, 'iron': 2, 'field': 3, 'poison': 4,
                'wood': 5, 'gold': 6, 'dim': 7}
@@ -1206,9 +1353,9 @@ def build_card_skin_output(skin):
     lines.append("    { %s }," % ", ".join(str(SKIN_COLORS[skin['types'][k]['color']]) for k in SKIN_TYPE_KEYS))
     # Limited-use arrow counters: at most one card type carries them
     # (the bow, shared by HEAL rings); uses_tile is indexed by remaining
-    # uses 0..5, uses_power_tile is the power-row glyph for that type.
+    # uses 0..6, uses_power_tile is the power-row glyph for that type.
     uses_type, uses_tiles, uses_power = skin_uses_icons(skin)
-    lines.append("    /* uses_type (0xFF = none), uses_tile: uses 0..5, uses_power_tile */")
+    lines.append("    /* uses_type (0xFF = none), uses_tile: uses 0..6, uses_power_tile */")
     lines.append("    %d," % uses_type)
     lines.append("    { %s }," % ", ".join(uses_tiles))
     lines.append("    %d" % uses_power)
@@ -1220,19 +1367,19 @@ def build_card_skin_output(skin):
 def skin_uses_icons(skin):
     """Resolve the limited-use arrow counters: the (single) card type
     with a uses_icons list -> (BATTLE_CARD_TYPE index, tile list indexed
-    by remaining uses 0..5, power icon tile).  Exactly six icons,
-    ordered uses 5..0; uses_power_icon is the power-row glyph for that
+    by remaining uses 0..6, power icon tile).  Exactly seven icons,
+    ordered uses 6..0; uses_power_icon is the power-row glyph for that
     type."""
     if skin is None:
-        return 0xFF, ["0"] * 6, 0
+        return 0xFF, ["0"] * 7, 0
     for idx, key in enumerate(SKIN_TYPE_KEYS):
         entry = skin['types'][key]
         icons = entry.get('uses_icons')
         if not icons:
             continue
-        if len(icons) != 6:
-            raise ValueError("cards_skin.%s.uses_icons must list exactly 6 "
-                             "icons (uses 5,4,3,2,1,0)" % key)
+        if len(icons) != 7:
+            raise ValueError("cards_skin.%s.uses_icons must list exactly 7 "
+                             "icons (uses 6,5,4,3,2,1,0)" % key)
         for name in icons:
             if name not in ICON_TILES:
                 raise ValueError("cards_skin.%s.uses_icons: unknown icon "
@@ -1243,10 +1390,10 @@ def skin_uses_icons(skin):
             raise ValueError("cards_skin.%s.uses_power_icon: unknown icon "
                              "'%s' (not in the combat tileset slugs)"
                              % (key, power_name))
-        # JSON order is uses 5..0; the ROM indexes by remaining uses.
+        # JSON order is uses 6..0; the ROM indexes by remaining uses.
         tiles = [ICON_TILES[name] for name in reversed(icons)]
         return idx, [str(t) for t in tiles], ICON_TILES[power_name]
-    return 0xFF, ["0"] * 6, 0
+    return 0xFF, ["0"] * 7, 0
 
 
 def load_battle_hud():
@@ -1413,6 +1560,8 @@ def main(args=None):
                         help="Print the png2gb --tile-coords string for enemy_ow_tiles.h (sorted enemy-id order) and exit")
     parser.add_argument("--ap-coords", action="store_true",
                         help="Print the png2gb --tile-coords string for ap_tiles.h (AP cost pips + !/? marks, fixed order) and exit")
+    parser.add_argument("--rider-coords", action="store_true",
+                        help="Print the png2gb --tile-coords string for rider_tiles.h (battle OAM rider icons, fixed BURN/FREEZE/POISON order) and exit")
 
     args = parser.parse_args(args)
 
@@ -1534,18 +1683,17 @@ def main(args=None):
         return 0
 
     if args.ow_coords:
-        # Enemies + tail riders only: the hero overworld sprite is loaded
-        # separately via HERO_DESOLATE_SPRITE_TILE_ID and never from this
-        # blob (its vestigial hero-first layout path once over-counted the
-        # budget by 2 and, swallowed by the Makefile $(...) substitution,
-        # shipped a sheet-order blob that scrambled every OAM sprite while
-        # all tile-id assertions stayed green).  The blob order must match
-        # battle_types.c exactly: sorted enemy-id order, riders appended
-        # at the tail (same tail rule as ow_blob_layout).
-        _rider_types = load_rider_types()
-        if _rider_types is None:
-            return 1
-        _offsets, names = ow_blob_layout(enemy_types, _rider_types)
+        # Enemies only (walk rows + idle tail): the hero overworld sprite
+        # is loaded separately via HERO_DESOLATE_SPRITE_TILE_ID and never
+        # from this blob (its vestigial hero-first layout path once
+        # over-counted the blob budget by 2 and, swallowed by the Makefile
+        # $(...) substitution, shipped a sheet-order blob that scrambled
+        # every OAM sprite while all tile-id assertions stayed green).
+        # The blob order must match battle_types.c exactly (same layout
+        # rule as ow_blob_layout).  Riders are NOT in this blob: they ride
+        # their own battle-entry stream at fixed RIDER_TILE_BASE, sharing
+        # tail ids 123-125 with the last walk cell + idle rows.
+        _offsets, _idle_offsets, names = ow_blob_layout(enemy_types)
         if names is None:
             return 1
         coords = []
@@ -1558,15 +1706,14 @@ def main(args=None):
         return 0
 
     if args.ap_coords:
-        # AP-cost pips + !/? marks for ap_tiles.h (fixed order: ap_1,
-        # ap_2, then the marks -- matches AP_TILE_IDS; ap_3 stays staged
-        # until a 3-cost card exists and is deliberately excluded here).
+        # AP-cost pips + !/? marks for ap_tiles.h (fixed order: ap_1
+        # through ap_5, then the marks -- matches AP_TILE_IDS).
         _ap_types = load_ap_types()
         _mark_types = load_mark_types()
         if _ap_types is None or _mark_types is None:
             return 1
         coords = []
-        for n in ["ap_1", "ap_2", "exclaim", "question"]:
+        for n in ["ap_1", "ap_2", "ap_3", "ap_4", "ap_5", "exclaim", "question"]:
             if n not in ENEMY_TILE_COORDS:
                 print("ERROR: --ap-coords: '%s' not on the enemy sheet" % n, file=sys.stderr)
                 return 1
@@ -1577,14 +1724,29 @@ def main(args=None):
         print(" ".join(coords))
         return 0
 
+    if args.rider_coords:
+        # Battle OAM rider icons for rider_tiles.h (fixed order BURN,
+        # FREEZE, POISON -- matches RIDER_TILE_BASE; streamed at battle
+        # entry over blob-tail ids 123-125, restored on overworld entry).
+        coords = []
+        for n in ["rider_fire", "rider_ice", "rider_poison"]:
+            if n not in ENEMY_TILE_COORDS:
+                print("ERROR: --rider-coords: '%s' not on the enemy sheet" % n, file=sys.stderr)
+                return 1
+            coords.append("%d,%d" % ENEMY_TILE_COORDS[n])
+        if not coords:
+            print("ERROR: --rider-coords produced no tiles", file=sys.stderr)
+            return 1
+        print(" ".join(coords))
+        return 0
+
 # Generate outputs
     battle_screens_output = build_battle_screens_output(battle_screens, {})
     rider_types = load_rider_types()
     if rider_types is None:
         return 1
     enemy_types_output, ow_count = build_enemy_types_output(
-        enemy_types, art_sets, art_order, art_offsets,
-        rider_types)
+        enemy_types, art_sets, art_order, art_offsets)
     if enemy_types_output is None:
         return 1
     ow_count_output = build_ow_count_output(ow_count)
@@ -1609,6 +1771,9 @@ def main(args=None):
     ap_output = build_ap_output(ap_types, mark_types)
     if ap_output is None:
         return 1
+    loot_rank_output = build_loot_rank_output(enemy_types)
+    if loot_rank_output is None:
+        return 1
 
     # Write battle_screens.c
     battle_screens_path = output_dir / "battle_screens.c"
@@ -1630,6 +1795,8 @@ def main(args=None):
     rider_path = output_dir / "rider_tiles_generated.h"
     # Write ap_tiles_generated.h (battle HUD OAM pips: AP cost + !/?)
     ap_path = output_dir / "ap_tiles_generated.h"
+    # Write loot_rank_content.c (BattleId -> rank row, bank 9 with the drop body)
+    loot_rank_path = output_dir / "loot_rank_content.c"
 
     if args.check:
         for path, fresh in ((battle_screens_path, battle_screens_output),
@@ -1641,7 +1808,8 @@ def main(args=None):
                             (card_skin_path, card_skin_output),
                             (hud_skin_path, hud_skin_output),
                             (rider_path, rider_output),
-                            (ap_path, ap_output)):
+                            (ap_path, ap_output),
+                            (loot_rank_path, loot_rank_output)):
             try:
                 committed = path.read_text(encoding="utf-8")
             except FileNotFoundError:
@@ -1711,6 +1879,9 @@ def main(args=None):
     with open(ap_path, "w") as f:
         f.write(ap_output)
     print("Wrote %s" % ap_path)
+    with open(loot_rank_path, "w") as f:
+        f.write(loot_rank_output)
+    print("Wrote %s" % loot_rank_path)
 
     return 0
 

@@ -10,9 +10,15 @@
 #include "rpg/deck.h"
 #include "rng.h"
 #include "content.h"
+#include "economy.h"
 #include "ui.h"
 #include "audio.h"
 #include "banked.h"
+
+/* BattleId -> enemy rank R0-R6 (src/game/loot_rank_content.c, bank 9).
+ * Fixed-bank readers dispatch game_loot_rank_banked -- never a direct
+ * read (the table's bank is not mapped in fixed context). */
+void game_loot_rank_banked(void);
 
 /* TileType headroom (see the note on the enum in world.h): ids live in
  * uint8_t map arrays with 0xFF as the empty-cell sentinel.  A size-0
@@ -20,9 +26,11 @@
  * in input.c). */
 static const int g_tiletype_fits_u8[(TILE_DESOLATE_LANDSCAPE_63 <= 0xFE) ? 1 : 0];
 
-/* Bank-3 movement bodies (src/world/edge_banked.c). */
+/* Bank-15 movement body (src/world/edge_banked.c). */
 void world_gate_check_banked(void);
-void world_edge_spawn_banked(void);
+/* Bank-12 combined diagonal gate check (src/world/diagonal_banked.c). */
+void diagonal_gate_check_banked(void);
+
 
 void world_load_map(World *w, MapId map_id, const GameState *state)
 {
@@ -66,22 +74,15 @@ void world_load_map(World *w, MapId map_id, const GameState *state)
     actor_load_scene(w, map_id, state);
 }
 
+void world_update_scroll_banked(void);
+
 void world_update_scroll(World *w)
 {
-    uint8_t px, py, max_x, max_y;
     if (!w) return;
-    px = world_player_px(w);
-    py = world_player_py(w);
-    px = (px < 80) ? 0 : (uint8_t)(px - 80);
-    py = (py < 72) ? 0 : (uint8_t)(py - 72);
-    max_x = (w->width > WORLD_VIEW_W) ? (uint8_t)((w->width - WORLD_VIEW_W) << 3) : 0;
-    max_y = (w->height > WORLD_VIEW_H) ? (uint8_t)((w->height - WORLD_VIEW_H) << 3) : 0;
-    if (px > max_x) px = max_x;
-    if (py > max_y) py = max_y;
-    w->camera_px_x = px;
-    w->camera_px_y = py;
-    w->scroll_x = (uint8_t)(px >> 3);
-    w->scroll_y = (uint8_t)(py >> 3);
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&world_update_scroll_banked;
+    g_bk_ptr_a = (void *)w;
+    banked_call_run();
 }
 
 void world_init(World *w, const GameState *state)
@@ -123,11 +124,13 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     uint8_t hostile_slot;
     const StaticActorDefinition *actor;
     const SceneDefinition *def;
-    const SceneExit *ex;
+    uint8_t sx;
+    Direction old_facing;
 
-    if (!w || w->move_state == MOVE_STATE_MOVING) return MOVE_RESULT_NONE;
+    if (!w || w->move_state != MOVE_STATE_IDLE) return MOVE_RESULT_NONE;
     (void)state;
 
+    old_facing = w->player.facing;
     if (dy < 0) w->player.facing = DIRECTION_UP;
     else if (dy > 0) w->player.facing = DIRECTION_DOWN;
     else if (dx < 0) w->player.facing = DIRECTION_LEFT;
@@ -139,27 +142,34 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     def = scene_definition_for_map(w->map_id);
 
     /* Invisible point-exit triggers fire regardless of the art painted
-     * under them, so the fixed-side table lookup comes first.  The STEPPED
-     * gate tile stays the move target (a normal one-tile walk); the far
-     * destination is staged separately. */
-    ex = scene_exit_at(def, target_x, target_y);
-    if (ex) {
-        w->move_outcome = MOVE_OUTCOME_EXIT;
-        w->move_param = (uint8_t)ex->target_scene;
-        w->move_target_x = target_x;
-        w->move_target_y = target_y;
-        w->move_exit_x = ex->spawn_x;
-        w->move_exit_y = ex->spawn_y;
-    } else {
-        /* Walkability + whole-edge decide run banked (bank 2 body writes
-         * outcome/param/dir/target straight through the staged World
-         * pointer).  A missing def stages NULL, which the body treats as
-         * no links after resetting the outcome to NONE.  Unwalkable
-         * ground blocks HERE, before actors resolve, so a hostile or
-         * static actor on solid art stays inert -- the legacy
-         * walkability-first gate (AGENTS item: actor checks must not
-         * precede walkability). */
-        g_bk_call_bank = 2;
+     * under them (scene home bank).  For diagonals, stage the exit
+     * probe first and let diagonal_gate_check_banked enforce the
+     * thumb-roll guard, orthogonal corner rule, and actor-aware
+     * wall-hug slide cleanly in bank 12. */
+    if (dx != 0 && dy != 0) {
+        sx = scene_exit_check(w, def, target_x, target_y);
+        g_bk_call_bank = 12;
+        g_bk_call_target = (uint16_t)&diagonal_gate_check_banked;
+        g_bk_ptr_a = (void *)w;
+        g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
+        g_bk_byte_a = target_x;
+        g_bk_byte_b = target_y;
+        g_bk_byte_d = sx;
+        banked_call_run();
+        if (g_bk_byte_c == 1) {
+            w->player.facing = old_facing;
+            return MOVE_RESULT_NONE;
+        }
+        if (w->move_outcome == MOVE_OUTCOME_NONE) {
+            return MOVE_RESULT_BLOCKED;
+        }
+        target_x = w->move_target_x;
+        target_y = w->move_target_y;
+        if (g_bk_byte_c == 2) {
+            scene_exit_check(w, def, target_x, target_y);
+        }
+    } else if (!scene_exit_check(w, def, target_x, target_y)) {
+        g_bk_call_bank = 15;
         g_bk_call_target = (uint16_t)&world_gate_check_banked;
         g_bk_ptr_a = (void *)w;
         g_bk_ptr_b = def ? (void *)&def->neighbor_n : (void *)0;
@@ -229,38 +239,28 @@ WorldMoveResult world_update_move(World *w, const GameState *state)
 
         if (w->move_outcome == MOVE_OUTCOME_EXIT || w->move_outcome == MOVE_OUTCOME_EDGE) {
             /* Scene change: point-exit spawns were staged by the decide
-             * path; whole-edge entry spawns run banked (bank 2 body,
-             * fixed-bank budget) from the staged cross-coordinate, edge
-             * dimension and direction. The player never commits
-             * PLAYER_MOVED onto the gate; the map changes. */
+             * path; whole-edge crossings land on the destination's
+             * arrival-side named entry (player.entry, Spawn layer),
+             * falling back to its main spawn when unset.  No row
+             * mirroring, so levels need no edge alignment. The player
+             * never commits PLAYER_MOVED onto the gate; the map changes. */
             SceneId target_scene = (SceneId)w->move_param;
-            uint8_t sx = w->move_target_x;
-            uint8_t sy = w->move_target_y;
             if (w->move_outcome == MOVE_OUTCOME_EDGE) {
-                /* Mirrored entry spawn runs banked (bank 2 body,
-                 * fixed-bank budget): cross-coordinate from the staged
-                 * target, both neighbor dims from a table fetch (the
-                 * predicate body cannot read tables). */
-                const SceneDefinition *nd = scene_definition_for_map((MapId)w->move_param);
-                if (!nd) {
-                    return MOVE_RESULT_BLOCKED;
-                }
-                g_bk_call_bank = 2;
-                g_bk_call_target = (uint16_t)&world_edge_spawn_banked;
-                g_bk_byte_a = (w->move_dir < 2) ? w->move_target_x : w->move_target_y;
-                g_bk_byte_b = nd->width;
-                g_bk_byte_c = nd->height;
-                g_bk_byte_d = w->move_dir;
-                banked_call_run();
-                sx = g_bk_byte_a;
-                sy = g_bk_byte_b;
+                /* Edge entry = the destination's arrival-side named entry
+                 * (player.entry, Spawn layer), falling back to its main
+                 * spawn when unset.  Runs banked (scene_entry: fixed-bank
+                 * budget, AGENTS.md 52.18); the selected entry was
+                 * validated walkable by the compile gate. */
+                scene_entry((MapId)target_scene, w->move_dir);
+                world_change_map(w, scene_id_to_map(target_scene),
+                                 g_bk_byte_b, g_bk_byte_c, state);
+                w->player.facing = (Direction)g_bk_byte_d;
             } else {
                 /* Point exit: the explicit destination staged at decide
                  * time (move_target is the stepped gate tile). */
-                sx = w->move_exit_x;
-                sy = w->move_exit_y;
+                world_change_map(w, scene_id_to_map(target_scene),
+                                 w->move_exit_x, w->move_exit_y, state);
             }
-            world_change_map(w, scene_id_to_map(target_scene), sx, sy, state);
             return MOVE_RESULT_MAP_CHANGED;
         } else if (w->move_outcome == MOVE_OUTCOME_ENCOUNTER) {
             /* The player does not occupy the enemy tile; battle starts from
@@ -333,24 +333,62 @@ void world_on_battle_end(Game *g, bool victory)
         act->hp = 0;
         act->flags = ACTOR_STATE_NONE;
         telemetry_emit(EVENT_ENTITY_DEFEATED, (uint8_t)act->id, 0, 0, 0);
-        if (act->reward_currency != 0 && act->gold_reward != 0) {
-            currency_add(&g->state, (CurrencyId)act->reward_currency, act->gold_reward);
-        }
+        /* Economy (docs/economy.md §3/§6): the bank-11 grant body owns the
+         * wallet-dampened credit, the loot-only gold_in note, and the
+         * battles tick.  Staged inline (single site -- a wrapper would
+         * only re-pay the staging).  Silent no-grant for reward-less          * fights (Carl's zero-gold spar ticks nothing); sales and event
+         * gold never touch gold_in (§6.1); defeat pays nothing
+         * (victory branch only). */
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&economy_grant_banked;
+        g_bk_byte_a = act->gold_reward;
+        g_bk_byte_b = 1;
+        g_bk_byte_c = (uint8_t)act->reward_currency;
+        banked_call_run();
         if (actor_id != 0) {
             game_world_set_actor_state(&g->state, actor_id, ACTOR_STATE_DEFEATED);
         }
         event_resolve_actor_defeated(g, actor_id, act->id);
 
-        /* Loot grant (docs/loot.md §8/§17/§34.5): the drop was ROLLED at
-         * battle start (game_loot_drop, isolated RNG) and its derived id
-         * waits in g_loot_id -- victory grants it to the collection.
-         * CARD_NONE = collection previously full (no room to grant). */
+        /* Loot grant (docs/loot.md §8/§17/§34.5, docs/enemies_ranking.md
+         * §4.3): the drop was ROLLED at battle start (game_loot_drop,
+         * isolated RNG) and its derived id waits in g_loot_id -- victory
+         * grants it to the collection.  CARD_NONE = rank-0 lesson fight
+         * (no drop) or a full collection (no room to grant). */
         if (g_loot_id != CARD_NONE) {
             if (deck_collection_add(&g->state.cards, g_loot_id, 1)) {
 #ifdef DEBUG_BUILD
-                telemetry_emit(EVENT_LOOT_CARD_ADDED, g_loot_id,
-                               deck_collection_count(&g->state.cards,
-                                                     g_loot_id), 0, 0);
+                {
+                    uint8_t loot_rank;
+                    uint8_t loot_total;
+                    g_bk_call_bank = 9;
+                    g_bk_call_target = (uint16_t)&game_loot_rank_banked;
+                    g_bk_byte_a = g->battle.enemy_battle_id;
+                    banked_call_run();
+                    /* Hoist the rank first: the total lookup below is a
+                     * second banked dispatch and stages over g_bk_byte_b
+                     * (same staging hazard the pre-add count hoist used
+                     * to cover for the merge).  The Battle's own battle
+                     * id feeds the rank lookup: the split event above
+                     * rewrites the runtime actor slot in place (knight
+                     * -> slime trio), so act->battle_type already names
+                     * the SECOND fight here -- the roll happened for the
+                     * first.  enemy_battle_id is never rewritten
+                     * (docs/enemies_ranking.md §1.6). */
+                    loot_rank = g_bk_byte_b;
+                    /* d1 is the identity total AFTER the grant (banked:
+                     * folds move copies onto curated ids, so the loot
+                     * row's own count would go stale -- e.g. always 1 on
+                     * a fold into a non-empty curated row). */
+                    g_bk_call_bank = 15;
+                    g_bk_call_target = (uint16_t)&deck_ident_total_banked;
+                    g_bk_ptr_a = (void *)&g->state.cards;
+                    g_bk_byte_a = g_loot_id;
+                    banked_call_run();
+                    loot_total = g_bk_byte_b;
+                    telemetry_emit(EVENT_LOOT_CARD_ADDED, g_loot_id,
+                                   loot_total, loot_rank, 0);
+                }
 #endif
             } else {
                 g_loot_id = CARD_NONE;
@@ -359,26 +397,18 @@ void world_on_battle_end(Game *g, bool victory)
     }
 }
 
+void world_on_battle_fled_banked(void);
+
 void world_on_battle_fled(Game *g)
 {
-    World *w;
-    uint8_t idx;
+    /* Thin fixed-bank wrapper: the fled body lives in ROM bank 12
+     * (src/world/fled_banked.c) to keep the fixed-bank budget for the
+     * diagonal wall-hug slide (AGENTS.md 52.18). Single staging slot. */
     if (!g) return;
-    w = &g->world;
-
-    /* The enemy stays on the map at the HP it had when the hero ran:
-     * no reward, defeat, or quest progress.  Inline (not banked): pure
-     * WRAM reads/writes, and the fixed bank has room again. */
-    idx = w->encounter_actor_index;
-    w->encounter_actor_index = NO_ACTOR_INDEX;
-    /* Flee grace (WORLD_FLEE_GRACE_FRAMES): the hero exits next to a live
-     * hostile, so encounters stay suppressed for ~2s while they escape. */
-    w->encounter_cooldown = WORLD_FLEE_GRACE_FRAMES;
-    if (idx == NO_ACTOR_INDEX) return;
-
-    if (w->actors[idx].active) {
-        w->actors[idx].hp = g->battle.enemies[0].hp;
-    }
+    g_bk_call_bank = 12;
+    g_bk_call_target = (uint16_t)&world_on_battle_fled_banked;
+    g_bk_ptr_a = (void *)g;
+    banked_call_run();
 }
 
 uint8_t g_patrol_outcome;  /* BSS zero (AGENTS.md 52.27) */
@@ -393,18 +423,36 @@ WorldMoveResult world_update_actors(World *w)
     if (!w) return MOVE_RESULT_NONE;
 
     for (slot = 0; slot < MAX_WORLD_ACTORS; slot++) {
+        WorldActorRuntime *a = &w->actors[slot];
         /* Inactive slots have no patrol state (the banked body returns
          * immediately for them): skip the trampoline round-trip.  Peaceful
-         * maps (town, cleared scenes) run zero patrol dispatches/frame. */
-        if (!w->actors[slot].active) continue;
+         * maps (town, cleared scenes) run zero patrol dispatches/frame.
+         * Idle actives skip it too: an actor that is neither animating a
+         * step nor due one only needs its step timer ticked down, which
+         * is plain WRAM work (no bank switch).  Intermediate move frames
+         * (move_progress < MOVE_FRAMES - 1) only increment progress in
+         * WRAM; the banked body runs only on decision frames and commit
+         * frames -- cutting moving-frame dispatches by 7/8ths with identical
+         * outcomes on identical frames.  Without this, crowded maps (4+
+         * actives) overrun VBlank and drop to half speed. */
+        if (!a->active) continue;
+        if (a->ai_type == AI_NONE || a->ai_type == AI_TUTOR) continue;
+        if (a->move_state) {
+            if (a->move_progress < (MOVE_FRAMES - 1)) {
+                a->move_progress++;
+                continue;
+            }
+        } else if (a->ai_timer != 0) {
+            a->ai_timer--;
+            continue;
+        }
         g_patrol_outcome = 0;
-        g_patrol_evt[0] = g_patrol_evt[1] = g_patrol_evt[2] = g_patrol_evt[3] = 0;
         g_patrol_world = w;
         g_patrol_slot = slot;
 #ifdef DEBUG_BUILD
         g_bk_call_bank = 5;
 #else
-        g_bk_call_bank = 3;
+        g_bk_call_bank = 12;
 #endif
         g_bk_call_target = (uint16_t)&world_patrol_slot_banked;
         banked_call_run();

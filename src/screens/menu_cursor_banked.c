@@ -1,0 +1,1644 @@
+#pragma bank 15
+#pragma disable_warning 110
+
+#include <gb/gb.h>
+#include <gb/cgb.h>
+#include "game.h"
+#include "ui.h"
+#include "banked.h"
+#include "telemetry.h"
+#include "telemetry_ring.h"
+#include "shops.h"
+#include "rpg/loot.h"
+#include "rpg/cards.h"
+#include "rpg/status.h"
+#include "rpg/deck.h"
+#include "game_ids.h"
+
+/* Shared SHOP cursor repaint (AGENTS.md 36): a cursor-only UP/DOWN
+ * repaints just the `>` glyph instead of invalidating the render cache.
+ * (The DECK tab's per-side navigation lives further down, see
+ * item_deck_nav_banked.)
+ *
+ * Lives in bank 15 (not bank 2 with the renders that call it): bank 2's
+ * switchable area is full, and this body is pure WRAM math -- mode/row
+ * computation plus two VRAM cell writes -- needing no bank-2 ROM tables
+ * (AGENTS.md §52.11.1).  Staging per item_menu_step_banked; the body
+ * owns the mutation (scroll + caret rows), callers keep their
+ * single-call shape so the fixed bank stays under 0x8000 (AGENTS.md
+ * §52.18). */
+
+extern char g_ui_screen_buf[18][21];
+extern uint8_t ui_font_tile_base;
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
+
+/* Item menu navigation layout constants (mirror item_screen.c). */
+#define CUR_FIRST_CARD 1
+/* Visible DECK rows (5-13): 9 rows x 4 OAM sprites (rider+ingot, both
+ * sides) = 36 entries, inside the 40-entry OAM budget. */
+#define CUR_VISIBLE_CARD 9
+/* First card row (mirror item_content_banked.c ROW_CARDS_TOP -- keep in
+ * sync): the diff-clear below addresses rows by slot. */
+#define CUR_CARDS_TOP 5
+
+/* Nav-mutation constants (mirror item_screen.c TAB_DECK/TAB_GEM/ROW_TOP,
+ * FILTER_ALL, SORT_NONE/SORT_COST_DESC) for item_menu_cycle_banked
+ * below -- keep in sync. */
+#define CYC_TAB_DECK  0
+#define CYC_TAB_GEM   3
+#define CYC_ROW_TOP   0
+#define CYC_FILTER_ALL 0xFF
+#define CYC_SORT_NONE  0
+#define CYC_SORT_COST_DESC 5
+
+static Game *s_cu_game;
+static uint8_t s_cu_old_index;
+static uint8_t s_cu_new_index;
+static uint8_t s_cu_old_row;
+static uint8_t s_cu_new_row;
+static uint8_t s_cu_need_scroll;
+
+static void cu_put_char(uint8_t x, uint8_t y, char ch)
+{
+    uint8_t tile;
+
+    if (y >= 18 || x >= 20) return;
+    if (g_ui_screen_buf[y][x] == ch) return;
+    tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x), tile);
+    g_ui_screen_buf[y][x] = ch;
+}
+
+/* Shop scroll-window + caret repaint for staged old/new.  The shop is
+ * the only remaining in-place painter: the DECK tab navigates through
+ * item_deck_nav_banked (state only; the caller invalidates and the full
+ * render repaints without wiping, so stepping never blinks) and
+ * QUEST/GEM/HERO through their own bank-13 bodies. */
+static void cu_apply(void)
+{
+    s_cu_game->item_menu_index = s_cu_new_index;
+
+    /* Shop list: index is a direct stock position (0-based).  Keep the
+     * cursor inside the SHOP_VISIBLE window; a window shift needs a
+     * full redraw (the banked body cannot repaint scrolled rows). */
+    s_cu_need_scroll = s_cu_game->item_menu_scroll;
+    if (s_cu_new_index < s_cu_need_scroll)
+        s_cu_need_scroll = s_cu_new_index;
+    else if (s_cu_new_index > (uint8_t)(s_cu_need_scroll + SHOP_VISIBLE - 1))
+        s_cu_need_scroll = (uint8_t)(s_cu_new_index - (SHOP_VISIBLE - 1));
+    if (s_cu_need_scroll != s_cu_game->item_menu_scroll) {
+        s_cu_game->item_menu_scroll = s_cu_need_scroll;
+        s_cu_game->render_cache.valid = false;
+        return;
+    }
+
+    s_cu_old_row = (uint8_t)(5u + (uint8_t)(s_cu_old_index - s_cu_game->item_menu_scroll));
+    s_cu_new_row = (uint8_t)(5u + (uint8_t)(s_cu_new_index - s_cu_game->item_menu_scroll));
+    if (s_cu_old_row != s_cu_new_row) {
+        cu_put_char(0, s_cu_old_row, ' ');
+        cu_put_char(0, s_cu_new_row, '>');
+    }
+}
+
+/* ── DECK group member/sums helper ───────────────────────────────
+ * One DECK row covers every deckable collection entry sharing the
+ * primary's (MATERIAL, WEAPON) name.  The DECK A handler needs
+ * the member list + group totals, but the fixed bank cannot resolve
+ * loot ids (catalog lives in bank 2) and bank 2 is at its ceiling
+ * (AGENTS.md 52.18), so the key compare lives here (bank 15 has room
+ * after the overflow moves).
+ *
+ * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = primary collection index,
+ * g_bk_byte_b = ordinal (NTH) / ignored (SUMS), g_bk_byte_d = mode
+ * (0 = NTH, 1 = SUMS).
+ * NTH: g_bk_byte_c = collection index of the ordinal-th same-name
+ *   deckable member, or 0xFF past the end.
+ * SUMS: g_bk_byte_c = group owned total, g_bk_byte_b = group decked
+ *   total (saturating).
+ *
+ * Key mapping is a copy of bank-2 ic_card_mat_wpn's curated switch
+ * (loot axes come from loot.h macros, same as both sides): keep the
+ * two in sync when the curated list grows. */
+/* Curated rows, index = CardId - CARD_FIRST_GAME (the catalog order in
+ * src/game/game_ids.h): material, weapon, deckable, type, power, cost
+ * (the last three drive the FILTER and SORT modes for the view build
+ * below -- the catalog itself is bank 2 and off-limits from here),
+ * plus the on-hit rider status id (STATUS_NONE when the card rides
+ * nothing -- only the poison dagger rides among curated cards).  The
+ * rider is part of the group key below: two rows share a DECK list
+ * row only when the player could not tell their cards apart in
+ * combat. */
+static const uint8_t s_cu_grp_mat[GAME_CARD_COUNT] =
+    { 2, 0, 2, 1, 1, 0, 4, 0, 3, 0, 0 };
+static const uint8_t s_cu_grp_wpn[GAME_CARD_COUNT] =
+    { 0, 1, 4, 0, 3, 0, 2, 0, 1, 0, 0 };
+static const uint8_t s_cu_grp_deckable[GAME_CARD_COUNT] =
+    { 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0 };
+static const uint8_t s_cu_grp_type[GAME_CARD_COUNT] =
+    { 0, 1, 2, 0, 0, 5, 0, 0, 1, 5, 5 };
+static const uint8_t s_cu_grp_power[GAME_CARD_COUNT] =
+    { 5, 1, 4, 3, 2, 0, 7, 1, 6, 1, 2 };
+static const uint8_t s_cu_grp_cost[GAME_CARD_COUNT] =
+    { 2, 1, 2, 1, 2, 0, 5, 1, 3, 0, 0 };
+static const uint8_t s_cu_grp_rider[GAME_CARD_COUNT] =
+    { 0, 0, 0, 0, STATUS_POISON, 0, 0, 0, 0, 0, 0 };
+
+static uint8_t cu_loot_has_rider(uint8_t mat, uint8_t w, uint8_t e)
+{
+    if (mat < MAT_BRONZE || e == EFF_PLAIN) return 0;
+    if (e == EFF_POISON) return (w == WPN_DAGGER) ? 1u : 0u;
+    if (e == EFF_FIRE || e == EFF_ICE) return (w == WPN_BOW) ? 1u : 0u;
+    return 0;
+}
+
+/* Group key: (MATERIAL, WEAPON, rider status).  Loot riders synthesize
+ * from the id axes with the same bronze-gated legality as
+ * loot_synth_banked and the bank-2 display mirror (poison is
+ * dagger-only, fire/ice bow-only); curated rows read the table above.
+ * Decks, sums, navigation and the A/unequip paths all key through
+ * here, so one row always means one playable card. */
+static uint8_t cu_grp_key(CardId id, uint8_t *mat, uint8_t *wpn,
+                           uint8_t *rider)
+{
+    uint8_t k;
+    uint8_t w;
+    uint8_t e;
+    if (loot_is_loot_id(id)) {
+        *mat = loot_id_material(id);
+        w = loot_id_weapon(id);
+        *wpn = (w <= 4) ? w : 0;
+        e = loot_id_effect(id);
+        *rider = cu_loot_has_rider(*mat, w, e) ? e : STATUS_NONE;
+        return 1;
+    }
+    if (id < CARD_FIRST_GAME) return 0;
+    k = (uint8_t)(id - CARD_FIRST_GAME);
+    if (k >= GAME_CARD_COUNT) return 0;
+    if (!s_cu_grp_deckable[k]) return 0;
+    *mat = s_cu_grp_mat[k];
+    *wpn = s_cu_grp_wpn[k];
+    *rider = s_cu_grp_rider[k];
+    return 1;
+}
+
+/* View-build helpers (same bank as the curated group table; the card
+ * catalog lives in bank 2 and card_get_def is a fixed-bank trampoline a
+ * banked body must never call -- AGENTS.md 52.11.1).  Loot ids resolve
+ * from the id axes with the same pure macros as loot_synth_banked. */
+static uint8_t cu_grp_type(CardId id, uint8_t *power, uint8_t *cost)
+{
+    uint8_t k;
+    uint8_t m, w, wi, rider;
+    if (loot_is_loot_id(id)) {
+        m = loot_id_material(id);
+        w = loot_id_weapon(id);
+        wi = (w <= WPN_RING) ? w : WPN_SWORD;
+        *power = LOOT_POWER(m, wi);
+        rider = cu_loot_has_rider(m, w, loot_id_effect(id));
+        *cost = (w <= WPN_RING) ? CARD_AP(*power, m, rider) : 0;
+        if (w == WPN_SHIELD) return 1;                       /* DEF */
+        if (w == WPN_RING || w > WPN_RING) return 2;         /* HEAL */
+        return 0;                                            /* ATK */
+    }
+    if (id < CARD_FIRST_GAME) return 0xFF;
+    k = (uint8_t)(id - CARD_FIRST_GAME);
+    if (k >= GAME_CARD_COUNT) return 0xFF;
+    *power = s_cu_grp_power[k];
+    *cost = s_cu_grp_cost[k];
+    if (!s_cu_grp_deckable[k]) return 0xFF;
+    return s_cu_grp_type[k];
+}
+
+static uint8_t cu_sort_value(CardId id, uint8_t sort)
+{
+    uint8_t power = 0;
+    uint8_t cost = 0;
+    uint8_t type = cu_grp_type(id, &power, &cost);
+    if (sort == 1) {
+        /* SORT_TYPE is the WEAPON (all swords together, shields
+         * together, then bows, daggers, rings -- same WPN order as
+         * the group key), not the combat role: role is already the
+         * FILTER axis, so sorting by it would be redundant. */
+        uint8_t sm = 0, sw = 0, sr = 0;
+        if (cu_grp_key(id, &sm, &sw, &sr)) return sw;
+        return type;
+    }
+    if (sort == 2 || sort == 4) return power;  /* SORT_POWER(+/-) */
+    return cost;                     /* SORT_COST(+/-) */
+}
+
+/* ── Grouped DECK view build (fixed-bank caller: item_screen.c) ────
+ * Fills s_view_indices (collection indices, one per MATERIAL+WEAPON
+ * row) + s_view_count from the live collection, honoring the current
+ * filter and sort, and the per-row owned/decked sums the render needs
+ * (s_row_owned/s_row_decked, indexed by view position).  Staging:
+ * g_bk_ptr_a = Game*.  Runs immediately before the bank-2 render in the
+ * same frame, so it is always fresh. */
+extern uint8_t s_view_indices[MAX_CARD_COLLECTION];
+extern uint8_t s_view_count;
+
+/* Per-row sums for the render (bank 2 cannot re-resolve group keys: its
+ * switchable area is full and the scan it needs duplicates ~300 B of
+ * key logic).  Per side, drawn-indexed: slots 0-8 hold the left
+ * (pile) block's rows, slots 9-17 the right (deck) block's; detail
+ * mode uses slot 0 for the selected row. */
+#define ROW_SUMS 18
+uint8_t s_row_owned[ROW_SUMS];
+uint8_t s_row_decked[ROW_SUMS];
+
+/* Per-group pile/deck sums, indexed by view position (0 ..
+ * s_view_count-1): populated by the full build below, read by the
+ * window pass and the nav walk instead of re-scanning the whole
+ * collection every press.  Valid from the last full build until any
+ * count mutation; every mutation path runs a full build (which ends
+ * with the cursor park) before the next paint. */
+uint8_t s_grp_owned[MAX_CARD_COLLECTION];
+uint8_t s_grp_decked[MAX_CARD_COLLECTION];
+
+/* Per-side packed draw maps: the first 9 view positions visible on
+ * that side (left: owned - decked > 0; right: decked > 0) at/after
+ * item_menu_scroll, 0xFF past the end.  A zero count hides that side's
+ * cell -- an emptied side shows blank rows -- and the cursor never
+ * parks on a hidden cell.  Built here (same bank as the group tables)
+ * on every DECK render; read by the bank-2 row painter. */
+uint8_t s_ic_draw_pos[9];
+uint8_t s_ic_draw_pos_r[9];
+
+/* DECK scroll-overflow flags for the bank-2 row painter (plain WRAM,
+ * bank-independent): bit 0 up-pile, 1 up-deck, 2 down-pile, 3
+ * down-deck.  An empty-windowed side never signals.  Built by the
+ * view build below on every DECK render, so full draws always agree. */
+uint8_t s_ic_scroll_flags;
+
+/* Previous packed maps (snapshot at build entry): the diff-clear at the
+ * end of the build erases VRAM/OAM/buffer cells for slots/sides that
+ * just lost their row.  Lives here with the maps (not bank 2 with the
+ * renders that consume them): bank 2's switchable area is full, and
+ * every op here is bank-independent (WRAM maps/buffer, direct VRAM/OAM
+ * writes), needing no bank-2 ROM tables (AGENTS.md 52.11.1). */
+static uint8_t s_cu_prev_pos[9];
+static uint8_t s_cu_prev_pos_r[9];
+
+extern uint8_t g_is_cgb;
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
+
+/* Unconditional VRAM+buffer+attr span clear: icon stamps write VRAM
+ * tiles and CGB palettes the buffer never sees (rider/weapon/chrome
+ * cells, AP pips), so an emptied slot must reset both planes. */
+static void cu_blank_span(uint8_t y, uint8_t x, uint8_t n)
+{
+    uint8_t i;
+    volatile uint8_t *dst;
+    char *buf;
+    dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    buf = &g_ui_screen_buf[y][x];
+    VBK_REG = 0;
+    for (i = 0; i < n; i++) {
+        BANKED_VRAM_WRITE(dst, ui_font_tile_base);
+        *buf = ' ';
+        dst++;
+        buf++;
+    }
+    if (g_is_cgb) {
+        dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+        VBK_REG = 1;
+        for (i = 0; i < n; i++) {
+            BANKED_VRAM_WRITE(dst, 0);
+#ifdef DEBUG_BUILD
+            g_tilemap_attr_mirror[((uint16_t)y << 5) + x + i] = 0;
+#endif
+            dst++;
+        }
+        VBK_REG = 0;
+    }
+}
+
+/* Hide one side's OAM pair for a slot (WRAM shadow OAM): mat entries
+ * are per-side (side 0: 17 + k, side 1: 26 + k); rider entries are
+ * SHARED (1 + k both sides) because deck-list riders are BG art and
+ * these entries are never stamped here -- the hides only clear stale
+ * battle-rider OAM, so sharing is safe and keeps every entry below
+ * the 32-slot battle budget. */
+static void cu_hide_side(uint8_t k, uint8_t side)
+{
+    volatile uint8_t *re;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)(1 + k) << 2));
+    re[0] = 0;
+    re[2] = 0;
+    re = (volatile uint8_t *)(0xC000u + ((uint16_t)((side ? 26 : 17) + k) << 2));
+    re[0] = 0;
+    re[2] = 0;
+}
+
+/* Owned/decked copies across every deckable collection entry sharing
+ * the primary's (MATERIAL, WEAPON, rider) identity.  Collection/deck
+ * state is staged through narrow locals (AGENTS.md 52.18: every
+ * g->field access costs ~10 B under SDCC's 16-bit struct addressing). */
+static void cu_row_sums(Game *g, uint8_t primary_coll, uint8_t *owned,
+                        uint8_t *decked)
+{
+    CardState *cs;
+    uint8_t ccount, dcount;
+    uint8_t i, j;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
+    uint8_t n;
+    CardId id;
+    *owned = 0;
+    *decked = 0;
+    cs = &g->state.cards;
+    ccount = cs->collection.count;
+    dcount = cs->deck.count;
+    if (primary_coll >= ccount) return;
+    if (!cu_grp_key(cs->collection.entries[primary_coll].id,
+                    &mat, &wpn, &rdr)) return;
+    for (i = 0; i < ccount; i++) {
+        id = cs->collection.entries[i].id;
+        if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+        if (m2 != mat || w2 != wpn || r2 != rdr) continue;
+        n = cs->collection.entries[i].count;
+        *owned = (uint8_t)(*owned + n);
+        if (*owned < n || *owned > 99) *owned = 99;
+        for (j = 0; j < dcount; j++) {
+            if (cs->deck.cards[j] == id) {
+                *decked = (uint8_t)(*decked + 1);
+                if (*decked == 0) *decked = 255;
+            }
+        }
+    }
+}
+
+/* Per-side scroll windows (DECK tab): the pile (left) window rides
+ * item_menu_scroll, the deck (right) window item_menu_scroll_deck
+ * (both in Game; every other screen is single-list and only ever
+ * touches the shared field).  Side-keyed so nav and side-flip
+ * can move one window without dragging the other. */
+static uint8_t cu_scroll_for(Game *g, uint8_t side)
+{
+    if (!g) return 0;
+    if (side) return g->item_menu_scroll_deck;
+    return g->item_menu_scroll;
+}
+
+static void cu_scroll_set(Game *g, uint8_t side, uint8_t v)
+{
+    if (!g) return;
+    if (side)
+        g->item_menu_scroll_deck = v;
+    else
+        g->item_menu_scroll = v;
+}
+
+/* Window + sums passes (defined below the build that dispatches them). */
+static void item_window_build(Game *g);
+static void item_sums_build(Game *g);
+static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side);
+static void cu_scroll_into_view(Game *g, uint8_t npos);
+
+/* Re-window only (no filter/sort/group/sums recompute): redraws the
+ * draw maps + slot sums + scroll flags from the cached per-group sums
+ * for the current per-side scrolls.  The in-place nav repaint
+ * dispatches here instead of the full build; counts cannot have
+ * changed on that path, so the cache is exact. */
+void item_view_rewindow_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    if (!g) return;
+    item_window_build(g);
+}
+
+static uint8_t s_dck_rep_dir; /* 0 = idle, 1 = up, 2 = down */
+static uint8_t s_dck_rep_t;
+static uint8_t s_dck_grp_id;
+
+/* Clear CGB BG attributes on content rows 3..12 (cols 1..17) before a
+ * full DECK-tab render when switching tabs/modes inside SCREEN_ITEM.
+ * Lives here in bank 15 (called from item_view_build_banked, which
+ * runs before every TAB_DECK render) rather than bank 2 so bank 2
+ * stays inside its tight 16 KB ceiling. */
+static void cu_clear_deck_attrs(Game *g)
+{
+    uint8_t y, x;
+    volatile uint8_t *dst;
+    s_dck_rep_dir = 0;
+    s_dck_rep_t = 0;
+    if (!g_is_cgb || g->render_cache.prev_screen != SCREEN_ITEM) return;
+    VBK_REG = 1;
+    for (y = 3; y <= 12; y++) {
+        dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + 1u);
+        for (x = 1; x <= 17; x++) {
+            BANKED_VRAM_WRITE(dst, 0);
+#ifdef DEBUG_BUILD
+            g_tilemap_attr_mirror[((uint16_t)y << 5) + x] = 0;
+#endif
+            dst++;
+        }
+    }
+    VBK_REG = 0;
+}
+
+void item_view_build_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t i, j, k;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
+    uint8_t type, power, cost;
+    uint8_t desc;
+    CardId id;
+    if (!g) return;
+    cu_clear_deck_attrs(g);
+    s_view_count = 0;
+    for (i = 0; i < g->state.cards.collection.count; i++) {
+        id = g->state.cards.collection.entries[i].id;
+        type = cu_grp_type(id, &power, &cost);
+        if (type == 0xFF) continue;
+        /* WEAPON filter (0xFF = ALL, else WPN_*), MATERIAL filter
+         * (0xFF = ALL, else MAT_*) -- both from the picker's two
+         * filter rows. */
+        if (!cu_grp_key(id, &mat, &wpn, &rdr)) continue;
+        if (g->item_menu_filter != 0xFF && wpn != g->item_menu_filter)
+            continue;
+        if (g->item_menu_filter_mat != 0xFF && mat != g->item_menu_filter_mat)
+            continue;
+        /* Fold into the first row with the same (mat, wpn, rider):
+         * that row's earliest collection entry stays the primary. */
+        for (k = 0; k < s_view_count; k++) {
+            if (!cu_grp_key(g->state.cards.collection.entries[
+                    s_view_indices[k]].id, &m2, &w2, &r2)) continue;
+            if (m2 == mat && w2 == wpn && r2 == rdr) break;
+        }
+        if (k < s_view_count) continue;
+        s_view_indices[s_view_count] = i;
+        s_view_count = (uint8_t)(s_view_count + 1);
+    }
+    /* Insertion sort (SORT_NONE/TYPE/POWER(+/-)/COST(+/-)). */
+    if (g->item_menu_sort != 0 && s_view_count > 1) {
+    desc = (uint8_t)(g->item_menu_sort == 4 || g->item_menu_sort == 5);
+    for (i = 1; i < s_view_count; i++) {
+        j = i;
+        while (j > 0) {
+            uint8_t va = cu_sort_value(
+                g->state.cards.collection.entries[s_view_indices[j]].id,
+                g->item_menu_sort);
+            uint8_t vb = cu_sort_value(
+                g->state.cards.collection.entries[s_view_indices[j - 1]].id,
+                g->item_menu_sort);
+            if (desc ? (vb < va) : (vb > va)) {
+                k = s_view_indices[j];
+                s_view_indices[j] = s_view_indices[j - 1];
+                s_view_indices[j - 1] = k;
+                j--;
+            } else {
+                break;
+            }
+        }
+    }
+    }
+    /* Per-row sums for the render: the visible window, plus slot 0 for
+     * the selected row in detail mode (no list is drawn then). */
+    if (g->item_menu_mode == 1) {
+        if (g->item_menu_index >= 1 &&
+            (uint8_t)(g->item_menu_index - 1) < s_view_count)
+            cu_row_sums(g, s_view_indices[g->item_menu_index - 1],
+                        &s_row_owned[0], &s_row_decked[0]);
+        return;
+    }
+    item_sums_build(g);
+    /* Per-side packed lists: the left block packs groups with a pile
+     * remainder (owned - decked > 0), the right block groups with decked
+     * copies -- first 8 of each at/after that side's OWN scroll position,
+     * so one side's window never moves the other.  A zero count hides
+     * that side's cell (an emptied side shows blank rows) and the cursor
+     * never parks on a hidden cell.  The same pass reports per-side
+     * scroll overflow into s_ic_scroll_flags (bit 0 up-pile, 1 up-deck,
+     * 2 down-pile, 3 down-deck): positions below the side's scroll
+     * classify the up bits, and a side already full at a position's
+     * entry classifies the down bits -- scanned in order, so both are
+     * exact with no second pass needed.
+     *
+     * The per-group sums come from the s_grp_owned/s_grp_decked cache,
+     * refreshed by the full build's populate pass below; the window
+     * itself never scans the collection (the rewindow entry point
+     * relies on this). */
+    item_window_build(g);
+}
+
+/* Full per-group sum pass: runs only in the full build, so the window
+ * loop and every nav walk read cached bytes instead of re-scanning
+ * the collection per press. */
+static void item_sums_build(Game *g)
+{
+    uint8_t n;
+    uint8_t owned;
+    uint8_t decked;
+    if (!g) return;
+    for (n = 0; n < s_view_count; n++) {
+        cu_row_sums(g, s_view_indices[n], &owned, &decked);
+        s_grp_owned[n] = owned;
+        s_grp_decked[n] = decked;
+    }
+}
+
+static void item_window_build(Game *g)
+{
+    uint8_t k = 0;
+    uint8_t kr = 0;
+    uint8_t n;
+    uint8_t i;
+    uint8_t start_l = g->item_menu_scroll;
+    uint8_t start_r = g->item_menu_scroll_deck;
+    uint8_t owned;
+    uint8_t decked;
+    /* Snapshot the maps before rebuilding: the diff-clear at the end
+     * erases slots/sides that lose their row (BSS zeros read as vpos 0
+     * on the very first build -- harmless, a full draw follows). */
+    for (i = 0; i < 9; i++) {
+        s_cu_prev_pos[i] = s_ic_draw_pos[i];
+        s_cu_prev_pos_r[i] = s_ic_draw_pos_r[i];
+    }
+    s_ic_scroll_flags = 0;
+    if (start_l >= s_view_count && s_view_count > 0) start_l = 0;
+    if (start_r >= s_view_count && s_view_count > 0) start_r = 0;
+    for (n = 0; n < s_view_count && (s_ic_scroll_flags & 0x0Cu) != 0x0Cu; n++) {
+        /* Cached sums (refreshed by item_sums_build on full builds);
+         * the window never scans the collection itself. */
+        owned = s_grp_owned[n];
+        decked = s_grp_decked[n];
+        if (n < start_l) {
+            if (owned > decked) s_ic_scroll_flags |= 0x01;
+        } else {
+            if (k >= 9 && owned > decked) s_ic_scroll_flags |= 0x04;
+            if (owned > decked && k < 9) {
+                s_ic_draw_pos[k] = n;
+                s_row_owned[k] = owned;
+                s_row_decked[k] = decked;
+                k++;
+            }
+        }
+        if (n < start_r) {
+            if (decked > 0) s_ic_scroll_flags |= 0x02;
+        } else {
+            if (kr >= 9 && decked > 0) s_ic_scroll_flags |= 0x08;
+            if (decked > 0 && kr < 9) {
+                s_ic_draw_pos_r[kr] = n;
+                s_row_owned[9 + kr] = owned;
+                s_row_decked[9 + kr] = decked;
+                kr++;
+            }
+        }
+    }
+    /* An empty-windowed side never signals (its rows cannot
+     * scroll): the in-loop down checks only fire past a full
+     * window, but the up bits can land on blank rows.  k/kr still
+     * hold the drawn counts here (the pad loops below overwrite
+     * them), so emptiness is a cheap local test. */
+    if (k == 0) s_ic_scroll_flags &= (uint8_t)~0x05;
+    if (kr == 0) s_ic_scroll_flags &= (uint8_t)~0x0A;
+    for (; k < 9; k++) {
+        s_ic_draw_pos[k] = 0xFF;
+        s_row_owned[k] = 0;
+        s_row_decked[k] = 0;
+    }
+    for (; kr < 9; kr++) {
+        s_ic_draw_pos_r[kr] = 0xFF;
+        s_row_owned[9 + kr] = 0;
+        s_row_decked[9 + kr] = 0;
+    }
+    /* Erase what the rebuild just emptied: a slot/side that held a row
+     * before and holds none now is blanked unconditionally (VRAM +
+     * buffer + OAM).  Live slots are redrawn by the caller and
+     * still-dead slots were already blank.  Every op here is
+     * bank-independent. */
+    {
+        uint8_t y;
+        uint8_t oL;
+        uint8_t oR;
+        for (k = 0; k < 9; k++) {
+            oL = s_cu_prev_pos[k];
+            oR = s_cu_prev_pos_r[k];
+            y = (uint8_t)(CUR_CARDS_TOP + k);
+            if (oL != 0xFF && s_ic_draw_pos[k] == 0xFF) {
+                cu_blank_span(y, 0, 9);
+                cu_hide_side(k, 0);
+            }
+            if (oR != 0xFF && s_ic_draw_pos_r[k] == 0xFF) {
+                cu_blank_span(y, 10, 10);
+                cu_hide_side(k, 1);
+            }
+        }
+    }
+    /* Park a vanished acted row's cursor on the next visible row of the
+     * same side (or FILTER when nothing visible follows -- the bottom
+     * row or an emptied side; never a side flip on A).  Runs here, at
+     * the end of every full build, instead of a separate resum pass:
+     * the view, sums and windows above are fresh, so the cursor the
+     * render paints is always parked. */
+    if (g->item_menu_index >= CUR_FIRST_CARD) {
+        uint8_t cpos = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
+        if (cpos < s_view_count &&
+            !item_row_visible(g, cpos, g->item_menu_side)) {
+            uint8_t ni = 0;
+            uint8_t n;
+            for (n = (uint8_t)(cpos + 1); n < s_view_count; n++) {
+                if (item_row_visible(g, n, g->item_menu_side)) {
+                    ni = (uint8_t)(n + CUR_FIRST_CARD);
+                    break;
+                }
+            }
+            g->item_menu_index = ni;
+            if (ni == 0)
+                cu_scroll_set(g, g->item_menu_side, 0);
+            else
+                cu_scroll_into_view(g, (uint8_t)(ni - CUR_FIRST_CARD));
+        }
+    }
+}
+
+void item_group_query_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t primary = g_bk_byte_a;
+    uint8_t ordinal = g_bk_byte_b;
+    uint8_t mode = g_bk_byte_d;
+    uint8_t i, j;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
+    uint8_t seen = 0;
+    CardId id;
+    if (!g || primary >= g->state.cards.collection.count) {
+        g_bk_byte_c = 0xFF;
+        return;
+    }
+    id = g->state.cards.collection.entries[primary].id;
+    if (!cu_grp_key(id, &mat, &wpn, &rdr)) {
+        g_bk_byte_c = 0xFF;
+        return;
+    }
+    if (mode == 1) {
+        uint8_t owned = 0;
+        uint8_t decked = 0;
+        uint8_t n;
+        for (i = 0; i < g->state.cards.collection.count; i++) {
+            id = g->state.cards.collection.entries[i].id;
+            if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+            if (m2 != mat || w2 != wpn || r2 != rdr) continue;
+            n = g->state.cards.collection.entries[i].count;
+            owned = (uint8_t)(owned + n);
+            if (owned < n || owned > 99) owned = 99;
+            for (j = 0; j < g->state.cards.deck.count; j++) {
+                if (g->state.cards.deck.cards[j] == id) {
+                    decked++;
+                    if (decked == 0) decked = 255;
+                }
+            }
+        }
+        g_bk_byte_c = owned;
+        g_bk_byte_b = decked;
+        return;
+    }
+    for (i = 0; i < g->state.cards.collection.count; i++) {
+        id = g->state.cards.collection.entries[i].id;
+        if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+        if (m2 != mat || w2 != wpn || r2 != rdr) continue;
+        if (seen == ordinal) {
+            g_bk_byte_c = i;
+            return;
+        }
+        seen++;
+    }
+    g_bk_byte_c = 0xFF;
+}
+
+/* Grouped A-action scan (bank 15): finds the first group member that
+ * can take another copy, verdict priority FULL > LOCKED > capped.
+ * Same-bank verdict calls (deck_equip_verdict_banked lives in
+ * deck_merge_banked.c, also bank 15); the DECK update applies the
+ * single add through deck_equip_card (re-verdicts deterministically)
+ * and owns all telemetry/SFX.  Staging: g_bk_ptr_a = Game*,
+ * g_bk_byte_a = primary collection index, g_bk_byte_d = pool.
+ * Returns g_bk_byte_c = 0 + g_bk_byte_b = member collection index
+ * when addable; otherwise c = 1 (FULL) / 2 (LOCKED) / 3 (capped) with
+ * b = the first member index hit by that verdict (0xFF when no member
+ * was tried).  The fixed caller routes FULL/LOCKED through
+ * deck_equip_card once so its telemetry (CARD_EQUIP_LOCKED) still
+ * fires; a fully-capped group (3) returns the identity-saturated
+ * member so the fixed caller reports AT CAP on the LEFT side (removal
+ * happens from the deck side instead of a clear-all). */
+void deck_equip_verdict_banked(void);
+void item_group_scan_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t primary = g_bk_byte_a;
+    uint8_t pool = g_bk_byte_d;
+    CardState *cs;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
+    uint8_t i;
+    uint8_t r;
+    uint8_t full_idx = 0xFF;
+    uint8_t locked_idx = 0xFF;
+    uint8_t saw_any = 0;
+    CardId id;
+    if (!g || primary >= g->state.cards.collection.count) {
+        g_bk_byte_c = 3;
+        g_bk_byte_b = 0xFF;
+        return;
+    }
+    cs = &g->state.cards;
+    id = cs->collection.entries[primary].id;
+    if (!cu_grp_key(id, &mat, &wpn, &rdr)) {
+        g_bk_byte_c = 3;
+        g_bk_byte_b = 0xFF;
+        return;
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        id = cs->collection.entries[i].id;
+        if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+        if (m2 != mat || w2 != wpn || r2 != rdr) continue;
+        g_bk_ptr_a = (void *)cs;
+        g_bk_byte_a = (uint8_t)id;
+        g_bk_byte_d = pool;
+        deck_equip_verdict_banked();
+        r = g_bk_byte_c;
+        if (r == 1) {
+            g_bk_byte_c = 0;
+            g_bk_byte_b = i;
+            g_bk_ptr_a = (void *)g;
+            return;
+        }
+        saw_any = 1;
+        if (r == 3) {
+            full_idx = i;
+            break;
+        }
+        if (r == 2 && locked_idx == 0xFF) locked_idx = i;
+    }
+    g_bk_ptr_a = (void *)g;
+    if (full_idx != 0xFF) {
+        g_bk_byte_c = 1;
+        g_bk_byte_b = full_idx;
+    } else if (locked_idx != 0xFF) {
+        g_bk_byte_c = 2;
+        g_bk_byte_b = locked_idx;
+    } else {
+        g_bk_byte_c = 3;
+        g_bk_byte_b = saw_any ? primary : 0xFF;
+    }
+}
+/* Row visibility for the two per-side pile/deck lists: a group row
+ * shows on a side when its count there is nonzero (pile side:
+ * owned > decked; deck side: decked > 0).  Reads the cached
+ * per-group sums instead of re-scanning (nav, scroll-into-view and
+ * the cursor park all run between full builds, where counts cannot
+ * change). */
+static uint8_t item_row_visible(Game *g, uint8_t pos, uint8_t side)
+{
+    if (!g || pos >= s_view_count) return 0;
+    if (side == 0) return (uint8_t)(s_grp_owned[pos] > s_grp_decked[pos]);
+    return (uint8_t)(s_grp_decked[pos] > 0);
+}
+
+/* Scroll window for the active side's packed list: the smallest scroll
+ * >= the current one that puts view position npos among the first 8
+ * rows drawn on its side (a position above the window scrolls up onto
+ * it).  One backward walk over [scroll, npos): stops at the 8th
+ * visible row above npos, so it costs O(npos - scroll) visibility
+ * checks -- not the O(n * 8) of re-ranking at every scroll step.
+ * npos itself is assumed visible on the active side (callers land the
+ * cursor on visible rows only).  Only the active side's offset moves;
+ * the other side's window is untouched. */
+static void cu_scroll_into_view(Game *g, uint8_t npos)
+{
+    uint8_t side = g->item_menu_side;
+    uint8_t lo = cu_scroll_for(g, side);
+    uint8_t s = npos;
+    uint8_t c = 0;
+    if (lo >= npos) {
+        cu_scroll_set(g, side, npos);
+        return;
+    }
+    while (s > lo) {
+        if (item_row_visible(g, (uint8_t)(s - 1), side)) {
+            if (c == (uint8_t)(CUR_VISIBLE_CARD - 1)) break;
+            c++;
+        }
+        s--;
+    }
+    cu_scroll_set(g, side, s);
+}
+
+/* Direction step for the shop list (g_bk_byte_b 0 = up, 1 = down,
+ * g_bk_byte_c = visible count): clamp the new index banked so the
+ * fixed update pays no bounds branch.  Staging: g_bk_ptr_a = Game*,
+ * g_bk_byte_a = old index. */
+void item_menu_step_banked(void)
+{
+    s_cu_game = (Game *)g_bk_ptr_a;
+
+    if (!s_cu_game) return;
+    s_cu_old_index = g_bk_byte_a;
+    s_cu_new_index = s_cu_old_index;
+    if (g_bk_byte_b == 0) {
+        if (s_cu_old_index > 0)
+            s_cu_new_index = (uint8_t)(s_cu_old_index - 1);
+    } else if ((uint8_t)(s_cu_old_index + 1) < g_bk_byte_c) {
+        s_cu_new_index = (uint8_t)(s_cu_old_index + 1);
+    }
+    cu_apply();
+    /* Blip only on a real move: at either end the clamp above leaves
+     * the index unchanged, and a no-op press must stay silent. */
+    if (s_cu_new_index != s_cu_old_index) {
+        g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+    }
+}
+
+/* DECK per-side navigation (bank 15): UP/DOWN move over the active
+ * side's packed list (a zero count on that side hides the row,
+ * wrapping at the ends); the FILTER/SORT row (index 0) always counts.
+ * LEFT/RIGHT (mode 2) steps between the two cells: same group when it
+ * shows on the target side (scrolled into that side's window -- its
+ * packed rank there can differ), else the target side's top drawn row,
+ * else its first visible row anywhere; an empty target side holds
+ * position.  State only (index/side/scroll): the caller invalidates
+ * and the full render repaints without wiping, so stepping never
+ * blinks.
+ * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = 0 up / 1 down / 2 step. */
+void item_deck_nav_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t mode = g_bk_byte_a;
+    uint8_t total;
+    uint8_t idx;
+    uint8_t guard;
+    if (!g) return;
+    if (mode == 2) {
+        uint8_t newside = (uint8_t)(g->item_menu_side ? 0 : 1);
+        uint8_t i;
+        if (g->item_menu_index < CUR_FIRST_CARD ||
+            (uint8_t)(g->item_menu_index - CUR_FIRST_CARD) >= s_view_count)
+            return;
+        idx = (uint8_t)(g->item_menu_index - CUR_FIRST_CARD);
+        if (item_row_visible(g, idx, newside)) {
+            g->item_menu_side = newside;
+            cu_scroll_into_view(g, idx);
+            g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+            return;
+        }
+        /* Top drawn row of the target side (maps are current: every
+         * DECK list render rebuilds them) keeps the window. */
+        i = newside ? s_ic_draw_pos_r[0] : s_ic_draw_pos[0];
+        if (i == 0xFF || i >= s_view_count) {
+            for (i = 0; i < s_view_count; i++) {
+                if (item_row_visible(g, i, newside)) break;
+            }
+            if (i >= s_view_count) return;
+            cu_scroll_set(g, newside, i);
+        }
+        g->item_menu_side = newside;
+        g->item_menu_index = (uint8_t)(i + CUR_FIRST_CARD);
+        g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+        return;
+    }
+    total = (uint8_t)(s_view_count + CUR_FIRST_CARD);
+    if (total <= 1) return;
+    /* Lazy side flip: the FILTER row never flips (LEFT/RIGHT keeps tab
+     * switching there), so an emptied active side would strand UP/DOWN
+     * on FILTER.  If the active side shows nothing but the other side
+     * does, step over first -- both sides stay drawn, only the cursor
+     * moves. */
+    {
+        uint8_t side = g->item_menu_side;
+        uint8_t i;
+        uint8_t found = 0;
+        for (i = 0; i < s_view_count; i++) {
+            if (item_row_visible(g, i, side)) {
+                found = 1;
+                break;
+            }
+        }
+        if (!found && s_view_count > 0) {
+            uint8_t other = (uint8_t)(side ? 0 : 1);
+            for (i = 0; i < s_view_count; i++) {
+                if (item_row_visible(g, i, other)) break;
+            }
+            if (i < s_view_count)
+                g->item_menu_side = other;
+        }
+    }
+    idx = g->item_menu_index;
+    guard = (uint8_t)(total + 1);
+    do {
+        if (mode == 0)
+            idx = idx > 0 ? (uint8_t)(idx - 1) : (uint8_t)(total - 1);
+        else
+            idx = idx < (uint8_t)(total - 1) ? (uint8_t)(idx + 1) : 0;
+        if (idx == 0) break;
+        if (item_row_visible(g, (uint8_t)(idx - CUR_FIRST_CARD),
+                             g->item_menu_side))
+            break;
+    } while (--guard);
+    /* No caret paint or cache touch here (AGENTS.md 36): the caller
+     * invalidates and the full render repaints without wiping, so
+     * scrolling and stepping never blink.  Just land the index; keep
+     * it drawable. */
+    if (idx != g->item_menu_index) {
+        g->item_menu_index = idx;
+        g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+    }
+    if (idx == 0)
+        cu_scroll_set(g, g->item_menu_side, 0);
+    else
+        cu_scroll_into_view(g, (uint8_t)(idx - CUR_FIRST_CARD));
+}
+
+/* Single-copy removal for the DECK right column (bank 15): sends the
+ * first decked member of the group (collection order) back to the
+ * owned pool.  Self-contained (AGENTS.md §52.11.1): no fixed-bank calls
+ * -- the scan/swap mirrors deck_remove_card inline (swap-with-last +
+ * DECK_MIN_CARDS floor), so the bank switch cannot strand it.
+ * Staging: g_bk_ptr_a = Game*, g_bk_byte_a = primary collection index;
+ * returns the member collection index in g_bk_byte_c (0xFF = none
+ * decked) and the removed CardId in g_bk_byte_b.  The fixed caller
+ * emits CARD_REMOVED_FROM_DECK itself. */
+void item_group_remove_one_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t primary = g_bk_byte_a;
+    CardState *cs;
+    uint8_t mat, wpn, rdr, m2, w2, r2;
+    uint8_t i, j;
+    CardId id;
+    if (!g || primary >= g->state.cards.collection.count) {
+        g_bk_byte_c = 0xFF;
+        return;
+    }
+    cs = &g->state.cards;
+    id = cs->collection.entries[primary].id;
+    if (!cu_grp_key(id, &mat, &wpn, &rdr)) {
+        g_bk_byte_c = 0xFF;
+        return;
+    }
+    for (i = 0; i < cs->collection.count; i++) {
+        id = cs->collection.entries[i].id;
+        if (!cu_grp_key(id, &m2, &w2, &r2)) continue;
+        if (m2 != mat || w2 != wpn || r2 != rdr) continue;
+        for (j = 0; j < cs->deck.count; j++) {
+            if (cs->deck.cards[j] != id) continue;
+            if (cs->deck.count <= DECK_MIN_CARDS) {
+                g_bk_byte_c = 0xFF;
+                return;
+            }
+            cs->deck.cards[j] = cs->deck.cards[--cs->deck.count];
+            g_bk_byte_c = i;
+            g_bk_byte_b = (uint8_t)id;
+            return;
+        }
+    }
+    g_bk_byte_c = 0xFF;
+}
+/* DECK nav mutations: weapon cycle / material cycle / sort cycle /
+ * tab switch (bank 15).  Moved out of the fixed bank (AGENTS.md
+ * §52.18): the card-group + boss-dialogue merge overflowed Bank 1,
+ * and these are pure WRAM state machines -- no ROM tables, no fixed
+ * calls -- so they run verbatim here.  Staging: g_bk_ptr_a = Game*,
+ * g_bk_byte_a = mode (0 weapon, 1 sort, 2 tab, 3 material),
+ * g_bk_byte_b = tab direction (0 back, 1 forward; ignored by modes
+ * 0/1/3, which take no direction input).  The direction is staged by
+ * the fixed caller: a banked body must never call input_pressed
+ * (AGENTS.md §52.11.1).  Mirror constants live in item_screen.c
+ * (TAB_DECK/TAB_GEM/ROW_TOP, FILTER_ALL, SORT_NONE/SORT_COST_DESC)
+ * -- keep in sync. */
+#define CYC_FILTER 0
+#define CYC_SORT   1
+#define CYC_TAB    2
+#define CYC_MATERIAL 3
+void item_menu_cycle_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t mode;
+    if (!g) return;
+    mode = g_bk_byte_a;
+    if (mode == CYC_FILTER) {
+        /* WEAPON row: ALL -> SWORD -> DAGGER -> SHIELD -> BOW ->
+         * RING -> ALL (stored WPN_* ids, 0xFF = ALL). */
+        if (g->item_menu_filter == CYC_FILTER_ALL)
+            g->item_menu_filter = WPN_SWORD;
+        else if (g->item_menu_filter == WPN_SWORD)
+            g->item_menu_filter = WPN_DAGGER;
+        else if (g->item_menu_filter == WPN_DAGGER)
+            g->item_menu_filter = WPN_SHIELD;
+        else if (g->item_menu_filter == WPN_SHIELD)
+            g->item_menu_filter = WPN_BOW;
+        else if (g->item_menu_filter == WPN_BOW)
+            g->item_menu_filter = WPN_RING;
+        else
+            g->item_menu_filter = CYC_FILTER_ALL;
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
+    } else if (mode == CYC_MATERIAL) {
+        /* MATERIAL row: ALL -> WOOD -> BRONZE -> IRON -> STEEL ->
+         * MYTHRIL -> ALL (stored MAT_* ids, 0xFF = ALL). */
+        if (g->item_menu_filter_mat == CYC_FILTER_ALL)
+            g->item_menu_filter_mat = MAT_WOOD;
+        else if (g->item_menu_filter_mat == MAT_WOOD)
+            g->item_menu_filter_mat = MAT_BRONZE;
+        else if (g->item_menu_filter_mat == MAT_BRONZE)
+            g->item_menu_filter_mat = MAT_IRON;
+        else if (g->item_menu_filter_mat == MAT_IRON)
+            g->item_menu_filter_mat = MAT_STEEL;
+        else if (g->item_menu_filter_mat == MAT_STEEL)
+            g->item_menu_filter_mat = MAT_MYTHRIL;
+        else
+            g->item_menu_filter_mat = CYC_FILTER_ALL;
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
+    } else if (mode == CYC_SORT) {
+        /* Wrap instead of % -- SM83 has no hardware divide and the SDCC
+         * int-mod library would land in the tight fixed bank. */
+        g->item_menu_sort = (g->item_menu_sort >= CYC_SORT_COST_DESC) ?
+            CYC_SORT_NONE : (uint8_t)(g->item_menu_sort + 1);
+        /* Fresh order, fresh windows on both sides (same as a tab
+         * switch): a stale per-side scroll would show a middle slice
+         * of the new order. */
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
+    } else {
+        /* RIGHT advances, LEFT goes back (DECK <-> QUEST <-> HERO <->
+         * GEM).  Directional: with four tabs a forward-only cycle would
+         * strand LEFT presses on the wrong tab. */
+        if (g_bk_byte_b) {
+            if (g->item_menu_tab == CYC_TAB_GEM) g->item_menu_tab = CYC_TAB_DECK;
+            else g->item_menu_tab++;
+        } else {
+            if (g->item_menu_tab == CYC_TAB_DECK) g->item_menu_tab = CYC_TAB_GEM;
+            else g->item_menu_tab--;
+        }
+        g->item_menu_index = CYC_ROW_TOP;
+        g->item_menu_scroll = 0;
+        g->item_menu_scroll_deck = 0;
+        g->item_menu_side = 0;
+        g->render_cache.valid = false;
+    }
+    /* Unconditional: every cycle mutates (filter/sort advance one step,
+     * tabs always flip), so a dispatched cycle is always a real move. */
+    g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+}
+
+/* DECK update mirror constants (item_screen.c TAB_DECK/ROW_TOP/
+ * FIRST_CARD, MODE_LIST/MODE_CARD_DETAIL/MODE_PICKER, MSG_*,
+ * REP_DELAY/REP_RATE -- keep in sync).  The whole DECK branch of
+ * item_screen_update moved here out of the fixed bank (AGENTS.md
+ * §52.18): fixed keeps a one-call router, everything below runs
+ * banked. */
+#define DCK_ROW_TOP    0
+#define DCK_FIRST_CARD 1
+#define DCK_MODE_LIST  0
+#define DCK_MODE_DETAIL 1
+#define DCK_MODE_PICKER 3
+#define DCK_MSG_NONE       0
+#define DCK_MSG_DECK_FULL  1
+#define DCK_MSG_DECK_MIN   2
+#define DCK_MSG_QUEST_ITEM 3
+#define DCK_MSG_NEED_AP    4
+#define DCK_MSG_DECK_CAPPED 5
+#define DCK_REP_DELAY 18
+#define DCK_REP_RATE 6
+
+/* DECK-tab update (bank 15, staging: g_bk_ptr_a = Game*, no-arg body).
+ * Dispatched from item_screen_update's fixed router for TAB_DECK; the
+ * other tabs keep their fixed pre-branch.  Same-bank helpers are
+ * plain calls (no trampoline); WRAM pad edges replace input_pressed
+ * (a banked body must never call it, AGENTS.md 52.11.1); SFX stages
+ * through the g_bk_sfx_req mailbox (same-frame play by
+ * game_consume_sfx); view rebuild + cursor park happen in the next
+ * full render (item_view_build_banked runs before every DECK paint
+ * and parks vanished rows itself), so every path here just
+ * invalidates -- no in-place repaint, no wipe. */
+static void pk_draw_rows(Game *g);
+
+void item_deck_update_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t edges;
+    uint8_t held;
+    uint8_t total;
+    if (!g) return;
+    edges = (uint8_t)(g_inp_pad & (uint8_t)~g_inp_prev);
+    held = g_inp_pad;
+
+    /* ── DECK tab ─────────────────────────────────────────────── */
+    switch (g->item_menu_mode) {
+        /* Selling lives in the shop's SELL tab now (docs/loot.md
+         * §34.6), not here: A backs out to the list like SELECT. */
+        case DCK_MODE_DETAIL:
+            if ((edges & (uint8_t)(1u << INPUT_SELECT)) ||
+                (edges & (uint8_t)(1u << INPUT_A))) {
+                g->item_menu_mode = DCK_MODE_LIST;
+                g->render_cache.valid = false;
+            }
+            return;
+        case DCK_MODE_PICKER:
+            if ((edges & (uint8_t)(1u << INPUT_UP)) ||
+                (edges & (uint8_t)(1u << INPUT_DOWN))) {
+                if (edges & (uint8_t)(1u << INPUT_DOWN)) {
+                    g->item_menu_pick_row =
+                        (uint8_t)(g->item_menu_pick_row >= 2 ? 0 :
+                                 (uint8_t)(g->item_menu_pick_row + 1));
+                } else {
+                    g->item_menu_pick_row =
+                        (uint8_t)(g->item_menu_pick_row == 0 ? 2 :
+                                 (uint8_t)(g->item_menu_pick_row - 1));
+                }
+                pk_draw_rows(g);
+                g_bk_sfx_req = (uint8_t)(SFX_CURSOR + 1);
+            } else if ((edges & (uint8_t)(1u << INPUT_LEFT)) ||
+                       (edges & (uint8_t)(1u << INPUT_RIGHT))) {
+                g_bk_ptr_a = (void *)g;
+                if (g->item_menu_pick_row == 0) {
+                    g_bk_byte_a = 0;
+                } else if (g->item_menu_pick_row == 1) {
+                    g_bk_byte_a = 3;
+                } else {
+                    g_bk_byte_a = 1;
+                }
+                g_bk_byte_b = 0;
+                item_menu_cycle_banked();
+                pk_draw_rows(g);
+            } else if (edges & (uint8_t)(1u << INPUT_A)) {
+                g->item_menu_mode = DCK_MODE_LIST;
+                g->render_cache.valid = false;
+            }
+            return;
+        default:
+            break;
+    }
+
+    /* LEFT/RIGHT on card rows steps the cursor between the pile and
+     * deck cells of the same row (banked nav: state only, no drawing);
+     * then invalidate (the full render repaints without wiping); the
+     * filter row (index 0) keeps tab switching. */
+    if ((edges & (uint8_t)(1u << INPUT_LEFT)) ||
+        (edges & (uint8_t)(1u << INPUT_RIGHT))) {
+        if (g->item_menu_index > DCK_ROW_TOP) {
+            g_bk_ptr_a = (void *)g;
+            g_bk_byte_a = 2;
+            item_deck_nav_banked();
+            /* Same-bank rewindow + staged paint (no full render, no
+             * wipe): counts cannot change on a nav step, so the cached
+             * sums stay exact. */
+            item_view_rewindow_banked();
+            g_bk_paint_req = 1;
+        } else {
+            g_bk_ptr_a = (void *)g;
+            g_bk_byte_a = 2;
+            g_bk_byte_b = (edges & (uint8_t)(1u << INPUT_RIGHT)) ? 1 : 0;
+            item_menu_cycle_banked();
+        }
+        return;
+    }
+
+    if (edges & (uint8_t)(1u << INPUT_SELECT)) {
+        if (g->item_menu_index >= DCK_FIRST_CARD &&
+            (uint8_t)(g->item_menu_index - DCK_FIRST_CARD) < s_view_count) {
+            g->item_menu_mode = DCK_MODE_DETAIL;
+            g->render_cache.valid = false;
+        }
+        return;
+    }
+    if (edges & (uint8_t)(1u << INPUT_A)) {
+        uint8_t owned = 0;
+        uint8_t decked = 0;
+        if (g->item_menu_index == DCK_ROW_TOP) {
+            g->item_menu_mode = DCK_MODE_PICKER;
+            g->item_menu_pick_row = 0;
+            g->item_menu_prev_filter = g->item_menu_filter;
+            g->item_menu_prev_filter_mat = g->item_menu_filter_mat;
+            g->item_menu_prev_sort = g->item_menu_sort;
+            g->render_cache.valid = false;
+            return;
+        } else {
+            CardState *cs = &g->state.cards;
+            uint8_t primary;
+            uint8_t pool;
+            uint8_t msg = DCK_MSG_NONE;
+            int16_t pv;
+            if ((uint8_t)(g->item_menu_index - DCK_FIRST_CARD) >= s_view_count)
+                return;
+            primary = s_view_indices[
+                (uint8_t)(g->item_menu_index - DCK_FIRST_CARD)];
+            g_bk_ptr_a = (void *)g;
+            g_bk_byte_a = primary;
+            g_bk_byte_d = 1;
+            item_group_query_banked();
+            owned = g_bk_byte_c;
+            decked = g_bk_byte_b;
+            pv = g->state.variables.values[VARIABLE_ID_ENERGY_POOL - 1];
+            if (pv < 1) pv = 1;
+            if (pv > 255) pv = 255;
+            pool = (uint8_t)pv;
+            if (g->item_menu_side == 0) {
+                if (decked >= owned) {
+                    /* Nothing available: silent no-op. */
+                } else {
+                    g_bk_ptr_a = (void *)g;
+                    g_bk_byte_a = primary;
+                    g_bk_byte_d = pool;
+                    item_group_scan_banked();
+                    s_dck_grp_id = g_bk_byte_b;
+                    if (s_dck_grp_id != 0xFF) {
+                        /* Apply + verdict inline (same bank, no
+                         * trampoline): the scan already found the first
+                         * addable member, so re-verdict its identity
+                         * directly and append on proceed.  Calling the
+                         * fixed deck_equip_card here would nest a
+                         * trampoline inside this banked body (its verdict
+                         * path calls back into banked code).  Telemetry
+                         * stages through the card-event mailbox (same
+                         * frame emit by game_update, like the SFX
+                         * mailbox); the fixed caller never touches it. */
+                        uint8_t verdict;
+                        CardId mid;
+                        mid = cs->collection.entries[s_dck_grp_id].id;
+                        g_bk_ptr_a = (void *)cs;
+                        g_bk_byte_a = (uint8_t)mid;
+                        g_bk_byte_d = pool;
+                        deck_equip_verdict_banked();
+                        verdict = g_bk_byte_c;
+                        if (verdict == 1) {
+                            cs->deck.cards[cs->deck.count] = mid;
+                            cs->deck.count++;
+                            telemetry_ring_emit(
+                                EVENT_CARD_ADDED_TO_DECK,
+                                (uint8_t)mid, 0, 0, 0);
+                            g_bk_sfx_req = (uint8_t)(SFX_SELECT + 1);
+                        } else if (verdict == 3) {
+                            msg = DCK_MSG_DECK_FULL;
+                        } else if (verdict == 2) {
+                            msg = DCK_MSG_NEED_AP;
+                            telemetry_ring_emit(
+                                EVENT_CARD_EQUIP_LOCKED,
+                                (uint8_t)mid, g_bk_byte_b, 0, 0);
+                        } else if (verdict == 4) {
+                            msg = DCK_MSG_DECK_CAPPED;
+                        }
+                    }
+                }
+            } else if (decked == 0) {
+                /* Nothing decked: silent no-op. */
+            } else if ((uint8_t)(cs->deck.count - 1) < DECK_MIN_CARDS) {
+                msg = DCK_MSG_DECK_MIN;
+            } else {
+                g_bk_ptr_a = (void *)g;
+                g_bk_byte_a = primary;
+                item_group_remove_one_banked();
+                if (g_bk_byte_c == 0xFF) {
+                    /* Race: nothing decked under us; silent no-op. */
+                } else {
+                    s_dck_grp_id = g_bk_byte_b;
+                    telemetry_ring_emit(
+                        EVENT_CARD_REMOVED_FROM_DECK,
+                        (uint8_t)s_dck_grp_id, 0, 0, 0);
+                    g_bk_sfx_req = (uint8_t)(SFX_SELECT + 1);
+                }
+            }
+            g->item_menu_message = msg;
+            if (msg != DCK_MSG_NONE) g->item_menu_msg_ttl = 45;
+        }
+        /* Reconcile + repaint in place (no full render): refreshes
+         * group sums + draw maps (erasing emptied slots and parking a
+         * vanished row's cursor) and stages g_bk_paint_req for the
+         * bank-2 row painter. */
+        item_sums_build(g);
+        item_window_build(g);
+        g_bk_paint_req = 1;
+        return;
+    }
+
+    total = (uint8_t)(s_view_count + 1); /* + the FILTER/SORT row */
+    if (total <= 1) return;
+
+    /* UP/DOWN walk the active side's packed list (hidden zero-count
+     * rows are skipped), then rewindow + paint in place (no full
+     * render, no wipe); LEFT/RIGHT steps between the two cells, the
+     * filter row keeps tab switching.  Holding UP/DOWN auto-repeats
+     * after a short delay; single presses and harness edges step
+     * exactly once. */
+    {
+        uint8_t dir = 0;
+        if (edges & (uint8_t)(1u << INPUT_UP)) dir = 1;
+        else if (edges & (uint8_t)(1u << INPUT_DOWN)) dir = 2;
+        if (dir != 0) {
+            s_dck_rep_dir = dir;
+            s_dck_rep_t = 0;
+        } else if (s_dck_rep_dir == 1 && (held & (uint8_t)(1u << INPUT_UP))) {
+            dir = 1;
+            if (++s_dck_rep_t < DCK_REP_DELAY) dir = 0;
+            else s_dck_rep_t = (uint8_t)(DCK_REP_DELAY - DCK_REP_RATE);
+        } else if (s_dck_rep_dir == 2 && (held & (uint8_t)(1u << INPUT_DOWN))) {
+            dir = 2;
+            if (++s_dck_rep_t < DCK_REP_DELAY) dir = 0;
+            else s_dck_rep_t = (uint8_t)(DCK_REP_DELAY - DCK_REP_RATE);
+        } else {
+            s_dck_rep_dir = 0;
+            s_dck_rep_t = 0;
+        }
+        if (dir == 0) return;
+        g_bk_ptr_a = (void *)g;
+        g_bk_byte_a = (uint8_t)(dir - 1);
+        item_deck_nav_banked();
+        item_view_rewindow_banked();
+        g_bk_paint_req = 1;
+        return;
+    }
+}
+
+/* DECK filter/sort picker render (bank 15, no-arg body): text-only, no
+ * catalog reads, so it lives here with the update that drives it
+ * (keeps bank 2 under 0x8000).  Same in-place protocol as the list
+ * repaint: full blank of the picker rows would flash, so only the
+ * caret rows and footer are redrawn... (full renders blank rows 2-17
+ * first, so all cells are covered either way). */
+extern char g_ui_screen_buf[18][21];
+extern uint8_t ui_font_tile_base;
+#ifdef DEBUG_BUILD
+extern volatile uint8_t g_tilemap_attr_mirror[32 * 32];
+#endif
+extern volatile uint8_t *s_ic_dst;
+extern char *s_ic_buf;
+extern uint8_t s_ic_txt_i;
+
+static void pk_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t len)
+{
+    uint8_t ended = (text == 0);
+    char ch;
+    if (y >= 18) return;
+    if ((uint8_t)(x + len) > 20) len = (uint8_t)(20 - x);
+    VBK_REG = 0;
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    s_ic_buf = &g_ui_screen_buf[y][x];
+    for (s_ic_txt_i = 0; s_ic_txt_i < len; s_ic_txt_i++) {
+        if (!ended) {
+            ch = text[s_ic_txt_i];
+            if (ch == '\0') {
+                ended = 1;
+                ch = ' ';
+            }
+        } else {
+            ch = ' ';
+        }
+        /* Unconditional VRAM write (no skip guard): icon/chrome tiles
+         * carry space buffers, so a guarded paint would leave stale
+         * art in VRAM while the buffer looks correct. */
+        {
+            uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
+            BANKED_VRAM_WRITE(s_ic_dst, tile);
+            *s_ic_buf = ch;
+        }
+        s_ic_dst++;
+        s_ic_buf++;
+    }
+}
+
+static void pk_blank_row(uint8_t y)
+{
+    uint8_t x;
+    if (y >= 18) return;
+    s_ic_dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5));
+    s_ic_buf = &g_ui_screen_buf[y][0];
+    for (x = 0; x < 20; x++) {
+        BANKED_VRAM_WRITE(s_ic_dst, ui_font_tile_base);
+        *s_ic_buf = ' ';
+        s_ic_dst++;
+        s_ic_buf++;
+    }
+}
+
+static const char *pk_weapon_name(uint8_t w)
+{
+    if (w == WPN_SWORD) return "SWORD";
+    if (w == WPN_DAGGER) return "DAGGER";
+    if (w == WPN_SHIELD) return "SHIELD";
+    if (w == WPN_BOW) return "BOW";
+    if (w == WPN_RING) return "RING";
+    return "ALL";
+}
+
+static const char *pk_mat_name(uint8_t m)
+{
+    if (m == MAT_WOOD) return "WOOD";
+    if (m == MAT_BRONZE) return "BRONZE";
+    if (m == MAT_IRON) return "IRON";
+    if (m == MAT_STEEL) return "STEEL";
+    if (m == MAT_MYTHRIL) return "MYTHRIL";
+    return "ALL";
+}
+
+static const char *pk_sort_name(uint8_t s)
+{
+    switch (s) {
+        case 1: return "TYPE";
+        case 2: return "PWR+";
+        case 3: return "CST+";
+        case 4: return "PWR-";
+        case 5: return "CST-";
+        default: return "OFF";
+    }
+}
+
+static void pk_draw_rows(Game *g)
+{
+    pk_draw_text(0, 7, (g->item_menu_pick_row == 0) ? ">" : " ", 2);
+    pk_draw_text(2, 7, "WEAPON", 10);
+    pk_draw_text(12, 7, pk_weapon_name(g->item_menu_filter), 8);
+    pk_draw_text(0, 8, (g->item_menu_pick_row == 1) ? ">" : " ", 2);
+    pk_draw_text(2, 8, "MATERIAL", 10);
+    pk_draw_text(12, 8, pk_mat_name(g->item_menu_filter_mat), 8);
+    pk_draw_text(0, 9, (g->item_menu_pick_row == 2) ? ">" : " ", 2);
+    pk_draw_text(2, 9, "SORT", 10);
+    pk_draw_text(12, 9, pk_sort_name(g->item_menu_sort), 8);
+}
+
+void item_picker_render_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t r;
+    uint8_t k;
+    if (!g) return;
+    /* Sweep the list/detail OAM (riders 1-9 shared by both sides --
+     * deck-list riders are BG art so these entries are never stamped
+     * here -- plus ingots 17-25 pile / 26-34 deck): the picker paints
+     * text only, so stale card icons would survive without this
+     * (bank-2 body swept for itself before the move). */
+    for (k = 0; k < 9; k++) {
+        cu_hide_side(k, 0);
+        cu_hide_side(k, 1);
+    }
+    for (r = 2; r <= 6; r++)
+        pk_blank_row(r);
+    pk_draw_rows(g);
+    for (r = 10; r <= 13; r++)
+        pk_blank_row(r);
+    pk_draw_text(0, 14, "LR CYCLE  A:OK B:NO", 20);
+    for (r = 15; r <= 17; r++)
+        pk_blank_row(r);
+}
+
+/* ── Shop in-place refresh + LCD-on tail cleanup (bank 15) ──────────
+ * Buying (card/arrow/refusal) and selling with copies left only change
+ * GOLD (row 3), an optional SELL xDDD count (cols 12..15), and the
+ * row-17 status message -- pure WRAM reads, needing no bank-2 catalog
+ * tables and no full-screen redraw or LCD blank.  Tab flips, scrolls,
+ * and last-copy sells still run bank-2 shop_content_render with the
+ * LCD on (no menu_draw_frame wipe), then call shop_clean_tail_banked
+ * here to clear any trailing rows and stale CGB attributes. */
+extern uint8_t g_shop_vis_count;
+
+static const uint16_t s_sh_p10[4] = { 10000, 1000, 100, 10 };
+
+static void sh_draw_text_diff(uint8_t x, uint8_t y, const char *text, uint8_t w)
+{
+    uint8_t i;
+    uint8_t ended = (text == NULL);
+    for (i = 0; i < w; i++) {
+        char ch;
+        if (!ended) {
+            ch = text[i];
+            if (ch == '\0') {
+                ended = 1;
+                ch = ' ';
+            }
+        } else {
+            ch = ' ';
+        }
+        cu_put_char((uint8_t)(x + i), y, ch);
+    }
+}
+
+static void sh_clear_attrs(uint8_t y, uint8_t x, uint8_t n)
+{
+    uint8_t i;
+    volatile uint8_t *dst;
+    if (!g_is_cgb) return;
+    dst = (volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x);
+    VBK_REG = 1;
+    for (i = 0; i < n; i++) {
+        BANKED_VRAM_WRITE(dst, 0);
+#ifdef DEBUG_BUILD
+        g_tilemap_attr_mirror[((uint16_t)y << 5) + x + i] = 0;
+#endif
+        dst++;
+    }
+    VBK_REG = 0;
+}
+
+static void sh_draw_gold(Game *g)
+{
+    uint16_t uval;
+    uint8_t i;
+    uint8_t started = 0;
+    char gstr[8];
+    char *p = gstr;
+
+    sh_draw_text_diff(0, 3, "  GOLD: ", 8);
+    uval = (uint16_t)g->state.currency.amount[0];
+    for (i = 0; i < 4; i++) {
+        uint16_t pw = s_sh_p10[i];
+        uint8_t d = 0;
+        while (uval >= pw) {
+            uval -= pw;
+            d++;
+        }
+        if (d != 0 || started) {
+            *p++ = (char)('0' + d);
+            started = 1;
+        }
+    }
+    *p++ = (char)('0' + (uint8_t)uval);
+    *p = '\0';
+    sh_draw_text_diff(8, 3, gstr, 10);
+}
+
+static void sh_draw_msg(Game *g)
+{
+    uint8_t msg = (uint8_t)(g->shop_message & 0x0Fu);
+    const char *ms = NULL;
+    if (msg == 2) ms = "Not enough!";
+    else if (msg == 4) ms = "Quiver full!";
+    else if (msg == 3) ms = "Already owned!";
+    sh_draw_text_diff(0, 17, ms, 14);
+}
+
+/* Staging: g_bk_ptr_a = Game*, g_bk_byte_a = sell_count (0 on BUY;
+ * > 0 on SELL with copies remaining to repaint xDDD at cursor row). */
+void shop_refresh_in_place_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t sell_count = g_bk_byte_a;
+
+    if (!g) return;
+
+    sh_draw_gold(g);
+
+    if (sell_count > 0 && g->item_menu_index >= g->item_menu_scroll) {
+        uint8_t y = (uint8_t)(5u + (uint8_t)(g->item_menu_index - g->item_menu_scroll));
+        if (y < (uint8_t)(5u + SHOP_VISIBLE)) {
+            uint8_t v = sell_count;
+            uint8_t h = 0;
+            uint8_t t = 0;
+            while (v >= 100) { v = (uint8_t)(v - 100); h++; }
+            while (v >= 10)  { v = (uint8_t)(v - 10);  t++; }
+            cu_put_char(12, y, 'x');
+            cu_put_char(13, y, (char)('0' + h));
+            cu_put_char(14, y, (char)('0' + t));
+            cu_put_char(15, y, (char)('0' + v));
+        }
+    }
+
+    sh_draw_msg(g);
+}
+
+/* Staging: g_bk_ptr_a = Game*, g_bk_byte_a = same_screen (0 on entry,
+ * 1 on LCD-on same-screen redraw).  Always paints row 3 (GOLD) and,
+ * when rows are visible, row 17 (status message); on same-screen
+ * redraws also clears trailing rows/attrs after shop_content_render. */
+void shop_clean_tail_banked(void)
+{
+    Game *g = (Game *)g_bk_ptr_a;
+    uint8_t same_screen = g_bk_byte_a;
+    uint8_t y;
+    if (!g) return;
+
+    sh_draw_gold(g);
+
+    if (g_shop_vis_count == 0) {
+        if (same_screen) {
+            sh_clear_attrs(5, 0, 17);
+            cu_blank_span(5, 17, 3);
+            cu_blank_span(6, 0, 20);
+            sh_clear_attrs(7, 0, 9);
+            cu_blank_span(7, 9, 11);
+            for (y = 8; y <= 17; y++)
+                cu_blank_span(y, 0, 20);
+        }
+        return;
+    }
+
+    sh_draw_msg(g);
+
+    if (same_screen) {
+        uint8_t rem = (g_shop_vis_count > g->item_menu_scroll)
+            ? (uint8_t)(g_shop_vis_count - g->item_menu_scroll) : 0;
+        if (rem > SHOP_VISIBLE) rem = SHOP_VISIBLE;
+        /* Live rows stamped BG icon tiles at cols 1..2 directly to VRAM;
+         * keep the text mirror clean (e.g. after flipping back from an
+         * empty-tab "(nothing to sell)" message). */
+        for (y = 5u; y < (uint8_t)(5u + rem); y++) {
+            g_ui_screen_buf[y][1] = ' ';
+            g_ui_screen_buf[y][2] = ' ';
+        }
+        for (y = (uint8_t)(5u + rem); y < (uint8_t)(5u + SHOP_VISIBLE); y++)
+            cu_blank_span(y, 0, 20);
+    }
+}

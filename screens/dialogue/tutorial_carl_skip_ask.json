@@ -1,0 +1,10 @@
+{
+  "id": "tutorial_carl_skip_ask",
+  "speaker": "CARL:",
+  "lines": [
+    "HEY! WANNA LEARN",
+    "HOW FIGHT?",
+    "> STAY  LEAVE"
+  ],
+  "choice": "yes_no"
+}

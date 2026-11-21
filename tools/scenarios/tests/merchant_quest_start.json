@@ -1,7 +1,7 @@
 {
  "name": "merchant_quest_start",
  "test": true,
- "description": "The Lost Merchant (Town) asks the hero to retrieve his stolen amulet: quest dialogue, quest ACTIVE (tracked) but NOT delivered",
+ "description": "The Lost Merchant (Town) asks the hero to retrieve his stolen shop keys: quest dialogue, quest ACTIVE (tracked) but NOT delivered",
  "actions": [
   {
    "type": "interact",
@@ -24,7 +24,7 @@
   },
   {
    "type": "inventory",
-   "item": "AMULET",
+   "item": "SHOPKEYS",
    "expected": 0
   },
   {

@@ -1,0 +1,9 @@
+{
+  "$schema": "../schema/entity_type.schema.json",
+  "id": "village_dog",
+  "label": "Village Dog",
+  "kind": "npc",
+  "name": "DOG",
+  "visual": "?",
+  "sprite_kind": "ascii"
+}

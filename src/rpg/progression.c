@@ -48,16 +48,6 @@ static ProgressionState *prog_get_or_add(GameState *state, uint8_t target_type, 
     return ps;
 }
 
-bool progression_ensure(GameState *state, uint8_t target_type, uint16_t target_id,
-                        uint8_t level, uint16_t progress)
-{
-    ProgressionState *ps = prog_get_or_add(state, target_type, target_id);
-    if (!ps) return false;
-    ps->level = level;
-    ps->progress = progress;
-    return true;
-}
-
 bool progression_add(GameState *state, uint8_t target_type, uint16_t target_id,
                      uint16_t amount, ProgressionAddResult *out_result)
 {

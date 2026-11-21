@@ -1,0 +1,35 @@
+{
+ "name": "hero_walking",
+ "test": true,
+ "description": "Moving hero shows walk frames (OAM 98/99), never idle: press LEFT from (13,8), step 4 mid-walk. Companion to hero_idle_standing (standing shows 96/97).",
+ "actions": [
+  {
+   "type": "press",
+   "button": "LEFT"
+  },
+  {
+   "type": "wait",
+   "frames": 4
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 0,
+   "expected": 98
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "LEFT"
+  },
+  "seed": 5002
+ }
+}

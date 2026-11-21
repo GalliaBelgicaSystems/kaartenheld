@@ -1,0 +1,52 @@
+{
+ "name": "economy_scaled_buy",
+ "test": true,
+ "description": "Market-scaled buy quote (docs/economy.md §4): at index 48 (150%) a POISON_DAGGER (price 8, bias 0) quotes S = (8*48+16)>>5 = 12, not the neutral 8. Two debug-path buys from 50g leave 26g (neutral would leave 34g); companion to shop_max_copies which pins the neutral 8g triplet.",
+ "actions": [
+  {
+   "type": "set_market_index",
+   "index": 48
+  },
+  {
+   "type": "buy_item",
+   "item": "POISON_DAGGER"
+  },
+  {
+   "type": "buy_item",
+   "item": "POISON_DAGGER"
+  }
+ ],
+ "assertions": [
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 26
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 2
+  },
+  {
+   "type": "market_index",
+   "expected": 48
+  },
+  {
+   "type": "event_count",
+   "event": "CARD_PURCHASED",
+   "count": 2
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8205,
+  "currency": {
+   "GOLD": 50
+  }
+ }
+}

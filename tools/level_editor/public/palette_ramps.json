@@ -262,7 +262,8 @@
     "COMBAT/card_outline"
    ],
    "slots": [
-    "base:0"
+    "base:0",
+    "menu:0"
    ]
   },
   "fight2": {
@@ -279,7 +280,8 @@
     "COMBAT/numbers_icons"
    ],
    "slots": [
-    "base:5"
+    "base:5",
+    "menu:5"
    ]
   },
   "fight3": {
@@ -296,7 +298,8 @@
     "COMBAT/numbers_icons"
    ],
    "slots": [
-    "base:3"
+    "base:3",
+    "menu:3"
    ]
   },
   "fight4": {
@@ -313,7 +316,8 @@
     "COMBAT/heart_fire_enemy_eyes"
    ],
    "slots": [
-    "base:1"
+    "base:1",
+    "menu:1"
    ]
   },
   "fight5": {
@@ -330,7 +334,8 @@
     "COMBAT/poison_icon"
    ],
    "slots": [
-    "base:4"
+    "base:4",
+    "menu:4"
    ]
   },
   "fight6": {
@@ -347,7 +352,8 @@
     "COMBAT/ice_icon"
    ],
    "slots": [
-    "base:2"
+    "base:2",
+    "menu:2"
    ]
   },
   "fight7": {
@@ -442,6 +448,23 @@
    ],
    "slots": []
   },
+  "fighthealth": {
+   "colors": [
+    "#ffffff",
+    "#89cc5e",
+    "#5c903a",
+    "#77e331"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/slime_combat",
+    "COMBAT/slime_outline_combat",
+    "SPRITES/slime_light"
+   ],
+   "slots": [
+    "menu:7"
+   ]
+  },
   "fightmimic": {
    "colors": [
     "#ffffff",
@@ -472,6 +495,21 @@
    ],
    "slots": []
   },
+  "fightslime_knight": {
+   "colors": [
+    "#ffffff",
+    "#3c5e26",
+    "#5c903a",
+    "#000000"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/slime_outline_combat_dark",
+    "COMBAT/slime_outline_combat",
+    "COMBAT/boss_spider_bat_combat_body"
+   ],
+   "slots": []
+  },
   "fightspider": {
    "colors": [
     "#ffffff",
@@ -486,7 +524,93 @@
     "COMBAT/boss_spider_bat_combat_body"
    ],
    "slots": [
-    "base:6"
+    "base:6",
+    "menu:6"
+   ]
+  },
+  "inventory1": {
+   "colors": [
+    "#ffffff",
+    "#bb9863",
+    "#967139",
+    "#967139"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/bronze_light",
+    "COMBAT/bronze_dark",
+    "COMBAT/bronze_dark"
+   ],
+   "slots": [
+    "obj:0"
+   ]
+  },
+  "inventory2": {
+   "colors": [
+    "#ffffff",
+    "#c8792e",
+    "#a85a10",
+    "#a85a10"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/iron_light",
+    "COMBAT/iron_dark",
+    "COMBAT/iron_dark"
+   ],
+   "slots": [
+    "obj:1"
+   ]
+  },
+  "inventory3": {
+   "colors": [
+    "#ffffff",
+    "#d8deec",
+    "#becaec",
+    "#becaec"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/mithril_light",
+    "COMBAT/mithril_dark",
+    "COMBAT/mithril_dark"
+   ],
+   "slots": [
+    "obj:6"
+   ]
+  },
+  "inventory4": {
+   "colors": [
+    "#ffffff",
+    "#e5aa54",
+    "#93621a",
+    "#604217"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/wood_light",
+    "COMBAT/wood_mid",
+    "COMBAT/wood_dark"
+   ],
+   "slots": [
+    "obj:5"
+   ]
+  },
+  "inventory5": {
+   "colors": [
+    "#ffffff",
+    "#bbbbbb",
+    "#828282",
+    "#828282"
+   ],
+   "refs": [
+    "COMBAT/background",
+    "COMBAT/steel_light",
+    "COMBAT/steel_dark",
+    "COMBAT/steel_dark"
+   ],
+   "slots": [
+    "obj:7"
    ]
   },
   "sprites": {
@@ -519,19 +643,21 @@
     "SPRITES/boss_eyes_scepter",
     "SPRITES/boss_eyes_scepter"
    ],
-   "slots": []
+   "slots": [
+    "obj:6"
+   ]
   },
   "sprites11": {
    "colors": [
     "#f1eb03",
     "#77e331",
-    "#5c903a",
+    "#3c5e26",
     "#5c903a"
    ],
    "refs": [
     "SPRITES/background",
     "SPRITES/slime_light",
-    "SPRITES/slime_dark",
+    "SPRITES/slime_outline",
     "SPRITES/slime_dark"
    ],
    "slots": [
@@ -607,13 +733,13 @@
   "sprites7": {
    "colors": [
     "#f1eb03",
-    "#b6b6b6",
+    "#ffffff",
     "#475ca8",
     "#3f3017"
    ],
    "refs": [
     "SPRITES/background",
-    "SPRITES/npc_beard",
+    "SPRITES/white",
     "SPRITES/mage_cloth",
     "SPRITES/npc"
    ],
@@ -795,18 +921,58 @@
   "town7": {
    "colors": [
     "#f1cf91",
+    "#8d754a",
     "#645233",
-    "#000000",
     "#000000"
    ],
    "refs": [
     "TOWN/house_wall",
+    "TOWN/barrel_wood_fence",
     "TOWN/wood_outlines_rubble",
-    "TOWN/holes",
     "TOWN/holes"
    ],
    "slots": [
     "village:7"
+   ]
+  },
+  "underground1": {
+   "colors": [
+    "#000000",
+    "#916c33",
+    "#5a431f",
+    "#ffffff"
+   ],
+   "refs": [
+    "UNDERGROUND/under_void",
+    "UNDERGROUND/under_ground",
+    "UNDERGROUND/under_border",
+    "UNDERGROUND/under_bones"
+   ],
+   "slots": [
+    "underground:0",
+    "underground:2",
+    "underground:3",
+    "underground:4",
+    "underground:5",
+    "underground:6",
+    "underground:7"
+   ]
+  },
+  "underground2": {
+   "colors": [
+    "#dbaf6c",
+    "#b68e50",
+    "#916c33",
+    "#5a431f"
+   ],
+   "refs": [
+    "UNDERGROUND/under_lightshade2",
+    "UNDERGROUND/under_lightshade1",
+    "UNDERGROUND/under_ground",
+    "UNDERGROUND/under_border"
+   ],
+   "slots": [
+    "underground:1"
    ]
   },
   "water": {
@@ -868,6 +1034,16 @@
    "6": "field4",
    "7": "field5"
   },
+  "menu": {
+   "0": "fight1",
+   "1": "fight4",
+   "2": "fight6",
+   "3": "fight3",
+   "4": "fight5",
+   "5": "fight2",
+   "6": "fightspider",
+   "7": "fighthealth"
+  },
   "obj": {
    "0": "sprites",
    "1": "sprites5",
@@ -881,6 +1057,16 @@
   "title": {
    "0": "title",
    "1": "title_logo"
+  },
+  "underground": {
+   "0": "underground1",
+   "1": "underground2",
+   "2": "underground1",
+   "3": "underground1",
+   "4": "underground1",
+   "5": "underground1",
+   "6": "underground1",
+   "7": "underground1"
   },
   "village": {
    "0": "town4",

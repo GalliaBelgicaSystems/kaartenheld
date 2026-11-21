@@ -94,8 +94,8 @@ export const OBJECT_TEMPLATES: ObjectTemplate[] = [
     color: '#f1c40f',
     icon: '✨',
     defaultProps: {
-      display_name: 'AMULET',
-      dialogue: 'DIALOGUE_ID_AMULET_NOTHING'
+      display_name: 'SHOP KEYS',
+      dialogue: 'DIALOGUE_ID_SHOPKEYS_NOTHING'
     }
   },
   {

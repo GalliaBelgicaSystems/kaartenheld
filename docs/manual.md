@@ -37,8 +37,8 @@ Press **START**, then choose from the menu:
 
 | Menu | What it does |
 |---|---|
-| **NEW GAME** | Start a brand-new adventure. |
 | **CONTINUE** | Load a game you saved earlier. |
+| **NEW GAME** | Start a brand-new adventure. |
 | **SOUND: ON/OFF** | Turn the music on or off. |
 | **TUTORIAL** | A short, friendly how-to-play lesson. |
 
@@ -54,7 +54,7 @@ Press **START**, then choose from the menu:
 | **A** | Talk, open, confirm, or use what is in front of you. |
 | **B** | Go back or cancel. In battle, it also *flees*. |
 | **START** | Open your **Cards & Quests** screen. |
-| **SELECT** | Open the **Load Game** screen. |
+| **SELECT** | In battle, play your staged hand. |
 
 Inside menus, **LEFT** and **RIGHT** switch pages, **UP** and **DOWN** move
 the pointer, **A** chooses, and **B** backs out.
@@ -87,22 +87,21 @@ and press **A** to talk.
 
 ### The Monster Hunt
 
-Talk to the **Mayor** in town. He asks you to defeat **5 monsters**.
+Talk to the **Mayor** in town. He asks you to defeat **3 monsters**.
 
-When you have beaten all five, go back to him and he will grant you
+When you have beaten all three, go back to him and he will grant you
 wonderful power: **one extra AP** every round. Then he warns you that a
 darkness stirs at the castle.
 
 ![Your quests](manual_images/quests.png)
 
-### The Lost Amulet
+### The Lost Shop Keys
 
-The **Lost Merchant** in town has lost his family treasure. It is hiding
-somewhere in the **Forest**.
+The **Lost Merchant** in town lost his shop keys on a night out drinking. Kobolds up north mugged him and took them. They are hiding in the **mountains up north**.
 
 ![The forest](manual_images/map-forest.png)
 
-Find it, bring it back, and he will thank you with **15 gold** — and open
+Find them, bring them back, and he will thank you with **15 gold** — and open
 his shop for you.
 
 ---
@@ -128,12 +127,13 @@ you own:
 |---|---|
 | **Sword** (`SW`) | Hurts the monster. |
 | **Shield** (`SH`) | Blocks damage when the monster attacks. |
-| **Bow** (`BO`) | Hurts from far away. The mighty Mythril Bow costs extra Energy. |
+| **Bow** (`BO`) | Hurts from far away. Bows hit softer than swords but their fire and ice arrows carry dangerous riders. |
 | **Ring / Heal** (`HE`) | Heals your health. A Ring can also pretend to be any number when you make a combo. |
-| **Dagger** (`DA`) | A small hit that can poison. |
+| **Dagger** (`DA`) | A small hit that can poison. Played alone on defence, it strikes first -- a killing blow takes no damage. |
 
-Some cards are extra special: a **Fire Sword** burns, a **Poison Dagger**
-poisons, and the **Mythril Bow** hits very, very hard.
+Some cards are extra special: a **Fire Bow** burns, a **Poison Dagger**
+poisons, and the **Mythril Bow** shoots often (its arrows are cheap to
+play, so it fires turn after turn).
 
 ### Collection and deck
 
@@ -164,8 +164,8 @@ play up to **5** cards at once.
 
 ![Choosing cards](manual_images/detail-hand.png)
 
-Every card costs **Energy**. You get **2 Energy** each round, so spend it
-carefully!
+Every card costs **Energy**. You get **1 Energy** each round, so spend it
+carefully! Story rewards raise your pool -- up to **5** by the end.
 
 ### Step 2 — Watch your attack
 
@@ -234,11 +234,13 @@ more you heal).
 - **Rings** heal you, count as any number in a combo, or act as
   wildcards on defence (0 block themselves, but they complete your hand
   and let over-block healing trigger).
-- **Poison** and **Burn** hurt a little every turn. Watch the little marks
+- **Burn** hurts every turn for a tenth of the hit that lit it
+  (at least 1 HP). Watch the little marks
   beside a fighter.
-- **Freeze** is nasty: a frozen fighter **misses a whole turn!**
-- When you are **poisoned**, a couple of your cards turn grey and cannot be
-  used until the poison wears off.
+- **Poison** never hurts -- instead, a poisoned enemy turns on its
+  allies (or itself, alone), and a poisoned hero plays a random hand.
+- **Ice** locks cards: a couple of your cards turn grey
+  and cannot be used until the ice wears off.
 - Badly hurt between fights? Find the red-robed **Heal Mage** in town —
   talking to him restores all your HP for free, with a happy little jingle.
 
@@ -249,15 +251,17 @@ more you heal).
 Win battles to earn **gold**. You start with **20 gold**.
 
 Talk to the **Lost Merchant** in town to spend it — once you return
-his stolen amulet from the Forest, his shop opens for business:
+his stolen shop keys from the mountains, his shop opens for business:
 
 ![The shop](manual_images/shop.png)
 
 ![The shop up close](manual_images/detail-shop.png)
 
-Press **A** to buy and **B** to leave. The Merchant sells a powerful
-**Mythril Bow** and an **Iron Ring** — your best friend when you are
-hurt.
+Press **A** to buy and **B** to leave. Press **LEFT** or **RIGHT** to
+switch between the **BUY** and **SELL** tabs and sell cards you do not
+need. The Merchant sells a handy **Mythril Bow** and an **Iron Ring**
+— your best friend when you are hurt — plus your starter cards, always
+free.
 
 ---
 
@@ -277,16 +281,20 @@ It is like a treasure hunt that never ends!
 
 ## 12. Saving Your Game
 
-Find the **Wizard** in town. He can save your adventure to one of **three
-slots**.
+Your adventure **saves itself**. Every time something important happens
+-- you earn an Ability Point, finish a quest, or walk into town or the
+castle -- the game writes your progress to the slot you picked when you
+started. A little spinning bar appears in the bottom-right corner while
+it saves.
 
-![Saving your game](manual_images/save.png)
+The **Wizard** in town can tell you all about it.
 
-Choose a slot and press **A**. Your Game Boy remembers even after you turn
-it off, so you can always come back later.
+To stop playing, open the quick screen with **START**, flip to the
+**QUEST** tab and choose **SAVE & QUIT**. Your Game Boy remembers even
+after you turn it off, so you can always come back later.
 
-To load a game, press **SELECT** while walking around, or choose
-**CONTINUE** on the title screen.
+To keep playing, choose **CONTINUE** on the title screen and pick your
+slot again.
 
 ---
 
@@ -296,8 +304,8 @@ To load a game, press **SELECT** while walking around, or choose
   what card you discovered!
 - **Lose a battle** if your health reaches zero. You will see the **GAME
   OVER** screen:
-  - **YES** — go back and load a saved game.
-  - **NO** — say goodbye and stop playing.
+  - **YES** -- go back to your last autosave.
+  - **NO** -- say goodbye and stop playing.
 
 Beat the **Lord of Slimes** in the Throne Room and you will see the happy
 ending. The land is saved, thanks to you!
@@ -314,7 +322,7 @@ ending. The land is saved, thanks to you!
   heal.
 - **Watch your Energy.** Two points a round goes fast.
 - **Do not waste your timer.** Decide, then press **SELECT**.
-- **Beat the 5 monsters early** to win an extra AP.
+- **Beat the 3 monsters early** to win an extra AP.
 - **Sell cards you do not need** and buy a Healing Ring.
 - **Save often** at the Wizard — you never know what is around the corner!
 
@@ -332,6 +340,6 @@ ending. The land is saved, thanks to you!
 | Starter deck | **12 cards** |
 | Biggest deck | **20 cards** |
 | Collection limit | **12 different cards** |
-| Main quest | Defeat **5 monsters** for the Mayor |
+| Main quest | Defeat **3 monsters** for the Mayor |
 
 Now go, hero — the cards are in your hands!

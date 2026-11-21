@@ -4,11 +4,12 @@ import { NeighborLinkStatus, fetchNeighborCheck } from './io/neighbors';
 
 /** Inline whole-edge link diagnostics for the Exits tab.
  *
- *  Each linked border drops the player one cell inside the neighbor's
- *  opposite edge; if that cell is a wall the player is stuck.  The check
- *  runs the compiler's own pairing logic (collision.py) against the
- *  current, possibly unsaved, level so the mapper sees the problem before
- *  saving.  The build refuses to compile a trapping pair (compile.py). */
+ *  Each linked border drops the player on the neighbor's arrival-side
+ *  entry (Spawn layer: west entry when entering from the west), falling
+ *  back to its main spawn when unset.  The check runs the compiler's own
+ *  pairing logic (collision.py) against the current, possibly unsaved,
+ *  level so the mapper sees the problem before saving.  The build
+ *  refuses to compile a trapping link (compile.py). */
 export const EdgeConnector: React.FC<{ level: EditorLevel }> = ({ level }) => {
   const neighbors = normalizeNeighbors(level.neighbors);
   const linkedDirs = (['north', 'south', 'east', 'west'] as const).filter(
@@ -80,9 +81,11 @@ export const EdgeConnector: React.FC<{ level: EditorLevel }> = ({ level }) => {
           </div>
         ))}
         <div style={{ color: '#777', lineHeight: 1.4, marginTop: 4 }}>
-          The player enters one cell inside the neighbour; every crossing must
-          land on walkable ground. Open the entry line in the neighbour
-          (whole-edge corridor) or wall the crossing cells here.
+          The player enters on the neighbour arrival-side entry (Spawn
+          layer: pick West entry for an east-edge link), else its main
+          spawn. Every crossing on one edge lands on the same cell, so no
+          edge alignment is needed. Keep the used entries on walkable
+          ground.
         </div>
       </div>
     </div>

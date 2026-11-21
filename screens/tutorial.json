@@ -42,10 +42,10 @@
     },
     {
       "lines": [
-        "BURN POISON FREEZE",
-        "Poison wounds and",
-        "locks cards. Ice",
-        "skips your turn."
+        "BURN POISON ICE",
+        "Burn wounds you.",
+        "Poison confuses.",
+        "Ice halves damage."
       ]
     },
     {

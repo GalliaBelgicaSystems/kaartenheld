@@ -28,7 +28,7 @@ GAME_ID_BASE = 0x80
 # them (sorted) and can never shift an existing id.  Never reorder.
 ENTITY_ORDER_PINNED = [
     "slime", "mayor", "guard", "shopkeeper", "bat", "slime_lord",
-    "merchant", "amulet", "wizard", "signpost", "mimic", "spider",
+    "merchant", "shopkeys", "wizard", "signpost", "mimic", "spider",
     "kobold", "fire", "dog",
 ]
 

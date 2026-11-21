@@ -23,14 +23,6 @@
   },
   {
    "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
    "button": "A"
   },
   {
@@ -53,7 +45,7 @@
   },
   {
    "type": "screen_row",
-   "row": 11,
+   "row": 9,
    "contains": "CONTINUE"
   },
   {

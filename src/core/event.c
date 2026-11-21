@@ -7,8 +7,8 @@
 #include "banked.h"
 
 /* Game-layer slime-trio spawn body (src/game/slime_trio_spawn_banked.c,
- * ROM bank 2).  Declared here so the fixed-bank executor can take its
- * address for the trampoline. */
+ * ROM bank 10 = GAME_EVENT_BANK).  Declared here so the fixed-bank
+ * executor can take its address for the trampoline. */
 void game_slime_trio_spawn_banked(void);
 
 /* ── Event engine ──────────────────────────────────────────────────
@@ -22,7 +22,7 @@ void game_slime_trio_spawn_banked(void);
  * always restored to 0.  event_get_row() returns the scratch copy; a
  * returned pointer is only valid until the next row access. */
 static const EventDefinition *g_events;  /* BSS (52.27) */
-static uint8_t g_event_count = 0;
+static uint8_t g_event_count;
 /* BSS: event_init() (via game_content_init() at every boot) sets the home
  * bank before any row is read. */
 static uint8_t g_event_bank;
@@ -126,16 +126,19 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
             (void)ok;
 #endif
         } else if (t == EVENT_ACTION_SPAWN_SLIME_TRIO) {
-            /* Slime-knight armor split (game content, bank 2): the
+            /* Slime-knight armor split (game content, bank 10): the
              * felled knight's runtime slot becomes a slime-trio
              * encounter in place.  Thin dispatch only -- the body
-             * resolves its own ow byte from the event row (same bank),
-             * so nothing is staged and the fixed bank pays just the
-             * branch + call.  Keeps engine files free of game ids
+             * lives in the event-table bank so its row scan is an
+             * in-bank read.  Keeps engine files free of game ids
              * (AGENTS.md §55.1). */
-            g_bk_call_bank = 2;
+            g_bk_call_bank = 10;
             g_bk_call_target = (uint16_t)&game_slime_trio_spawn_banked;
             banked_call_run();
+        } else if (t == EVENT_ACTION_AUTOSAVE) {
+            /* Stage an autosave (game_update flushes once, on canonical
+             * state).  Generic mechanism; the game rows decide when. */
+            g_autosave_pending = 1;
         }
     }
 }

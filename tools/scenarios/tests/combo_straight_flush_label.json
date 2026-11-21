@@ -158,7 +158,7 @@
   {
    "type": "screen_row",
    "row": 10,
-   "contains": "STR FLUSH"
+   "contains": "STRAIGHT FLUSH"
   },
   {
    "type": "event_not_occurred",

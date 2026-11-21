@@ -158,7 +158,7 @@
       "label": "arrow pointing up dark",
       "gb_constant": "TILE_COMBAT_ARROW_POINTING_UP_DARK",
       "walkable": false,
-      "color": "#c9beae",
+      "color": "#c8bdad",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_arrow_pointing_up_dark.png",
       "category": "terrain"
@@ -714,6 +714,16 @@
       "category": "terrain"
     },
     {
+      "id": "combat_6_arrows_left",
+      "label": "6_arrows_left",
+      "gb_constant": "TILE_COMBAT_6_ARROWS_LEFT",
+      "walkable": false,
+      "color": "#c09f6f",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_6_arrows_left.png",
+      "category": "terrain"
+    },
+    {
       "id": "combat_3_arrows_left",
       "label": "3_arrows_left",
       "gb_constant": "TILE_COMBAT_3_ARROWS_LEFT",
@@ -891,6 +901,76 @@
       "color": "#bc9c6e",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_eight_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_material_icon",
+      "label": "material icon",
+      "gb_constant": "TILE_COMBAT_MATERIAL_ICON",
+      "walkable": false,
+      "color": "#c8b598",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_material_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_wood_material_icon",
+      "label": "wood material icon",
+      "gb_constant": "TILE_COMBAT_WOOD_MATERIAL_ICON",
+      "walkable": false,
+      "color": "#b59d7b",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_wood_material_icon.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_fire_icon_menu",
+      "label": "fire icon menu",
+      "gb_constant": "TILE_COMBAT_FIRE_ICON_MENU",
+      "walkable": false,
+      "color": "#d1a5a5",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_fire_icon_menu.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_ice_icon_menu",
+      "label": "ice icon menu",
+      "gb_constant": "TILE_COMBAT_ICE_ICON_MENU",
+      "walkable": false,
+      "color": "#cff0f5",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_ice_icon_menu.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_poison_icon_menu",
+      "label": "poison icon menu",
+      "gb_constant": "TILE_COMBAT_POISON_ICON_MENU",
+      "walkable": false,
+      "color": "#d7c6ed",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_poison_icon_menu.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_health_icon_menu",
+      "label": "health icon menu",
+      "gb_constant": "TILE_COMBAT_HEALTH_ICON_MENU",
+      "walkable": false,
+      "color": "#d4f6be",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_health_icon_menu.png",
+      "category": "terrain"
+    },
+    {
+      "id": "combat_finger_pointing_right_cursor_menu",
+      "label": "finger pointing right cursor menu",
+      "gb_constant": "TILE_COMBAT_FINGER_POINTING_RIGHT_CURSOR_MENU",
+      "walkable": false,
+      "color": "#beb19d",
+      "ascii": "#",
+      "image_url": "/tiles/combat/combat_finger_pointing_right_cursor_menu.png",
       "category": "terrain"
     }
   ]

@@ -1,0 +1,77 @@
+{
+ "name": "shopkeys_unsellable",
+ "test": true,
+ "description": "The Lost Shop Keys cannot be sold: they are a SPECIAL quest card, not loot, so the shop's SELL tab never lists them (neither do the price-0 starter basics). A on the empty SELL list is a silent no-op -- still owned, no gold, no CARD_SOLD.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 0
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  },
+  "inventory": {
+   "SHOPKEYS": 1
+  }
+ },
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "screen_row",
+   "row": 5,
+   "contains": "(nothing to sell)"
+  },
+  {
+   "type": "inventory",
+   "item": "SHOPKEYS",
+   "expected": 1
+  },
+  {
+   "type": "currency",
+   "expected": 0,
+   "currency": "GOLD"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_SOLD"
+  }
+ ]
+}

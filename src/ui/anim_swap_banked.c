@@ -61,7 +61,7 @@ uint8_t g_anim_count;
  * no-animation baseline (16.84 ticks/flip both).  A VRAM-index list
  * was chosen over in-draw
  * recording because the record hook would live in fixed-bank
- * ui_draw_world_cell (~38 B of _HOME margin left); the post-redraw
+ * ui_draw_terrain_cell (~38 B of _HOME margin left); the post-redraw
  * rebuild scan needs no fixed-bank loop and no per-cell history.
  * The ring is static between full redraws (hardware SCX/SCY scrolls
  * it, no per-frame redraws) and every redraw rebuilds, so the list is
@@ -93,6 +93,8 @@ void world_anim_rebuild_banked(void)
     uint8_t i;
     uint8_t row;
     uint8_t col;
+    uint8_t width;
+    uint8_t height;
     uint8_t v;
     uint8_t n;
     uint8_t s;
@@ -100,15 +102,18 @@ void world_anim_rebuild_banked(void)
     uint8_t found;
     uint8_t base;
     uint16_t idx;
-    /* Distinct pair-endpoint slots across all kinds (fire 37/38, water
-     * 60/61 -- shared by every kind, so the rebuild is kind-agnostic;
-     * castle maps can never hold these VRAM ids anyway). */
+    /* Distinct pair-endpoint slots for the current tileset (fire 37/38,
+     * water 60/61 on forest/desolate; 0 slots on village/castle/underground
+     * so non-animated maps skip the VRAM scan and set g_anim_count = 0). */
     nslots = 0;
     slots[0] = 0;
     slots[1] = 0;
     slots[2] = 0;
     slots[3] = 0;
     for (p = 0; p < (uint8_t)(ANIM_PAIR_COUNT * 3); p = (uint8_t)(p + 3)) {
+        if (kAnimPairs[p] != (uint8_t)g_game.world.tileset_kind) {
+            continue;
+        }
         sa = kAnimPairs[(uint8_t)(p + 1)];
         sb = kAnimPairs[(uint8_t)(p + 2)];
         for (i = 0; i < 2; i++) {
@@ -126,15 +131,26 @@ void world_anim_rebuild_banked(void)
             }
         }
     }
+    if (nslots == 0) {
+        g_anim_count = 0;
+        return;
+    }
     /* Ring lives in VRAM bank 0.  Gate crossings repaint with the LCD
      * on, so reads go through the bounded helper (mode-3 returns 0xFF,
      * which can only under-record, never mis-record: 0xFF decodes past
      * every animation slot).  LCD-off full redraws skip the wait at once.
-     * Every map fits rows 0..17 x cols 0..31 (<=24 wide, <=18 tall). */
+     * Scan only the LIVE map rectangle (g_game.world is WRAM, always
+     * mapped, so this body needs no staging): out-of-bounds ring cells
+     * are never redrawn (the reveal draws [0,width) x [0,height)), so on
+     * a map smaller than the ring they can retain stale tile ids from a
+     * previous, larger map -- recording one would burn an ANIM_CELL_CAP
+     * slot on a cell the swap pass would then animate invisibly. */
+    width = g_game.world.width;
+    height = g_game.world.height;
     n = 0;
-    idx = 0;
-    for (row = 0; row < 18; row++) {
-        for (col = 0; col < 32; col++) {
+    for (row = 0; row < height; row++) {
+        for (col = 0; col < width; col++) {
+            idx = ((uint16_t)row << 5) + col;
             v = anim_read_cell(idx);
             base = (uint8_t)(v - RPG_TILE_BASE_WORLD);
             /* v is an animation id iff v >= 128 and its slot is listed.
@@ -151,7 +167,6 @@ void world_anim_rebuild_banked(void)
                     }
                 }
             }
-            idx++;
         }
     }
     g_anim_count = n;
@@ -227,17 +242,11 @@ void world_anim_swap_banked(void)
     uint8_t n;
     uint8_t v;
     uint16_t cell;
-    if (!w) return;
-    /* Throttle: every 4th game frame is plenty -- steps last 16 frames
-     * and the walk is tiny now.  g_game.frame advances once per
-     * game_update on both builds. */
-    if (((uint8_t)g_game.frame & 3) != 0) {
-        return;
-    }
     /* Collect this tileset's (other -> want) frame mapping for the
      * current step.  Pairs are (tileset-kind, VRAM-slot-A, VRAM-slot-B);
      * both VRAM bases are 128 (WORLD and DESOLATE), so slot + base never
-     * leaves uint8. */
+     * leaves uint8.  The fixed-bank caller already gates on
+     * ((g_game.frame & 3) == 0 && g_anim_count != 0). */
     npairs = 0;
     o0 = 0;
     w0 = 0;
@@ -271,7 +280,7 @@ void world_anim_swap_banked(void)
     }
     /* Walk the recorded list through PPU-gated cell access (above):
      * phase-independent on every target, idle or moving. */
-    n = (g_anim_count <= ANIM_CELL_CAP) ? g_anim_count : ANIM_CELL_CAP;
+    n = g_anim_count;
     for (i = 0; i < n; i++) {
         cell = g_anim_cells[i];
         v = anim_read_cell(cell);

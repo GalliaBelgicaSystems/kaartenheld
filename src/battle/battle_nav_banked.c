@@ -3,6 +3,7 @@
 #include "battle.h"
 #include "rpg/status.h"
 #include "banked.h"
+#include "rng.h"
 
 /* ── Banked battle navigation / selection cluster (ROM bank 4) ──────
  * Hosts the hand-cursor / combo-selection / target-selection / enemy
@@ -15,10 +16,9 @@
  * in g_bk_byte_c (booleans).
  *
  * Self-contained (AGENTS.md §52.11.1): reads/writes only WRAM structs
- * (the staged Battle*, the battle-scoped grey masks in status.h) and its
- * own bank-local helpers.  It must NOT call any fixed-bank function --
- * telemetry for target moves is emitted by the fixed wrapper after the
- * dispatch returns. */
+ * (the staged Battle*) and its own bank-local helpers.  It must NOT
+ * call any fixed-bank function -- telemetry for target moves is
+ * emitted by the fixed wrapper after the dispatch returns. */
 
 /* Dispatch opcodes (shared with src/battle/battle.c wrappers). */
 #define NAV_OP_CURSOR_MOVE      1
@@ -27,6 +27,7 @@
 #define NAV_OP_CARD_SELECT      4
 #define NAV_OP_IS_CARD_SELECTED 5
 #define NAV_OP_HAND_PLAYABLE    6
+#define NAV_OP_CONFUSE_AUTO     7
 
 /* Total energy cost reserved by the cards currently selected into the combo.
  * Selection validates against the un-reserved remainder, so this never
@@ -40,18 +41,32 @@ static uint8_t nav_combo_reserved_cost(const Battle *b)
     return sum;
 }
 
-/* A hand card can be added to the current combo only while it has uses left,
- * is not greyed out by poison, AND its cost fits in the phase energy not yet
- * reserved by the pending combo (deck.md Phase 10).  Greyed hand cards (bit
- * set in s_grey_mask[0]) are unplayable for the grey-out duration -- the
- * cursor skips them, selection rejects them, and the auto-play fallback in
- * battle_execute_combo ignores them. */
+/* A hand card can be added to the current combo only while it has uses left
+ * AND its cost fits in the phase energy not yet reserved by the pending
+ * combo (deck.md Phase 10).  Unplayable cards reject with NO ENERGY --
+ * the cursor skips them, selection rejects them, and the auto-play
+ * fallback in battle_execute_combo ignores them.
+ * Limited-arrows: a BOW also needs a staged bow in the pending combo to
+ * stay under the shared arrow pool (g_bk_byte_d, staged by the fixed
+ * wrapper; the engine body stays game-id-free).  uses_remaining == 0
+ * still rejects first, so debug-forced depleted bows keep the old
+ * OUT OF USES path. */
+static uint8_t nav_staged_bows(const Battle *b)
+{
+    uint8_t i, n = 0;
+    for (i = 0; i < b->combo_count; i++) {
+        if (b->hand[b->selected_indices[i]].type == BATTLE_CARD_TYPE_BOW) n++;
+    }
+    return n;
+}
+
 static bool nav_hand_playable(const Battle *b, uint8_t hand_idx)
 {
     uint8_t available;
     if (b->hand[hand_idx].type == BATTLE_CARD_TYPE_EMPTY) return false;
     if (b->hand[hand_idx].uses_remaining == 0) return false;
-    if ((s_grey_mask[0] & (uint8_t)(1u << hand_idx)) != 0) return false;
+    if (b->hand[hand_idx].type == BATTLE_CARD_TYPE_BOW &&
+        nav_staged_bows(b) >= g_bk_byte_d) return false;
     available = b->energy - nav_combo_reserved_cost(b);
     return b->hand[hand_idx].cost <= available;
 }
@@ -68,8 +83,10 @@ static bool nav_is_card_selected(const Battle *b, uint8_t hand_idx)
 }
 
 /* Transient HUD message (row 12): id 1 = NO ENERGY, 2 = OUT OF USES,
- * 3 = ONE RING (docs/loot.md §34.3).  Field writes only (the fixed-bank
- * static helper is unreachable while the content bank is mapped). */
+ * 3 = ONE RING (docs/loot.md §34.3), 8 = NO ARROWS (limited-arrows:
+ * bow selected with the shared pool empty).  Field writes only (the
+ * fixed-bank static helper is unreachable while the content bank is
+ * mapped). */
 static void nav_msg(Battle *b, uint8_t id)
 {
     b->msg_id = id;
@@ -128,8 +145,18 @@ static void nav_card_select(Battle *b)
     }
 
     if (!nav_hand_playable(b, b->cursor_pos)) {
-        nav_msg(b,
-                (b->hand[b->cursor_pos].uses_remaining == 0) ? 2 : 1);
+        /* Depleted (uses == 0) keeps OUT OF USES; a bow that fails on
+         * the arrows condition itself (staged bows at/over the pool)
+         * flashes NO ARROWS; everything else (energy) says
+         * NO ENERGY. */
+        if (b->hand[b->cursor_pos].uses_remaining == 0) {
+            nav_msg(b, 2);
+        } else if (b->hand[b->cursor_pos].type == BATTLE_CARD_TYPE_BOW &&
+                   nav_staged_bows(b) >= g_bk_byte_d) {
+            nav_msg(b, BATTLE_MSG_NO_ARROWS);
+        } else {
+            nav_msg(b, 1);
+        }
         return;
     }
 
@@ -161,6 +188,72 @@ static void nav_card_select(Battle *b)
     }
 }
 
+/* Confused-hero auto-stage (poison, docs/loot.md §34.6): the hero plays
+ * a random hand -- no input.  Stages a random subset of the currently
+ * playable hand that fits the phase energy (nav_hand_playable already
+ * accounts reserved cost and uses; at most one ring, like manual
+ * staging) and reports through g_bk_byte_c: 0 = hero not confused,
+ * 2 = staged this frame (the fixed hook starts the hold beat), 1 =
+ * already staged (the fixed hook counts the hold down and executes at
+ * zero).  The split keeps a readable beat between staging and
+ * resolution.  Rotation start + per-card coin come from inline
+ * xorshift steps (same stream as rng_next, deterministic per seed);
+ * the first playable card always joins so a non-empty affordable hand
+ * never passes. */
+static void nav_confuse_auto(Battle *b)
+{
+    StatusSlots *slots;
+    uint8_t i, k, idx, start;
+    uint8_t staged_ring = 0;
+    g_bk_byte_c = 0;
+    if (b->phase == BATTLE_PHASE_PLAYER_DEFEND &&
+        b->msg_id >= BATTLE_MSG_CONFUSED_FOE &&
+        b->msg_id <= BATTLE_MSG_CONFUSED_OUTCOME) {
+        return;
+    }
+    slots = &s_battle_status[0];
+    for (i = 0; i < slots->count; i++) {
+        if (slots->slot[i].id == STATUS_POISON) break;
+    }
+    if (i >= slots->count) return;
+    if (b->combo_count != 0) {
+        g_bk_byte_c = 1;
+        return;
+    }
+    g_rng_state ^= (uint16_t)(g_rng_state << 7);
+    g_rng_state ^= (uint16_t)(g_rng_state >> 9);
+    g_rng_state ^= (uint16_t)(g_rng_state << 8);
+    start = (uint8_t)g_rng_state;
+    while (start >= BATTLE_HAND_SIZE) start = (uint8_t)(start - BATTLE_HAND_SIZE);
+    for (k = 0; k < BATTLE_HAND_SIZE; k++) {
+        idx = (uint8_t)(start + k);
+        if (idx >= BATTLE_HAND_SIZE) idx = (uint8_t)(idx - BATTLE_HAND_SIZE);
+        /* combo_count is 0 on entry here (non-zero returns above), so no
+         * selected-slot can collide -- no nav_is_card_selected call. */
+        if (!nav_hand_playable(b, idx)) continue;
+        if (b->hand[idx].ring) {
+            if (staged_ring) continue;
+        }
+        if (b->combo_count > 0) {
+            g_rng_state ^= (uint16_t)(g_rng_state << 7);
+            g_rng_state ^= (uint16_t)(g_rng_state >> 9);
+            g_rng_state ^= (uint16_t)(g_rng_state << 8);
+            if (((uint8_t)g_rng_state & 1u) == 0) continue;
+        }
+        if (b->hand[idx].ring) staged_ring = 1;
+        b->selected_indices[b->combo_count++] = idx;
+        if (b->combo_count == 1) b->cursor_pos = idx;
+    }
+    b->dirty |= (uint8_t)(BATTLE_DIRTY_HAND | BATTLE_DIRTY_DESC |
+                          BATTLE_DIRTY_COMBO | BATTLE_DIRTY_MSG);
+    /* Staged something: hold the beat so the message reads.  Nothing
+     * playable (depleted bows, unaffordable hand):
+     * report "execute now" so the no-play path runs instead of idling
+     * on this frame forever -- re-entering next frame would stage
+     * nothing again, an infinite hold. */
+    g_bk_byte_c = (b->combo_count == 0) ? 1 : 2;
+}
+
 void battle_nav_banked(void)
 {
     Battle *b = (Battle *)g_bk_ptr_a;
@@ -177,6 +270,19 @@ void battle_nav_banked(void)
         break;
     case NAV_OP_ALL_DEAD:
         g_bk_byte_c = 0;
+        /* Unkillable desperation boss (game-owned table, slot cached in
+         * WRAM by the bank-8 check body, 0xFF when no such battle): clamp
+         * any lethal blow back to 1 HP on every liveness check, so
+         * counter and poison-tick kills can never sneak past the attack
+         * path's trigger into a victory.  The engine names no game ids
+         * here (AGENTS.md 55.1); the same floor runs in the check body
+         * itself.  Pure WRAM writes (staging discipline: the fixed
+         * wrappers own telemetry), roomy bank 4. */
+        if (g_despair_slot != 0xFF && g_despair_slot < b->enemy_count) {
+            if (b->enemies[g_despair_slot].hp == 0) {
+                b->enemies[g_despair_slot].hp = 1;
+            }
+        }
         {
             uint8_t i;
             for (i = 0; i < b->enemy_count; i++) {
@@ -206,6 +312,9 @@ void battle_nav_banked(void)
         break;
     case NAV_OP_HAND_PLAYABLE:
         g_bk_byte_c = nav_hand_playable(b, g_bk_byte_b) ? 1 : 0;
+        break;
+    case NAV_OP_CONFUSE_AUTO:
+        nav_confuse_auto(b);
         break;
     default:
         break;

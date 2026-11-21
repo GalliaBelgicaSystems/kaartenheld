@@ -50,8 +50,15 @@ typedef enum {
     BATTLE_PHASE_PLAYER_DEFEND = 3,    /* Player selecting shield defense cards */
     BATTLE_PHASE_DEFENSE_RESOLVE = 4,  /* Resolving defense & damage taken */
     BATTLE_PHASE_RESULT = 5,           /* Victory / Defeat / Fled */
-    BATTLE_PHASE_SHUFFLE = 6           /* Deck exhausted: reshuffling consumes
+    BATTLE_PHASE_SHUFFLE = 6,          /* Deck exhausted: reshuffling consumes
                                         * the player's action (enemy still acts) */
+    BATTLE_PHASE_SLIME_DESPAIR = 7     /* Lord of Slimes desperation telegraph:
+                                        * unwinnable final-boss hold.  The boss
+                                        * flashes (shared telegraph blink),
+                                        * rows 9+10 announce the focus, and
+                                        * the phase waits for A: it never
+                                        * auto-advances (the timer re-arms
+                                        * on expiry) and no other input acts. */
 } BattlePhase;
 
 /* BattleTurn enum preserved for telemetry & backward compatibility */
@@ -67,6 +74,35 @@ typedef enum {
     BATTLE_RESULT_DEFEAT = 2,
     BATTLE_RESULT_FLED = 3
 } BattleResult;
+
+/* Transient battle message ids (Battle.msg_id; row 9 unless noted):
+ * 0 = none, 1 = NO ENERGY, 2 = OUT OF USES, 3 = ONE RING (nav rejections,
+ * 45-frame TTL), 4 = loot reveal (result screen, never expires), 5 =
+ * RETIRED ice-fizzle id (never staged: ice is halved-damage-only, so no
+ * defend beat owns it; kept for numeric stability), 8 = NO
+ * ARROWS (limited-arrows bow refusal: the shared arrow pool is empty;
+ * nav rejection, 45-frame TTL like the other rejections), 9 = Carl
+ * tutorial speech, 10 = slime-lord despair telegraph.  A whiffed attack
+ * (timer expiry with nothing staged) carries no msg_id: the ANIM banner
+ * keys MISSED! off the empty victim snapshot instead (fixed-bank budget;
+ * see battle_update).  An explicit empty SELECT keeps the historic
+ * auto-play of the highlighted card (see battle_execute_combo). */
+#define BATTLE_MSG_ICED_FOE 5 /* retired: never staged (ice halves damage) */
+/* Limited-arrows bow refusal (see the msg_id table above): staged by the
+ * banked nav body when a bow is selected with the shared arrow pool
+ * empty.  Id 8 is the first free slot (1-7, 9, 10 are taken). */
+#define BATTLE_MSG_NO_ARROWS 8
+/* Confused attacker (poison), two-beat acknowledgement (bank 12
+ * telegraph stages the first): msg 6 is the "FOE IS CONFUSED!" beat
+ * that waits for A, msg 7 is the staged outcome the A press reveals
+ * before the redirected swing resolves.  Which outcome (an ally takes
+ * it vs the attacker hurting itself) rides in g_battle_confuse_self,
+ * decided at telegraph time by the same rule the resolve uses, so the
+ * render needs no status scan (bank 3 is full in release, AGENTS.md
+ * 52.18). */
+#define BATTLE_MSG_CONFUSED_FOE 6
+#define BATTLE_MSG_CONFUSED_OUTCOME 7
+extern uint8_t g_battle_confuse_self;
 
 typedef struct {
     Combatant player;
@@ -112,18 +148,95 @@ extern uint8_t g_battle_enemy_art_base[MAX_BATTLE_ENEMIES];
 /* Per-slot OAM flag (1 = sprite via scratch OBJ slot, 0 = BG stamp).
  * Staged by the loader from g_battle_art_obj; read by the stamper. */
 extern uint8_t g_battle_enemy_art_oam[MAX_BATTLE_ENEMIES];
+/* Hero badge tile id (BG VRAM): the bank-4 art loader streams the OW idle
+ * frame into the first free slot past enemy art at every battle entry and
+ * caches the id here for the bank-3 hero-row stamper.  BSS zero-init. */
+extern uint8_t g_battle_hero_tile;
+/* Poker-hand tile window state (src/battle/hand_tiles_banked.c, bank 8):
+ * HAND_* tier with resident word art (+arrow), 0xFE = arrow-only
+ * (enemy forecast, no staged word), 0xFF = nothing usable.  Re-armed
+ * off-battle.  Read by the bank-3 renderer: the row-10 name area shows
+ * tiles only while its preview tier matches this (otherwise it blanks,
+ * so a just-changed selection never tears). */
+extern uint8_t g_hand_shown_tier;
+/* Staged combo-row want (bank-8 BSS in hand_tiles_banked.c, written by
+ * the bank-3 renderer, read by the bank-8 sync): HAND_* tier whose art
+ * to stream, NONE for no word.  The renderer -- not last_combo -- owns
+ * this because dagger-counter staging resolves HAND_NONE while its
+ * display tier comes from the counter path. */
+extern uint8_t g_hand_want_tier;
+/* Staged word cells (bank-8 BSS, same file): the sheet-cell sequence
+ * for the shown tier (0xFF = blank column) plus its width in cells,
+ * copied here by the sync on every stream.  The renderer stamps VRAM
+ * from this staging -- never from a second bank-3 copy of the word
+ * table (one source of truth).  Cells, not letters: a sheet cell
+ * renders 1-2 letters ("pa" shows PA), so the pixel word is
+ * cell-count columns wide while the buffer word below stays
+ * letter-per-column; both are centered independently. */
+extern uint8_t g_hand_cells_wram[8];
+extern uint8_t g_hand_cell_len;
 /* Live energy-pool max for the HUD "/max" badge (bank-3 renderer cannot
  * run the pool read itself, so the bank-4 battle-entry body stages it here
  * beside b->energy; same uninitialized-WRAM pattern as the art arrays
  * above).  Never persisted (Battle is temporary runtime state,
  * AGENTS.md 53.1). */
 extern uint8_t g_battle_pool_max;
+/* Confusion routing (poison): 0xFF = normal hero defense this resolve;
+ * otherwise the friendly-fire victim's combatant slot (see battle.c).
+ * Written by the banked defend-resolve body, read by the fixed wrapper
+ * (rider target) and battle_execute_combo (victory check skips the
+ * counter path). */
+extern uint8_t g_battle_confuse_victim;
+/* Confusion hold: frames remaining before a staged confused hand
+ * executes (see battle.c). */
+extern uint8_t g_battle_confuse_hold;
 /* Nonzero when anything in the battle animates on the 16-frame clock:
  * multi-frame art rows (staged by the bank-4 art loader) or a glow-mask
  * set (ORed by the bank-5 alt loader -- the overlay blinks even on
  * single-frame stamps).  Cleared by battle_start; read by the battle
  * clock to skip the re-stamp for fully static lineups. */
 extern uint8_t g_battle_multiframe;
+/* Hit feedback (WRAM, BSS zero, staged per battle): the engine never
+ * trusts fixed-bank code size for this (AGENTS.md 52.18), so NOTHING
+ * here is set from fixed-bank resolve paths.  Instead the bank-9 frame
+ * tick watches HP deltas (direct WRAM reads, no dispatch): an enemy HP
+ * drop judders those slots (g_battle_shake_mask bits, 12 frames, +-1
+ * cell BG stamp / +-4 px OAM alternating every 2), a player HP drop
+ * judders the whole hand with one shared offset (a single out-and-back
+ * nudge over 5 frames -- uniform motion never overlaps neighboring
+ * 3-wide boxes), a player HP rise flashes
+ * green twice on a white base over the 50-frame heal jingle
+ * (g_battle_heal_phase stages the current pulse so the bank-3 painter
+ * stays branch-light: release bank 3 has ~40 B left and cannot afford
+ * threshold math; the GOLD slot holds the flash ramp only during the
+ * pulses, so spent-use dimming and the boss stamp read their own ramps the
+ * rest of the time). Status ticks, counters, overblock heals and debug HP pokes all funnel
+ * through HP, so every present and future source feeds the same feedback
+ * with no per-source wiring.  g_battle_fx_epoch (bumped by
+ * battle_start) re-arms the caches and zeroes stale timers, so a new
+ * fight never inherits a previous one.  g_battle_shake_wipe /
+ * g_battle_deck_wipe are one-shot zone wipes consumed by the next
+ * painter run, so no shifted pixel strands after a judder.  Off-battle
+ * ticks see a static Battle and stay silent.  Timer countdown re-arms
+ * the matching dirty bits so the painters re-run each frame
+ * (battle_update's delay branch sets no dirty flags of its own).
+ * Painted by the bank-3 (BG stamp, hero row, hand) and bank-5 (OAM
+ * sprites, AP pips) renderers.  The deck shake is skipped on result
+ * screens (the loot reveal owns rows 10-12 there).  Module scope, never
+ * in Battle: Battle sits mid-Game, so any growth shifts every later
+ * Game field (see the art arrays above).  Never persisted (Battle is
+ * temporary runtime state, AGENTS.md 53.1). */
+extern uint8_t g_battle_shake_mask;
+extern uint8_t g_battle_shake_timer;
+extern uint8_t g_battle_shake_wipe;
+extern uint8_t g_battle_heal_flash;
+extern uint8_t g_battle_heal_phase;
+extern uint8_t g_battle_deck_timer;
+extern uint8_t g_battle_deck_wipe;
+extern uint8_t g_battle_fx_epoch;
+extern uint8_t g_battle_fx_seen;
+extern uint8_t g_battle_fx_php;
+extern uint8_t g_battle_fx_ehp[MAX_BATTLE_ENEMIES];
 
 /* Scratch OBJ slot for OAM battle art (one ramp per battle: encounters
  * engage clones of one type). Programmed at battle entry, restored with
@@ -152,7 +265,7 @@ extern const uint8_t g_battle_art_alt_mask[];
 
 /* ANIM-phase victim snapshot (battle.c): the enemy name "ATTACK <name>"
  * shows while the attack resolves.  Empty string = no attack this ANIM
- * (freeze/empty-combo skip) -> banner falls back to "PLAYER ATTACK!". */
+ * (ice-locked fizzle/empty-combo skip) -> banner falls back to "PLAYER ATTACK!". */
 extern char g_battle_anim_target_name[13];
 
 /* Banked battle-art loader (src/battle/battle_art_banked.c, ROM bank 4):
@@ -169,6 +282,12 @@ void battle_art_load_banked(void);
  * ui_update_battle wrapper right after the bank-3 render (sequential
  * trampoline calls, never nested). */
 void battle_oam_draw_banked(void);
+
+/* Banked hit-feedback tick (src/battle/battle_feedback_banked.c, ROM
+ * bank 9): no staging, reads the live battle straight from g_game.
+ * Dispatched every frame from game_update (same non-terminal gate as
+ * the frame tick). */
+void battle_feedback_tick_banked(void);
 
 /* Bank-3 rider-HUD helper (src/battle/battle_rider_content.c): draws /
  * hides one OAM rider icon per hand slot (entry 19+i) inset over that
@@ -199,13 +318,44 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp);
  * uses the standard 3-slot screen ("default").  Read directly by
  * battle_hud_load_banked() in the same bank-4 dispatch. */
 extern uint8_t g_battle_solo;
+/* Slime-lord desperation flag (WRAM, BSS zero): set by the game-owned
+ * bank-8 check body when the desperation boss reaches its threshold.
+ * battle_screen consumes it on the defeat exit to route the wake-grove /
+ * wake-dialogue / ENDING outro instead of GAME_OVER. */
+extern uint8_t g_slime_despair;
+/* Unkillable-boss slot cache (WRAM, 0xFF = none): re-derived every call
+ * by the game-owned bank-8 check body (src/game/despair_banked.c) from
+ * its battle table, so the engine never names a game battle id.  The
+ * nav clamp and the counter/tick defeat-telemetry guards key off this;
+ * battle_start resets it to none. */
+extern uint8_t g_despair_slot;
+/* Desperation message staging (WRAM): the game table's banner + two
+ * message lines, copied here by the bank-8 body at trigger time.  The
+ * bank-3 battle render reads these while the hold lasts. */
+extern char g_despair_banner[16];
+extern char g_despair_row9[19];
+extern char g_despair_row10[20];
 void battle_cursor_move(Battle *b, int8_t dir);
 void battle_target_move(Battle *b, int8_t dir);
 bool battle_all_enemies_dead(const Battle *b);
 void battle_card_select(Battle *b);
 void battle_card_undo(Battle *b);
 void battle_card_undo_banked(void);
+uint8_t battle_confuse_auto(Battle *b);
+/* Banked combo-staging body (src/battle/battle_stage_combo_banked.c,
+ * ROM bank 4): g_bk_ptr_a = Battle*, stages hand -> last_combo. */
+void battle_stage_combo_banked(void);
+/* Banked hand-refill decision body (src/battle/battle_turn_draw_banked.c,
+ * ROM bank 14): g_bk_ptr_a = Battle*, boolean result in g_bk_byte_c. */
+void battle_turn_draw_banked(void);
+/* Banked enemy-telegraph body (src/battle/battle_telegraph_banked.c,
+ * ROM bank 12): g_bk_ptr_a = Battle*.  Draws the next enemy card
+ * (freeze/poison/normal/deckless branches), stages msg + shake state,
+ * and emits its telemetry inline (debug builds).  The SFX tail stays
+ * in the fixed wrapper (battle_update). */
+void battle_telegraph_banked(void);
 void battle_execute_combo(Battle *b);
+void battle_set_result(Battle *b, uint8_t res);
 void battle_update(Battle *b);
 bool battle_is_card_selected(const Battle *b, uint8_t hand_idx);
 void battle_defend_resolve(Battle *b);
@@ -217,6 +367,21 @@ void battle_defend_resolve_banked(void);
  * width in bytes b/c/d.  Dispatched from battle_defend_counter()
  * (battle.c) between the block resolution and the discard. */
 void battle_counter_prep_banked(void);
+/* Banked post-swing counter poison-rider body
+ * (src/battle/battle_rider_banked.c, ROM bank 11): reads &g_game.battle
+ * and the eval-scaled poison chance staged in g_bk_byte_e.  Applies
+ * the leading dagger's poison on-hit rider AFTER the swing resolves (and
+ * only if both hero and attacker still stand), so a poison applied by
+ * the counter never confuses the swing it rode in on.  Dispatched when
+ * battle_defend_counter() returns 2 (0 = no counter, 1 = counter hit
+ * without deferred poison, 2 = counter hit with deferred poison).
+ * Fixed-bank callers cannot stage the full rider logic -- the fixed
+ * bank is full (AGENTS.md 52.18) -- so the tiny dispatch lives in
+ * battle_execute_combo and the logic lives here. */
+void battle_counter_rider_banked(void);
+/* DEBUG-only friendly-fire defeat report (src/battle/battle_ff_defeat_banked.c,
+ * ROM bank 12): no args; reads g_battle_confuse_victim + live enemy HP. */
+void battle_ff_defeat_banked(void);
 
 /* Banked no-arg deck-bridge body (src/battle/battle_init_content.c, ROM
  * bank 2), dispatched by battle_start via the WRAM trampoline. */
@@ -232,6 +397,7 @@ void battle_init_deck_banked(void);
 #define NAV_OP_CARD_SELECT      4
 #define NAV_OP_IS_CARD_SELECTED 5
 #define NAV_OP_HAND_PLAYABLE    6
+#define NAV_OP_CONFUSE_AUTO     7
 void battle_nav_banked(void);
 
 #endif /* BATTLE_H */

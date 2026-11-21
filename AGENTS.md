@@ -1351,8 +1351,9 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
 * **ROM Bank 6 Isolation**:
   * The driver assembly (`lib/hUGEDriver/src/hUGEDriver.asm` via `tools/rgb2sdas.py -b 6`) and all converted track data (`#pragma bank 6`, six songs) live in **ROM Bank 6**.  The driver reads song bytes through the mapped ROM window, so songs cannot live anywhere else.
   * This keeps the fixed Bank 0/1 memory budget (`_CODE`/`_HOME`) clean and prevents ROM0 overflow.
-  * Bank 6 is full (16224/16384 B): the opening theme, chest jingle, mimic loop + intro and victory (`generated/music/*.c`, `#pragma bank 7`) live in **ROM Bank 7** next to a **second copy of the hUGE driver**.  The transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 8`) live in **ROM Bank 8** alongside the icon table and the shared overworld sprite blob.  The timer ISR selects bank 8 around `sfx_step_tick()` and bank 6/7 around `hUGE_dosound()`; muting targets the song's bank (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
+  * Bank 6 is full (14746/16384 B release after the Battle BGM move-out; was 16224/16384 B): the opening theme, chest jingle, mimic loop + intro and victory (`generated/music/*.c`, `#pragma bank 7`) live in **ROM Bank 7** next to a **second copy of the hUGE driver**.  The transcribed-SFX step tables plus stepper (`generated/sfx/sfx_tables.c`, `src/audio/sfx_step.c`, `#pragma bank 8`) live in **ROM Bank 8** alongside the icon table and the shared overworld sprite blob.  The timer ISR selects bank 8 around `sfx_step_tick()` and bank 6/7 around `hUGE_dosound()`; muting targets the song's bank (driver code + state).  Do NOT add another song to bank 6 -- `make memmap` fails on any `_CODE_N` over 16 KB.
   * Bank 7 is filling up too: it also hosts `deck_reshuffle_banked` (the lossless reshuffle did not fit banks 2/3).  Treat bank 7 as equally constrained -- check `make memmap` headroom before adding anything there.
+  * **Re-scored Battle BGM (Nov 2026)**: the new `Battle BGM.uge` overflowed bank 6, so `song_battle` moved to **bank 7** (second driver copy, no dispatch change -- the B7 leg already exists) and `song_underground` moved back to **bank 6**, which the move freed up. Release headroom after the swap: bank 6 ~1.6 KB, bank 7 ~1.6 KB, bank 9 ~5.4 KB (`make memmap`).
   * **ROM Bank 9 (casino theme)**: the chuck-a-luck table track (`assets/music/casino.uge` -> `generated/music/casino.c`, symbol `song_casino`, `MUSIC_CASINO`) needs ~3.3 KB and bank 7 has only ~640 B free in the release layout
   (~1.5 KB in debug), so it lives in **bank 9** next to its own **third copy of the hUGE driver** (`hUGEDriver_b9.o`, all exports renamed `_b9`).  `huge_music.c` therefore carries a three-legged bank dispatch (init / dosound / mute: bank 9 then bank 7 then the bank-6 default); the two mute entry points share one `huge_mute_dispatch()` ladder because each extra leg costs fixed-bank ROM.  Bank 9 is otherwise the debug build's test-actor bank (`GAME_TEST_ACTOR_BANK`), and it still has >8 KB free -- check `make memmap` before adding a second song there, and remember a new song bank always needs its own driver copy.
   * **ROM Bank 8 (overflow bank)**: banked-copy-read data that outgrew banks 4/5 lives here, starting with the shared overworld sprite blob (`src/game/enemy_ow_content.c`, streamed by `ui_sprite_init` via `banked_copy(8, ...)`), plus the transcribed SFX.  Readers must go through `banked_copy` (never direct pointers); offsets are bank-independent.  A banked reader must share its table's bank: the blob's tile count lives WITH the blob (`src/game/enemy_ow_count.c`, bank 8, emitted by `battle_compile.py`) -- when it lived in `battle_types.c` (bank 4) the boot read returned 0xFF and `ui_init`'s `t+=8` chunk loop wrapped past 255 forever, so the release ROM never booted (walkthrough boot anchors failed on every walk).  Banked bodies may live here too (the audio mapping/jingle bodies): they must stay pure (WRAM + regs + same-bank calls only -- a body must NEVER switch away its own bank mid-function, or the CPU fetches its continuation through the new bank's window).  The link allows 16 banks (`-Wl-yo16`, 256 KB ROM); `make memmap` tracks `_CODE_8` like the rest.
@@ -1658,7 +1659,11 @@ three layout-sensitive sentinels (§52.19) instead of the full suite:
 make test-sentinels
 ```
 
-and reserve the full `make test-harness` for the end.  For tracker-song
+and reserve the full `make test-harness` for the end.  When the full
+suite runs, capture failing scenario NAMES and the totals count in
+that same single invocation (e.g. grep both `SCENARIO:` and `STATUS:`
+lines) — never run the suite once to see how many failed and again
+to see which failed.  For tracker-song
 work, answer bank-fit and duration questions without a full build:
 
 ```bash
@@ -2335,25 +2340,28 @@ ENEMY ATTACK!/DEFENSE TURN keep every phase readable if a name slot is
 invalid; composed in the bank-3 file-static `s_banner_text[24]`, names
 cap at 11 chars so all banners fit 20 cols), `2` enemy HP (the former
 name row; HP moved here when the name row was removed), `3-4` enemies
-(art/caret), `7` hero, `8` deck counter (`DECK:` +
-draw-pile count at columns 13-19, `battle_draw_deck_line`, drawn with the
-hero row on BATTLE_DIRTY_HERO) + AP, `9` transient gameplay messages
-(`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` pending
-combo preview (`<tier> DMG<n>`, e.g. `PAIR DMG5`: tier name from the shared
-classifier plus the resolve-mirror damage, no `COMBO:` label; with no poker
-tier the row still shows the inflicted face value as bare `DMG<n>`, blank
-only when nothing effective is staged; during a telegraphed enemy strike
-the row splits into a forecast -- `DMG <n>` red on the left (incoming)
-plus `DEF <m>` green right-aligned (current staged block, 0 while none
-staged), no `ENEMY` prefix; drawn with a full 20-col row clear -- the combo
-draw owns the row the old blank band above the hand occupied), `11-14`
+(art/caret), `7` hero (badge col 0, HP digits cols 2-3 + heart col 4,
+arrow icon col 15 + count cols 16-17, forecast trio cols 9-11:
+down arrow + incoming power + sword (red, enemy turn), sword/dagger/ring +
+staged damage/heal + up-arrow or green cross (green set, player turn)),
+`8` AP digit col 3 + AP tile col 4, block forecast cols 9-11
+(shield/dagger + block/counter + up arrow, brown-on-white shield set /
+red dagger set, enemy turn only), deck icon col 15 + deck count
+cols 16-17, drawn with the hero row on BATTLE_DIRTY_HERO),
+`9` transient gameplay messages
+(`NO ENERGY!`/`OUT OF USES!`/`ONE RING!`, BATTLE_DIRTY_MSG), `10` staged
+hand-name tiles (centered poker-hand word from the shared classifier,
+e.g. `PAIR`, `STRAIGHT FLUSH`: hand-art tiles stamped from the bank-8
+stream window plus the word letters in the semantic buffer, no text
+label and no DMG number -- damage/block numbers live on rows 7-8 now;
+blank for high card / nothing staged; drawn with a full 20-col row
+clear), `11-14`
 boxed hand cards (`cards_row`=14 is the BOTTOM
 row; each card is a 3-wide x `box_h`-tall frame from the compiled
 `card_frame_tiles` at VRAM `UI_TILE_CARD_FRAME_BASE` 118, weapon icon on
-the first interior row, power digit on the second (the arrow-counter
-type — the bow — instead draws its power icon there and the
-remaining-uses glyph on the bottom border floor, keeping its frame
-corners; the semantic screen
+the first interior row, power digit on the second row (bows included:
+the digit is the card's real damage; the floor row carries the
+remaining-uses glyph for finite-use cards); the semantic screen
 buffer keeps the type code + digit on row 13 for assertions), `15`
 markers (`1-5` selection-order digits; the cursor and the enemy-target
 caret render the up-arrow select icon tile `UI_TILE_SELECT_ARROW` 96
@@ -2586,11 +2594,15 @@ Rules:
 * 8-bit `*` anywhere (including banked bodies) pulls the SDCC mult
   routines (`__mulsuchar` et al.) into fixed `_CODE` (~69 B); use shifts,
   repeated addition, or a running counter for small tile-math instead.
-* The debug build's fixed bank is tight (627 B headroom after the
-  scenario-load move-out, Oct 2026; release has ~4.9 KB): the next fixed-
-  bank addition in a debug build will likely need a move-out first --
-  every `b->field` access costs ~10 B under SDCC's 16-bit struct
-  addressing, so stage through banked bodies and WRAM globals instead.
+* The debug build's fixed bank is essentially full (2 B of `_HOME`
+  headroom as of Nov 2026; release still has ~3.9 KB): any fixed-bank
+  addition in a debug build needs a move-out first -- every `b->field`
+  access costs ~10 B under SDCC's 16-bit struct addressing, so stage
+  through banked bodies and WRAM globals instead.  A new per-frame
+  fixed helper must live in its own tiny frame: inlining one into
+  `game_update`'s huge frame cost ~2x via register spillover and
+  overflowed the bank (see §52.19 family; `game_consume_sfx` is the
+  template).
   Companion pressure: bank 3 is thin in both builds (~40 B debug /
   ~600 B release after the counter forecast), while bank 5 has room
   (~1.1 KB debug / ~0.6 KB release after the scenario-load move) --
@@ -2861,6 +2873,27 @@ Rules:
   (PyBoy `memory[]` reads at the `.sym` addresses), not with more
   scenarios.
 
+## 52.28 Same-frame SFX request mailbox (Nov 2026)
+
+Banked menu-nav bodies cannot call `audio_play_sfx` (a fixed-bank call
+plus MBC5 switches would strand their own bank), so a real cursor move
+stages `(SFX id + 1)` in the WRAM byte `g_bk_sfx_req`
+(`src/core/banked.h`) and `game_consume_sfx()` -- its own tiny frame
+in `src/core/game.c`, called once per frame right after
+`screen_update()` -- plays + clears it the same frame.  Rules:
+
+* Stage ONLY on a measured move (compare index/side before and after;
+  the GEM/QUEST single-item wrap and the shop-list clamp are the
+  no-op cases) -- a no-op press must stay silent.
+* Direct-input screens (game-over toggle, shop tab flips, picker row,
+  dialogue advance/confirms, title/tutorial/battle) call
+  `audio_play_sfx` fixed-side instead; never both paths for one press
+  (a double stage + direct call restarts the blip and double-counts
+  `sfx_count` scenarios).
+* `0` means none (BSS zero, AGENTS.md §52.27); the consumer runs
+  unconditionally every frame, so a request can never go stale --
+  not across screens, saves, loads, or harness teleports.
+
 ---
 
 # 53. State Ownership
@@ -2936,13 +2969,21 @@ in sync; changing one without the other silently breaks every scenario.
 
 * Core snapshot (`g_snap_buf`, 36 bytes): byte 12 is `state.flags.bytes[0]`,
   byte 19 is `state.scene.scene_id`.  Existing scenarios depend on these.
-* Extended snapshot (`g_state_snap_buf`, 210 bytes, version 0x06): version
-  byte 0, flags 1..8, variables 9..24, currency 25..37, party 38..50,
-  inventory (collection) 51..83, world 84..132, progression 133..181,
-  equipment 182, camera/world geometry 183..188, battle-deck count at 189
-  followed by up to 20 deck card ids at 190..209.
-* State-load descriptor (`g_scen_state_buf`, version 0x04): the optional
-  deck section at 229 (present flag) / 230 (count) / 231..250 (card ids)
+* Extended snapshot (`g_state_snap_buf`, 294 bytes, version 0x08): version
+  byte 0, flags 1..8, variables 9..40 (all MAX_STATE_VARIABLES as int16
+  LE -- grown from 9..24 for the 9th variable in Nov 2026; the builder
+  always copied 16 vars while the layout reserved 8, so vars 9+ used to
+  alias the currency bytes), currency count 41 + entries 42..53, party
+  count 54 + members 55..66, inventory (collection) count 67 + entries
+  68..167, world count 168 + entries 169..216, progression count 217 +
+  entries 218..265, equipment 266, camera/world geometry 267..272,
+  battle-deck count at 273 followed by up to 20 deck card ids at
+  274..293.
+* State-load descriptor (`g_scen_state_buf`, 320 bytes, version 0x05):
+  variables section carries up to 16 entries (vid + int16 LE, 3 bytes
+  each at 19..66), so variables 9+ load through descriptors; the
+  optional deck section at 297 (present flag) / 298 (count) / 299..318
+  (card ids)
   replaces the starter deck when present — an explicit empty deck is how
   scenarios reach `battle_start`'s packed fallback path now that
   `DECK_MIN_CARDS` blocks emptying a deck through gameplay.
@@ -3046,10 +3087,11 @@ open key (overworld and battle player-turn).  Inside, LEFT/RIGHT switches
 tabs, UP/DOWN moves the list, A confirms/toggles, B backs out (two-step on
 the DECK list: first B jumps to the first card row, B again on the top row
 closes), SELECT opens the detail submenu.  Rejections (`DECK FULL`) show a
-transient message cleared by a frame TTL, never a silent no-op.  On a loot
-card's detail page, A sells one copy while the player has engaged a buying
-shop (`ShopDefinition.buys`; `g->shop_id` is set by the shop actor and
-cleared on scene change) — docs/loot.md §24/§34.6, scenario
+transient message cleared by a frame TTL, never a silent no-op.  The shop
+screen has BUY and SELL tabs (LEFT/RIGHT flips); the SELL tab sells one copy
+per A while the player has engaged a buying shop (`ShopDefinition.buys`;
+`g->shop_id` is set by the shop actor and cleared on scene change) —
+docs/loot.md §24/§34.6, scenario
 `merchant_sell_loot`.
 
 ## 54.3 Actor lifecycle
@@ -3228,7 +3270,7 @@ executes both regressions (battle VRAM restore, dialogue palette restore).
 
 ## 55.7 Chests are OAM sprites, floor stays floor
 
-Chests (and similar openable pickups like the forest amulet) render as
+Chests (and similar openable pickups like the forest shop-keys chest) render as
 OAM sprites, never background tiles: the level paints plain ground on
 the cell and the actor is a `SPRITE_KIND_CHEST` interactable on it
 (solid via the actor's `BLOCKING` flag, not via tile walkability).
@@ -3359,12 +3401,24 @@ the commit/PR without booting anything.
 08-quests-tab        QUEST tab
 08-carl-field        overworld beside Carl (single field slime)
 08-carl-mark         Carl with the quest "?" overhead (pre-lesson)
-08-carl-tutor        Carl's lesson dialogue (name + warning)
-09-battle            Carl spar opens (select hints on rows 5/9)
+08-carl-tutor        Carl's spar offer (YES/NO ask)
+09-battle            Carl spar opens (plain solo screen, TARGET CARL)
 10-battle-attack     after a player attack (damage dealt)
-10-battle-defend     Carl's telegraph + defend hints
-11-battle-victory    VICTORY result over the solo spar (loot gold asserted)
-11-victory-speech    Carl's good-luck speech (AP 2 -> 3)
+10-battle-defend     Carl's DEFEND phase (shield lesson closed)
+10-hand-pair         PAIR name tiles (also the player-attacking icon set)
+10-hand-twopair      TWO PAIR name tiles
+10-hand-three        THREE KIND name tiles
+10-hand-straight     STRAIGHT name tiles
+10-hand-flush        FLUSH name tiles
+10-hand-fullhouse    FULL HOUSE name tiles
+10-hand-four         FOUR KIND name tiles
+10-hand-straightflush STRAIGHT FLUSH name tiles (starts col 4)
+10-hand-five         FIVE KIND name tiles
+10-hand-short        SHORT STRAIGHT name tiles
+10-defend-dagger     enemy attacking, daggers staged (red counter trio)
+10-defend-shield     enemy attacking, shields staged (brown block trio)
+11-battle-fled       FLED! result after fleeing the spar (no reward)
+11-farewell-speech   Carl's farewell box (no AP for fleeing)
 11-battle-aftermath  overworld after leaving the fight (VRAM restore)
 12-wizard-save       save menu at the wizard
 13-wizard-saved      after saving to Slot 1

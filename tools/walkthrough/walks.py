@@ -19,13 +19,20 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       SCENE_MOUNTAIN_PASS, SCENE_CASTLE,
                                       SCENE_SOUTH_FIELD, SCENE_FIELD,
                                       SCENE_VILLAGE_AREA, SCENE_DESOLATE_FIELD,
+                                      SCENE_UNDERGROUND_TUNNEL,
+                                      SCENE_UNDERGROUND_TUNNEL_SOUTH,
                                       STORY_FLAG_ID_ARRIVED_TOWN,
                                       STORY_FLAG_ID_MET_MAYOR,
+                                      STORY_FLAG_ID_FIELD_CHEST,
+                                      STORY_FLAG_ID_MET_DOG,
+                                      STORY_FLAG_ID_BONE_TAKEN,
+                                      STORY_FLAG_ID_DOG_KEY,
                                       VARIABLE_ID_QUEST_MONSTER_HUNT,
                                       VARIABLE_ID_MERCHANT_QUEST,
                                       VARIABLE_ID_ENERGY_POOL,
-                                      CARD_IRON_RING, CARD_POISON_DAGGER,
-                                      CARD_AMULET,
+                                      CARD_IRON_RING, CARD_BOW_9,
+                                      CARD_STEEL_SHIELD, CARD_POISON_DAGGER,
+                                      CARD_SHOPKEYS, CARD_BONE, CARD_OLD_KEY,
                                       HERO_START_GOLD,
                                       HERO_START_HP, MUSIC_FOREST,
                                       MUSIC_DUNGEON, MUSIC_TOWN,
@@ -33,12 +40,14 @@ from walkthrough.state_reader import (SCENE_TOWN, SCENE_FOREST,
                                       SFX_ALERT, SFX_NONE)
 
 WALK_SECONDS = 300        # per-walk wall-clock cap
-MAX_BATTLE_ROUNDS = 26
 from walkthrough.state_reader import (ATTACK_TYPES, BT_SHIELD, BT_EMPTY,
+                                      BT_DAGGER, BATTLE_ENEMIES,
                                       OFF_PARTY, CHARACTER_STATE_HP,
                                       CHARACTER_STATE_MAX_HP, ENTITY_SIZE,
                                       BATTLE_HAND, CARD_SIZE, CARD_TYPE,
-                                      CARD_VALUE)
+                                      CARD_VALUE, CARD_COST, BATTLE_ENERGY,
+                                      BATTLE_INCOMING_DMG, MUSIC_UNDERGROUND,
+                                      OFF_VARIABLES)
 # collision lives in tools/level_compiler; set the path here rather than
 # borrowing route.py's namespace, so a future refactor of route.py's import
 # list cannot silently break this module.
@@ -116,26 +125,25 @@ def poke_hand_99(s):
 
 
 def transit_fight(s):
-    """Win an unexpected transit ambush (DECK: open) with single
+    """Win an unexpected transit ambush (battle HUD open) with single
     99-attack cards, then return to the overworld. True on VICTORY.
     Loops for multi-enemy packs (single-target kills one per round).
     Single-card so energy 1 suffices; intentional fights (walk-b)
     never call this so base damage/rounds stay asserted."""
     for _round in range(5):
-        # The DECK: row redraws over several frames after a phase change
+        # The hero row redraws over several frames after a phase change
         # (full battle redraws span multiple emulator ticks); a tick-halt
-        # can land mid-redraw with TARGET already up but the deck row not
-        # yet repainted.  Wait briefly for the deck row instead of
+        # can land mid-redraw with TARGET already up but the hero row not
+        # yet repainted.  Wait briefly for the HUD instead of
         # breaking on the first torn read, or a redraw-phase check
         # abandons a healthy fight (same class as verify_oam's
         # frame-halt hazard, AGENTS.md 52.26).
-        if not s.wait_for(lambda: s.text_has("DECK:"), ticks=30):
+        if not s.wait_for(lambda: s.battle_hud_up(), ticks=30):
             break
         if s.text_has("VICTORY") or s.text_has("DEFEATED"):
             break
         poke_hand_99(s)
         s.wait_for(lambda: s.text_has("TARGET ")
-                   or s.text_has("PICK CARDS")
                    or s.text_has("PLAYER TURN"), ticks=180)
         poke_hand_99(s)
         # Select exactly one attack card (first attack slot). If the
@@ -158,7 +166,7 @@ def transit_fight(s):
             s.press("select", settle=40)
             if s.text_has("VICTORY") or s.text_has("DEFEATED"):
                 break
-            # Synchronize phases like _battle_round: the attack execute
+            # Synchronize phases: the attack execute
             # runs an animation before DEFEND opens (~240 ticks). Firing
             # blind selects into DEFEND (or into the next round before a
             # card is picked) desyncs the whole fight.
@@ -173,7 +181,6 @@ def transit_fight(s):
             if s.text_has("VICTORY") or s.text_has("DEFEATED"):
                 break
             if s.wait_for(lambda: s.text_has("TARGET ")
-                           or s.text_has("PICK CARDS")
                            or s.text_has("PLAYER TURN"), ticks=240):
                 break
     if s.text_has("VICTORY"):
@@ -186,7 +193,7 @@ def transit_fight(s):
         # loop also stops for an open KNIGHT: box (never press into
         # it); route followers drain aftermath dialogues themselves.
         for _ in range(6):
-            if ((not s.text_has("DECK:") and not s.text_has("VICTORY"))
+            if ((not s.battle_hud_up() and not s.text_has("VICTORY"))
                     or s.text_has("KNIGHT:")):
                 break
             s.press("a", settle=30)
@@ -196,38 +203,67 @@ def transit_fight(s):
     return False
 
 
+def _dialogue_open(s):
+    """True while any modal dialogue box is up (SCREEN_DIALOGUE == 1,
+    src/screens/screen.h).  Text markers (KNIGHT:, FOUND SHOP KEYS, ...)
+    only cover known boxes; the screen byte covers aftermath dialogues
+    the walk has never seen (quest-complete notices, future briefings)."""
+    r = s.reader
+    return r.rd(r.g_game, 1)[0] == 1
+
+
+def _aftermath_open(s):
+    """Any post-victory dialogue still up: the knight's armor-break
+    briefing, a quest-complete notice (e.g. the monster-hunt 'return
+    to the mayor' that fires when a transit kill crosses the kill
+    threshold mid-route), or any future aftermath box."""
+    return s.text_has("KNIGHT:") or _dialogue_open(s)
+
+
 def drain_postvictory_dialogue(s, tries=8):
-    """Close a dialogue left open by a transit win (today: the knight's
+    """Close any dialogue left open by a transit win (today: the knight's
     armor-break briefing, which fires from its defeat event on the way
-    out of VICTORY).  Only follow()/_walk_path() call this, and only
-    right after transit_fight() wins -- so any dialogue open here is
-    causally the fight's aftermath, never an objective dialogue (those
-    open via bump_actor, never during a route step).  Bounded: never
-    spins a walk that is genuinely stuck.  A future aftermath dialogue
-    extends the marker tuple below."""
+    out of VICTORY, and quest-complete notices, which fire when a
+    transit kill crosses a quest threshold mid-route).  Only
+    follow()/_walk_path() call this, and only right after
+    transit_fight() wins -- so any dialogue open here is causally the
+    fight's aftermath, never an objective dialogue (those open via
+    bump_actor, never during a route step).  Bounded: never spins a
+    walk that is genuinely stuck."""
     for _ in range(tries):
-        if not s.stable(lambda: s.text_has("KNIGHT:"), frames=10):
+        if not s.stable(lambda: _aftermath_open(s), frames=10):
             return True
         s.press("a", settle=30)
-    return not s.text_has("KNIGHT:")
+    return not _aftermath_open(s)
 
 
 def _walk_path(s, path):
     """Execute a BFS cell path as discrete one-tile presses.  Ambushes
     (including stationary guardians routed through on purpose) fight
     via transit_fight and retry: a knight-armor kill opens its briefing
-    instead of VICTORY, so drain that too and keep going (the spawned
-    trio either chases off the tile or falls to the next retry)."""
+    instead of VICTORY, and a threshold-crossing kill opens a
+    quest-complete notice -- drain any aftermath and keep going (the
+    spawned trio either chases off the tile or falls to the next
+    retry)."""
     for dx, dy in path:
         btn = _BTNS[(dx, dy)]
         fx, fy = s.pos()
         ok = False
+        handled = False
         for _ in range(3):
             ok = s.walk_btn(btn, lambda: s.pos() == (fx + dx, fy + dy))
-            if ok or not s.text_has("DECK:"):
+            if ok:
+                break
+            if not s.battle_hud_up():
+                if _drain_skip_offer(s):
+                    continue
                 break
             win = transit_fight(s)
-            knight = (not win) and s.text_has("KNIGHT:")
+            # KNIGHT: means the armor split (slime knights break open
+            # into a briefing + trio instead of VICTORY) -- on a win as
+            # well as a no-VICTORY armor kill.  Drain it before anything
+            # else or the open box eats every later input.
+            knight = s.text_has("KNIGHT:")
             s.check("transit fight victory", win or knight,
                     expected="VICTORY or KNIGHT: box",
                     actual="defeat" if not (win or knight) else "win")
@@ -235,72 +271,130 @@ def _walk_path(s, path):
                 s.check("transit knight briefing drained",
                         drain_postvictory_dialogue(s),
                         expected="no KNIGHT: box", actual="stuck open")
+                handled = True
             elif win:
                 s.check("transit aftermath drained",
                         drain_postvictory_dialogue(s),
                         expected="no KNIGHT: box", actual="stuck open")
+                handled = True
             else:
                 break
-        banner = (s.bg_text()[0].strip() if s.text_has("DECK:") else "")
+        # A step consumed by a HANDLED ambush did not commit, but the
+        # walk is fine: follow() re-plans the rest of the leg from the
+        # hero's actual cell.  Only a genuinely blocked step is a
+        # failure, so the "route move" check stays quiet for the ambush.
+        if not ok and handled:
+            continue
+        banner = (s.bg_text()[0].strip() if s.battle_hud_up() else "")
         s.check("route move %s" % btn, ok,
                 expected="tile commit",
                 actual="pos %s scene %d deck=%s banner=%r" % (
                     s.pos(), s.reader.scene_state()["scene_id"],
-                    s.text_has("DECK:"), banner))
+                    s.battle_hud_up(), banner))
 
 
 def follow(s, planner, from_scene, start, to_scene, goal,
-           capture_when=None, capture_label=None):
-    """Execute a cross-scene BFS route; optional mid-route screenshot."""
-    steps = planner.route(from_scene, start, to_scene, goal)
-    for step in steps:
-        if step[0] == "move":
-            _walk_path(s, [step[1:]])
-        else:
-            _, direction, e = step
-            # Ambush on the exit step overrides the transition
-            # (MOVE_OUTCOME_ENCOUNTER wins over EXIT/EDGE): fight, retry
-            # the crossing, and repeat while still ambushed (bounded, so
-            # back-to-back patrols can't spin forever). The check logs
-            # only the final outcome, never an intermediate ambush.
-            res = False
-            for _ in range(3):
-                res = s.cross_exit(
-                    direction, planner.scenes[e["target_scene"]].scene_id)
-                if res or not s.text_has("DECK:"):
+           capture_when=None, capture_label=None, on_scene=None):
+    """Execute a cross-scene BFS route; optional mid-route screenshot.
+
+    The route's steps are RELATIVE deltas, so one lost step (an ambush
+    fought off the planned cell, a hostile standing on the next cell, a
+    cancelled departure) shifts EVERY later step off the planned cells
+    and the walk grinds into walls far from the route.  A mid-route
+    ambush in south_ridge did exactly that: the fight left the hero a few
+    tiles off, the stale suffix walked it into the rock band, and every
+    further press was a no-op.  So each leg is re-planned from the hero's
+    ACTUAL position whenever a step does not land where the plan said.
+    Bounded (24 legs) so a genuinely stuck walk fails loudly instead of
+    spinning."""
+    pos = start
+    scene = from_scene
+    for _leg in range(24):
+        steps = planner.route(scene, pos, to_scene, goal)
+        replan = False
+        for step in steps:
+            if step[0] == "move":
+                want = (pos[0] + step[1], pos[1] + step[2])
+                _walk_path(s, [step[1:]])
+                pos = s.pos()
+                if pos != want:
+                    replan = True
                     break
-                win = transit_fight(s)
-                knight = (not win) and s.text_has("KNIGHT:")
-                s.check("transit fight victory", win or knight,
-                        expected="VICTORY or KNIGHT: box",
-                        actual="defeat" if not (win or knight) else "win")
-                if knight:
-                    # Armor kill (no VICTORY screen): drain the reveal
-                    # briefing, then retry past whatever it spawned.
-                    s.check("transit knight briefing drained",
+            else:
+                _, direction, e = step
+                # Ambush on the exit step overrides the transition
+                # (MOVE_OUTCOME_ENCOUNTER wins over EXIT/EDGE): fight,
+                # retry the crossing, and repeat while still ambushed
+                # (bounded, so back-to-back patrols can't spin forever).
+                # The check logs only the final outcome, never an
+                # intermediate ambush.
+                res = False
+                for _ in range(3):
+                    res = s.cross_exit(
+                        direction,
+                        planner.scenes[e["target_scene"]].scene_id)
+                    if res:
+                        break
+                    if not s.battle_hud_up():
+                        # Carl's leave-the-field offer (fresh game):
+                        # answer LEAVE (the skip) and retry -- LEAVE
+                        # sets the one-shot skip so the retry exits
+                        # instead of re-asking (STAY would block and
+                        # re-ask).
+                        if _drain_skip_offer(s):
+                            continue
+                        break
+                    win = transit_fight(s)
+                    # KNIGHT: means the armor split (slime knights break
+                    # open into a briefing + trio instead of VICTORY) --
+                    # on a win as well as a no-VICTORY armor kill.  Drain
+                    # it before anything else or the open box eats every
+                    # later input.
+                    knight = s.text_has("KNIGHT:")
+                    s.check("transit fight victory", win or knight,
+                            expected="VICTORY or KNIGHT: box",
+                            actual="defeat" if not (win or knight) else "win")
+                    if knight:
+                        # Armor kill (no VICTORY screen): drain the
+                        # reveal briefing, then retry past whatever it
+                        # spawned.
+                        s.check("transit knight briefing drained",
+                                drain_postvictory_dialogue(s),
+                                expected="no KNIGHT: box",
+                                actual="stuck open")
+                        continue
+                    if not win:
+                        break
+                    s.check("transit aftermath drained",
                             drain_postvictory_dialogue(s),
                             expected="no KNIGHT: box", actual="stuck open")
-                    continue
-                if not win:
+                s.check("exit %s -> %s" % (direction, e["target_scene"]),
+                        res, expected=e["target_scene"],
+                        actual="scene %d" % s.reader.scene_state()["scene_id"])
+                if not res:
+                    replan = True
                     break
-                s.check("transit aftermath drained",
-                        drain_postvictory_dialogue(s),
-                        expected="no KNIGHT: box", actual="stuck open")
-            s.check("exit %s -> %s" % (direction, e["target_scene"]), res,
-                    expected=e["target_scene"],
-                    actual="scene %d" % s.reader.scene_state()["scene_id"])
-        if capture_when and capture_label and capture_when():
-            s.shoot(capture_label)
-            capture_when, capture_label = None, None
+                scene = e["target_scene"]
+                pos = s.pos()
+            if capture_when and capture_label and capture_when():
+                s.shoot(capture_label)
+                capture_when, capture_label = None, None
+            if on_scene is not None:
+                on_scene(s)
+        if not replan:
+            break
     return s.pos()
 
 
 def bump_actor(s, planner, scene_name, adjacent, direction, marker,
-               tries=8):
+               tries=8, extra_avoid=None):
     """Walk to `adjacent`, press `direction` into the actor until the
-    dialogue marker appears (retries: dropped presses, transition eats)."""
+    dialogue marker appears (retries: dropped presses, transition eats).
+    `extra_avoid` cells stay off-limits on the walk over: approaching a
+    hostile objective must never step onto the objective itself."""
     if s.pos() != adjacent:
-        path = planner.path(scene_name, s.pos(), adjacent)
+        path = planner.path(scene_name, s.pos(), adjacent,
+                            extra_avoid=extra_avoid)
         if path is None:
             s.check("path to %s" % (adjacent,), False,
                     expected="bfs path", actual="none")
@@ -318,6 +412,17 @@ def close_dialogue(s, marker, frames=45):
                          label="close " + marker)
 
 
+def close_box(s, tries=8):
+    """Close a modal box opened over the battle screen (Carl's coaching
+    boxes, jeers, farewell): press A until the DIALOGUE screen itself is
+    gone.  Unlike close_dialogue (which stops when one marker row goes
+    away), this drains every page however many the box holds, and never
+    mistakes a mid-wipe torn read for progress."""
+    return s.press_until("a", lambda: not _dialogue_open(s),
+                         tries=tries, settle=30, timeout=120,
+                         label="close box")
+
+
 def _cursor_to(s, idx):
     """Move the battle hand cursor to slot idx (WRAM-read, bounded)."""
     for _ in range(8):
@@ -327,12 +432,58 @@ def _cursor_to(s, idx):
     return s.reader.battle_cursor() == idx
 
 
-def _select_cards(s, wanted_types):
+def _drain_skip_offer(s):
+    """Answer Carl's leave-the-field offer with LEAVE (the skip path:
+    grants the spar's +1 AP once and sets TUTORIAL_SKIPPED, so the
+    crossing retry exits instead of re-asking).  STAY would keep
+    blocking the exit and re-ask on every attempt, which is correct
+    for players but cannot cross -- walks always take LEAVE here.
+    Advance to the choice page if needed, ensure the cursor sits on
+    LEAVE, confirm, then close both the ask and the granted line.
+    The row is read before any press, so an already-open choice page
+    is never confirmed blind.  Returns True when an offer box was
+    handled."""
+    if not s.text_has("HEY! WANNA"):
+        return False
+    s.check("skip offer asked", True,
+            expected="HEY! WANNA", actual="asked")
+    for _ in range(6):
+        rows = s.bg_text()
+        # The cursor row carries the '>' marker; match the STAY/LEAVE
+        # option row specifically (other '>' rows must not confirm).
+        row = next((r for r in rows if ">" in r and "STAY" in r
+                    and "LEAVE" in r), None)
+        if row is not None:
+            break
+        # Choice page not up yet: advance a page (never a confirming
+        # press -- the row check above gates the confirm below).
+        s.press("a", settle=12)
+    else:
+        return False
+    if row.startswith(">"):
+        s.press("right", settle=12)  # toggle STAY -> LEAVE
+    s.press("a", settle=12)  # confirm LEAVE
+    close_dialogue(s, "HEY! WANNA")
+    # LEAVE opens the one-shot granted line ("SUIT YOURSELF! TAKE THIS
+    # AP!"): close it too so the caller retries on a clean overworld.
+    if s.text_has("SUIT YOURSELF"):
+        close_dialogue(s, "SUIT YOURSELF")
+    return not s.text_has("HEY! WANNA")
+
+
+def _select_cards(s, wanted_types, max_cards=None):
     """Toggle-select every hand card whose type is in wanted_types.
     Each A press is verified against combo_count (an A can be eaten by
-    input edge timing, AGENTS.md §52.10 — retry with a reset frame)."""
+    input edge timing, AGENTS.md §52.10 — retry with a reset frame).
+
+    max_cards caps how many cards join the combo.  walk-b uses it: an
+    uncapped round stages deep into the 10-card starter deck's draw pile
+    and risks a RESHUFFLE turn, which consumes the next PLAYER_SELECT and
+    delays Carl's poker lesson past the walk's fixed choreography."""
     picked = 0
     for idx in range(5):
+        if max_cards is not None and picked >= max_cards:
+            break
         if not _cursor_to(s, idx):
             continue
         ctype = s.reader.battle_hand()[idx][0]
@@ -352,59 +503,130 @@ def _select_cards(s, wanted_types):
     return picked
 
 
-def _battle_round(s):
-    """One full round: select attack cards + execute, then select shield
-    cards + execute.  True when the battle reached a result banner.
-    Phase waits are input-free (the game advances automatically after
-    each execute).  Both executes are retried like the opening round
-    below: a press eaten by edge timing leaves the phase open instead
-    of advancing, and over a long fight (Carl's 10 HP still needs
-    10+ single-card rounds at the flat-1 opening pool) a single desync
-    cascades into rounds
-    of phase-mismatched presses dealing nothing."""
-    # Select phase: TARGET banner (Carl: PICK CARDS headline instead;
-    # fallback literal PLAYER TURN).
-    s.wait_for(lambda: s.text_has("TARGET ")
-               or s.text_has("PICK CARDS")
-               or s.text_has("PLAYER TURN"), ticks=180)
-    _select_cards(s, ATTACK_TYPES)
-    for _ in range(4):
-        s.press("select", settle=40)     # execute attack
-        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
-            return True
-        if s.wait_for(lambda: s.text_has("DEFEND"), ticks=240):
+def _topup_timer(s):
+    """Reset the battle turn countdown (throwaway spar session only):
+    the handbook + lesson flow stages far past the 1200-tick turn
+    budget, so every round re-arms the clock.  Energy-pool address math
+    mirrors the state reader (battle base + BATTLE_ENERGY, timer next)."""
+    r = s.reader
+    timer = r._resolve_battle_base() + BATTLE_ENERGY + 1
+    s.pb.memory[timer] = 0xB0
+    s.pb.memory[timer + 1] = 0x04
+
+
+def _carl_topup(s):
+    """Restore Carl to full HP mid-spar (walk-b only): at 10 HP the
+    walk's three choreographed attack rounds could otherwise kill him
+    before the flee path, ending the walk on VICTORY instead of FLED!.
+    Damage assertions only need strict decrease, which still holds
+    (prev_total is always read after the top-up)."""
+    r = s.reader
+    try:
+        base = r._resolve_battle_base() + BATTLE_ENEMIES
+        mx = r.battle_enemy_max_hp(0)
+    except Exception as exc:
+        print("[_carl_topup] battle state unreadable, skipping: %r" % (exc,))
+        return
+    s.pb.memory[base] = mx
+    _topup_timer(s)
+
+
+# Poker-hand handbook (walk-b only): exact (type, value) deals per tier,
+# staged through PyBoy memory exactly like the debug harness's
+# set_hand_card (cost 0 so every card stages).  Junk cards stay tier-free
+# (distinct values, mixed types, no 5-run) so each hand reads its tier.
+_HANDS = [
+    ("pair", [(0, 3), (2, 3), (0, 1), (2, 4), (4, 5)]),
+    ("twopair", [(0, 3), (2, 3), (0, 5), (4, 5), (2, 1)]),
+    ("three", [(0, 3), (2, 3), (4, 3), (0, 1), (2, 2)]),
+    ("straight", [(0, 1), (2, 2), (0, 3), (2, 4), (0, 5)]),
+    ("flush", [(0, 1), (0, 2), (0, 4), (0, 5), (0, 9)]),
+    ("fullhouse", [(0, 3), (2, 3), (4, 3), (0, 5), (2, 5)]),
+    ("four", [(0, 3), (2, 3), (4, 3), (1, 3), (0, 1)]),
+    ("straightflush", [(0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]),
+    ("five", [(0, 7), (2, 7), (4, 7), (1, 7), (0, 7)]),
+    ("short", [(0, 1), (2, 2), (0, 3), (4, 7), (1, 9)]),
+]
+
+
+def _poke_hand(s, cards):
+    """Rewrite the live 5-card battle hand (type/value/cost) in place,
+    and top up the turn timer: the handbook stages ten full hands in
+    one SELECT phase, far past the 1200-tick turn budget, so every
+    poke also resets the countdown (throwaway spar session only)."""
+    r = s.reader
+    base = r._resolve_battle_base() + BATTLE_HAND
+    for i, (t, v) in enumerate(cards):
+        s.pb.memory[base + i * CARD_SIZE + CARD_TYPE] = t
+        s.pb.memory[base + i * CARD_SIZE + CARD_VALUE] = v
+        s.pb.memory[base + i * CARD_SIZE + CARD_COST] = 0
+    _topup_timer(s)
+
+
+def _poke_incoming(s, dmg):
+    """Stage the telegraphed enemy power (throwaway spar session only):
+    Carl's practice deck hits for 0, which blanks the forecast trios,
+    so the defend icon shots stage a nonzero incoming for the render
+    (reset to 0 before the real execute so the spar stays harmless)."""
+    r = s.reader
+    rbase = r._resolve_battle_base()
+    s.pb.memory[rbase + BATTLE_INCOMING_DMG] = dmg
+
+
+def _select_all(s):
+    """Select hand slots 0-4 (verified per press, like _select_cards)."""
+    for idx in range(5):
+        if not _cursor_to(s, idx):
+            continue
+        for _attempt in range(3):
+            before = s.reader.battle_combo_count()
+            s.press("a", settle=12)
+            if s.reader.battle_combo_count() > before:
+                break
+            s.tick(2)
+
+
+def _clear_combo(s):
+    """B-press until nothing is staged (bounded, like the flee drain)."""
+    for _ in range(8):
+        if s.reader.battle_combo_count() == 0:
             break
-    if s.text_has("VICTORY") or s.text_has("DEFEATED"):
-        return True
-    # Defense phase: <name>: DEFEND! banner.
-    _select_cards(s, (BT_SHIELD,))
-    for _ in range(4):
-        s.press("select", settle=40)     # execute defense
-        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
-            return True
-        if s.wait_for(lambda: s.text_has("TARGET ")
-                      or s.text_has("PICK CARDS")
-                      or s.text_has("PLAYER TURN"), ticks=240):
-            break
-    return s.text_has("VICTORY") or s.text_has("DEFEATED")
+        s.press("b", settle=12)
+
+
+def _handbook_shot(s, name, milestone):
+    """Stage one handbook hand, shoot its row-10 name tiles, clear."""
+    hand = next(h for h in _HANDS if h[0] == name)[1]
+    _poke_hand(s, hand)
+    s.tick(10)
+    _select_all(s)
+    s.tick(20)
+    s.check("handbook %s staged" % name,
+            s.reader.battle_combo_count() == 5,
+            expected="combo_count 5", actual=str(s.reader.battle_combo_count()))
+    s.shoot(milestone)
+    _clear_combo(s)
+    s.check("handbook %s cleared" % name,
+            s.reader.battle_combo_count() == 0,
+            expected="combo_count 0", actual=str(s.reader.battle_combo_count()))
 
 
 def engage_hostile(s, planner, scene_name, hostile_xy):
     """Reach a patrol-box edge, then sweep until the battle engages
-    (DECK: on the BG tilemap)."""
+    (hero-row sprite tile on the BG tilemap)."""
     edge = planner.edge_of(scene_name, s.pos(), hostile_xy)
     if edge is not None:
         path = planner.path(scene_name, s.pos(), edge)
         if path:
             _walk_path(s, path)
-    if s.text_has("DECK:"):
+    if s.battle_hud_up():
         return True
     hx = hostile_xy[0]
     for _ in range(60):
-        if s.text_has("DECK:"):
+        if s.battle_hud_up():
             return True
         s.press("left" if s.pos()[0] > hx else "right", settle=24)
-    return s.text_has("DECK:")
+    return s.battle_hud_up()
 
 
 # ── Walk A: town — dialogue, mayor, shop purchase, quick screen, save ──
@@ -450,10 +672,12 @@ def walk_a(planner, checks, sram_out=None):
 
     # Route into town via the grove corridor; capture the
     # camera-scrolled field shot on the way.
-    # Town entry is the field-east mirrored spawn (1,7): one inside the
-    # west edge at the crossed row.
+    # Town landing is the resolved west entry (player.entry.west, else
+    # the main spawn): edge crossings land on the arrival-side entry,
+    # not a mirrored row.
     field_pos = _boot_to_field(s, planner)
-    follow(s, planner, "field", field_pos, "town", (1, 7),
+    town_landing = planner._arrival({"target_scene": "town"}, None, "east", "town")
+    follow(s, planner, "field", field_pos, "town", town_landing,
            capture_when=lambda: s.pos()[0] >= 22,
            capture_label="01-field-scrolled")
     s.settle_scene(expected_scene=SCENE_TOWN)
@@ -463,7 +687,7 @@ def walk_a(planner, checks, sram_out=None):
     s.check_eq("ARRIVED_TOWN flag",
                s.reader.flag(STORY_FLAG_ID_ARRIVED_TOWN), True)
     s.check_eq("scene pos synced", (st["player_x"], st["player_y"]),
-               (1, 7))
+               town_landing)
 
     # Guard dialogue (guard at (10,8); bump from (9,8) rightwards).
     # Three-line pages show both guard lines at once plus a blank third
@@ -534,7 +758,7 @@ def walk_a(planner, checks, sram_out=None):
             expected="MUSIC_TOWN", actual="restore")
 
     # Lost Merchant quest: the briefing tracks it (MERCHANT_QUEST=1),
-    # then the amulet is fetched from the mountain pass.  Delivering it
+    # then the shop keys are fetched from the mountain pass.  Delivering them
     # completes the quest for +15g and opens the merchant's merged shop
     # (ring included).  The merchant
     # lives in the village area (east of town); the INTRO is one page,
@@ -545,38 +769,40 @@ def walk_a(planner, checks, sram_out=None):
             bump_actor(s, planner, "village_area", (10, 4), "down", "MERCHANT:"),
             expected="MERCHANT:", actual="none")
     close_dialogue(s, "MERCHANT:")
-    s.check_eq("amulet quest active",
+    s.check_eq("shop keys quest active",
                s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 1)
 
-    # Mountain detour for the amulet (position from the level JSON; the
+    # Mountain detour for the shop keys (position from the level JSON; the
     # planner routes around patrol boxes and blocking actors, goal
-    # exempt).  The amulet chest is blocking: bump from the west.
+    # exempt).  The shop-keys chest is blocking and guarded by the kobold
+    # standing east of it: step onto the kobold's cell (transit fight),
+    # then bump west into the chest.
     mountain = _level("mountain_pass")
-    amulet = next(o for o in mountain["objects"]
+    keys = next(o for o in mountain["objects"]
                   if (o.get("properties") or {}).get("entity_id")
-                  == "ENTITY_ID_AMULET")
-    ax, ay = amulet["position"]["x"], amulet["position"]["y"]
-    follow(s, planner, "village_area", s.pos(), "mountain_pass", (ax - 1, ay))
+                  == "ENTITY_ID_SHOPKEYS")
+    ax, ay = keys["position"]["x"], keys["position"]["y"]
+    follow(s, planner, "village_area", s.pos(), "mountain_pass", (ax + 1, ay))
     s.settle_scene(expected_scene=SCENE_MOUNTAIN_PASS)
-    s.check("amulet found",
-            bump_actor(s, planner, "mountain_pass", (ax - 1, ay), "right",
-                       "FOUND AMULET"),
-            expected="FOUND AMULET", actual="none")
-    close_dialogue(s, "FOUND AMULET")
-    s.check_eq("amulet in collection",
-               s.reader.collection_count(CARD_AMULET), 1)
+    s.check("shop keys found",
+            bump_actor(s, planner, "mountain_pass", (ax + 1, ay), "left",
+                       "FOUND SHOP KEYS"),
+            expected="FOUND SHOP KEYS", actual="none")
+    close_dialogue(s, "FOUND SHOP KEYS")
+    s.check_eq("shop keys in collection",
+               s.reader.collection_count(CARD_SHOPKEYS), 1)
 
-    # Back to the village: the talk holding the amulet delivers it
-    # (thanks + 15g, amulet removed, quest COMPLETE), which opens the
+    # Back to the village: the talk holding the shop keys delivers them
+    # (thanks + 15g, shop keys removed, quest COMPLETE), which opens the
     # shop on the talk after.
     follow(s, planner, "mountain_pass", s.pos(), "village_area", (10, 4))
     s.settle_scene(expected_scene=SCENE_VILLAGE_AREA)
     s.check("deliver dialogue opened",
             bump_actor(s, planner, "village_area", (10, 4), "down",
-                       "You found it!"),
-            expected="You found it!", actual="none")
-    close_dialogue(s, "You found it!")
-    s.check_eq("amulet quest complete",
+                       "You found them!"),
+            expected="You found them!", actual="none")
+    close_dialogue(s, "You found them!")
+    s.check_eq("shop keys quest complete",
                s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 2)
     # Transit fights (god-mode) add loot gold, so assert at least the
     # delivery reward on top of the starter pool, never an exact total.
@@ -584,9 +810,14 @@ def walk_a(planner, checks, sram_out=None):
             expected=">= %d" % (HERO_START_GOLD + 15),
             actual=str(s.reader.gold()))
 
-    # Merged shop (village merchant, opened by delivering the amulet):
-    # one-copy ring + bow stock.  The ring
-    # is the first row; buying hides it and the bow slides up.
+    # Merged shop (village merchant, opened by delivering the shop keys):
+    # one-copy ring + bow + shield stock plus the always-listed free
+    # basics.  The top row is bought; usually the ring, but a loot twin
+    # merged under a capped curated id hides its one-copy row
+    # (docs/loot.md §34.6), so the walk reads the row instead of
+    # assuming it: release loot reshuffles whenever boot timing shifts
+    # the DIV prime (src/game/marks_banked.c), and a hardcoded ring buy
+    # breaks the moment a twin drops pre-shop.
     s.check("shop opened",
             bump_actor(s, planner, "village_area", (10, 4), "down", "SHOP"),
             expected="SHOP", actual="none")
@@ -594,15 +825,48 @@ def walk_a(planner, checks, sram_out=None):
     s.check("ring row caret", s.bg_text()[5][:1] == ">",
             expected="> at row 5", actual=s.bg_text()[5])
     gold0 = s.reader.gold()
-    price = s.reader.card_price(CARD_IRON_RING)
     s.check("gold before purchase", gold0 >= HERO_START_GOLD + 15,
             expected=">= %d" % (HERO_START_GOLD + 15), actual=str(gold0))
+    row5 = s.bg_text()[5]
+    # Shop rows show the weapon word plus the OAM material ingot (the
+    # material word is gone): match the weapon, then pin the ingot's
+    # real-OAM tile + slot (entry 13 = first shop row) per material.
+    if "RING" in row5:
+        want, keep, slid, mtile, mslot = CARD_IRON_RING, "RING", "BOW", 119, 1
+    elif "BOW" in row5:
+        want, keep, slid, mtile, mslot = CARD_BOW_9, "BOW", "SHIELD", 120, 6
+    elif "SHIELD" in row5:
+        want, keep, slid, mtile, mslot = CARD_STEEL_SHIELD, "SHIELD", "SWORD", 117, 7
+    else:
+        want, keep, slid, mtile, mslot = None, None, None, None, None
+    s.check("shop top row recognized", want is not None,
+            expected="ring/bow/shield row", actual=row5)
+    if want is not None:
+        s.check_eq("shop material ingot tile",
+                   s.pb.memory[0xFE00 + 13 * 4 + 2], mtile)
+        s.check_eq("shop material ingot slot",
+                   s.pb.memory[0xFE00 + 13 * 4 + 3] & 7, mslot)
+    price = s.reader.card_price(want)
+    before = s.reader.collection_count(want)
     s.press("a", settle=30)
     s.check_eq("gold after purchase", s.reader.gold(), gold0 - price)
-    s.check_eq("ring in collection", s.reader.collection_count(
-        CARD_IRON_RING), 1)
-    s.check("bow row slides up", "BO9" in s.bg_text()[5],
-            expected="BO9 at row 5", actual=s.bg_text()[5])
+    # The bought card merges under its capped curated id (one row);
+    # the one-copy row hides so the next row slides up.  A loot twin of
+    # the same card (DIV-shifted loot) merges in on the same purchase,
+    # so the count grows by one (no twin) or two (twin) -- gold staying
+    # exact proves exactly one purchase happened either way.
+    after = s.reader.collection_count(want)
+    s.check("bought card in collection",
+            after >= before + 1 and after <= before + 2,
+            expected="in [%d, %d]" % (before + 1, before + 2),
+            actual=str(after))
+    # No-hide rows: the bought row stays put (verify it still names
+    # the bought card), then DOWN reaches the next row below it.
+    s.check("bought row stays", keep in s.bg_text()[5],
+            expected="%s at row 5" % keep, actual=s.bg_text()[5])
+    s.press("down", settle=20)
+    s.check("next row below", slid in s.bg_text()[6],
+            expected="%s at row 6" % slid, actual=s.bg_text()[6])
     s.press_until("b", lambda: s.stable(
         lambda: not s.text_has("SHOP"), frames=30), label="shop close")
     # Post-purchase the merchant's equip tip opens as a dialogue box on
@@ -614,21 +878,58 @@ def walk_a(planner, checks, sram_out=None):
     s.check("shop closed", not s.text_has("SHOP"), expected="closed",
             actual=s.bg_text()[0].strip())
 
-    # Quick screen: DECK tab, toggle the first card's deck membership,
-    # open the filter picker from the top row, then the QUEST tab.
-    # NOTE: the starter deck holds every owned copy, so A on a fully
-    # decked card CLEARS it (docs/deck-management.md) — the assert is
-    # "membership toggled", never "+1".
-    s.press_until("start", lambda: s.text_has("DECK QUEST"),
+    # Quick screen: DECK tab, move one card deck -> pile, open the
+    # filter picker from the top row, then the QUEST tab.
+    # NOTE: transit-fight loot can add owned copies (release loot
+    # reshuffles whenever boot timing shifts the DIV prime). Find a
+    # fully-decked row (left N == 0, right N > 0): RIGHT flips to the
+    # deck side and A sends one copy back to the pile, so the deck
+    # count must drop by exactly one (MIN-guarded).
+    s.press_until("start", lambda: s.text_has("GEMS"),
                   label="quick screen")
-    s.shoot("06-cards-menu", need="DECK QUEST")
+    s.shoot("06-cards-menu", need="GEMS")
     deck0 = s.reader.deck_count()
-    s.press("down", settle=20)      # FILTER/SORT row -> first card row
-    s.press("a", settle=30)         # toggle deck membership
+    s.check("deck above the MIN floor", deck0 - 1 >= 5,
+            expected="deck0 - 1 >= 5", actual=str(deck0))
+    # Unified grid: DOWN lands the first pile group, or -- when every
+    # owned copy is decked -- the deck side's first row (the FILTER row
+    # never flips sides; loot varies the composition run to run, and
+    # the A-removal below always frees a pile copy again).  Per-side
+    # packing caveat: the pile and deck blocks pack independently
+    # (each skips groups with a zero count on its side), so the same
+    # view-row is NOT the same screen-row when the sides skip
+    # different groups (e.g. a fully-decked group the pile skips but
+    # the deck shows).  Find each caret by scanning the card rows
+    # instead of assuming row 5.
+    def card_carets(rows):
+        pile = [r for r in range(5, 13) if rows[r][0] == ">"]
+        deck = [r for r in range(5, 13)
+                if len(rows[r]) > 10 and rows[r][10] == ">"]
+        return pile, deck
+    s.press("down", settle=20)
+    rows = s.bg_text()
+    pile_rows, deck_rows = card_carets(rows)
+    s.check("first card caret", len(pile_rows) + len(deck_rows) == 1,
+            expected="one > at col 0 or 10",
+            actual=str(pile_rows + deck_rows))
+    if pile_rows:
+        s.press("right", settle=20)  # pile cell -> deck cell
+        rows = s.bg_text()
+        pile_rows, deck_rows = card_carets(rows)
+        s.check("deck cell caret", len(deck_rows) == 1,
+                expected="one > at col 10", actual=str(deck_rows))
+    s.press("a", settle=30)  # deck cell: send one copy back to the pile
     deck1 = s.reader.deck_count()
-    s.check("deck membership toggled", deck1 != deck0,
-            expected="deck != %d" % deck0, actual=str(deck1))
-    s.press("up", settle=20)        # back to the FILTER/SORT row
+    s.check("deck membership removed", deck1 == deck0 - 1,
+            expected="deck == %d" % (deck0 - 1), actual=str(deck1))
+    s.press("left", settle=20)  # deck cell -> pile cell
+    rows = s.bg_text()
+    pile_rows, deck_rows = card_carets(rows)
+    s.check("owned side caret", len(pile_rows) == 1,
+            expected="one > at col 0", actual=str(pile_rows))
+    s.press("b", settle=20)  # single B jumps back to the FILTER row
+    s.check("filter row caret", s.bg_text()[2][0] == ">",
+            expected="> at filter row", actual=s.bg_text()[2])
     s.press_until("a", lambda: s.text_has("LR CYCLE"),
                   label="filter picker")
     s.shoot("07-filter-picker", need="LR CYCLE")
@@ -638,46 +939,60 @@ def walk_a(planner, checks, sram_out=None):
             expected="closed", actual="open")
     tabbed = False
     for _ in range(8):
-        if s.bg_text()[1][5] == "^":
+        if s.menu_cursor_col() == 5:
             tabbed = True
             break
         s.press("right", settle=30)
-    s.check("quest tab caret", tabbed, expected="^ at col 5",
-            actual=s.bg_text()[1])
+    s.check("quest tab caret", tabbed, expected="cursor tile at col 5",
+            actual="col %d" % s.menu_cursor_col())
     s.shoot("08-quests-tab")
+    s.press("right", settle=30)  # QUEST -> HERO
+    s.check("hero tab caret", s.menu_cursor_col() == 11,
+            expected="cursor tile at col 11",
+            actual="col %d" % s.menu_cursor_col())
+    s.shoot("08-hero-tab")
+    s.press("right", settle=30)  # HERO -> GEMS
+    s.check("gems tab caret", s.menu_cursor_col() == 16,
+            expected="cursor tile at col 16",
+            actual="col %d" % s.menu_cursor_col())
+    s.shoot("08-gems-tab")
     s.press_until("b", lambda: s.stable(
-        lambda: not s.text_has("DECK QUEST"), frames=30),
+        lambda: not s.text_has("GEMS"), frames=30),
         label="quick close")
-    s.check("quick screen closed", not s.text_has("DECK QUEST"),
+    s.check("quick screen closed", not s.text_has("GEMS"),
             expected="closed", actual="open")
 
-    # Wizard save (slot 1).  Capture only on a stable menu/message —
-    # removes the known-unstable 12-wizard-save frame (§56.2).
-    # The shop/quick screen ran in the village; return to town for the
-    # wizard (he never moved). Drop god-mode first so SRAM keeps base
-    # 10/10 HP (town/village legs are ambush-free).
+    # Save & quit (QUEST tab): A opens the quit confirm, YES writes
+    # the active slot and lands on the title screen.  Drop god-mode
+    # first so SRAM keeps base HP (town/village legs are ambush-free).
+    # Snapshot SRAM for walk-l wherever we stand (no town trip needed:
+    # quitting works from any overworld).
     ungod_mode(s)
-    follow(s, planner, "village_area", s.pos(), "town", (6, 11))
-    s.settle_scene(expected_scene=SCENE_TOWN)
-    _walk_path(s, planner.path("town", s.pos(), (6, 11)) or [])
-    s.check("wizard save menu", s.press_until(
-        "up", lambda: s.text_has("SAVE GAME"), label="save menu"),
-        expected="SAVE GAME", actual="none")
-    s.tick(20)
-    s.shoot("12-wizard-save", need="SAVE GAME")
+    s.press_until("start", lambda: s.text_has("GEMS"),
+                  label="quick screen")
+    tabbed = False
+    for _ in range(8):
+        if s.menu_cursor_col() == 5:
+            tabbed = True
+            break
+        s.press("right", settle=30)
+    s.check("quest tab caret", tabbed, expected="cursor tile at col 5",
+            actual="col %d" % s.menu_cursor_col())
     s.press("a", settle=30)
-    s.check("SAVED message", s.wait_for(lambda: s.text_has("SAVED"),
-                                        ticks=120),
-            expected="SAVED", actual="none")
-    # Let the transient TTL clear so the capture is byte-stable.
-    s.press_until("a", lambda: s.stable(
-        lambda: not s.text_has("SAVED"), frames=45), tries=2,
-        settle=20, timeout=90, label="message ttl")
-    s.shoot("13-wizard-saved")
+    s.check("quit confirm", s.wait_for(lambda: s.text_has("SAVE AND QUIT"),
+                                       ticks=120),
+            expected="SAVE AND QUIT", actual="none")
+    s.shoot("12-quit-confirm", need="SAVE AND QUIT")
+    s.press("a", settle=30)
+    s.check("title after quit", s.wait_for(lambda: s.text_has("PRESS START"),
+                                           ticks=120),
+            expected="PRESS START", actual="none")
+    s.shoot("13-quit-title", need="PRESS START")
 
     if sram_out is not None:
+        st = s.reader.scene_state()
         sram_out.append((s.stop_save_ram(), dict(
-            scene=SCENE_TOWN, pos=(6, 11),
+            scene=st["scene_id"], pos=(st["player_x"], st["player_y"]),
             gold=s.reader.gold(), deck=s.reader.deck_count(),
             ring=s.reader.collection_count(CARD_IRON_RING))))
     else:
@@ -694,10 +1009,104 @@ def walk_b(planner, checks):
                 None)
     carl_xy = (carl["position"]["x"], carl["position"]["y"])
     props = carl["properties"]
-    # Field cache east of Carl first: Carl withholds the spar until it
-    # is opened ("Open chest, then come back!"), so the hero opens it
-    # (first poison dagger plus the AP unlock: pool 1 -> 2) and only
-    # then walks to the lesson.
+    # Field cache east of Carl first -- but it is key-locked now: bumping
+    # it without the Old Key says "This chest is locked." (pool stays 1,
+    # no dagger).  The key comes from the village dog, which wants a bone
+    # from the tunnel skeleton -- so the walk runs the whole quest chain
+    # before the lesson (god-mode for the transit legs, like walk-a/c/e;
+    # ungod before Carl so the spar asserts stay at base HP).
+    s.check("locked chest bump",
+            bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
+            expected="CHEST:", actual="none")
+    s.check("locked chest text",
+            s.text_has("This chest"),
+            expected="This chest", actual="none")
+    s.check("locked cache closed",
+            close_dialogue(s, "CHEST:"),
+            expected="closed", actual="open")
+    s.check_eq("no dagger without key",
+               s.reader.collection_count(CARD_POISON_DAGGER), 0)
+    s.check_eq("energy pool stays 1 (locked)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 1)
+    s.check("field chest flag clear",
+            not s.reader.flag(STORY_FLAG_ID_FIELD_CHEST),
+            expected="clear", actual="set")
+    god_mode(s)
+    # Town: the village dog holds the field cache's Old Key and will not
+    # give it -- hearing the hint sets MET_DOG, which unlocks the
+    # skeleton's bone offer.
+    town_landing = planner._arrival({"target_scene": "town"}, None,
+                                     "east", "town")
+    follow(s, planner, "field", s.pos(), "town", town_landing)
+    s.settle_scene(expected_scene=SCENE_TOWN)
+    s.check("dog hint bump",
+            bump_actor(s, planner, "town", (8, 13), "down", "DOG:"),
+            expected="DOG:", actual="none")
+    s.check("dog hint text",
+            s.text_has("won't"),
+            expected="won't", actual="none")
+    s.check("dog hint closed",
+            close_dialogue(s, "DOG:"),
+            expected="closed", actual="open")
+    s.check("met dog flag",
+            s.reader.flag(STORY_FLAG_ID_MET_DOG),
+            expected="set", actual="clear")
+    # Tunnel skeleton (south tunnel): with MET_DOG set, the bump offers
+    # "Take a bone from the skeleton?" -- YES (default cursor) grants
+    # the bone.
+    follow(s, planner, "town", s.pos(), "underground_tunnel_south", (10, 11))
+    s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL_SOUTH)
+    s.check_eq("underground music",
+               s.reader.music_track(), MUSIC_UNDERGROUND)
+    s.check("skeleton ask bump",
+            bump_actor(s, planner, "underground_tunnel_south", (10, 11), "right",
+                       "SKELETON:"),
+            expected="SKELETON:", actual="none")
+    s.shoot("08-skeleton-ask", need="Take a bone")
+    s.check("skeleton bone taken",
+            s.press_until("a", lambda: s.text_has("You take a bone"),
+                          tries=6, settle=30, label="taken"),
+            expected="You take a bone", actual="none")
+    # The taken box is narration with an empty speaker (no SKELETON:
+    # tag), so close on its content line: closing on the speaker tag
+    # would pass vacuously with the box still open and wedge every
+    # later move on the open modal.
+    s.check("skeleton taken closed",
+            close_dialogue(s, "You take a bone"),
+            expected="closed", actual="open")
+    s.check_eq("bone in collection",
+               s.reader.collection_count(CARD_BONE), 1)
+    s.check("bone taken flag",
+            s.reader.flag(STORY_FLAG_ID_BONE_TAKEN),
+            expected="set", actual="clear")
+    # Back to town: trade the bone for the Old Key (YES, then the thanks
+    # sets DOG_KEY on close and the ? mark goes away).
+    follow(s, planner, "underground_tunnel_south", s.pos(), "town", (8, 13))
+    s.settle_scene(expected_scene=SCENE_TOWN)
+    s.check("dog trade bump",
+            bump_actor(s, planner, "town", (8, 13), "down", "DOG:"),
+            expected="DOG:", actual="none")
+    s.check("dog trade thanks",
+            s.press_until("a", lambda: s.text_has("OLD KEY"),
+                          tries=6, settle=30, label="thanks"),
+            expected="OLD KEY", actual="none")
+    s.shoot("08-dog-key", need="OLD KEY")
+    s.check("dog thanks closed",
+            close_dialogue(s, "DOG:"),
+            expected="closed", actual="open")
+    s.check_eq("old key in collection",
+               s.reader.collection_count(CARD_OLD_KEY), 1)
+    s.check_eq("bone traded away",
+               s.reader.collection_count(CARD_BONE), 0)
+    s.check("dog key flag",
+            s.reader.flag(STORY_FLAG_ID_DOG_KEY),
+            expected="set", actual="clear")
+    # Field cache with the key: first poison dagger plus the AP unlock.
+    # Pool reaches 3 here: base 1, +1 from Carl's leave-the-field offer
+    # (leaving for town pre-lesson grants the tutorial point and sets
+    # TUTORIAL_SKIPPED), +1 from the cache.
+    follow(s, planner, "town", s.pos(), "field", (20, 8))
+    s.settle_scene(expected_scene=SCENE_FIELD)
     s.check("chest bump",
             bump_actor(s, planner, "field", (20, 8), "right", "CHEST:"),
             expected="CHEST:", actual="none")
@@ -707,18 +1116,20 @@ def walk_b(planner, checks):
             expected="closed", actual="open")
     s.check_eq("first poison dagger",
                s.reader.collection_count(CARD_POISON_DAGGER), 1)
-    s.check_eq("energy pool 1 -> 2",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
+    s.check_eq("energy pool 1 -> 3 (skip + cache)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    ungod_mode(s)
     # Carl spars on bump (he is stationary, so walk adjacent and step
     # in; the planner routes around his tile).  Bumps are retried: screen
     # transitions eat input for a few dozen frames.  Carl is a single
-    # sprite now: bumping him opens the lesson first, and closing it
-    # auto-starts the spar from the stashed encounter (no second bump).
+    # sprite now: bumping him opens the spar offer first (YES/NO ask),
+    # and confirming YES auto-starts the spar from the stashed encounter
+    # (no second bump).
     # Carl waits on his hut doorstep (15,12); the hero bumps from (14,12).
     # Walk adjacent first and capture the quest "?" floating over him
     # (milestone 08-carl-mark): the field cache above already opened his
     # lesson, and the spar is still unwon.  The bump below opens the
-    # lesson, so the mark must be shot BEFORE it.
+    # offer, so the mark must be shot BEFORE it.
     if s.pos() != (14, 12):
         _carl_path = planner.path("field", s.pos(), (14, 12))
         if _carl_path is None:
@@ -742,42 +1153,84 @@ def walk_b(planner, checks):
     rows = s.bg_text()
     s.check("carl tutor rows exact",
             rows[14] == "+--CARL:-----------+"
-            and rows[15] == "Human? Here danger  "
-            and rows[16] == "I teach you fight!  "
-            and rows[17] == "U/D choose target  ?",
+            and rows[15] == "HUMAN? HERE DANGER  "
+            and rows[16] == "I TEACH YOU FIGHT!  "
+            and rows[17] == "WANT TO LEARN?     ?",
             expected="exact box text",
             actual=" / ".join(rows[14:18]))
-    # Closing by battle-open (not by CARL: gone): the spar banner itself
-    # reads "CARL: PICK CARDS", so a marker-gone wait would spam A's into
-    # the fight.  Three advances close the 8-line lesson; press_until
-    # self-heals dropped presses and stops at the first DECK: sighting.
-    s.check("lesson closed into spar",
-            s.press_until("a", lambda: s.text_has("DECK:"),
-                          tries=8, settle=30, label="DECK:"),
-            expected="DECK:", actual="none")
+    # The offer is a YES/NO ask: advance to the choice row, confirm YES
+    # (the default cursor), and the spar starts by itself.  The spar's
+    # first frame raises the attack coaching box (a normal dialogue box
+    # over the world, not a battle-row hint).
+    s.check("carl choice page",
+            s.press_until("a", lambda: s.text_has("> YES"),
+                          tries=6, settle=30, label="> YES"),
+            expected="> YES", actual="none")
+    s.check("carl spar accepted",
+            s.press_until("a", lambda: s.text_has("PICK CARDS WITH A!"),
+                          tries=6, settle=30, label="attack lesson"),
+            expected="PICK CARDS WITH A!", actual="none")
+    # Closing by battle-open (not by CARL: gone): the two-page attack
+    # box closes into the SELECT phase, and press_until self-heals
+    # dropped presses, stopping at the first battle-HUD sighting.
+    s.check("attack lesson closed",
+            s.press_until("a", lambda: s.battle_hud_up(),
+                          tries=8, settle=30, label="battle HUD"),
+            expected="battle HUD", actual="none")
     s.tick(40)
-    s.shoot("09-battle", need="DECK:")
+    s.check("battle HUD up", s.battle_hud_up(),
+            expected="hero sprite row", actual=s.bg_text()[7])
+    s.shoot("09-battle")
     s.check_eq("hero hp at battle start", s.reader.battle_player_hp(),
                HERO_START_HP)
     s.check_eq("carl hp at battle start", s.reader.battle_enemy_hp(0),
                props["hp"])
-    s.check_eq("spar starts at 2 AP (chest opened first)",
-               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 2)
+    s.check_eq("spar starts at 3 AP (skip + cache)",
+               s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
+    gold_before = s.reader.gold()
 
     # Fight with hand-aware selection until the solo spar drops
     # (variance-safe: enemy HP strictly decreases per landed hit; never
     # assert exact damage).  Bounded rounds + defeat detection.  Carl's
     # practice deck deals 0, so the hero must still be full afterwards.
-    # His stepwise sparring hints show per phase: the card-pick lesson
-    # while choosing the attack, the shield lesson while defending.
+    # His coaching shows once per phase as normal dialogue boxes: the
+    # attack lesson on spar entry (closed above), the shield lesson on
+    # the first DEFEND, the poker-hands lesson on the way back to
+    # SELECT, then the flee lesson on the next attack landed, and from
+    # then on one looping jeer per attack (drained per round).
+    _carl_topup(s)
     prev_total = s.reader.battle_enemy_hp(0)
-    start_total = prev_total
-    victory = False
-    defeated = False
-    # Select-stage banner and hint are up while choosing the attack.
-    s.check("select hint", s.text_has("PICK CARDS"),
-            expected="PICK CARDS", actual="none")
-    _select_cards(s, ATTACK_TYPES)
+    # Select-stage banner is up while choosing the attack.
+    s.check("select banner", s.text_has("TARGET CARL"),
+            expected="TARGET CARL", actual="none")
+    # Poker-hand handbook: stage each named hand in the opening SELECT
+    # (no executes, so the spar never advances) and capture its row-10
+    # name tiles.  The pair shot doubles as the player-attacking icon
+    # set (row 7 shows the staged attack trio; row 8 stays blank).
+    for _name, _mark in (("pair", "10-hand-pair"),
+                         ("twopair", "10-hand-twopair"),
+                         ("three", "10-hand-three"),
+                         ("straight", "10-hand-straight"),
+                         ("flush", "10-hand-flush"),
+                         ("fullhouse", "10-hand-fullhouse"),
+                         ("four", "10-hand-four"),
+                         ("straightflush", "10-hand-straightflush"),
+                         ("five", "10-hand-five")):
+        _handbook_shot(s, _name, _mark)
+    # Short straight is gem-gated (GEM_STRAIGHT = bit 0 of
+    # VARIABLE_ID_GEM_EQUIPPED = 8, game_ids.h): set the bit for the
+    # shot, clear it right after so later choreography is unaffected.
+    _gem_addr = s.reader.state + OFF_VARIABLES + 2 * (8 - 1)
+    s.pb.memory[_gem_addr] = 1
+    s.pb.memory[_gem_addr + 1] = 0
+    _handbook_shot(s, "short", "10-hand-short")
+    s.pb.memory[_gem_addr] = 0
+    s.pb.memory[_gem_addr + 1] = 0
+    # Two cards per phase (capped, not the full affordable set): an
+    # uncapped round stages deeper into the 10-card starter draw pile and
+    # risks a RESHUFFLE turn that consumes the round-2 PLAYER_SELECT,
+    # delaying Carl's poker lesson past this walk's fixed choreography.
+    _select_cards(s, ATTACK_TYPES, max_cards=2)
     # The execute press is retried: a press eaten by edge timing leaves
     # the SELECT phase open instead of advancing to DEFEND.
     for _ in range(4):
@@ -788,57 +1241,165 @@ def walk_b(planner, checks):
             break
     s.check("defend banner", s.text_has("DEFEND"),
             expected="DEFEND", actual="none")
-    # The hint shares row 9 with transient messages (a selection
-    # rejection's 45-frame TTL freezes through attack animations, so it
-    # can still own the row when DEFEND opens): wait for the lesson.
-    s.check("defend hint",
-            s.wait_for(lambda: s.text_has("SHIELD"), ticks=150),
-            expected="SHIELD", actual="none")
-    s.shoot("10-battle-defend", need="DEFEND")
-    _select_cards(s, (BT_SHIELD,))
-    s.press("select", settle=40)     # execute defense
+    # Attack landed (Carl's HP dropped): capture the battle frame here.
     s.shoot("10-battle-attack")
+    # The first DEFEND phase raises the shield coaching box; close its
+    # two pages, then the battle's own DEFEND banner owns row 0.
+    s.check("defend lesson",
+            s.wait_for(lambda: s.text_has("PICK SHIELD"), ticks=150),
+            expected="PICK SHIELD", actual="none")
+    s.check("defend lesson closed", close_box(s),
+            expected="closed", actual="open")
+    # The close lands back on the battle screen through a full LCD-off
+    # redraw; wait for the DEFEND banner to own row 0 again before
+    # shooting or selecting (inputs eaten mid-wipe desync the fight).
+    s.check("defend banner back",
+            s.wait_for(lambda: s.text_has("DEFEND"), ticks=180),
+            expected="DEFEND", actual="none")
+    s.shoot("10-battle-defend", need="DEFEND")
+    # Enemy-attacking icon sets: daggers first (red counter trio),
+    # then shields (brown block trio).  Both are staged and cleared
+    # without executing, so the choreography below re-selects fresh.
+    _poke_hand(s, [(4, 3), (4, 3), (4, 3), (4, 3), (4, 3)])
+    _poke_incoming(s, 9)
+    s.tick(10)
+    _select_cards(s, (BT_DAGGER,), max_cards=2)
+    s.tick(20)
+    s.shoot("10-defend-dagger", need="DEFEND")
+    _clear_combo(s)
+    _poke_hand(s, [(1, 3), (1, 3), (1, 3), (1, 3), (1, 3)])
+    s.tick(10)
+    _select_cards(s, (BT_SHIELD,), max_cards=2)
+    s.tick(20)
+    s.shoot("10-defend-shield", need="DEFEND")
+    _clear_combo(s)
+    _poke_incoming(s, 0)
+    _select_cards(s, (BT_SHIELD,), max_cards=2)
+    s.press("select", settle=40)     # execute defense
+    # The way back to SELECT raises the poker-hands box, then the flee
+    # box: close both (3 pages + 1) to reach a plain SELECT phase.
+    s.check("poker lesson",
+            s.wait_for(lambda: s.text_has("PAIRS HIT HARDER!"), ticks=240),
+            expected="PAIRS HIT HARDER!", actual="none")
+    s.check("poker lesson closed", close_box(s),
+            expected="closed", actual="open")
+    # Same full-redraw settle on the way back to SELECT: the cursor and
+    # hand must be live before the next attack.
+    s.check("select banner back",
+            s.wait_for(lambda: s.text_has("TARGET CARL"), ticks=180),
+            expected="TARGET CARL", actual="none")
+    _carl_topup(s)
     prev_total = s.reader.battle_enemy_hp(0)
-    for round_no in range(1, MAX_BATTLE_ROUNDS):
-        done = _battle_round(s)
-        if done:
-            victory = s.text_has("VICTORY")
-            defeated = s.text_has("DEFEATED")
+    # The next attack is the first one landed since the defend lesson,
+    # so it raises the flee lesson (with its reward tease) -- not a
+    # jeer.  Close it, defend through the round, and the spar is back
+    # to a plain SELECT with strictly less enemy HP.  Capped like the
+    # others: the lesson needs a landed hit, never max damage.
+    _select_cards(s, ATTACK_TYPES, max_cards=2)
+    for _ in range(4):
+        s.press("select", settle=40)     # execute attack
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
             break
-        if s.reader.battle_player_hp() == 0:
-            defeated = True
+        if s.text_has("CARL:"):          # flee lesson on ANIM
             break
-        total = s.reader.battle_enemy_hp(0)
-        if total < prev_total:
-            s.check("damage dealt round %d" % round_no, True)
-            prev_total = total
-    s.check("battle victory", victory, expected="VICTORY",
-            actual="enemy hp %d/%d after %d rounds%s"
-            % (prev_total, start_total, MAX_BATTLE_ROUNDS,
-               " (hero defeated)" if defeated else ""))
-    s.shoot("11-battle-victory", need="VICTORY")
-
-    # Leave the result screen; Carl's good-luck speech shows deferred
-    # before the overworld return.  The loot hook credits gold on battle
-    # end, so assert gold AFTER the exit.  The exit press is retried: screen
-    # transitions eat input for a few dozen frames.
-    s.check("victory speech",
-            s.press_until("a", lambda: s.text_has("CARL:"), tries=6),
-            expected="CARL:", actual="none")
-    s.shoot("11-victory-speech", need="CARL:")
-    s.check("speech closed",
-            close_dialogue(s, "CARL:"),
+    s.check("flee lesson",
+            s.wait_for(lambda: s.text_has("TO FLEE, PRESS B"), ticks=180),
+            expected="TO FLEE, PRESS B", actual="none")
+    s.check("flee lesson reward tease",
+            s.press_until("a", lambda: s.text_has("BEAT ME FOR POWER"),
+                          tries=6, settle=30, label="power tease"),
+            expected="BEAT ME FOR POWER", actual="none")
+    s.check("flee lesson closed", close_box(s),
+            expected="closed", actual="open")
+    s.check("defend banner 2",
+            s.wait_for(lambda: s.text_has("DEFEND"), ticks=240),
+            expected="DEFEND", actual="none")
+    _select_cards(s, (BT_SHIELD,))
+    for _ in range(4):
+        s.press("select", settle=40)     # execute defense
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        if s.wait_for(lambda: s.text_has("TARGET ")
+                      or s.text_has("PLAYER TURN"), ticks=240):
+            break
+    total = s.reader.battle_enemy_hp(0)
+    s.check("damage dealt", total < prev_total,
+            expected="hp %d < %d" % (total, prev_total),
+            actual="hp %d" % total)
+    # One more attack: now that the lesson is over, it earns a looping
+    # jeer.  Capped at 2 like round 1: uncapped staging one-shot Carl
+    # on some shuffles (VICTORY instead of the jeer), and the walk only
+    # needs a landed hit, never max damage.
+    _carl_topup(s)
+    _select_cards(s, ATTACK_TYPES, max_cards=2)
+    for _ in range(4):
+        s.press("select", settle=40)
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        if s.text_has("CARL:"):
+            break
+    s.check("post-attack box", s.text_has("CARL:"),
+            expected="CARL: box", actual="none")
+    s.check("jeer",
+            s.text_has("UCH!"),
+            expected="UCH!", actual="none")
+    s.check("post-attack box closed", close_box(s),
+            expected="closed", actual="open")
+    # Finish the round that attack started (defend through it) so the
+    # next phase is a plain SELECT -- B only flees from there.
+    s.check("defend banner 3",
+            s.wait_for(lambda: s.text_has("DEFEND"), ticks=240),
+            expected="DEFEND", actual="none")
+    _select_cards(s, (BT_SHIELD,))
+    for _ in range(4):
+        s.press("select", settle=40)
+        if s.text_has("VICTORY") or s.text_has("DEFEATED"):
+            break
+        if s.wait_for(lambda: s.text_has("TARGET ")
+                      or s.text_has("PLAYER TURN"), ticks=240):
+            break
+    s.check("flee window",
+            s.wait_for(lambda: s.text_has("TARGET CARL"), ticks=180),
+            expected="TARGET CARL", actual="none")
+    # Flee the lesson (B on the empty attack hand): FLED! flashes for
+    # a frame before Carl's farewell box auto-opens over it, so the
+    # farewell is the stable sync point; closing it lands back on the
+    # (now stable) FLED! result, and leaving that returns to the field
+    # with full HP (0-damage spar), pool unchanged (no AP for fleeing),
+    # and Carl alive for a rematch.
+    # At pool 3 a stray card may still be staged (B unselects before it
+    # flees), so drain the combo first or the flee press only clears it.
+    for _ in range(4):
+        if s.reader.battle_combo_count() == 0:
+            break
+        s.press("b", settle=12)
+    for _ in range(3):
+        s.press("b", settle=40)
+        if s.wait_for(lambda: s.text_has("GROW STRONGER!")
+                      or s.text_has("FLED!"), ticks=120):
+            break
+    s.check("farewell speech",
+            s.wait_for(lambda: s.text_has("GROW STRONGER!"), ticks=240),
+            expected="GROW STRONGER!", actual="none")
+    s.shoot("11-farewell-speech", need="GROW STRONGER!")
+    s.check("farewell closed",
+            close_box(s),
+            expected="closed", actual="open")
+    s.check("fled", s.wait_for(lambda: s.text_has("FLED!"), ticks=120),
+            expected="FLED!", actual="none")
+    s.shoot("11-battle-fled", need="FLED!")
+    s.check("fled exit", close_dialogue(s, "FLED!"),
             expected="closed", actual="open")
     s.check("aftermath overworld",
             s.wait_for(lambda: s.reader.scene_state()["scene_id"]
                        == SCENE_FIELD, ticks=180),
             expected="SCENE_FIELD",
             actual="scene %d" % s.reader.scene_state()["scene_id"])
-    s.check_eq("victory gold", s.reader.gold(),
-               HERO_START_GOLD + props.get("gold_reward", 0))
+    s.check_eq("no victory gold (fled, not won)", s.reader.gold(),
+               gold_before)
     s.check_eq("hero hp untouched (0-damage spar)", s.reader.hero()["hp"],
                HERO_START_HP)
-    s.check_eq("energy pool 2 -> 3",
+    s.check_eq("energy pool stays 3 (no AP for fleeing)",
                s.reader.variable(VARIABLE_ID_ENERGY_POOL), 3)
     s.walk_btn("up", lambda: s.pos()[1] == 7)
     s.walk_btn("down", lambda: s.pos()[1] == 8)
@@ -854,21 +1415,24 @@ def walk_c(planner, checks):
     god_mode(s)
     field = _level("field")
     spawn = _boot_to_field(s, planner)
-    # Forest arrival = the field->forest stairs tunnel (content-coupled).
-    assert any(e.get("target_scene") == "forest"
+    # Forest arrival = the field->underground stairs tunnel, then the
+    # tunnel walk, then the underground->forest stairs (content-coupled:
+    # field's north stairs land in the tunnel's bottom-left, the tunnel's
+    # top-right stairs land in the forest).
+    assert any(e.get("target_scene") == "underground_tunnel"
                for e in (field.get("exits", []) or [])), \
-        "walk_c expects a field->forest tunnel exit"
+        "walk_c expects a field->underground_tunnel tunnel exit"
     forest = _level("forest")
     goal = (forest["player"]["spawn"]["x"], forest["player"]["spawn"]["y"])
     # Assert the alert sequence AT the crossing, not at the goal: the
     # sting + resume windows elapse during any post-crossing walk, and
     # cross_exit's own settling eats them too, so a settle-then-assert
     # observes only the resumed track.  Walk to the tunnel mouth (same
-    # scene, no warp), cross explicitly, and assert immediately:
-    # cross_exit returns ~25 f after the flip, well inside every window
-    # (hold to +90, sting +30..+81, resume +90).
+    # scene, no warp), cross explicitly, and assert immediately.
+    # The flip-anchored waits below carry the margins (the old
+    # "+30..+81" sting model is stale -- see the note at the crossing).
     _mouth_path = planner.path("field", spawn, (16, 1), avoid_exits=True)
-    s.check("path to forest tunnel", _mouth_path is not None,
+    s.check("path to underground tunnel", _mouth_path is not None,
             expected="bfs path", actual="none")
     if _mouth_path:
         _walk_path(s, _mouth_path)
@@ -876,17 +1440,25 @@ def walk_c(planner, checks):
     # cross_exit's settling (~25 f) plus any dropped-press retries eat
     # the sting windows, so a settle-then-assert observes only the
     # resumed track.  Flip-anchored waits have huge margins (hold to
-    # +90, sting +30..+81, resume +90).  The kobold spawns 6 tiles away,
-    # so no ambush can interrupt the crossing; a DECK box here still
-    # fights through like follow()'s exit path.
+    # +200, sting start +200, sting end +200, resume +250).  The kobold
+    # spawns 6 tiles away, so no ambush can interrupt the crossing; a
+    # DECK box here still fights through like follow()'s exit path.
+    # NOTE (Oct 2026): the sting fires ~flip+90, not the +30..+81 the
+    # old comments claimed.  The alert TTL sits pinned at 150 for ~57
+    # post-entry frames before counting down (deterministic across
+    # runs; full hold -> sting -> resume sequence still plays, only
+    # later), so a 90-tick start wait misses it by ~2 ticks exactly.
+    # Windows below are calibrated to that observed timing; if the
+    # entry stall ever moves, recalibrate against a tick trace
+    # (sfx_voice per tick after the flip), not the old model.
     _crossed = False
     for _ in range(4):
         s.press("left", settle=12)
-        if s.wait_for(lambda: s.reader.scene_state()["scene_id"] == SCENE_FOREST,
+        if s.wait_for(lambda: s.reader.scene_state()["scene_id"] == SCENE_UNDERGROUND_TUNNEL,
                       ticks=90):
             _crossed = True
             break
-        if s.text_has("DECK:"):
+        if s.battle_hud_up():
             _win = transit_fight(s)
             s.check("transit fight victory", _win,
                     expected="VICTORY", actual="defeat")
@@ -895,26 +1467,79 @@ def walk_c(planner, checks):
             s.check("transit aftermath drained",
                     drain_postvictory_dialogue(s),
                     expected="no KNIGHT: box", actual="stuck open")
+            continue
+        # Carl's leave-the-field offer: answer LEAVE (the skip) and
+        # retry -- LEAVE sets the one-shot skip so the retry exits
+        # instead of re-asking (STAY would block and re-ask).
+        if _drain_skip_offer(s):
+            continue
+        break
+    s.check("underground tunnel entered", _crossed,
+            expected="underground_tunnel", actual="no crossing")
+    s.settle_scene(expected_scene=SCENE_UNDERGROUND_TUNNEL)
+    s.check_eq("underground music", s.reader.music_track(), MUSIC_UNDERGROUND)
+    # Walk the tunnel to the top stairs and cross into the forest:
+    # the gate sits at (16,3), so stop one cell south and step north
+    # onto it (avoid_exits keeps the entry gate from warping us back
+    # out).
+    _tunnel_path = planner.path("underground_tunnel", s.pos(), (16, 4),
+                                avoid_exits=True)
+    s.check("path through tunnel", _tunnel_path is not None,
+            expected="bfs path", actual="none")
+    if _tunnel_path:
+        _walk_path(s, _tunnel_path)
+    _crossed = False
+    for _ in range(4):
+        s.press("up", settle=12)
+        if s.wait_for(lambda: s.reader.scene_state()["scene_id"] == SCENE_FOREST,
+                      ticks=90):
+            _crossed = True
+            break
+        if s.battle_hud_up():
+            _win = transit_fight(s)
+            s.check("transit fight victory", _win,
+                    expected="VICTORY", actual="defeat")
+            if not _win:
+                break
+            s.check("transit aftermath drained",
+                    drain_postvictory_dialogue(s),
+                    expected="no KNIGHT: box", actual="stuck open")
+            continue
+        # Carl's leave-the-field offer: answer LEAVE (the skip) and
+        # retry -- LEAVE sets the one-shot skip so the retry exits
+        # instead of re-asking (STAY would block and re-ask).
+        if _drain_skip_offer(s):
+            continue
+        break
     s.check("forest tunnel crossed", _crossed,
             expected="forest", actual="no crossing")
-    # Alert-first: the kobold entry sting holds the track, so right
-    # after arrival the music is NONE; the checks below pin the sting
-    # actually stepping (sfx 7 while it rings, idle after) and the
-    # forest track coming back as the kobold approaches.
-    s.check_eq("forest music held for sting", s.reader.music_track(),
-               MUSIC_NONE)
+    # The flip tick itself is a 1-frame window: world_load_map starts the
+    # scene track inside game_update, and the marks tick that arms the
+    # entry alert runs on the NEXT frame.  Polling for the scene change
+    # lands on either side of that boundary, so settle two frames before
+    # reading the track.
+    s.tick(2)
+    # Alert sting plays on top of the running track, so right after
+    # arrival the music is still FOREST (no restart, no pause); the
+    # checks below pin the sting actually stepping (sfx 7 while it
+    # rings, idle after) and the forest track still playing as the
+    # kobold approaches.  The sting
+    # starts ~flip+90 (see note above), so the start wait needs 200,
+    # not 90.
+    s.check_eq("forest music playing under sting", s.reader.music_track(),
+               MUSIC_FOREST)
     s.check("forest alert sting playing",
             s.wait_for(lambda: s.reader.sfx_voice() == SFX_ALERT,
-                       ticks=90, label="sting start"),
+                       ticks=200, label="sting start"),
             expected=SFX_ALERT, actual="silent")
     s.check("forest alert sting done",
             s.wait_for(lambda: s.reader.sfx_voice() == SFX_NONE,
-                       ticks=150, label="sting end"),
+                       ticks=200, label="sting end"),
             expected=SFX_NONE, actual="stuck")
-    s.check("forest music resumes",
+    s.check("forest music continues",
             s.wait_for(lambda: s.reader.music_track() == MUSIC_FOREST,
-                       ticks=150, label="forest music"),
-            expected="MUSIC_FOREST", actual="held")
+                       ticks=250, label="forest music"),
+            expected="MUSIC_FOREST", actual="switched")
     # Continue to the spawn for the arrival milestone.  avoid_exits:
     # the tunnel gate sits right on the path -- stepping back onto it
     # would warp out to the field.
@@ -952,51 +1577,60 @@ def walk_e(planner, checks):
     s.settle_scene(expected_scene=SCENE_SOUTH_FIELD)
     s.check_eq("south scene", s.reader.scene_state()["scene_id"],
                SCENE_SOUTH_FIELD)
-    # South waiting knight (13,7): guardian of the castle corridor
-    # (stationary, bump-to-combat).  Engage it directly, win the armor
-    # fight, drain the reveal briefing, then beat the trio it spawns --
-    # mirroring the castle-knight interlude below.  Proves the real-map
-    # guardian end to end (the harness covers the fixture twin).
-    s.check("south guardian engaged",
-            engage_hostile(s, planner, "south_field", (13, 7)),
-            expected="DECK:", actual="none")
-    s.check("south guardian banner readable",
-            s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
-            expected="TARGET banner", actual=s.bg_text()[0].strip())
-    s.check("south guardian armor fight",
-            transit_fight(s),
-            expected="VICTORY", actual="defeat")
-    s.tick(90)
-    s.check("south guardian reveal opened",
-            s.text_has("KNIGHT:"),
-            expected="KNIGHT:", actual=s.bg_text()[0].strip())
-    s.check("south guardian reveal closed",
-            close_dialogue(s, "KNIGHT:"),
-            expected="closed", actual="open")
-    s.check("south guardian trio engaged",
-            engage_hostile(s, planner, "south_field", (13, 7)),
-            expected="DECK:", actual="none")
-    s.check("south guardian trio banner",
-            s.text_has("TARGET SLIME"),
-            expected="TARGET SLIME", actual=s.bg_text()[0].strip())
-    s.check("south guardian trio fight",
-            transit_fight(s),
-            expected="VICTORY", actual="defeat")
-    s.check("south guardian trio exit",
-            s.press_until("a", lambda: not s.text_has("DECK:"),
-                          tries=4, label="battle exit"),
-            expected="closed", actual="open")
-    s.check("south no briefing repeat", not s.text_has("KNIGHT:"),
-            expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
-    follow(s, planner, "south_field", s.pos(), "castle",
-           (mimic_xy[0] - 1, mimic_xy[1]))
+    # The south waiting knight is gone (content removal): the castle
+    # corridor at (13,7) is plain floor now, so the walk continues
+    # straight through -- no guardian, no spawned trio.  (The harness
+    # covers the fixture twin: south_knight_bump on TEST_SOUTH_FIELD.)
+    s.check("south corridor clear",
+            planner.scenes["south_field"].walkable(13, 7),
+            expected="walkable", actual="blocked")
+    # The mimic never moves (AI_NONE) and nothing else patrols its
+    # tile: walk beside it and bump it directly.  The approach cell is
+    # the first walkable cardinal neighbor REACHABLE without stepping
+    # onto the mimic itself: the repaint flanked the old west cell with
+    # columns, and the corridor geometry forces tier-3 routing through
+    # (12,10) from the south -- stepping there would kill the objective
+    # as transit.  Deterministic on purpose -- the sweep helper is for
+    # chasers, and a sweep here could catch the bat instead and then
+    # fight the walk's objective.
+    adj = None
+    for dx, dy, push in ((-1, 0, "right"), (1, 0, "left"),
+                         (0, -1, "down"), (0, 1, "up")):
+        cell = (mimic_xy[0] + dx, mimic_xy[1] + dy)
+        if not planner.scenes["castle"].walkable(cell[0], cell[1]):
+            continue
+        if planner.path("castle", s.pos(), cell,
+                        extra_avoid={mimic_xy}) is None:
+            continue
+        adj = (cell, push)
+        break
+    s.check("mimic approachable", adj is not None,
+            expected="reachable walkable neighbor", actual="walled in")
+    if adj is None:
+        return
+    entry = {}
+
+    def latch_castle_hold(s):
+        # First castle frame only.  The entry pause applies on the frame
+        # after the scene flip (same 1-frame window as walk-c's forest
+        # check), so settle two frames before reading.
+        if s.reader.scene_state()["scene_id"] == SCENE_CASTLE and \
+                "music" not in entry:
+            s.tick(2)
+            entry["music"] = s.reader.music_track()
+
+    follow(s, planner, "south_field", s.pos(), "castle", adj[0],
+           on_scene=latch_castle_hold)
     s.check_eq("castle scene", s.reader.scene_state()["scene_id"],
                SCENE_CASTLE)
-    # Alert-first: the slime-knight entry sting holds the track here
-    # too (the restart is pinned by walk-c/the sweep; the knight flow
-    # below replays DUNGEON through battle exit anyway).
-    s.check_eq("castle music held for sting", s.reader.music_track(),
-               MUSIC_NONE)
+    # Alert-first: the slime-knight entry sting pauses the track here
+    # too (continuation, never a restart; the knight flow below replays
+    # DUNGEON through battle exit anyway).  Latched at the
+    # first castle frame: later transit battles on the walk to `adj`
+    # legitimately outlast the pause window, so asserting here (after the
+    # full walk) would be timing-fragile.
+    s.check_eq("castle music paused for sting", entry.get("music"),
+               MUSIC_DUNGEON)
     # Slime-knight interlude (real-content regression for the armor
     # split): the knight chases anywhere in the castle, so it may have
     # ambushed en route already (transit win + drained briefing).  Either
@@ -1008,7 +1642,7 @@ def walk_e(planner, checks):
     knight_xy = (knight["position"]["x"], knight["position"]["y"])
     s.check("knight engaged",
             engage_hostile(s, planner, "castle", knight_xy),
-            expected="DECK:", actual="none")
+            expected="battle HUD", actual="none")
     # Settle for the select banner, then branch on WHO engaged: armor
     # (knight intact) or slimes (trio already spawned by an en-route
     # ambush).  Never fight blind: an unrecognized banner fails loudly.
@@ -1036,7 +1670,7 @@ def walk_e(planner, checks):
         # sweep finds it wherever the knight fell.
         s.check("trio tile engaged",
                 engage_hostile(s, planner, "castle", knight_xy),
-                expected="DECK:", actual="none")
+                expected="battle HUD", actual="none")
         s.check("trio banner readable",
                 s.wait_for(lambda: s.text_has("TARGET "), ticks=120),
                 expected="TARGET banner", actual=s.bg_text()[0].strip())
@@ -1050,20 +1684,17 @@ def walk_e(planner, checks):
             transit_fight(s),
             expected="VICTORY", actual="defeat")
     s.check("no second briefing",
-            s.press_until("a", lambda: not s.text_has("DECK:"),
+            s.press_until("a", lambda: not s.battle_hud_up(),
                           tries=4, label="battle exit"),
             expected="closed", actual="open")
     s.check("no briefing repeat", not s.text_has("KNIGHT:"),
             expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
-    # The mimic never moves (AI_NONE) and nothing else patrols its
-    # tile: walk beside it and bump it directly.  Deterministic on
-    # purpose -- the sweep helper is for chasers, and a sweep here
-    # could catch the bat instead and then fight the walk's objective.
-    _walk_path(s, planner.path("castle", s.pos(), (mimic_xy[0] - 1, mimic_xy[1])) or [])
+    _walk_path(s, planner.path("castle", s.pos(), adj[0],
+                              extra_avoid={mimic_xy}) or [])
     s.check("mimic engaged",
-            bump_actor(s, planner, "castle", (mimic_xy[0] - 1, mimic_xy[1]),
-                       "right", "DECK:"),
-            expected="DECK:", actual="none")
+            bump_actor(s, planner, "castle", adj[0], adj[1],
+                       "TARGET MIMIC", extra_avoid={mimic_xy}),
+            expected="battle", actual="none")
     s.check("mimic banner", s.text_has("TARGET MIMIC"),
             expected="MIMIC", actual=s.bg_text()[0].strip())
     s.tick(40)
@@ -1148,6 +1779,17 @@ def walk_sweep(planner, checks):
             want_music = -1
         s = Session(checks, "sweep")
         god_mode(s)
+        if name == "demo_end_wake_scene":
+            # Teleport-only finale (despair outro): no portal targets it
+            # by design, so the sweep cannot walk there.  Recorded as an
+            # explicit SKIP (not a pass, not silent): capture_walkthrough
+            # tallies "SKIP" statuses separately from passes/failures.
+            # The release scene_load path is exercised by hand, not here.
+            checks.append(("sweep", "sweep %s reachable" % name, "SKIP",
+                           "isolated finale (no inbound portal by design)",
+                           "skipped: teleport-only"))
+            s.close()
+            continue
         if name == "wake_grove":
             st = s.reader.scene_state()
             s.check_eq("sweep %s scene" % name, st["scene_id"],
@@ -1213,7 +1855,7 @@ def walk_d(checks):
             ("18-tutorial-slide2", "STRIKE FIRST"),
             ("19-tutorial-slide3", "POKER PAYS"),
             ("20-tutorial-slide4", "DEFEND YOURSELF"),
-            ("21-tutorial-slide5", "BURN POISON FREEZE"),
+            ("21-tutorial-slide5", "BURN POISON ICE"),
             ("22-tutorial-slide6", "SPARE SHIELDS")):
         s.check(label, s.press_until(
             "right", lambda m=marker: s.text_has(m), label=label),
@@ -1231,12 +1873,9 @@ def walk_l(checks, saved):
     sram_bytes, exp = saved
     s = Session(checks, "walk-l", boot=False,
                 ram_file=io.BytesIO(sram_bytes))
-    # Title -> menu -> CONTINUE -> LOAD GAME -> slot 1.
+    # Title -> menu -> CONTINUE (index 0) -> LOAD GAME -> slot 1.
     s.check("title menu", s.press_until(
-        "start", lambda: s.text_has("NEW GAME"), label="menu"),
-        expected="NEW GAME", actual="none")
-    s.check("continue entry", s.press_until(
-        "down", lambda: s.text_has("> CONTINUE"), label="continue"),
+        "start", lambda: s.text_has("> CONTINUE"), label="menu"),
         expected="> CONTINUE", actual="none")
     s.press("a", settle=40)
     s.check("load screen", s.press_until(

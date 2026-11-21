@@ -1,0 +1,192 @@
+{
+ "name": "loot_rank_mimic",
+ "test": true,
+ "description": "R5 elite roll (docs/enemies_ranking.md \u00a74.2/\u00a75.2): seed 7003 on the mimic rolls a STEEL RING (id 0xC4 = 196, rank 5) -- elites live in steel. The mimic pays its purse (20 g, decided \u00a78.3) plus the R5 roll; both the gold and the card are asserted.",
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 11,
+   "y": 10,
+   "facing": "RIGHT"
+  },
+  "seed": 7003,
+  "variables": {
+   "MONSTERS_DEFEATED": 1,
+   "ENERGY_POOL": 5
+  },
+  "party": {
+   "HERO": {
+    "hp": 99,
+    "max_hp": 99
+   }
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 60
+  },
+  {
+   "type": "set_enemy_hp",
+   "index": 0,
+   "hp": 1
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 30
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "BATTLE_WON"
+  },
+  {
+   "type": "event_occurred",
+   "event": "LOOT_CARD_ADDED"
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 0,
+   "value": 196
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 5
+  },
+  {
+   "type": "screen_row",
+   "row": 11,
+   "contains": "S RG"
+  },
+  {
+   "type": "screen_row",
+   "row": 12,
+   "contains": "STEEL RING"
+  },
+  {
+   "type": "currency",
+   "expected": 40,
+   "currency": "GOLD"
+  }
+ ]
+}

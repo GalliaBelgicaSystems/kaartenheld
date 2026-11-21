@@ -1,0 +1,79 @@
+{
+ "name": "shop_stack_cap_99",
+ "test": true,
+ "description": "Shop purchases refuse at the 99-copy collection ceiling instead of charging gold for vanished copies: owning 99 IRON_RING refuses the purchase with Already owned!, emits CARD_PURCHASE_FAILED, and leaves gold at 50.",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8514,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ },
+ "actions": [
+  {
+   "type": "add_item",
+   "item": "IRON_RING",
+   "quantity": 99
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "SHOP"
+  },
+  {
+   "type": "inventory",
+   "item": "IRON_RING",
+   "expected": 99
+  },
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 50
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "CARD_PURCHASED"
+  },
+  {
+   "type": "event_occurred",
+   "event": "CARD_PURCHASE_FAILED"
+  },
+  {
+   "type": "screen_row",
+   "row": 17,
+   "contains": "Already owned!"
+  }
+ ]
+}

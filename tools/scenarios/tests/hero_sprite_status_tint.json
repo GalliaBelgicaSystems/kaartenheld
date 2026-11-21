@@ -1,0 +1,52 @@
+{
+ "name": "hero_sprite_status_tint",
+ "test": true,
+ "description": "Hero badge sprite follows status: DBG_APPLY_STATUS ices the PLAYER (slot 0, duration 5, no rounds played so nothing expires) and the row-7 sprite cell (col 1) must carry the ICE palette (2) instead of the healthy NONE (0); the buffer keeps '@' so the sprite stays assertable as text.",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 8408,
+  "start_battle": true
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "apply_status",
+   "slot": 0,
+   "status": 3,
+   "duration": 5
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "event_occurred",
+   "event": "STATUS_APPLIED"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "@"
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 0,
+   "expected": 2
+  }
+ ]
+}

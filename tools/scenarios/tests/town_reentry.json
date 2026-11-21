@@ -46,7 +46,8 @@
   },
   "seed": 1001,
   "flags": {
-   "ARRIVED_TOWN": true
+   "ARRIVED_TOWN": true,
+   "TUTORIAL_SKIPPED": true
   }
  }
 }

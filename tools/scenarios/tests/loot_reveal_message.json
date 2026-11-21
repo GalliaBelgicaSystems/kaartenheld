@@ -1,12 +1,12 @@
 {
  "name": "loot_reveal_message",
  "test": true,
- "description": "Always-drop + victory reveal (docs/loot.md 34.5): every victory grants a loot card and the battle result banner shows the 'YOU FOUND:' block. At AP 1 seed 5002 yields a WOOD PLAIN DAGGER (W DA); asserts BATTLE_WON + LOOT_CARD_ADDED and the row-10 reveal header.",
+ "description": "First-victory loot grant, reveal side (docs/loot.md 34.5): the very first fight's drop is always a BRONZE SHIELD (id 0x81 = 129), so the victory reveal must show YOU FOUND: on row 10. Fought on a real slime (wall slime, R1) with zero kills so the grant applies; the grant fires regardless of the isolated loot RNG stream.",
  "initial_state": {
-  "scene": "TEST_FIELD",
+  "scene": "TEST_MOUNTAIN_PASS",
   "player": {
-   "x": 13,
-   "y": 8,
+   "x": 12,
+   "y": 10,
    "facing": "DOWN"
   },
   "seed": 5002,
@@ -175,6 +175,18 @@
   {
    "type": "event_occurred",
    "event": "LOOT_CARD_ADDED"
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 0,
+   "value": 129
+  },
+  {
+   "type": "event_arg",
+   "event": "LOOT_CARD_ADDED",
+   "index": 2,
+   "value": 1
   },
   {
    "type": "screen_row",

@@ -10,17 +10,17 @@
   {
    "type": "set_enemy_hp",
    "index": 0,
-   "hp": 60
+   "hp": 30
   },
   {
    "type": "set_enemy_hp",
    "index": 1,
-   "hp": 60
+   "hp": 30
   },
   {
    "type": "set_enemy_hp",
    "index": 2,
-   "hp": 60
+   "hp": 30
   },
   {
    "type": "press",
@@ -95,10 +95,10 @@
   "start_battle": true,
   "deck": {
    "IRON_SWORD": 4,
-   "FIRE_SWORD": 2
+   "BRONZE_SWORD": 2
   },
   "variables": {
-   "ENERGY_POOL": 2
+   "ENERGY_POOL": 4
   }
  }
 }

@@ -1,13 +1,13 @@
-#pragma bank 2
+#pragma bank 11
 
 #include "telemetry.h"
 #include "game.h"
 
-/* Banked body of debug_state_snapshot() (see telemetry.c).  Lives in ROM
- * bank 2 and runs through the WRAM banked-call trampoline so the ~460-byte
- * extended-snapshot builder does not consume the fixed-bank _CODE budget.
- * It must stay self-contained (no calls into fixed-bank code): it reads only
- * the WRAM globals g_game / g_state_snap_buf and its own static snap_copy. */
+/* Extended state snapshot builder (ROM bank 11, called directly by
+ * debug_snapshot_banked() in src/debug/snapshot_banked.c).  Keeping this
+ * ~460-byte builder in bank 11 avoids consuming the fixed-bank _CODE budget.
+ * Self-contained (no calls into fixed-bank code): reads only the WRAM globals
+ * g_game / g_state_snap_buf and its own static snap_copy. */
 
 static void snap_copy(uint8_t *dst, const void *src, uint8_t n)
 {
@@ -28,9 +28,14 @@ void debug_state_snapshot_banked(void)
 
     b[STATE_SNAP_CURRENCY_COUNT_OFF] = MAX_CURRENCIES;
     p = b + STATE_SNAP_CURRENCY_ENTRY_OFF;
-    /* Single-currency game (gold only): unrolled single entry. */
-    *p++ = 1;
-    snap_copy(p, &st->currency.amount[0], 2);
+    /* Gold + arrows (limited-arrows): one entry per currency slot. */
+    for (i = 0; i < MAX_CURRENCIES; i++) {
+        uint8_t *amt;
+        *p++ = (uint8_t)(i + 1);
+        amt = (uint8_t *)&st->currency.amount[i];
+        *p++ = amt[0];
+        *p++ = amt[1];
+    }
 
     b[STATE_SNAP_PARTY_OFFSET] = st->party.count;
     p = b + STATE_SNAP_PARTY_OFFSET + 1;
@@ -80,4 +85,9 @@ void debug_state_snapshot_banked(void)
     for (i = 0; i < st->cards.deck.count && i < MAX_DECK_CARDS; i++) {
         *p++ = st->cards.deck.cards[i];
     }
+
+    /* Economy tail (docs/economy.md §6.3): appended, never inserted.
+     * EconomyState is 6 contiguous bytes (no padding: u8/u16/u16/u8). */
+    snap_copy(b + STATE_SNAP_MARKET_INDEX_OFF, &st->economy,
+              (uint8_t)sizeof(EconomyState));
 }

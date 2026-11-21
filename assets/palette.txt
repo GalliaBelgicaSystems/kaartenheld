@@ -37,6 +37,14 @@ curtain_dark: #621212
 window_frame: #2e2e2e
 stairs: #b3b0b0
 
+UNDERGROUND
+under_void: #000000
+under_ground: #916c33
+under_border: #5a431f
+under_lightshade1: #b68e50
+under_lightshade2: #dbaf6c
+under_bones: #ffffff
+
 TOWN
 ground: #b6a27e
 puddle_stone: #b6b6b6
@@ -60,6 +68,8 @@ character_main_outline_bat: #000000
 enemy: #673c3c
 npc: #3f3017
 npc_beard: #b6b6b6
+white: #ffffff
+slime_outline: #3c5e26
 mage_cloth: #475ca8
 chest_outline: #6f5a34
 chest_lock: #ac9d23
@@ -78,6 +88,7 @@ card_outline: #b09266
 heart_fire_enemy_eyes: #8b1b1b
 slime_combat: #89cc5e
 slime_outline_combat: #5c903a
+slime_outline_combat_dark: #3c5e26
 boss_spider_bat_combat_body: #000000
 boss_combat_body_light: #565656
 spider_combat_knife_handle: #5a4a3d
@@ -91,6 +102,18 @@ bat_combat_inner_wings: #3d3044
 eyes_glow: #f57137
 ice_icon: #7ae3f3
 poison_icon: #7136c1
+bronze_dark: #967139
+bronze_light: #bb9863
+steel_dark: #828282
+steel_light: #bbbbbb
+mithril_dark: #becaec
+mithril_light: #d8deec
+wood_dark: #604217
+wood_mid: #93621a
+wood_light: #e5aa54
+iron_dark: #a85a10
+iron_light: #c8792e
+
 
 TITLE
 title_bg: #ffffff
@@ -117,22 +140,24 @@ castle1: CASTLE/ground, CASTLE/stairs, CASTLE/wall_light, CASTLE/wall_dark
 castle2: CASTLE/ground, CASTLE/wood_light, CASTLE/wood_dark, UNUSED
 castle3: CASTLE/ground, CASTLE/gold, CASTLE/curtain_light, CASTLE/curtain_dark
 castle4: CASTLE/ground, CASTLE/wall_light, CASTLE/wall_dark, CASTLE/window_frame
+underground1: UNDERGROUND/under_void, UNDERGROUND/under_ground, UNDERGROUND/under_border, UNDERGROUND/under_bones
+underground2: UNDERGROUND/under_lightshade2, UNDERGROUND/under_lightshade1, UNDERGROUND/under_ground, UNDERGROUND/under_border
 town1: TOWN/ground, TOWN/barrel_wood_fence, TOWN/fence_light, TOWN/wood_outlines_rubble
 town2: TOWN/ground, TOWN/house_wall, TOWN/house_roof_shade, TOWN/wood_outlines_rubble
 town3: TOWN/ground, TOWN/fire_light, TOWN/fire_dark, TOWN/fire_base
 town4: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/holes
 town5: TOWN/ground, TOWN/puddle_stone, TOWN/stone_dark, TOWN/wood_outlines_rubble
 town6: TOWN/ground, TOWN/puddle_stone, TOWN/barrel_wood_fence, TOWN/wood_outlines_rubble
-town7: TOWN/house_wall, TOWN/wood_outlines_rubble, TOWN/holes, UNUSED
+town7: TOWN/house_wall, TOWN/barrel_wood_fence, TOWN/wood_outlines_rubble, TOWN/holes
 sprites: SPRITES/background, SPRITES/enemy, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 sprites2: SPRITES/background, SPRITES/boss_eyes_scepter, SPRITES/spider_boss_light, SPRITES/character_main_outline_bat
 sprites5: SPRITES/background, SPRITES/chest_lock, SPRITES/wood_dog, SPRITES/chest_outline
 sprites6: SPRITES/background, SPRITES/wood_dog, SPRITES/chest_outline, SPRITES/npc
-sprites7: SPRITES/background, SPRITES/npc_beard, SPRITES/mage_cloth, SPRITES/npc
+sprites7: SPRITES/background, SPRITES/white, SPRITES/mage_cloth, SPRITES/npc
 sprites8: SPRITES/background, SPRITES/npc_beard, SPRITES/boss_eyes_scepter, SPRITES/npc
 sprites9: SPRITES/background, SPRITES/wood_dog, SPRITES/merchant_coin, SPRITES/npc
 sprites10: SPRITES/background, SPRITES/wood_dog, SPRITES/boss_eyes_scepter, UNUSED
-sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_dark, UNUSED
+sprites11: SPRITES/background, SPRITES/slime_light, SPRITES/slime_outline, SPRITES/slime_dark
 sprites12: SPRITES/background, SPRITES/npc_beard, SPRITES/ice_icon, SPRITES/poison_icon
 fight1: COMBAT/background, COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline
 fight2: COMBAT/card_background, COMBAT/card_gold, COMBAT/card_outline, COMBAT/numbers_icons
@@ -141,7 +166,9 @@ fight4: COMBAT/background, COMBAT/ice_icon, COMBAT/poison_icon, COMBAT/heart_fir
 fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon
 fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
 fight7: COMBAT/card_background, COMBAT/slime_combat, COMBAT/numbers_icons, UNUSED
+fighthealth: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, SPRITES/slime_light
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
+fightslime_knight: COMBAT/background, COMBAT/slime_outline_combat_dark, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
 fightgoblin: COMBAT/background, COMBAT/goblin_combat_skin, COMBAT/goblin_combat_skin_dark_outlines, UNUSED
 fightmimic: COMBAT/background, COMBAT/mimic_combat_body_light, COMBAT/mimic_combat_body_dark, COMBAT/mimic_combat_mouth
@@ -151,3 +178,8 @@ fightboss2: COMBAT/background, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_combat_
 fightboss3: COMBAT/background, COMBAT/eyes_glow, COMBAT/boss_combat_body_light, COMBAT/boss_spider_bat_combat_body
 title: TITLE/title_bg, TITLE/title_light, TITLE/title_medium, TITLE/title_dark
 title_logo: TITLE/title_bg, TITLE/galliabelgica_red, TITLE/galliabelgica_blue, TITLE/galliabelgica_black
+inventory1: COMBAT/background, COMBAT/bronze_light, COMBAT/bronze_dark, UNUSED
+inventory2: COMBAT/background, COMBAT/iron_light, COMBAT/iron_dark, UNUSED
+inventory3: COMBAT/background, COMBAT/mithril_light, COMBAT/mithril_dark, UNUSED
+inventory4: COMBAT/background, COMBAT/wood_light, COMBAT/wood_mid, COMBAT/wood_dark
+inventory5: COMBAT/background, COMBAT/steel_light, COMBAT/steel_dark, UNUSED

@@ -1,7 +1,7 @@
 {
  "name": "splash_skip",
  "test": true,
- "description": "Pressing START on the boot studio splash skips it immediately into the title screen.",
+ "description": "Pressing START on the boot studio splash skips it immediately into the autosave notice; another START skips the notice into the title screen.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -20,6 +20,14 @@
   {
    "type": "wait",
    "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 5
   }
  ],
  "assertions": [
@@ -30,6 +38,10 @@
   {
    "type": "event_occurred",
    "event": "SCREEN_CHANGED"
+  },
+  {
+   "type": "music_track",
+   "expected": "TITLE"
   }
  ]
 }

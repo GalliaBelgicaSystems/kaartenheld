@@ -36,6 +36,8 @@ uint8_t g_bk_byte_a;
 uint8_t g_bk_byte_b;
 /* BSS (zero = no pending dialogue).  See banked.h. */
 uint8_t g_bk_dlg_id;
+uint8_t g_bk_dlg_line;
+uint8_t g_bk_dlg_count;
 
 /* Linker-allocated home for the RAM-resident banked-call trampoline. */
 uint8_t g_banked_call_tramp[64];
@@ -43,6 +45,11 @@ uint8_t g_banked_call_tramp[64];
 /* Extra staging bytes for banked ↔ fixed communication. */
 uint8_t g_bk_byte_c;
 uint8_t g_bk_byte_d;
+uint8_t g_bk_byte_e;
+/* SFX request mailbox (BSS zero = none).  See banked.h. */
+uint8_t g_bk_sfx_req;
+/* In-place repaint request mailbox (BSS zero = none).  See banked.h. */
+uint8_t g_bk_paint_req;
 
 extern void banked_copy_run(void);
 

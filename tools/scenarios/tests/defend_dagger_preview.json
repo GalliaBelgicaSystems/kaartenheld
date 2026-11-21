@@ -1,7 +1,7 @@
 {
  "name": "defend_dagger_preview",
  "test": true,
- "description": "Counter forecast: with a DA3 pair staged (not yet confirmed) in defend vs the kobold's telegraphed 2, row 10 shows DMG 2 on the left and CNT 8 on the right instead of DEF -- the same suited-pair math the resolve will deal. Real-VRAM read (vram_row) so a buffer/VRAM divergence fails loudly (AGENTS.md 52.25 family).",
+ "description": "Counter forecast: with a DA3 pair staged (not yet confirmed) in defend vs the kobold's telegraphed 2, row 10 shows DMG 2 on the left and CNT 9 on the right instead of DEF -- the same suited-pair math the resolve will deal, in full. Real-VRAM read (vram_row) so a buffer/VRAM divergence fails loudly (AGENTS.md 52.25 family).",
  "actions": [
   {
    "type": "wait",
@@ -98,24 +98,78 @@
    "expected": "BATTLE"
   },
   {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "DMG 2"
-  },
-  {
-   "type": "screen_row",
-   "row": 10,
-   "contains": "CNT 8"
-  },
-  {
    "type": "screen_row_not_contains",
    "row": 10,
    "contains": "DEF"
   },
   {
-   "type": "vram_row",
+   "type": "screen_row",
+   "row": 7,
+   "contains": "v3S"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 9,
+   "expected": 228
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 11,
+   "expected": 104
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 9,
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
+   "row": 8,
+   "contains": "d9^"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 9,
+   "expected": 107
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 8,
+   "col": 11,
+   "expected": 110
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 8,
+   "col": 9,
+   "expected": 1
+  },
+  {
+   "type": "screen_row",
    "row": 10,
-   "contains": "CNT 8"
+   "contains": "PAIR"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 9,
+   "expected": 229
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 10,
+   "col": 10,
+   "expected": 230
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 10,
+   "col": 9,
+   "expected": 3
   }
  ],
  "initial_state": {

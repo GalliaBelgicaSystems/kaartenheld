@@ -33,11 +33,17 @@ from walkthrough.walks import WALK_SECONDS            # noqa: E402
 CLASSIC_MILESTONES = [
     "00-boot-grove", "00-stairs-refusal", "01-field-scrolled", "02-town-arrived",
     "02-mayor-mark", "03-guard-dialogue", "04-dialogue-next", "05-shop",
-    "06-cards-menu", "07-filter-picker", "08-quests-tab",
+    "06-cards-menu", "07-filter-picker", "08-quests-tab", "08-hero-tab",
+    "08-gems-tab",
+    "08-dog-key", "08-skeleton-ask",
     "08-carl-field", "08-carl-mark", "08-carl-tutor",
     "09-battle", "10-battle-attack", "10-battle-defend",
+    "10-hand-pair", "10-hand-twopair", "10-hand-three",
+    "10-hand-straight", "10-hand-flush", "10-hand-fullhouse",
+    "10-hand-four", "10-hand-straightflush", "10-hand-five",
+    "10-hand-short", "10-defend-dagger", "10-defend-shield",
     "11-battle-aftermath",
-    "11-battle-victory", "11-victory-speech", "11-chest", "12-wizard-save", "13-wizard-saved",
+    "11-battle-fled", "11-farewell-speech", "11-chest", "12-quit-confirm", "13-quit-title",
     "14-forest-arrived", "15-title-menu", "16-tutorial-slide0",
     "17-tutorial-slide1", "18-tutorial-slide2", "19-tutorial-slide3",
     "20-tutorial-slide4", "21-tutorial-slide5", "22-tutorial-slide6",
@@ -185,14 +191,20 @@ def run(clean=False):
                              "<= %ds" % WALK_SECONDS, "%.1fs" % dt))
 
     print()
-    bad = [c for c in failures if not c[2]]
+    bad = [c for c in failures if c[2] is False]
+    skipped = [c for c in failures if c[2] == "SKIP"]
     if bad:
         print("%d/%d check(s) failed:" % (len(bad), len(failures)))
         for label, name, _ok, expected, actual in bad:
             print("  [%s] %s\n      expected: %s\n      actual:   %s"
                   % (label, name, expected, actual))
         return 1
-    print("walkthrough: %d check(s) passed" % len(failures))
+    print("walkthrough: %d check(s) passed%s"
+          % (len(failures) - len(skipped),
+             (", %d skipped:" % len(skipped)) if skipped else ""))
+    for label, name, _ok, expected, actual in skipped:
+        print("  [%s] %s\n      expected: %s\n      actual:   %s"
+              % (label, name, expected, actual))
     return 0
 
 

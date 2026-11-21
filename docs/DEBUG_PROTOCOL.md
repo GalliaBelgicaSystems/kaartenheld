@@ -489,17 +489,19 @@ dialogue + sets `MET_MAYOR`), `MAYOR_GREETING` (already met),
 A dialogue row may carry `"choice": "yes_no"` (`screens/dialogue/*.json`,
 validated and compiled by `dialogue_compile.py` into
 `DialogueDefinition.choice`). On the dialogue's last page the choice UI is
-active: `UP`/`DOWN`/`LEFT`/`RIGHT` move the cursor between `YES` (default)
-and `NO`, `A`/`START` confirms (and then advances). The option row is the
-dialogue's last line and must read exactly `> YES   NO` (cursor cells at
-columns 0 and 7); only those cells repaint on a cursor move.
+active: `UP`/`DOWN`/`LEFT`/`RIGHT` move the cursor between the first
+option (default) and the second, `A`/`START` confirms (and then advances).
+The option row is the dialogue's last line and must read `> YES   NO`
+(most prompts) or `> STAY  LEAVE` (Carl's leave-the-field offer -- same
+cursor cells at columns 0 and 7, second option still at col 8); only
+those cells repaint on a cursor move.
 
 Confirming emits:
 
 ```text
 DIALOGUE_CHOICE
   dialogue: HEAL_MAGE_ASK
-  choice: 0 (= YES) or 1 (= NO)
+  choice: 0 (= first option: YES / STAY) or 1 (= second: NO / LEAVE)
 ```
 
 (`EVENT_DIALOGUE_CHOICE`; `data[0]` is the `DialogueId`, `data[1]` the
@@ -533,6 +535,24 @@ as a loot RING (docs/loot.md §34.3): joker classification, defense shield
 value, one-ring selection gate.  See `ring_one_ring_gate` /
 `ring_joker_heal`.
 
+`set_hand` stages a whole opening hand in one action -- an ordered list of
+up to five cards, each `{type, value, cost?, uses?, status?, chance?, ring?}`
+(type `SW`/`SH`/`BO`/`HE`/`DA`):
+`{"type": "set_hand", "cards": [{"type": "SW", "value": 5, "cost": 1}]}`.
+It applies the same ROM debug actions as `set_hand_card` /
+`set_hand_card_meta` (plus the rider ones), so the staged cards are ordinary
+mechanic state and assertions still read the real hand.  Battle start
+shuffles the draw pile (`deck_shuffle_pile`), so scenarios that assert
+specific card slots pin them here instead of trusting the deal order.
+
+`set_deck` (`DBG_ACT_SET_DECK_CARD` / `_STATE` / `_RING`) stages the battle's
+UNDRAWN draw pile -- the scripted-order counterpart to `set_hand`:
+`{"type": "set_deck", "cards": [{"type": "HE", "value": 4, "ring": true}],
+"draw_idx": 0}` writes `cards[0..n)` and sets the pile count (draw cursor
+defaults to 0, i.e. "the next draws are exactly these cards").  Scenarios that
+choreograph a specific draw/refill order use it to restore the pile the
+battle-start shuffle randomized (`battle_discard_ring`).
+
 `collection_add` (`DBG_ACT_ADD_ITEM`) grants cards to the collection by
 RAW id: `{"type": "collection_add", "card_id": 99, "quantity": 1}` --
 raw ids let scenarios reach derived loot-range CardIds that have no name
@@ -557,11 +577,13 @@ in the host maps (docs/loot.md §34).
   `add_item`, `remove_item`, `add_currency`, `add_progress`, `buy_item`,
   `use_item_direct`, `deck_add`, `deck_remove` (via the ROM
   `g_debug_action` channel).  The button-driven `use_item` action still
-  tests the item menu UI.  `deck_add`/`deck_remove` call the real
-  `deck_add_card`/`deck_remove_card`, so every validation (ownership,
-  per-card caps, `DECK_MIN_CARDS`) applies; they emit
-  `CARD_ADDED_TO_DECK` / `CARD_REMOVED_FROM_DECK` on success only, so
-  scenarios assert rejection via event counts.
+  tests the item menu UI.  `deck_add` calls the real gated
+  `deck_equip_card` (ownership, per-card caps, `DECK_MIN_CARDS`, plus the
+  loot AP lock), `deck_remove` calls `deck_remove_card`; they emit
+  `CARD_ADDED_TO_DECK` / `CARD_EQUIP_LOCKED` / `CARD_REMOVED_FROM_DECK`
+  on their respective outcomes only, so scenarios assert rejection via
+  event counts.  A locked `deck_add` emits `CARD_EQUIP_LOCKED`
+  (`d0` = card id, `d1` = required AP) and no `CARD_ADDED_TO_DECK`.
 * Save/load: the `save` and `load` scenario actions (via the `g_debug_action`
   channel, codes 8 and 9) call `save_game`/`load_game`
   (`src/rpg/save.{h,c}`) — SRAM battery persistence of `GameState`.  After a
@@ -581,9 +603,14 @@ Quest state and objectives are generic variables owned by the event table in
 * `QUEST_MONSTER_HUNT` = 0 (NOT_STARTED), 1 (ACTIVE), 2 (COMPLETE).
 * `MONSTERS_DEFEATED` — a **global** counter incremented on every hostile
   defeat (no quest gating), so kills before the quest starts still count.
-* `ENDING_SHOWN` — set when the final boss (Lord of Slimes) is defeated;
-  the battle victory then goes to the `SCREEN_ENDING` instead of the
-  overworld.  A on the ending restarts the game.
+* `ENDING_SHOWN` — legacy victory flag for the final boss (Lord of
+  Slimes): when set, a battle victory goes to `SCREEN_ENDING` instead of
+  the overworld.  The boss is unwinnable in normal play (at its HP
+  threshold the desperation telegraph opens and the scripted reprisal
+  whites out, teleports to the wake grove, plays the "Where am I?"
+  dialogue and routes to the ENDING screen), so this flag no longer sets
+  in normal play; only the `ending_boot` scenario reaches the ending
+  screen through it.  A on the ending restarts the game.
 
 The event engine supports generic conditions (flag is/not set, variable
 `>=`/`==`) and actions (dialogue, set/clear flag, set/add variable, give
@@ -591,25 +618,25 @@ item, scene change).  The Mayor quest is expressed entirely as event data:
 
 * `QUEST_START` (interact MAYOR, quest NOT_STARTED) → MAYOR_INTRO dialogue,
   set MET_MAYOR, quest=ACTIVE.
-* `QUEST_COMPLETE` (ACTIVE && MONSTERS_DEFEATED >= 5) → reward dialogue +
+* `QUEST_COMPLETE` (ACTIVE && MONSTERS_DEFEATED >= 3) → reward dialogue +
   +1 AP (ENERGY_POOL) + quest=COMPLETE (given exactly once).
 * `QUEST_ACTIVE` (ACTIVE) → "still working" dialogue.
 * `QUEST_DONE` (COMPLETE) → already-rewarded dialogue.
 
-The Lost Amulet side quest follows the same shape (`MERCHANT_QUEST` =
-0/1/2), with loot state split out: `STORY_FLAG_ID_AMULET_CHEST` records
-the chest opening (set atomically with the AMULET grant), so the chest
+The Lost Shop Keys side quest follows the same shape (`MERCHANT_QUEST` =
+0/1/2), with loot state split out: `STORY_FLAG_ID_SHOPKEYS_CHEST` records
+the chest opening (set atomically with the SHOPKEYS grant), so the chest
 sprite and chest jingle key off loot, never quest state:
 
 * `MERCHANT_INTRO` (interact MERCHANT, NOT_STARTED) → briefing dialogue,
   quest=ACTIVE (tracked immediately).
-* `MERCHANT_REMINDER` (interact MERCHANT, ACTIVE without the amulet) →
+* `MERCHANT_REMINDER` (interact MERCHANT, ACTIVE without the shop keys) →
   briefing again (shop stays locked until delivery).
-* `AMULET_PICKUP` (interact AMULET, chest unopened) → FOUND dialogue +
+* `SHOPKEYS_PICKUP` (interact SHOPKEYS, chest unopened) → FOUND dialogue +
   item + quest=ACTIVE + chest flag.  Finding it before talking counts;
   after delivery the flag stays set so it never refires.
-* `MERCHANT_DELIVER` (interact MERCHANT, ACTIVE with the amulet) →
-  thanks + 15g, amulet removed, quest=COMPLETE; the shop opens.
+* `MERCHANT_DELIVER` (interact MERCHANT, ACTIVE with the shop keys) →
+  thanks + 15g, shop keys removed, quest=COMPLETE; the shop opens.
 
 Scenario actions: `equip_item` (mechanic) and the quick-screen UI (START →
 SELECT tab-focus → arrows → A) are both testable.
@@ -1430,9 +1457,12 @@ STATUS_APPLIED
   data[2] = duration in turns
 
 STATUS_TICKED
-  data[0] = flat tick damage (POISON 1, BURN 2, FREEZE 0 per round
-            regardless of stacks; extra applications refresh duration
-            and deepen stacks for telemetry only)
+  data[0] = tick damage for the round (POISON 0 -- control-only, so a
+            poison TICKED fires only on the expiry round; BURN scales
+            per instance at 10% of the inflicting hit, min 1; FREEZE 0.
+            Extra applications refresh duration and deepen stacks for
+            telemetry only, except a stronger re-applied burn keeps its
+            higher tick)
   data[1] = actor slot (0 = player; otherwise enemy index)
   data[2] = instances expired by this tick
   data[3] = first expired status id (valid when data[2] != 0)
@@ -1445,34 +1475,16 @@ STATUS_RESISTED
   data[0] = status id whose roll failed
   data[1] = target slot
 
-TURN_SKIPPED (docs/combo-system.md §12, Phase D)
-  data[0] = combatant slot whose turn was skipped (0 = player,
-            1..n = enemy index)
-  data[1] = cause StatusId (STATUS_FREEZE for a frozen attacker/player,
-            STATUS_POISON for a greyed-draw skip)
-```
+TURN_SKIPPED -- RETIRED with the ice grey-out (never emitted; kept
+for wire/event-id stability).
 
-Poison grey-out events (Phase D, docs/combo-system.md §12/§16):
+Ice grey-out events -- RETIRED (never emitted; kept for wire/event-id
+stability):
 
 ```text
-CARDS_GREYED
-  data[0] = actor slot (0 = player, 1..n = enemy); for an enemy the
-            grey applies to the party's SHARED battle deck
-  data[1] = first greyed pool position (deck position / hand index)
-  data[2] = second greyed pool position
-  data[3] = grey duration in rounds (POISON_GREY_TURNS)
-
-CARDS_UNGREYED
-  data[0] = actor slot
-  data[1] = first previously-greyed pool position
-  data[2] = second previously-greyed pool position
+CARDS_GREYED (retired)
+CARDS_UNGREYED (retired)
 ```
-
-The enemy grey gate tests the OR of every enemy slot's mask against the
-shared deck's current draw position (every encounter engages as a trio,
-so the deck rotates through all three attackers; a greyed position never
-plays no matter which enemy is up).  The skip emits `TURN_SKIPPED` with
-`data[1] = STATUS_POISON` and leaves the draw position unadvanced.
 
 ---
 
@@ -1504,12 +1516,22 @@ LOOT_CARD_ADDED
             material = (id-0x60)>>5, effect = (id>>3)&3, weapon = id&7;
             material 0=wood 1=bronze 2=iron 3=steel 4=mythril)
   data[1] = collection count after the add
+  data[2] = enemy rank R0-R6 (docs/enemies_ranking.md §4.3: the rank row
+            the drop rolled; rank 0 never emits this event -- lesson
+            fights grant no card)
 
 CARD_SOLD (docs/loot.md §34.6)
   data[0] = CardId sold
   data[1] = gold received (the def's price -- the centralized sell
             value for loot ids)
   data[2] = collection count after the sale
+
+CARD_EQUIP_LOCKED (docs/enemies_ranking.md §4.8)
+  data[0] = CardId refused (loot-derived, cost above the live pool)
+  data[1] = required AP (the card's cost; the quick screen shows
+            NEED AP <d1>)
+  data[2] = 0
+  No CARD_ADDED_TO_DECK fires with it.
 ```
 
 ---

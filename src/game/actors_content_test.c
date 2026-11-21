@@ -18,7 +18,7 @@ static const WorldActorDefinition g_test_field_actors[] = {
     {
         1, ENTITY_ID_CARL, 14, 8, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 10, 10, 5, CURRENCY_ID_GOLD,
+        'C', "CARL", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_CARL, AI_TUTOR, 30, 30, 0, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 9, 1
     },
@@ -63,7 +63,7 @@ static const WorldActorDefinition g_test_town_actors[] = {
     {
         0, ENTITY_ID_WIZARD, 6, 10, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'W', "WIZARD", INTERACTION_SAVE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        'W', "WIZARD", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_WIZARD_AUTOSAVE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
          SPRITE_KIND_ENEMY, 8, 0
     },
@@ -75,11 +75,25 @@ static const WorldActorDefinition g_test_town_actors[] = {
          SPRITE_KIND_ENEMY, 5, 0
     },
     {
+        0, ENTITY_ID_VILLAGE_DOG, 4, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "VILLAGE DOG", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_DOG_HINT, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 1, 0
+    },
+    {
         0, ENTITY_ID_DOG, 15, 14, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'W', "WILD DOG", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_DOG_GREETING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
          SPRITE_KIND_ASCII, 0xFF, 0
+    },
+    {
+        0, ENTITY_ID_SIGNPOST, 3, 3, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '#', "HOUSE", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_HOUSE_DOOR, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
     },
 };
 
@@ -106,9 +120,9 @@ static const WorldActorDefinition g_test_forest_actors[] = {
          SPRITE_KIND_ENEMY, 2, 0
     },
     {
-        0, ENTITY_ID_AMULET, 16, 10, DIRECTION_DOWN,
+        0, ENTITY_ID_SHOPKEYS, 16, 10, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'A', "AMULET", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_AMULET_NOTHING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        'A', "SHOP KEYS", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_SHOPKEYS_NOTHING, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
          SPRITE_KIND_CHEST, 13, 0
     },
@@ -142,21 +156,21 @@ static const WorldActorDefinition g_test_castle_actors[] = {
     {
         10, ENTITY_ID_MIMIC, 12, 10, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'T', "MIMIC", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_MIMIC, AI_NONE, 50, 50, 0, CURRENCY_ID_GOLD,
+        'T', "MIMIC", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_MIMIC, AI_NONE, 50, 50, 20, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 3, 1
     },
     {
         11, ENTITY_ID_SPIDER, 17, 7, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'S', "SPIDER", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SPIDER, AI_PATROL_VERT, 10, 10, 15, CURRENCY_ID_GOLD,
+        'S', "SPIDER", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SPIDER, AI_PATROL_VERT, 10, 10, 8, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 12, 0
     },
     {
         6, ENTITY_ID_SLIME_LORD, 10, 5, DIRECTION_DOWN,
         ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
-        'L', "LORD OF SLIMES", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 99, 99, 50, CURRENCY_ID_GOLD,
+        'L', "LORD OF SLIMES", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 70, 70, 50, CURRENCY_ID_GOLD,
         0, 0,
          SPRITE_KIND_ENEMY, 11, 1
     },
@@ -236,6 +250,23 @@ static const WorldActorDefinition g_test_gamble_actors[] = {
         0, 0,
          SPRITE_KIND_ENEMY, 2, 0
     },
+    {
+        0, ENTITY_ID_SIGNPOST, 3, 3, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '#', "HOUSE", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_HOUSE_DOOR, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
+};
+
+static const WorldActorDefinition g_test_underground_actors[] = {
+    {
+        0, ENTITY_ID_SKELETON, 12, 10, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'S', "SKELETON", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_SKELETON_DESC, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
 };
 
 const WorldActorTable g_actor_tables[] = {
@@ -253,6 +284,8 @@ const WorldActorTable g_actor_tables[] = {
         (uint8_t)(sizeof(g_test_south_field_actors) / sizeof(g_test_south_field_actors[0])) },
     { MAP_TEST_GAMBLE,     g_test_gamble_actors,
         (uint8_t)(sizeof(g_test_gamble_actors) / sizeof(g_test_gamble_actors[0])) },
+    { MAP_TEST_UNDERGROUND, g_test_underground_actors,
+        (uint8_t)(sizeof(g_test_underground_actors) / sizeof(g_test_underground_actors[0])) },
 };
 
-const uint8_t g_actor_table_count = 7;
+const uint8_t g_actor_table_count = 8;

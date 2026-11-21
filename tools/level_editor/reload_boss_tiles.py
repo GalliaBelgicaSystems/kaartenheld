@@ -65,6 +65,15 @@ COMBAT_MAP = [
     (5, 4, "combat_middle_right_boss_2"),
 ]
 
+# (col, row, combat tile id). Card-menu material icons (row 6, 0-based
+# row 5): the generic material ingot plus the wood-material log.  Both
+# render as menu OAM (never BG), tinted per card material at runtime
+# via the inventory1-4 OBJ alias ramps (tools/palette_slots.json).
+MATERIAL_MAP = [
+    (9, 5, "combat_material_icon"),
+    (10, 5, "combat_wood_material_icon"),
+]
+
 # (col, row, actors tile id, enemies tile id or None). Non-2 set feeds both
 # tilesets (slime-lord OW); the _2 set exists only in actors/.
 OW_MAP = [
@@ -89,11 +98,14 @@ RIDER_MAP = [
 
 # (col, row, actors tile id). AP-cost pips (OAM HUD): the one/two/three
 # ap sprites.png cells are the battle top-left OAM, one per hand card,
-# selected by its energy cost (cost 0 shows none).
+# selected by its energy cost (cost 0 shows none). Four/five ap (row 3
+# cols 6-7) cover the mythril bow's 5 AP cost.
 AP_MAP = [
     (10, 2, "actors_one_ap"),
     (11, 2, "actors_two_ap"),
     (0, 3, "actors_three_ap"),
+    (6, 3, "actors_four_ap"),
+    (7, 3, "actors_five_ap"),
 ]
 
 # (col, row, actors tile id). Battle OAM mark glyphs (! and ?), same
@@ -101,6 +113,11 @@ AP_MAP = [
 MARK_MAP = [
     (1, 3, "actors_exclamation_point"),
     (2, 3, "actors_question_mark"),
+]
+
+# (col, row, actors tile id). Town wizard (cell 1, 1).
+WIZARD_MAP = [
+    (1, 1, "actors_wizard"),
 ]
 
 # (col, row, combat tile id). Card-cursor arrows: the single
@@ -112,6 +129,14 @@ ARROW_MAP = [
     (1, 1, "combat_arrow_pointing_up_dark"),
     (15, 4, "combat_arrow_pointing_up_light"),
     (8, 5, "combat_x_icon"),
+]
+
+# (col, row, combat tile id). The 6-arrows-left floor glyph (row 7,
+# 0-based row 6): 1-AP wood bows hold 6 arrows per battle
+# (LOOT_BOW_USES_FROM_AP = 7 - AP), so the uses ladder runs 0..6 and the
+# font-digit fallback in ui_battle_content.c never fires for bows.
+ARROWS6_MAP = [
+    (0, 6, "combat_6_arrows_left"),
 ]
 
 # (col, row, enemies tile id). Town dogs: sheet truth (tan art) refreshes
@@ -136,10 +161,25 @@ KNIGHT_COMBAT_MAP = [
 ]
 
 # (col, row, enemies tile id). Slime-knight overworld frames: row 3
-# (0-based row 2) of assets/sprites.png.
+# (0-based row 2) of assets/sprites.png, plus the idle stance (row 4,
+# 0-based row 3) added with the sprite refresh.
 KNIGHT_OW_MAP = [
     (6, 2, "slime_knight_frame1"),
     (7, 2, "slime_knight_frame2"),
+    (4, 3, "slime_knight_idle"),
+]
+
+# (col, row, combat tile id). Card-menu rider icons + the menu cursor
+# (row 6, 0-based row 5): dedicated 8x8 menu art replacing the recycled
+# sprite cells for the BG rider cells (centered by construction) and the
+# finger cursor that replaces the '>' / '^' glyphs.  Composed into
+# assets/menu_icons.png by tools/compose_menu_icons.py.
+MENU_MAP = [
+    (11, 5, "combat_fire_icon_menu"),
+    (12, 5, "combat_ice_icon_menu"),
+    (13, 5, "combat_poison_icon_menu"),
+    (14, 5, "combat_health_icon_menu"),
+    (15, 5, "combat_finger_pointing_right_cursor_menu"),
 ]
 
 # Curated tile id -> (tileset json path, png dir).
@@ -148,6 +188,9 @@ for _tid in [t for _, _, t in COMBAT_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in ARROW_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
+                        "tools/level_editor/public/tiles/combat")
+for _tid in [t for _, _, t in ARROWS6_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in RIDER_MAP]:
@@ -159,10 +202,19 @@ for _tid in [t for _, _, t in AP_MAP]:
 for _tid in [t for _, _, t in MARK_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
                         "tools/level_editor/public/tiles/actors")
+for _tid in [t for _, _, t in WIZARD_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/actors.json",
+                        "tools/level_editor/public/tiles/actors")
 for _tid in [t for _, _, t in DOG_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/enemies.json",
                         "tools/level_editor/public/tiles/enemies")
 for _tid in [t for _, _, t in KNIGHT_COMBAT_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
+                        "tools/level_editor/public/tiles/combat")
+for _tid in [t for _, _, t in MATERIAL_MAP]:
+    TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
+                        "tools/level_editor/public/tiles/combat")
+for _tid in [t for _, _, t in MENU_MAP]:
     TILESET_OF[_tid] = ("tools/level_editor/tilesets/combat.json",
                         "tools/level_editor/public/tiles/combat")
 for _tid in [t for _, _, t in KNIGHT_OW_MAP]:
@@ -237,6 +289,11 @@ def main():
         assert "actors_" + slugify(label) == tid, \
             "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
         jobs.append((sprites_img, col, row, tid))
+    for col, row, tid in WIZARD_MAP:
+        label = sprites_csv[row][col].strip()
+        assert "actors_" + slugify(label) == tid, \
+            "sprites (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((sprites_img, col, row, tid))
     for col, row, tid in DOG_MAP:
         label = sprites_csv[row][col].strip()
         assert "dog" in slugify(label), \
@@ -253,6 +310,21 @@ def main():
             "sprites (%d,%d) label %r is not a slime-knight cell" % (col, row, label)
         jobs.append((sprites_img, col, row, tid))
     for col, row, tid in ARROW_MAP:
+        label = combat_csv[row][col].strip()
+        assert "combat_" + slugify(label) == tid, \
+            "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((combat_img, col, row, tid))
+    for col, row, tid in ARROWS6_MAP:
+        label = combat_csv[row][col].strip()
+        assert "combat_" + slugify(label) == tid, \
+            "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((combat_img, col, row, tid))
+    for col, row, tid in MATERIAL_MAP:
+        label = combat_csv[row][col].strip()
+        assert "combat_" + slugify(label) == tid, \
+            "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
+        jobs.append((combat_img, col, row, tid))
+    for col, row, tid in MENU_MAP:
         label = combat_csv[row][col].strip()
         assert "combat_" + slugify(label) == tid, \
             "combat (%d,%d) label %r does not slug to %s" % (col, row, label, tid)
@@ -306,7 +378,7 @@ def main():
             for d in drift:
                 print("  %s" % d)
             return 1
-        print("reload-boss-tiles --check: clean (24 PNGs + swatches in sync).")
+        print("reload-boss-tiles --check: clean (%d PNGs + swatches in sync)." % len(jobs))
         return 0
 
     for js, manifest in manifests.items():

@@ -107,15 +107,30 @@ def main():
     # auto-advances to title; START/A then walks title -> NEW GAME ->
     # intro slides -> overworld (same state-verified pattern as
     # verify_music.py; game frames and PyBoy ticks are not 1:1).
+    def _advance_to_new_game():
+        if (pb.memory[game_addr] == 9
+                and (pb.tilemap_background.tile_identifier(3, 9) & 0xFF) == 30
+                and (pb.tilemap_background.tile_identifier(5, 9) & 0xFF) == 35):
+            pb.button_press("down")
+            for _ in range(4):
+                pb.tick()
+            pb.button_release("down")
+            for _ in range(16):
+                pb.tick()
+
     for _ in range(30):
         if pb.memory[game_addr] == 0:
             break
+        _advance_to_new_game()
         pb.button_press("start")
         for _ in range(4):
             pb.tick()
         pb.button_release("start")
         for _ in range(16):
             pb.tick()
+        if pb.memory[game_addr] == 0:
+            break
+        _advance_to_new_game()
         pb.button_press("a")
         for _ in range(4):
             pb.tick()
@@ -139,15 +154,24 @@ def main():
     # Locate the player Entity in WRAM by its boot pattern (robust to
     # struct-layout drift -- the same technique as verify_music.py):
     # TEST_FIELD spawn (17,7) facing LEFT, 15/15 HP, active, id 1.
+    # Wait for the intro-exit transition frame to finish syncing
+    # world.player.hp/max_hp from party state (g_game.screen becomes 0
+    # inside game_restart before game_update finishes the HP sync).
     WRAM_BASE = 0xC000
     WRAM_SIZE = 0x2000
     PLAYER_BOOT = bytes([17, 7, 15, 15, 1, 2, 1])
-    wram = bytes(pb.memory[i]
-                 for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
-    idx = wram.find(PLAYER_BOOT)
+    idx = -1
+    for _ in range(60):
+        wram = bytes(pb.memory[i]
+                     for i in range(WRAM_BASE, WRAM_BASE + WRAM_SIZE))
+        idx = wram.find(PLAYER_BOOT)
+        if idx >= 0 and (pb.memory[0xFF40] & 0x80):
+            break
+        pb.tick()
     if idx < 0:
         print("error: player boot pattern not found in WRAM",
               file=sys.stderr)
+        pb.stop()
         return 1
     world = WRAM_BASE + idx - 5
     POS_X = world + 5
@@ -210,7 +234,7 @@ def main():
     # Press and hold RIGHT
     pb.button_press("right")
 
-    prev_vram_map = bytes([pb.memory[0x9800 + i] for i in range(32 * 18)])
+    prev_vram_map = bytes([pb.memory[0x9800 + i] for i in range(32 * 32)])
     prev_scx = pb.memory[0xFF43]
     prev_scy = pb.memory[0xFF42]
     prev_ms = 0
@@ -236,10 +260,10 @@ def main():
         scroll_x = scx // 8
         scroll_y = scy // 8
 
-        curr_vram_map = bytes([pb.memory[0x9800 + i] for i in range(32 * 18)])
+        curr_vram_map = bytes([pb.memory[0x9800 + i] for i in range(32 * 32)])
 
-        # Compare VRAM map changes across all 32x18 background ring cells
-        diffs = [i for i in range(32 * 18) if curr_vram_map[i] != prev_vram_map[i]]
+        # Compare VRAM map changes across all 32x32 background ring cells
+        diffs = [i for i in range(32 * 32) if curr_vram_map[i] != prev_vram_map[i]]
 
         if scx != prev_scx or scy != prev_scy:
             subtile_scroll_frames += 1

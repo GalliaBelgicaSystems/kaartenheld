@@ -15,40 +15,47 @@ That separation is important because eventually a strong hand should be able to 
 **Phase A (cards → deck → selection → combo evaluator → attack/defend → HUD),
 Phase B (generic effect layer), and the core of Phase C (status system) are
 implemented.**  Status foundation (§12-§19 minus per-effect scaling):
-`src/rpg/status.{h,c}` + bank-2 bodies (`status_content.c`) provide
+`src/rpg/status.{h,c}` + bank-10 bodies (`status_content.c`) provide
 StatusDefinition / StatusInstance / application with STACK+refresh rules
-(POISON: tick 1/stack, max 5 stacks, duration 3); battle-scoped slots live
+(POISON/ICE: tick 0 -- control-only, max 5 stacks, duration 2); battle-scoped slots live
 in the status module (0 = player, 1..n = enemies), reset at battle start.
 Cards carry an on-hit rider as DATA (`CardDefinition.status_id/status_chance`,
 copied into battle `Card`s); the deterministic RNG decides landing
-(1/255 units, §17/§18) and poison ticks once per round at the
-player-select boundary, with deaths resolving like combat deaths.
+(1/255 units, §17/§18).  Poison is control-only (tick 0, no damage):
+it lasts 2 rounds confusing the victim (enemies attack their allies, the
+hero plays random hands), then expires, with deaths resolving like
+combat deaths only for damaging statuses.
 Telemetry: `STATUS_APPLIED` / `STATUS_TICKED` (payloads in
-DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply + 3
-ticks + expiry, payload-locked) and `status_poison_resist` (roll fails).
+DEBUG_PROTOCOL.md §31.2).  Scenarios: `status_poison_apply` (apply +
+duration + expiry with no damage, payload-locked) and
+`status_poison_resist` (roll fails).
 
-**Phase D (implemented)**: BURN (tick 2/round, max 3 stacks, duration 2)
-and FREEZE (no tick, no stacking, duration 1 -- a frozen combatant skips
-its next attack; battle consumes the frozen bitmask that apply + the
-tick body maintain, emitting `TURN_SKIPPED`; player-side freeze skips
-the whole offense).  Loot wiring: fire swords roll BURN riders and ice
-swords FREEZE riders (docs/loot.md §34.1/§34.2).  Telemetry completed:
-`STATUS_EXPIRED` fires per expiring tick and `STATUS_RESISTED` when a
-rider roll fails (§19 fully implemented).  Scenarios: `status_burn_apply`,
-`status_freeze_skip`, `status_freeze_player`.  Debug action
+**Phase D (implemented)**: BURN (10% of the inflicting hit's damage per
+round, min 1 -- scaled per application, max 3 stacks, duration 3)
+and ICE (no tick, max 5 stacks, duration 2 -- an iced combatant's
+outgoing damage lands halved, rounded up, both sides).  Loot wiring:
+fire bows roll BURN riders and ice bows FREEZE riders (docs/loot.md
+§34.1/§34.2).  Telemetry completed: `STATUS_EXPIRED` fires per
+expiring tick and `STATUS_RESISTED` when a rider roll fails (§19
+fully implemented).  Scenarios: `status_burn_apply`,
+`status_ice_no_skip`, `status_ice_player_halved`.  Debug action
 `DBG_ACT_APPLY_STATUS` applies any status to any combatant slot.
-Poison's on-hit rider carries the **grey-out** rider (§16): applying
-poison greys 2 random positions of the afflicted combatant's pool for
-`POISON_GREY_TURNS` rounds (telemetry `CARDS_GREYED`, cleared by
-`CARDS_UNGREYED`).  The gate lives in the battle telegraph: any pool
-position covered by the victim's grey mask never plays -- for enemies the
-mask ORs across ALL enemy slots against the party's single shared battle
-deck, because every hostile encounter engages as a trio (three attackers
-rotate through one draw position), so a greyed position must never be
-drawn no matter which enemy is up.  A greyed draw emits `TURN_SKIPPED`
-(cause `STATUS_POISON`) without advancing the draw position.  Scenarios:
-`status_poison_apply` (apply + ticks + expiry + grey gate), `status_poison_reshuffle`
-(5-stack cap, greyed cards recycled out of reshuffles, skips).  Still open
+Ice has no card lock: an iced attacker's telegraphed swing (enemies)
+or resolved combo/counter (hero) lands at half damage, rounded up --
+the card announcement keeps the full value, only the damage softens;
+healing is untouched.  (The old grey-out lock -- `CARDS_GREYED` /
+`CARDS_UNGREYED` / `TURN_SKIPPED` cause ICE / `FOE IS ICED!` -- is
+retired; the event ids stay for wire stability but are never emitted.)
+Scenarios: `status_ice_apply` (apply + ticks + expiry, no grey, no
+skip), `status_ice_halved` (enemy forecast halves 4 -> 2),
+`battle_ice_foe_halved` (odd rounding 2 -> 1),
+`status_ice_reshuffle` (5-stack cap across reshuffles),
+`confuse_iced_redirect` (ice never suppresses confusion).  Poison's
+on-hit rider carries **confusion** instead: a poisoned enemy attacks its
+allies (or itself when alone), and a poisoned hero plays a random hand
+(`Confused! / You play randomly!`, no input).  Scenarios:
+`enemy_confuse_ally_kill`, `enemy_confuse_self`, `hero_confuse_message`,
+`hero_confuse_autoplay`.  Still open
 from Phase C/D: HEAL ALL; per-effect scaling refinements.
 
 # 0.1 Hand table (implemented)
@@ -68,7 +75,7 @@ effective cards (attack phase: every selected card; defend: SHIELDs
 only -- other selected cards are inert for classification AND block);
 the SHORT STRAIGHT needs a 3+ run at any staged count >= 3
 (gem-gated, docs/short-straight.md).
-Values classify order-independently.  Suited bonus: +25
+Values classify order-independently.  Suited bonus: +30
 percent when every effective card shares one symbol and a tier was
 made.  Effective multiplier scales base_power into the effect amount,
 and scales on-hit status rider chances (capped ~100%):
@@ -99,8 +106,8 @@ winning play (`gem_combo_preview`, reads `SHORT STR`), so preview and
 result agree.  Full rules live in docs/short-straight.md.
 
 The POISON DAGGER (DA1) is a starter card: its own symbol, 1 physical
-damage, base poison chance 50% scaled by the hand multiplier.  Poison
-ticks a flat 1 HP per round after the afflicted actor's turn resolves;
+damage, base poison chance 82% scaled by the hand multiplier.  Poison
+deals no damage -- it greys out the victim's cards while it lasts;
 re-applications refresh duration (stacks deepen for telemetry only).
 
 Deviations from the plan's sketches, all

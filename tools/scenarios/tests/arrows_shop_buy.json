@@ -1,0 +1,137 @@
+{
+ "name": "arrows_shop_buy",
+ "test": true,
+ "description": "The Merchant's last BUY row sells arrows (1 gold each, limited-arrows): moving down six times and buying spends 1 gold and adds 1 arrow",
+ "actions": [
+  {
+   "type": "interact",
+   "actor": "MERCHANT"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "event_occurred",
+   "event": "CURRENCY_SPENT"
+  },
+  {
+   "type": "event_arg",
+   "event": "CURRENCY_SPENT",
+   "index": 0,
+   "value": 1
+  },
+  {
+   "type": "event_arg",
+   "event": "CURRENCY_ADDED",
+   "index": 0,
+   "value": 2
+  },
+  {
+   "type": "currency",
+   "expected": 49,
+   "currency": "GOLD"
+  },
+  {
+   "type": "currency",
+   "expected": 3,
+   "currency": "ARROWS"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "[A] Buy  [B] Leave"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 15,
+   "contains": "Don't forget to"
+  },
+  {
+   "type": "screen_row_not_contains",
+   "row": 16,
+   "contains": "equip your cards"
+  },
+  {
+   "type": "sfx_last",
+   "expected": 12
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 10,
+   "y": 3,
+   "facing": "RIGHT"
+  },
+  "seed": 8504,
+  "flags": {
+   "ARRIVED_TOWN": true
+  },
+  "currency": {
+   "GOLD": 50,
+   "ARROWS": 2
+  },
+  "variables": {
+   "MERCHANT_QUEST": 2
+  }
+ }
+}

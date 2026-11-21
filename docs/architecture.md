@@ -142,7 +142,7 @@ Every supposedly generic system has at least one content-only second example:
   unlock) share the event engine + quest registry, zero engine changes.
 * **Actors** — enemies (slime/bat/boss) and NPCs are data; the boss is a
   conditional-spawn content row.
-* **Items / shops** — potions/NUT/sword/amulet and two per-shop stock lists
+* **Items / shops** — potions/NUT/sword/shop-keys and two per-shop stock lists
   are data.
 * **Scenes / events / battles** — exits, dialogues, defeat counters are data.
 

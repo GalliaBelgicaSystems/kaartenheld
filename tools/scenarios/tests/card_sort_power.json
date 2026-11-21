@@ -27,18 +27,18 @@
   },
   {
    "type": "screen_row",
-   "row": 4,
-   "contains": "BRONZE SWORD"
-  },
-  {
-   "type": "screen_row",
    "row": 5,
-   "contains": "WOOD SWORD"
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
    "row": 6,
-   "contains": "WOOD SHIELD"
+   "contains": "S  1"
+  },
+  {
+   "type": "screen_row",
+   "row": 7,
+   "contains": "H  1"
   }
  ],
  "initial_state": {

@@ -1,0 +1,64 @@
+{
+  "name": "battle_bow_uses_display6",
+  "test": true,
+  "description": "A 6-shot 1-AP wood bow draws its real power digit on the card's middle row (font tile 17 = '1') and the 6_arrows_left glyph on the floor row (VRAM 112, former menu blank); the semantic row reads BO6. Guards the uses 0..6 ladder (LOOT_BOW_USES_FROM_AP tops out at 6).",
+  "initial_state": {
+    "scene": "TEST_FIELD",
+    "player": {
+      "x": 13,
+      "y": 8,
+      "facing": "DOWN"
+    },
+    "seed": 7002,
+    "start_battle": true
+  },
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_hand_card",
+      "index": 0,
+      "card_type": "BO",
+      "value": 1
+    },
+    {
+      "type": "set_hand_card_meta",
+      "index": 0,
+      "cost": 1,
+      "uses": 6
+    },
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 20
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "screen_row",
+      "row": 13,
+      "contains": "BO6"
+    },
+    {
+      "type": "tilemap_cell",
+      "row": 13,
+      "col": 1,
+      "expected": 17
+    },
+    {
+      "type": "tilemap_cell",
+      "row": 14,
+      "col": 1,
+      "expected": 112
+    }
+  ]
+}

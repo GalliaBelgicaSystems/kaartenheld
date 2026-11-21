@@ -68,6 +68,11 @@
     },
     {
       "type": "screen_row",
+      "row": 10,
+      "contains": "STAKED:0/50"
+    },
+    {
+      "type": "screen_row",
       "row": 12,
       "contains": "?"
     },

@@ -1,7 +1,7 @@
 {
  "name": "card_filter_type",
  "test": true,
- "description": "Type filter ATTACK shows only attack cards in the CARDS tab (swords + dagger, no shield/ring rows)",
+ "description": "Weapon filter SWORD shows only sword cards in the CARDS tab (wood + bronze swords, no shield/ring rows)",
  "actions": [
   {
    "type": "press",
@@ -13,7 +13,7 @@
   },
   {
    "type": "set_filter",
-   "filter": "ATTACK"
+   "filter": "SWORD"
   },
   {
    "type": "wait",
@@ -27,18 +27,18 @@
   },
   {
    "type": "screen_row",
-   "row": 4,
-   "contains": "WOOD SWORD"
+   "row": 5,
+   "contains": "S  1"
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "BRONZE SWORD"
+   "row": 6,
+   "contains": "S  1"
   },
   {
    "type": "screen_row_not_contains",
-   "row": 6,
-   "contains": "WOOD SHIELD"
+   "row": 7,
+   "contains": "WOOD"
   }
  ],
  "initial_state": {

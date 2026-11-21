@@ -15,9 +15,15 @@
 #define ACTOR_FLAG_BLOCKING     0x02
 #define ACTOR_FLAG_INTERACTABLE 0x04
 
-/* Runtime actor state flags (placeholder for future persistence). */
+/* Runtime actor state flags (WorldActorRuntime.flags; rebuilt on every
+ * scene load, never persistent). */
 #define ACTOR_STATE_NONE        0x00
-/* future: ACTOR_STATE_DEFEATED, ACTOR_STATE_TALKED_TO, ACTOR_STATE_MOVED ... */
+/* Chaser awake: the hero came within AI_CHASE_SIGHT of this AI_CHASE /
+ * AI_CHASE_FAST actor, so it now chases (world_patrol_slot_banked gates on
+ * this bit).  Set once by the bank-8 sight scan in marks_banked.c; the
+ * actor keeps chasing for the rest of the scene. */
+#define ACTOR_STATE_ALERTED     0x01
+/* future: ACTOR_STATE_TALKED_TO, ACTOR_STATE_MOVED ... */
 
 /* What happens when the player engages this actor. */
 typedef enum {
@@ -47,7 +53,9 @@ typedef enum {
     AI_NONE          = 0,
     AI_PATROL_CIRCLE = 1,   /* Clockwise 2x2 circle around spawn (Bats) */
     AI_PATROL_CROSS  = 2,   /* + cross pattern around spawn (Slimes) */
-    AI_CHASE         = 3,   /* Step toward the player every AI tick (Kobolds) */
+    AI_CHASE         = 3,   /* Step toward the player every AI tick once the
+                             * player is in sight (Kobolds); sleeps outside
+                             * AI_CHASE_SIGHT */
     AI_PATROL_VERT   = 4    /* Bounce vertically up/down 3 tiles from spawn
                              * (castle Spiders); direction held in ai_step
                              * bit 0, flips at the bound or a blocked path */,
@@ -65,6 +73,13 @@ typedef enum {
 
 /* Vertical patrol amplitude: bounce up/down this many tiles from spawn. */
 #define AI_PATROL_VERT_TILES 3
+
+/* Line of sight of a chasing hostile (AI_CHASE / AI_CHASE_FAST), in tiles.
+ * Chebyshev range: the hero is in sight while it is within this many tiles
+ * on BOTH axes.  A chaser sleeps (holds its ground) until the hero enters
+ * sight; the wake-up plays the pursuer "!" + alert sting and starts the
+ * chase for the rest of the scene. */
+#define AI_CHASE_SIGHT 10
 
 /* Overworld HUD marker kinds (OAM icons drawn above actors by the
  * bank-4 sprite pass, fixed entries 30+): 0 = none, 1 = quest "?"

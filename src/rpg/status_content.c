@@ -1,26 +1,39 @@
-#pragma bank 3
+#pragma bank 10
 
 #include "status.h"
 #include "banked.h"
 #include "rng.h"
+#include "rpg/effects.h"
 
 /* ── Status definitions + banked bodies (Phase C) ───────────────────
- * Runs from ROM bank 3 via the WRAM banked-call trampoline; reads only
+ * Runs from ROM bank 10 via the WRAM banked-call trampoline; reads only
  * its own bank-local definition table and the staged pointers/bytes, and
  * writes through staged pointers / shared WRAM result structs
- * (g_status_applied in status.c).  Never calls fixed-bank code.
+ * (g_status_applied in status.c).  Never calls fixed-bank code.  Lives
+ * in bank 10 (event bank): banks 3/5 are render-full in release, and
+ * every caller dispatches through the trampoline, so no bank-local call
+ * constrains placement (AGENTS.md §52.11.1, §55.5).  Bank 10 already
+ * hosts dispatched bodies (dialogue nav, Carl offer) next to the event
+ * table; the status bodies touch disjoint WRAM and never read the
+ * table.
  *
- * Stacking rule (plan §16): POISON/BURN STACK up to max_stacks and
- * refresh duration; FREEZE does not stack (control status -- a frozen
- * combatant can neither attack nor defend for the whole duration,
- * battle-side).  Balance values are deliberately provisional (§26). */
+ * Stacking rule (plan §16): POISON/BURN/ICE STACK up to max_stacks and
+ * refresh duration.  Balance values are deliberately provisional (§26).
+ * POISON is control-only (tick 0): it never deals damage, it confuses
+ * the victim (enemies attack their allies, the hero plays random hands
+ * -- see battle.c).  ICE is halved-damage-only (tick 0): an iced
+ * combatant's outgoing damage lands halved (rounded up).  BURN is the
+ * damage-over-time status (10% of the inflicting hit per round, min 1,
+ * scaled per instance at apply). */
 
 static const StatusDefinition s_status_defs[STATUS_DEF_COUNT] = {
-    /* id            tick  max  dur */
-    { STATUS_NONE,     0,   0,   0 },
-    { STATUS_POISON,   1,   5,   3 },
-    { STATUS_BURN,     1,   3,   3 },
-    { STATUS_FREEZE,   0,   1,   3 }
+    /* id            tick  max                        dur */
+    { STATUS_NONE,     0,   0,                         0 },
+    { STATUS_POISON,   0,   STATUS_POISON_MAX_STACKS,  STATUS_POISON_DURATION },
+    /* BURN tick is per-instance scaled at apply (10% of the inflicting
+     * hit, min 1); the table slot stays 0 so no flat fallback exists. */
+    { STATUS_BURN,     0,   3,                         3 },
+    { STATUS_FREEZE,   0,   5,                         2 }
 };
 
 static const StatusDefinition *status_def(uint8_t id)
@@ -34,6 +47,20 @@ static const StatusDefinition *status_def(uint8_t id)
     return (const StatusDefinition *)0;
 }
 
+/* Burn tick from the inflicting hit's damage: 10% per round, min 1.
+ * Subtract loop instead of / (which would lower to the fixed-bank div
+ * library, unreachable while bank 10 is mapped -- AGENTS.md §52.11.1). */
+static uint8_t burn_tick(uint8_t basis)
+{
+    uint8_t t = 0;
+    while (basis >= 10) {
+        basis = (uint8_t)(basis - 10);
+        t++;
+    }
+    if (t == 0) t = 1;
+    return t;
+}
+
 void status_apply_banked(void)
 {
     StatusSlots *slots = (StatusSlots *)g_bk_ptr_a;
@@ -42,6 +69,13 @@ void status_apply_banked(void)
     uint8_t duration = (uint8_t)(g_bk_byte_b & 0x0F);
     const StatusDefinition *def;
     uint8_t i;
+    /* Burn basis (inflicting hit's damage): g_effect_last.amount, left
+     * by the combo dispatch every hit runs.  Gameplay rider paths run
+     * immediately after their hit's dispatch, so this is always their
+     * own hit (status.h).  Consumed AND cleared on entry, so a spent
+     * basis can never leak into a later debug/organic apply. */
+    uint8_t basis = g_effect_last.amount;
+    g_effect_last.amount = 0;
 
     if (!slots || id == STATUS_NONE) return;
     def = status_def(id);
@@ -52,13 +86,19 @@ void status_apply_banked(void)
     if (stacks > def->max_stacks) stacks = def->max_stacks;
 
     /* STACK rule: existing instance gains stacks (capped), duration
-     * refreshed to the request. */
+     * refreshed to the request.  A re-applied burn keeps the stronger
+     * tick (a weak re-hit never cools an existing blaze). */
     for (i = 0; i < slots->count; i++) {
         if (slots->slot[i].id == id) {
             uint16_t total = (uint16_t)(slots->slot[i].stacks + stacks);
+            uint8_t nt;
             if (total > def->max_stacks) total = def->max_stacks;
             slots->slot[i].stacks = (uint8_t)total;
             slots->slot[i].duration = duration;
+            if (id == STATUS_BURN) {
+                nt = burn_tick(basis);
+                if (nt > slots->slot[i].tick) slots->slot[i].tick = nt;
+            }
             g_status_applied.id = id;
             g_status_applied.stacks = slots->slot[i].stacks;
             g_status_applied.duration = duration;
@@ -70,6 +110,8 @@ void status_apply_banked(void)
     slots->slot[slots->count].id = id;
     slots->slot[slots->count].stacks = stacks;
     slots->slot[slots->count].duration = duration;
+    slots->slot[slots->count].tick =
+        (id == STATUS_BURN) ? burn_tick(basis) : 0;
     slots->count++;
     g_status_applied.id = id;
     g_status_applied.stacks = stacks;
@@ -90,20 +132,25 @@ void status_tick_banked(void)
 
     g_status_tick.damage = 0;
     g_status_tick.expired_count = 0;
-    /* Consume last round's frozen flag for this actor; re-set below if
-     * the status is still active (battle tests the bit once per attack).
-     * Slots beyond STATUS_ROUND_SLOTS can't occur (wrapper guards). */
+    /* Clear last round's frozen flag for this actor (retained for
+     * layout stability -- nothing reads the mask since the freeze-skip
+     * removal). */
     g_status_frozen_mask &= (uint8_t)~(1 << actor_slot);
 
     for (i = 0; i < slots->count; ) {
         StatusInstance *inst = &slots->slot[i];
         const StatusDefinition *def = status_def(inst->id);
         if (def != (const StatusDefinition *)0) {
-            /* FLAT tick (docs/combo-system.md Phase C decision): poison
-             * deals def->tick HP per round regardless of stacks; extra
-             * applications only refresh duration and deepen stacks for
-             * telemetry. */
-            damage += def->tick;
+            /* Per-instance tick: burn carries its scaled round damage
+             * (10% of the inflicting hit, min 1 -- staged at apply);
+             * poison/ice instances hold 0.  Extra applications only
+             * refresh duration and deepen stacks for telemetry. */
+            damage += inst->tick;
+        }
+        if (inst->id == STATUS_POISON &&
+            (g_poison_grace_mask & (uint8_t)(1u << actor_slot))) {
+            i++;
+            continue;
         }
         inst->duration--;
         if (inst->duration == 0) {
@@ -112,60 +159,71 @@ void status_tick_banked(void)
             }
             /* Remove by shifting the tail down, field-wise: struct
              * assignment lowers to __memcpy, which lives in the fixed
-             * bank and is unreachable while bank 3 is mapped.  An
-             * expiring FREEZE must NOT re-arm the frozen-mask bit: it
-             * armed at the top of the round, and the expiry consumes the
-             * status, so the combatant resumes acting next round. */
+             * bank and is unreachable while bank 10 is mapped. */
             slots->slot[i].id = slots->slot[slots->count - 1].id;
             slots->slot[i].stacks = slots->slot[slots->count - 1].stacks;
             slots->slot[i].duration = slots->slot[slots->count - 1].duration;
+            slots->slot[i].tick = slots->slot[slots->count - 1].tick;
             slots->count--;
         } else {
-            if (def != (const StatusDefinition *)0 && inst->id == STATUS_FREEZE) {
-                /* Still frozen after this round: the combatant skips its
-                 * attack again; the mask bit is tested (never consumed)
-                 * by the battle gates. */
-                g_status_frozen_mask |= (uint8_t)(1 << actor_slot);
-            }
             i++;
         }
     }
 
+    g_poison_grace_mask &= (uint8_t)~(1u << actor_slot);
     g_status_tick.damage = damage;
     g_status_tick.expired_count = expired;
 }
 
-/* Poison grey-out pick body (status.h): selects POISON_GREY_CARDS distinct
+/* Ice grey-out pick body (status.h): selects ICE_GREY_CARDS distinct
  * pool positions at random and arms the battle-scoped mask/duration.
  * Reads the actor slot (g_bk_byte_a) and the victim's card-pool size
  * (g_bk_byte_b) from the staged globals; writes s_grey_mask/s_grey_dur
  * (WRAM) directly.  A victim already greyed is only refreshed (same cards,
- * same duration) -- the STACK rule for grey, matching poison itself.
+ * same duration) -- the STACK rule for grey, matching ice itself.
  *
  * Banked self-containment: randomness uses the SAME inlined xorshift step
  * on g_rng_state as rng_next() (src/debug/rng.c), so banked code draws from
  * the deterministic stream without calling the fixed-bank function; the
  * modulo is a subtraction loop instead of % (which would lower to the
- * fixed-bank div library, unreachable while bank 3 is mapped). */
+ * fixed-bank div library, unreachable while bank 10 is mapped). */
+#ifdef DEBUG_BUILD
+static void decode_grey_mask(uint8_t mask)
+{
+    uint8_t a = 0xFF, b = 0xFF, i;
+    for (i = 0; i < 8; i++) {
+        if ((mask & (uint8_t)(1u << i)) != 0) {
+            if (a == 0xFF) a = i;
+            else { b = i; break; }
+        }
+    }
+    g_bk_byte_b = a;
+    g_bk_byte_c = b;
+}
+#endif
+
 void status_grey_apply_banked(void)
 {
     uint8_t slot = g_bk_byte_a;
     uint8_t pool = g_bk_byte_b;
     uint8_t i, idx, mask = 0;
 
-    /* Defensive: a pool smaller than POISON_GREY_CARDS cannot host that
+    /* Defensive: a pool smaller than ICE_GREY_CARDS cannot host that
      * many distinct greyed positions -- the second draw's linear probe
      * would loop forever.  Unreachable today (player hand = BATTLE_HAND_SIZE,
      * enemy decks are 4/5 cards), but a future smaller deck must not hang
-     * bank 3. */
-    if (slot >= STATUS_ROUND_SLOTS || pool < POISON_GREY_CARDS) return;
+     * bank 10. */
+    if (slot >= STATUS_ROUND_SLOTS || pool < ICE_GREY_CARDS) return;
 
     if (s_grey_mask[slot] != 0) {
-        s_grey_dur[slot] = (uint8_t)(POISON_GREY_TURNS + 1);
+        s_grey_dur[slot] = ICE_GREY_TURNS;
+#ifdef DEBUG_BUILD
+        decode_grey_mask(s_grey_mask[slot]);
+#endif
         return;
     }
 
-    for (i = 0; i < POISON_GREY_CARDS; i++) {
+    for (i = 0; i < ICE_GREY_CARDS; i++) {
         g_rng_state ^= (uint16_t)(g_rng_state << 7);
         g_rng_state ^= (uint16_t)(g_rng_state >> 9);
         g_rng_state ^= (uint16_t)(g_rng_state << 8);
@@ -178,10 +236,14 @@ void status_grey_apply_banked(void)
         mask |= (uint8_t)(1u << idx);
     }
     s_grey_mask[slot] = mask;
-    /* The grey drains at the enter-select round boundary; the poison
-     * usually lands mid-round, so POISON_GREY_TURNS+1 boundaries leave
-     * exactly POISON_GREY_TURNS future decision rounds greyed. */
-    s_grey_dur[slot] = (uint8_t)(POISON_GREY_TURNS + 1);
+    /* The grey drains at the enter-select round boundary in lockstep
+     * with the STATUS_FREEZE instance itself (both tick down once per
+     * round in battle_tick_statuses), so the tint and the
+     * grey-out expire together after ICE_GREY_TURNS rounds. */
+    s_grey_dur[slot] = ICE_GREY_TURNS;
+#ifdef DEBUG_BUILD
+    decode_grey_mask(mask);
+#endif
 }
 
 /* One round boundary for a greyed combatant: decrement the duration and,
@@ -193,30 +255,16 @@ void status_grey_apply_banked(void)
 void status_grey_tick_banked(void)
 {
     uint8_t slot = g_bk_byte_a;
-    uint8_t a, b, i;
 
-    if (slot >= STATUS_ROUND_SLOTS) {
-        g_bk_byte_a = 0;
-        return;
-    }
-    if (s_grey_dur[slot] == 0) {
-        g_bk_byte_a = 0;
-        return;
-    }
-    if (--s_grey_dur[slot] != 0) {
+    if (slot >= STATUS_ROUND_SLOTS || s_grey_dur[slot] == 0 ||
+        --s_grey_dur[slot] != 0) {
         g_bk_byte_a = 0;
         return;
     }
     /* Expired: decode indices and clear mask. */
-    a = 0xFF; b = 0xFF;
-    for (i = 0; i < 8; i++) {
-        if ((s_grey_mask[slot] & (uint8_t)(1u << i)) != 0) {
-            if (a == 0xFF) a = i;
-            else { b = i; break; }
-        }
-    }
+#ifdef DEBUG_BUILD
+    decode_grey_mask(s_grey_mask[slot]);
+#endif
     s_grey_mask[slot] = 0;
     g_bk_byte_a = 1;
-    g_bk_byte_b = a;
-    g_bk_byte_c = b;
 }

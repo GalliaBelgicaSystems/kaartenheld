@@ -66,6 +66,27 @@ extern volatile uint8_t g_rom_bank_live;
         } \
     } while (0)
 
+/* CGB CRAM read with the same Mode-3 discipline (banked bodies only;
+ * the index register must already select the target byte: CRAM reads
+ * never auto-increment, so set BCPS/OCPS before EVERY byte, and a
+ * Mode-3 read returns 0xFF -- the same silent-corruption class as the
+ * VRAM map cell the map-entry scan guards above). */
+#define BANKED_CRAM_READ(dst, reg) \
+    do { \
+        uint8_t _bcr_t; \
+        if (LCDC_REG & 0x80) { \
+            __asm di __endasm; \
+            _bcr_t = 200; \
+            while (_bcr_t--) { \
+                if (!(STAT_REG & 0x02)) break; \
+            } \
+            (dst) = (reg); \
+            __asm ei __endasm; \
+        } else { \
+            (dst) = (reg); \
+        } \
+    } while (0)
+
 /* RAM-resident MBC5 bank-switch + copy (src/crt0.s).  banked_copy() copies
  * `n` bytes from a banked ROM source into a WRAM destination, running the
  * MBC5 bank switch from a WRAM trampoline so it is safe regardless of the
@@ -137,10 +158,39 @@ extern uint8_t g_bk_byte_a;
 extern uint8_t g_bk_byte_b;
 extern uint8_t g_bk_byte_c;
 extern uint8_t g_bk_byte_d;
+/* Fifth staging byte (choice protocols that outgrow a/b/c/d, e.g. the
+ * dog trade's quest-complete variable id).  Same contract as the rest:
+ * staged by the banked producer, consumed by the fixed wrapper in the
+ * same call.  BSS zero-init (no non-zero WRAM initializer, AGENTS.md
+ * 52.27); the WRAM cost is one byte (stack-budget gate watches it). */
+extern uint8_t g_bk_byte_e;
+/* Same-frame SFX request for fully-banked menu nav (shop item steps,
+ * DECK nav/cycles, item QUEST/GEM row walks, save-picker slots): those
+ * bodies cannot call audio_play_sfx (fixed-bank call + MBC5 switches
+ * would strand their own bank), so a real cursor move stages
+ * (SFX id + 1) here and game_update() plays + clears it the same
+ * frame.  0 = none.  BSS zero-init (AGENTS.md 52.27).  Direct-input
+ * screens (game-over toggle, shop tab flips, picker row, dialogue
+ * advance/confirms) call audio_play_sfx fixed-side instead. */
+extern uint8_t g_bk_sfx_req;
+/* Same-frame in-place repaint request for DECK nav (AGENTS.md 36):
+ * the moved banked nav re-windows the draw maps itself but cannot
+ * call the bank-2 row painter (cross-bank call from a banked body),
+ * so it stages 1 here and the fixed update dispatches the bank-2
+ * repaint after the trampoline returns.  0 = none.  BSS zero-init
+ * (AGENTS.md 52.27). */
+extern uint8_t g_bk_paint_req;
 /* Generic post-tick request: a non-zero value asks game_update() to open
  * that dialogue (the banked producer cannot call dialogue_start_def).
  * Consumed and cleared by the fixed side in the same frame. */
 extern uint8_t g_bk_dlg_id;
+/* Single-line page override for the post-tick request: when non-zero,
+ * the opened dialogue shows only line [g_bk_dlg_line] (count byte =
+ * line + 1) instead of the full text.  Staged by the producer,
+ * consumed and cleared with g_bk_dlg_id.  Generic bytes, never game
+ * ids (AGENTS.md 55.1). */
+extern uint8_t g_bk_dlg_line;
+extern uint8_t g_bk_dlg_count;
 
 /* Linker-allocated home for the banked-call trampoline (WRAM), copied by
  * banked_call_init() at boot (game_init calls it, like banked_copy_init). */

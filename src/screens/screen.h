@@ -26,7 +26,8 @@ typedef enum {
     SCREEN_TUTORIAL  = 11,
     SCREEN_SPLASH    = 12,
     SCREEN_CREDITS   = 13,
-    SCREEN_GAMBLE    = 14
+    SCREEN_GAMBLE    = 14,
+    SCREEN_NOTICE    = 15
 } ScreenId;
 
 /*
@@ -74,6 +75,8 @@ void title_screen_update(Game *g);
 void title_screen_render(Game *g);
 void splash_screen_update(Game *g);
 void splash_screen_render(Game *g);
+void notice_screen_update(Game *g);
+void notice_screen_render(Game *g);
 void intro_screen_update(Game *g);
 void intro_screen_render(Game *g);
 void tutorial_screen_update(Game *g);
@@ -107,5 +110,11 @@ void credits_content_render(void);
 void thanks_content_render(void);
 void ending_content_render(void);
 void game_over_content_render(void);
+
+/* Demo-outro flag (simple_screens.c, WRAM): set when the slime-lord wake
+ * dialogue routes to THANKS, cleared when THANKS restarts.  Lets the
+ * banked thanks body show congratulations after the outro but a
+ * "try to beat the Lord of Slimes" note after an ordinary game-over. */
+extern uint8_t g_demo_completed;
 
 #endif /* SCREEN_H */

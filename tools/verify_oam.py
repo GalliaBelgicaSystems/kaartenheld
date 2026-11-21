@@ -69,6 +69,7 @@ Exits non-zero if any assertion fails.
 
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -145,6 +146,29 @@ def bg_cram(sess):
              for c in range(4)] for p in range(8)]
 
 
+def obj_cram(sess):
+    """All 64 CGB OBJ CRAM bytes via OCPS/OCPD (paused core: safe).
+    Returned as a list of 8 palettes x 4 RGB555 words, for asserting a
+    scene load programmed the map's OBJ ramps (per-map overrides)."""
+    raw = []
+    for i in range(64):
+        sess._memwrite(0xFF6A, i)
+        raw.append(sess._memread(0xFF6B))
+    return [[raw[p * 8 + c * 2] | (raw[p * 8 + c * 2 + 1] << 8)
+             for c in range(4)] for p in range(8)]
+
+
+def _ramp_words(ramp):
+    """Artist ramp colors from assets/palette_ramps.json as RGB555 words."""
+    doc = json.loads(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                       "..", "assets", "palette_ramps.json")).read())
+    out = []
+    for h in doc["ramps"][ramp]["colors"]:
+        r, g, b = int(h[1:3], 16), int(h[3:5], 16), int(h[5:7], 16)
+        out.append(((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3))
+    return out
+
+
 def wait_vblank(sess, tries=3):
     """Pause at a VBlank boundary: VRAM is only readable outside scanout
     modes 2/3 (real HW blocks it; mGBA returns 0xFF).  step() pauses at the
@@ -156,7 +180,17 @@ def wait_vblank(sess, tries=3):
     true.  Returns True in VBlank, False if the bound is hit (callers fail
     loudly instead of asserting on blocked reads)."""
     for _ in range(tries):
-        sess._cmd("frame", timeout=10.0)
+        out = sess._cmd("frame", timeout=10.0).decode(errors="ignore")
+        # Same OAM-DMA straddle as emulator.ensure_vram_readable: a `frame`
+        # halt at LY=144 with PC inside the HRAM DMA wait loop (0xFF80-0xFF87)
+        # leaves the bus locked (VRAM reads 0xFF) despite LY>=144.  Step out
+        # first so the transfer completes inside VBlank.
+        for _ in range(90):
+            m = re.search(r"PC:\s*([0-9A-Fa-f]+)", out)
+            pc = int(m.group(1), 16) if m else 0
+            if not (0xFF80 <= pc <= 0xFF87):
+                break
+            out = sess._cmd("next").decode(errors="ignore")
         ly = sess._memread(0xFF44)
         if ly is not None and ly >= 144:
             return True
@@ -242,8 +276,8 @@ def verify_npc_sprites(sess):
     sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
     sess.step(2)
     found = set()
-    # Entries 1-4 are reserved hostile slots (hidden when empty); static
-    # actors start at entry 5, so scan wide and match order-insensitively.
+    # Entries 1-7 are reserved hostile slots (hidden when empty); static
+    # actors start at entry 8, so scan wide and match order-insensitively.
     for slot in range(1, 13):
         tile = shadow_oam_slot_tile(sess, slot)
         pal = shadow_oam_slot_pal(sess, slot)
@@ -254,6 +288,44 @@ def verify_npc_sprites(sess):
                              ("wizard", 119, 5)):
         check(f"town {label} renders as OAM tile {tile} with OBJ palette {pal}",
               True, (tile, pal) in found)
+
+
+def verify_obj_map_overrides(sess):
+    """Per-map OBJ palette overrides (map.obj_palettes): dog maps program
+    OBJ slot 6 with sprites10 (red collar); every other map keeps the
+    canonical sprites9 (merchant orange).
+
+    The paired red->orange assertions are mutually non-vacuous: boot state
+    is orange, so red proves the first load applied, and orange-after-red
+    proves the second load reprogrammed (a failed load of either scene
+    fails loudly). The third stage pins the cache-warm branch explicitly
+    (g_loaded_tileset already VILLAGE): TEST_GAMBLE shares TEST_TOWN's
+    tileset but declares no override, so only the union-slot fallback --
+    not the cold-load 24-byte restore -- can flip slot 6 back to orange.
+    VBlank-gated: mid-scanout CRAM reads back 0xFF and pass vacuously."""
+    print("== Per-map OBJ palette overrides ==")
+    check("OBJ CRAM read in VBlank (dog map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "mayor_dialogue.json"))
+    sess.step(2)
+    check("dog map: OBJ slot 6 is sprites10 (red collar)",
+          _ramp_words("sprites10"), obj_cram(sess)[6])
+    # Same-tileset warm restore: TEST_GAMBLE is VILLAGE like TEST_TOWN
+    # but declares no override. The tileset cache must still hold VILLAGE
+    # from the previous load (scenario loads never invalidate it), so the
+    # cold-load canonical restore is skipped and only the union fallback
+    # can produce orange here.
+    check("same-tileset warm cache (VILLAGE)",
+          12, sess._memread(sess.get_symbol("g_loaded_tileset")))
+    check("OBJ CRAM read in VBlank (warm map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "gamble_enter.json"))
+    sess.step(2)
+    check("warm same-tileset map: OBJ slot 6 restored to sprites9 (orange)",
+          _ramp_words("sprites9"), obj_cram(sess)[6])
+    check("OBJ CRAM read in VBlank (plain map)", True, wait_vblank(sess))
+    sess.load_scenario(load_scenario(sess, "forest_boot.json"))
+    sess.step(2)
+    check("plain map: OBJ slot 6 is sprites9 (canonical orange)",
+          _ramp_words("sprites9"), obj_cram(sess)[6])
 
 
 def verify_hostile_sprites(sess):
@@ -267,45 +339,45 @@ def verify_hostile_sprites(sess):
     forest = load_scenario(sess, "forest_boot.json")
     sess.load_scenario(forest)
     sess.step(2)
-    # Player on MAP_FOREST renders the HERO_DESOLATE sprite (98|99), same as
-    # south_field; every other map uses PLAYER (102).
-    check("forest player renders as hero OAM tile (98|99)",
-          1, (98 <= shadow_sprite_tile(sess) <= 99))
+    # Player on MAP_FOREST renders the standing-hero idle sprite (96|97),
+    # same as south_field; moving heroes show walk frames 98|99.
+    check("forest player renders as hero idle OAM tile (96|97)",
+          1, (96 <= shadow_sprite_tile(sess) <= 97))
     attr_mirror = sess.get_symbol("g_tilemap_attr_mirror")
     check("forest treetop (3, 3) has field2 canopy palette (2)",
           2, mirror_at(sess, attr_mirror, 3, 3))
     check("forest treetrunk (3, 4) has field4 trunk palette (6)",
           6, mirror_at(sess, attr_mirror, 3, 4))
 
-    print("== Chest OAM sprite (forest amulet closed, then open after loot) ==")
-    forest_amulet = load_scenario(sess, "forest_boot.json")
-    sess.load_scenario(forest_amulet)
+    print("== Chest OAM sprite (forest shop-keys chest closed, then open after loot) ==")
+    forest_chest = load_scenario(sess, "forest_boot.json")
+    sess.load_scenario(forest_chest)
     sess.step(2)
-    # Amulet is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (5).
-    # Closed-chest frame (shared-blob tile 121: 120 + the slime-knight
-    # overworld cell); the floor cell stays plain floor (VRAM tile
-    # 128 + 62 = 190), never chest paint.
-    check("forest amulet owns closed-chest OAM sprite (tile 121)",
-          121, shadow_oam_slot_tile(sess, 5))
+    # Shop-keys chest is the first static -> OAM entry 1 + MAX_WORLD_ACTORS (8).
+    # Closed-chest frame (shared-blob tile 122: base 100 + offset 22, after
+    # the slime-knight walk row); the floor cell stays plain floor (VRAM
+    # tile 128 + 62 = 190), never chest paint.
+    check("forest shop-keys chest owns closed-chest OAM sprite (tile 122)",
+          122, shadow_oam_slot_tile(sess, 8))
     # The background cell itself stays plain floor (the chest is a
     # SPRITE_KIND_CHEST OAM sprite, not floor paint).
     mirror = sess.get_symbol("g_tilemap_mirror")
-    check("amulet cell paints plain floor (190), not chest art",
+    check("shop-keys cell paints plain floor (190), not chest art",
           190, mirror_at(sess, mirror, 16, 10))
-    # Loot it through the real interact path (amulet_open_sprite spawns
-    # the player beside the amulet facing it): A opens the pickup
+    # Loot it through the real interact path (shopkeys_open_sprite spawns
+    # the player beside the shop-keys chest facing it): A opens the pickup
     # dialogue, A closes it.  The sprite must flip to the open frame
-    # (122) and stay there across redraws.
-    loot = load_scenario(sess, "amulet_open_sprite.json")
+    # (123) and stay there across redraws.
+    loot = load_scenario(sess, "shopkeys_open_sprite.json")
     sess.load_scenario(loot)
     sess.step(2)
     sess.press("A")
     sess.step(10)
     sess.press("A")
     sess.step(20)
-    check("looted amulet shows open-chest OAM sprite (tile 122)",
-          122, shadow_oam_slot_tile(sess, 5))
-    check("looted amulet cell still plain floor (190)",
+    check("looted shop-keys chest shows open-chest OAM sprite (tile 123)",
+          123, shadow_oam_slot_tile(sess, 8))
+    check("looted shop-keys cell still plain floor (190)",
           190, mirror_at(sess, mirror, 16, 10))
 
     print("== Hostile sprite tiles (south_field slime / bat) ==")
@@ -462,9 +534,10 @@ def verify_battle_transition(sess):
     sess.step(1)
 
     # 1. Overworld steady: player at (13,8), camera (24,0) ->
-    #    OAM x = 13*8+8-24 = 88, y = 8*8+0+16 = 80.
+    #    OAM x = 13*8+8-24 = 88, y = 8*8+0+16 = 80.  Standing hero shows
+    #    the idle frames (96|97).
     check("overworld @ sprite position (shadow OAM)", (80, 88), shadow_oam(sess))
-    check("overworld sprite tile (shadow OAM)", 98, shadow_sprite_tile(sess))
+    check("overworld sprite tile (shadow OAM)", 1, (96 <= shadow_sprite_tile(sess) <= 97))
 
     # 2. Walk right into the slime at (14,8): Carl teaches first, so the
     #    bump opens his lesson (dialogue); closing it auto-starts the spar
@@ -608,7 +681,7 @@ def verify_dialogue_transition(sess):
     # VBlank from the gate above: CRAM reads are exact here.
     paper = bg_cram(sess)[4]
     check("dialogue entry: paper ramp intact (slot 4)",
-          [0x7FFF, 0x6739, 0x294A, 0x0000], paper)
+          [0x7FFF, 0x3256, 0x0C71, 0x196E], paper)
 
     # Sprite stays visible behind the box at the player's position (9,5),
     # camera (0,0) -> OAM y=5*8+16=56, x=9*8+8=80.
@@ -637,6 +710,45 @@ def verify_dialogue_transition(sess):
           True, "+" not in row14 and "-" not in row14)
     check("dialogue exit: @ sprite visible (shadow OAM)",
           (56, 80), shadow_oam(sess))
+
+    # Despair wake transition (SLIME_LORD_DEFEAT -> STRANGE_WAKE on the
+    # wake map while staying in SCREEN_DIALOGUE): game_slime_despair_wake
+    # must reset render_cache.prev_map_id to the new map (screen_change
+    # is a no-op when already on SCREEN_DIALOGUE).  Without that reset,
+    # game_render sees map_id != prev_map_id on every steady wake frame
+    # and runs ui_sprite_begin_transition + ui_lcd_off/on every frame
+    # (60 Hz white-screen flicker, wiped CGB attrs, hidden hero sprite).
+    sess.load_scenario({
+        "scene": "TEST_CASTLE",
+        "player": {"x": 9, "y": 5, "facing": "RIGHT"},
+        "dialogue": "SLIME_LORD_DEFEAT",
+    })
+    sess.step(2)
+    for _ in range(6):
+        if sess.snapshot().get("scene") == "TEST_FOREST":
+            break
+        sess.press("A")
+        sess.step(75)
+    sess.step(10)
+    check("wake dialogue: reached wake map", "TEST_FOREST",
+          sess.snapshot().get("scene"))
+    check("wake dialogue: @ sprite visible after fade-in (shadow OAM)",
+          (96, 104), shadow_oam(sess))
+    reset_hide_count(sess)
+    for _ in range(3):
+        sess.step(1)
+    check("wake dialogue steady: no spurious per-frame re-hide over 3 frames",
+          0, hide_count(sess))
+    check("wake dialogue steady: @ sprite remains visible (shadow OAM)",
+          (96, 104), shadow_oam(sess))
+    check("wake dialogue VRAM read in VBlank", True, wait_vblank(sess))
+    wake_nonzero = 0
+    for y in range(18):
+        for x in range(20):
+            if vram_attr_at(sess, x, y) not in (None, 0):
+                wake_nonzero += 1
+    check("wake dialogue steady: CGB attrs kept (nonzero count)",
+          True, wake_nonzero > 20)
 
 
 def verify_scene_transition(sess):
@@ -714,10 +826,13 @@ def verify_scene_transition(sess):
           lcd_off_frames)
 
     # 4. Palette integrity across the LCD-on load: TOWN CRAM after the
-    #    gate crossing must equal a fresh TOWN boot on every slot except
-    #    4 (held black by the wipe; free in every world tileset), proving
-    #    zero Mode-3 palette drops.  VBlank-gated: mid-scanout CRAM reads
-    #    back 0xFF and pass vacuously.
+    #    gate crossing must equal a fresh TOWN boot on every slot,
+    #    proving zero Mode-3 palette drops.  Slot 4 is the HUD-owned
+    #    paper ramp (opaque white status bar; programmed by the bank-11
+    #    status stream in ui_world_tail, free in every world tileset):
+    #    both sides carry it, so equality proves no drops there too.
+    #    VBlank-gated: mid-scanout CRAM reads back 0xFF and pass
+    #    vacuously.
     check("town CRAM read in VBlank", True, wait_vblank(sess))
     sess.load_scenario(load_scenario(sess, "town_boot.json"))
     sess.step(2)
@@ -728,11 +843,11 @@ def verify_scene_transition(sess):
     sess.hold("RIGHT", 14)
     check("town CRAM read in VBlank (arrival)", True, wait_vblank(sess))
     arr_cram = bg_cram(sess)
-    check("gate crossing: slot 4 held black",
-          [0, 0, 0, 0], arr_cram[4])
+    check("gate crossing: slot 4 holds the HUD paper ramp",
+          [0x7FFF, 0x3256, 0x0C71, 0x196E], arr_cram[4])
     same = all(ref_cram[p] == arr_cram[p]
-               for p in (0, 1, 2, 3, 5, 6, 7))
-    check("gate crossing: TOWN CRAM matches fresh boot (slots 0-3,5-7)",
+               for p in (0, 1, 2, 3, 4, 5, 6, 7))
+    check("gate crossing: TOWN CRAM matches fresh boot (all slots)",
           True, same)
 
 
@@ -778,7 +893,7 @@ def verify_restart_clears_boss_oam(sess):
 
     # The boss footprint must be hidden.  Pin entry 4 precisely: with
     # slot 3 inactive the body hides exactly that entry, so a visible
-    # entry 4 here is the resurrected boss grid (entries 5+ legitimately
+    # entry 4 here is the resurrected boss grid (entries 8+ legitimately
     # hold field statics -- see below -- so they are not pinned)...
     post_y4 = sess._memread(0xC000 + 4 * 4)
     check("restart: ex-boss OAM entry 4 hidden", 0, post_y4)
@@ -889,6 +1004,146 @@ def verify_battle_vram_restore(sess):
           before, vram_tiles())
 
 
+def _gfx_tile_bytes(header_relpath, index):
+    """Tile-index bytes of a generated tile header (make gfx output),
+    parsed from its `/* tile N */` comments.  Returns None when the
+    header cannot be parsed (callers fail loudly, never vacuous)."""
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "..", header_relpath)
+    try:
+        text = open(path).read()
+    except OSError:
+        return None
+    m = re.search(r"/\* tile %d \*/((?:\s*0x[0-9A-Fa-f]{2}, 0x[0-9A-Fa-f]{2},?.*\n){8})" % index, text)
+    if not m:
+        return None
+    return bytes(int(b, 16) for b in re.findall(r"0x([0-9A-Fa-f]{2})", m.group(1)))
+
+
+def verify_shop_rider_vram(sess):
+    """Shop SELL-tab rider icons are dedicated menu BG tiles (the menu
+    used to recycle enemy-sprite OAM art, whose 8x8 crop was off-center):
+    with a poison loot card listed, tilemap cell (1, 5) must be tile 230
+    (UI_TILE_MENU_RIDER_POISON) and the VRAM tile data behind it must
+    equal the menu_riders sheet's poison cell, not blank art.  The rider
+    OAM entries stay hidden (BG art needs no sprites).  Regression ids
+    alone (the harness oam_tile asserts) cannot see tile data, so this
+    check reads real VRAM.  NOTE: sess.load_scenario applies
+    initial_state only (no scenario actions), so the card grant + shop
+    walk are driven explicitly."""
+    print("== Shop rider VRAM (SELL poison row stamps menu BG tile) ==")
+    sess.load_scenario(load_scenario(sess, "shop_sell_rider_ids.json"))
+    sess.debug_action(sess.DBG_ACT_ADD_ITEM, 139, 0, 1)
+    shop_open = False
+    for _ in range(3):
+        sess.press("A")
+        for _ in range(10):
+            sess.step(1)
+            if sess.snapshot().get("screen") == "SHOP":
+                shop_open = True
+                break
+        if shop_open:
+            break
+    check("shop open (merchant interact)", True, shop_open)
+    sess.press("RIGHT")
+    sess.step(5)
+    check("shop SELL tab open", "SHOP",
+          sess.snapshot().get("screen"))
+    check("SELL poison row hides rider OAM entry 1",
+          0, shadow_oam_slot_tile(sess, 1))
+
+    rider = _gfx_tile_bytes("src/gfx/menu_rider_tiles.h", 2)
+    check("rider header parses (poison tile)", True, rider is not None)
+    check("shop VRAM read in VBlank", True, wait_vblank(sess))
+    sess._memwrite(0xFF4F, 0)
+    cell = sess._memread(0x9800 + 5 * 32 + 1)
+    check("SELL poison row elem cell is menu rider tile 230",
+          230, cell)
+
+    def bg_tile_230():
+        return bytes(b if b is not None else 0
+                     for i in range(16)
+                     for b in (sess._memread(0x8000 + 230 * 16 + i),))
+
+    during = bg_tile_230()
+    check("shop streams poison menu art into BG tile 230",
+          rider, during)
+    check("shop tile is not blank (test exercises the bug)",
+          True, any(during))
+    # Re-sync after the VBlank reads (AGENTS.md 52.26): the B press
+    # below must land on a whole game_render-stepped frame.
+    sess.step(1)
+    sess.press("B")
+    sess.step(10)
+    check("left shop: back to overworld", "OVERWORLD",
+          sess.snapshot().get("game_state"))
+
+
+def verify_menu_tab_switches(sess):
+    """Intra-menu tab and mode switches (SCREEN_ITEM -> SCREEN_ITEM) must
+    NEVER run the full-screen LCD-off transition (ui_sprite_begin_transition
+    / ui_lcd_off), must keep LCDC.7 enabled on every frame, must move only
+    the row-1 tab caret while preserving the row-0 category separators
+    (tile 214 at cols 4, 10, 15), and must clear CGB BG attributes on
+    content rows 3..12 so TAB_DECK's right-column card palettes do not leak
+    onto TAB_HERO's portrait cells (15..16, 4..5)."""
+    print("== Menu tab/mode switches: no LCD-off full redraw, clean attrs ==")
+    sess.load_scenario(load_scenario(sess, "first_encounter.json"))
+    sess.step(2)
+    reset_hide_count(sess)
+
+    # Open SCREEN_ITEM from OVERWORLD: screen_change calls ui_sprite_hide()
+    # and game_render calls ui_sprite_begin_transition() (2 increments).
+    sess.press("START")
+    sess.step(2)
+    check("menu open reaches ITEM screen", "ITEM",
+          sess.snapshot().get("screen"))
+    check("menu open from overworld runs transition hide",
+          2, hide_count(sess))
+
+    # Reset hide counter, then switch DECK -> QUEST -> HERO and check
+    # VRAM header tiles + CGB attributes on HERO.
+    reset_hide_count(sess)
+    lcd_off_frames = 0
+    for btn in ("RIGHT", "RIGHT"):
+        sess.press(btn)
+        for _ in range(3):
+            sess.step(1)
+            if not (sess._memread(0xFF40) & 0x80):
+                lcd_off_frames += 1
+
+    check("menu HERO tab VRAM read in VBlank", True, wait_vblank(sess))
+    sess._memwrite(0xFF4F, 0)
+    seps = [sess._memread(0x9800 + col) for col in (4, 10, 15)]
+    check("menu row 0 category separators intact (tile 214 at cols 4,10,15)",
+          [214, 214, 214], seps)
+    row1_carets = [sess._memread(0x9800 + 32 + col) for col in (0, 5, 11, 16)]
+    check("menu HERO tab row 1 caret at col 11 (211) and border (212) elsewhere",
+          [212, 212, 211, 212], row1_carets)
+    hero_attrs = [vram_attr_at(sess, x, y)
+                  for y in (4, 5) for x in (15, 16)]
+    check("menu HERO portrait cells (15..16, 4..5) have clean CGB attrs (0)",
+          [0, 0, 0, 0], hero_attrs)
+
+    # Re-sync after VBlank reads (AGENTS.md 52.26), then cycle HERO -> GEMS
+    # -> DECK, open/close MODE_PICKER (A/B on row 0), and open/close
+    # MODE_DETAIL (DOWN, SELECT, B).
+    sess.step(1)
+    for btn in ("RIGHT", "RIGHT", "A", "B", "DOWN", "SELECT", "B"):
+        sess.press(btn)
+        for _ in range(3):
+            sess.step(1)
+            if not (sess._memread(0xFF40) & 0x80):
+                lcd_off_frames += 1
+
+    check("menu stays on ITEM screen after tab/mode cycle", "ITEM",
+          sess.snapshot().get("screen"))
+    check("intra-menu tab/mode switches never run transition hide",
+          0, hide_count(sess))
+    check("intra-menu tab/mode switches never turn LCD off",
+          0, lcd_off_frames)
+
+
 def main():
     # Each section uses its own session so debugger state (the game_render
     # frame-sync breakpoint, watchpoints) never contaminates another
@@ -902,10 +1157,13 @@ def main():
                       ("dialogue", verify_dialogue_transition),
                       ("hostile sprites", verify_hostile_sprites),
                       ("npc sprites", verify_npc_sprites),
+                      ("obj map overrides", verify_obj_map_overrides),
                        ("battle sprites", verify_battle_oam),
                        ("battle spider", verify_battle_spider_oam),
                        ("boss glow overlay", verify_boss_glow_overlay),
-                       ("exit art", verify_exit_art)):
+                       ("exit art", verify_exit_art),
+                       ("shop rider VRAM", verify_shop_rider_vram),
+                       ("menu tab switches", verify_menu_tab_switches)):
         sess = EmulatorSession(rom_path=ROM)
         try:
             sess.connect()

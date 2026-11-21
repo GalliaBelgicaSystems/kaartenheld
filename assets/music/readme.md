@@ -103,17 +103,17 @@ generated/sfx/sfx_index.c   [fixed bank: 7 voice-presence bytes]
 | File | SFX id(s) | Duration |
 |---|---|---|
 | `sfx cursor.uge` | CURSOR | 9 ticks (0.14 s) |
-| `sfx accept.uge` | CONFIRM, SELECT | 8 ticks (0.12 s) |
+| `sfx accept.uge` | CONFIRM, SELECT | 9 ticks (0.14 s) |
 | `sfx back.uge` | BACK | 10 ticks (0.16 s) |
 | `sfx hit2.uge` | ATTACK | 22 ticks (0.34 s) |
 | `sfx hit.uge` | HIT | 12 ticks (0.19 s) |
-| `sfx block.uge` | BLOCK | 77 ticks (1.20 s) |
+| `sfx block.uge` | BLOCK | 20 ticks (0.31 s) |
 
 * `make sfx` regenerates the tables deterministically (byte-identical
   reruns). The transcriber fails loudly on any encoding outside the
   observed subset (other effects, CH2/CH3 notes, wave instruments,
   routines, tempo changes).
-* `BLOCK`'s 1.2 s decay ducks music CH2 for its full duration by design
+* `BLOCK`'s decay ducks music CH2 for its duration by design
   (scored envelope). If that proves annoying in play, shorten the
   envelope in the `.uge` and regenerate — do not hand-edit the tables.
 * Runtime: `audio_play_sfx()` (ids unchanged, ~20 existing call sites)

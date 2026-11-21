@@ -7,9 +7,10 @@
 #include "game_ids.h"
 
 /* ── Dialogue table (game content, banked ROM) ─────────────────────
- * Compiled into MBC5 ROM bank 7 (the `#pragma bank 7`
- * below) so the fixed bank 0 / _HOME area stays small.  Bank 7
- * has room (bank 2, home of the event/card/shop tables, is full).
+ * Compiled into MBC5 ROM bank 10 (the `#pragma bank 10`
+ * below) so the fixed bank 0 / _HOME area stays small.  Bank 10
+ * has room (bank 2, home of the event/card/shop tables, is full,
+ * and bank 7 filled with tracker songs).
  * The engine never
  * reads this table directly: core/dialogue.c copies the matching row and
  * its text into WRAM staging in dialogue_start_def(), so the banked layout
@@ -20,33 +21,9 @@
  * render 18 chars wide.  Unused line slots are left NULL by the
  * partial initializer; dialogue_start_def() only reads the first
  * line_count slots. */
-#pragma bank 7
+#pragma bank 10
 
 const DialogueDefinition g_dialogues[] = {
-    {
-        DIALOGUE_ID_AMULET_FOUND,
-        "",
-        3,
-        {"FOUND AMULET!!", "Return to the", "merchant!"},
-        0,
-        0
-    },
-    {
-        DIALOGUE_ID_AMULET_NOTHING,
-        "",
-        1,
-        {"Nothing here now."},
-        0,
-        0
-    },
-    {
-        DIALOGUE_ID_CARL_CHEST_FIRST,
-        "CARL:",
-        2,
-        {"Open chest,", "then come back!"},
-        0,
-        0
-    },
     {
         DIALOGUE_ID_CARL_MAILBOX,
         "",
@@ -56,11 +33,51 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_CHEST_LOCKED,
+        "CHEST:",
+        2,
+        {"This chest", "is locked."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_DOG_ASK,
+        "DOG:",
+        2,
+        {"Give Bone to dog?", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_DOG_BUSY,
+        "DOG:",
+        2,
+        {"The dog is busy", "gnawing the bone."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_DOG_GREETING,
         "WILD DOG:",
         4,
         {"Meow.", "", "", "Bark, bark I mean."},
         0,
+        0
+    },
+    {
+        DIALOGUE_ID_DOG_HINT,
+        "DOG:",
+        3,
+        {"The dog is holding", "a key and won't", "give it."},
+        STORY_FLAG_ID_MET_DOG,
+        0
+    },
+    {
+        DIALOGUE_ID_DOG_THANKS,
+        "DOG:",
+        2,
+        {"Bark! You got", "the OLD KEY!"},
+        STORY_FLAG_ID_DOG_KEY,
         0
     },
     {
@@ -84,6 +101,14 @@ const DialogueDefinition g_dialogues[] = {
         "GUARD:",
         2,
         {"Mayor trusts you.", "Welcome, hero!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_GUARD_DAGGER_LESSON,
+        "GUARD:",
+        8,
+        {"Daggers counter.", "One played alone", "hits back FIRST,", "full damage.", "Weaker than swords,", "but poison can", "confuse. Find one", "east of Carl."},
         0,
         0
     },
@@ -136,10 +161,26 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_HEAL_MAGE_RINGS_ASK,
+        "HEAL MAGE:",
+        3,
+        {"Want to learn how", "rings work?", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_HEAL_MAGE_THANKS,
         "HEAL MAGE:",
-        5,
-        {"All healed!", "Rings can heal", "you as well.", "The merchant", "sells one!"},
+        6,
+        {"All healed!", "Rings can heal,", "once you have one", "come talk to me.", "The merchant", "sells one!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_HOUSE_DOOR,
+        "",
+        3,
+        {"Where do you think", "you are? In the", "full game?"},
         0,
         0
     },
@@ -163,7 +204,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_KOBOLD_INVITE,
         "Nis:",
         8,
-        {"I'M NIS! PICK 1-6.", "I ROLL 3 DICE.", "MATCH TO WIN 1:1,", "2:1 OR 3:1.", "BET 1, 5 OR 10.", "UPDN ROW LR CHANGE", "+20 NET WINS A GEM", "> YES   NO"},
+        {"I'M NIS! PICK 1-6.", "I ROLL 3 DICE.", "MATCH TO WIN 1:1,", "2:1 OR 3:1.", "BET 1, 5 OR 10.", "UPDN ROW LR CHANGE", "STAKE 50 TOTAL: GEM", "> YES   NO"},
         0,
         1
     },
@@ -179,7 +220,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MAYOR_EARLY,
         "MAYOR:",
         6,
-        {"You've already", "slain 5 monsters!", "Hunters like you", "keep us safe!", "Take this power:", "one more AP!"},
+        {"You've already", "slain 3 monsters!", "Hunters like you", "keep us safe!", "Take this power:", "one more AP!"},
         0,
         0
     },
@@ -194,8 +235,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
-        8,
-        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!"},
+        11,
+        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!", "Card wielder, slay", "three monsters and", "I'll reward you!"},
         0,
         0
     },
@@ -210,8 +251,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_MERCHANT_INTRO,
         "MERCHANT:",
-        5,
-        {"A thief stole my", "family heirloom!", "Bandits settle", "north, in the", "mountains!"},
+        8,
+        {"Went out drinking", "last night and got", "mugged by Kobolds!", "They took my shop", "keys! Without them", "I can't open shop!", "They hide up north", "I can't face them!"},
         0,
         0
     },
@@ -219,7 +260,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MERCHANT_THANKS,
         "MERCHANT:",
         3,
-        {"You found it!", "Thank you, hero!", "My shop is open now."},
+        {"You found them!", "Thank you, hero!", "My shop is open now."},
         0,
         0
     },
@@ -243,7 +284,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_QUEST_ACTIVE,
         "MAYOR:",
         2,
-        {"Defeat 5 monsters!", "Return for power!"},
+        {"Defeat 3 monsters!", "Return for power!"},
         0,
         0
     },
@@ -264,10 +305,162 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
-        DIALOGUE_ID_TUTORIAL_CARL_INTRO,
+        DIALOGUE_ID_QUIT_CONFIRM,
+        "",
+        2,
+        {"SAVE AND QUIT?", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_SHOPKEYS_FOUND,
+        "",
+        3,
+        {"FOUND SHOP KEYS!!", "Return them to the", "merchant"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SHOPKEYS_NOTHING,
+        "",
+        1,
+        {"Nothing here now."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SKELETON_ASK,
+        "SKELETON:",
+        3,
+        {"Take a bone from", "the skeleton?", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_SKELETON_DESC,
+        "SKELETON:",
+        1,
+        {"An old skeleton."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SKELETON_TAKEN,
+        "",
+        1,
+        {"You take a bone."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SLIME_LORD_DEFEAT,
+        "Lord of Slimes:",
+        4,
+        {"Card wielder, you", "put up a good", "fight, but you are", "no match for me!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_SLIME_LORD_INTRO,
+        "Lord of Slimes:",
+        6,
+        {"Card wielder, you", "dare challenge me!", "You cannot stop", "what is coming.", "Slimes will rule", "this planet soon!"},
+        STORY_FLAG_ID_SLIME_LORD_INTRO,
+        0
+    },
+    {
+        DIALOGUE_ID_STRANGE_WAKE,
+        "",
+        2,
+        {"Where am I?", "What happened?"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_ATTACK,
+        "CARL:",
+        6,
+        {"TAKE THIS AP TO", "DO POKER HANDS!", "PICK CARDS WITH A!", "L/R MOVES CURSOR.", "SELECT CONFIRMS", "THE ATTACK!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_ATTACK_NOGRANT,
+        "CARL:",
+        4,
+        {"PICK CARDS WITH A!", "L/R MOVES CURSOR.", "SELECT CONFIRMS", "THE ATTACK!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_DECLINE,
+        "CARL:",
+        2,
+        {"SUIT YOURSELF!", "COME BACK ANYTIME!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_DEFEND,
         "CARL:",
         8,
-        {"Human? Here danger", "I teach you fight!", "U/D choose target", "Make Poker!", "Attack with Sword", "Dagger or Bow", "Defend with shield", "Fire, ice, poison!"},
+        {"CARL ATTACKS NOW!", "PICK SHIELD CARDS!", "SELECT CONFIRMS", "THE BLOCK!", "DAGGERS CAN ATTACK", "DURING DEFENSE!", "ADD NEW CARDS WITH", "THE START MENU!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_FAREWELL,
+        "CARL:",
+        3,
+        {"WISE TO FLEE!", "GROW STRONGER!", "THEN TRY AGAIN!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_FLEE,
+        "CARL:",
+        5,
+        {"TO FLEE, PRESS B", "WITH EMPTY HAND!", "TRY IT NOW!", "COME BACK AND", "BEAT ME FOR POWER"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_HURT,
+        "CARL:",
+        7,
+        {"UCH!", "EW!", "THAT ALL YOU GOT?", "OUCH!", "ENOUGH ALREADY!", "IT HURTS!", "PLEASE STOP!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_INTRO,
+        "CARL:",
+        5,
+        {"HUMAN? HERE DANGER", "I TEACH YOU FIGHT!", "WANT TO LEARN?", "BEAT ME FOR POWER!", "> YES   NO"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_POKER,
+        "CARL:",
+        8,
+        {"PAIRS HIT HARDER!", "PAIR: 2 THE SAME.", "TRIPS: 3 THE SAME.", "STRAIGHT: 5 IN ROW", "FLUSH: SAME SUIT.", "FULL HOUSE: 3 + 2.", "4 KIND IS MASSIVE!", "SUITED: +30%!"},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_SKIP_ASK,
+        "CARL:",
+        3,
+        {"HEY! WANNA LEARN", "HOW FIGHT?", "> STAY  LEAVE"},
+        0,
+        1
+    },
+    {
+        DIALOGUE_ID_TUTORIAL_CARL_SKIP_GRANTED,
+        "CARL:",
+        2,
+        {"SUIT YOURSELF!", "TAKE THIS AP!"},
         0,
         0
     },
@@ -275,7 +468,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_TUTORIAL_CARL_VICTORY,
         "CARL:",
         5,
-        {"REAL FIGHTS BEGIN!", "AP limits cards!", "Have 1 more AP!", "More increase AP", "to survive!"},
+        {"REAL FIGHTS BEGIN!", "AP LIMITS CARDS!", "DO QUESTS FOR", "MORE AP TO", "SURVIVE!"},
         0,
         0
     },
@@ -300,6 +493,14 @@ const DialogueDefinition g_dialogues[] = {
         "",
         2,
         {"I'm not going", "back down there."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_WIZARD_AUTOSAVE,
+        "WIZARD:",
+        5,
+        {"Your progress is", "saved as you play.", "You can also save", "and quit from the", "QUEST menu."},
         0,
         0
     },

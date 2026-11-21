@@ -2,7 +2,7 @@
 
 **Kaartenheld** (Luxembourgish for "Card Hero") is an upcoming top-down adventure game for the Nintendo Game Boy by **Gallia Belgica Systems**, a two-person indie team of inexperienced-but-relentless developers.
 
-This repository contains the playable **battle demo** for Kaartenheld: a top-down adventure with a deck-building card combat system in which you build **poker hands to trigger combos**, explore the world, and grow your deck — with **no traditional RPG mechanics**: no equipment, no levels, no XP. Your power is entirely determined by the cards you carry.
+This repository contains the playable **battle demo** for Kaartenheld: a top-down adventure with a deck-building card combat system in which you build **poker hands to trigger combos**, explore the world, and grow your deck — with **no XP or levels**. Your power comes from the cards you carry, the energy to play them (which grows via story milestones), and equipable gem passives.
 
 Every combat victory rewards you with a **new random card**: add it to your deck, or sell it.
 
@@ -15,15 +15,21 @@ Every combat victory rewards you with a **new random card**: add it to your deck
 </p>
 
 <p align="center">
-  <img src="screenshots/battle.gif" alt="Kaartenheld card combat: selecting a TWO PAIR combo and attacking a kobold trio" width="480">
+  <img src="screenshots/battle.gif" alt="Kaartenheld card combat: selecting swords and shields to form a combo against a forest kobold" width="480">
   <br>
-  <em>Card combat — playing a <strong>TWO PAIR</strong> combo against a kobold trio.</em>
+  <em>Card combat — staging swords and shields into a combo against a forest kobold.</em>
 </p>
 
 <p align="center">
-  <img src="screenshots/overworld.gif" alt="Kaartenheld overworld: walking from the Field through the gate into the Forest, out to the treasure chest" width="480">
+  <img src="screenshots/heal.gif" alt="Kaartenheld heal: playing a heal ring after taking a hit, the HP bar pulses" width="480">
   <br>
-  <em>Overworld — from the Field through the gate into the Forest, out to the chest.</em>
+  <em>Heal ring — taking a hit, then playing a heal card (HP bar pulses).</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/overworld.gif" alt="Kaartenheld overworld: walking from the Field through the north gate into the Forest" width="480">
+  <br>
+  <em>Overworld — from the Field through the north gate into the Forest.</em>
 </p>
 
 <p align="center">
@@ -43,21 +49,23 @@ Kaartenheld is built with a deliberately split creative process:
 ## The Game
 
 - **Top-down adventure**: explore tile-based maps, talk to characters, follow the story.
-- **Card combat**: battles are fought with a deck of up to 20 cards; you play a 5-card hand.
-- **Poker combos**: the values of the cards in your hand form poker hands — PAIR, TWO PAIR, THREE KIND, STRAIGHT, FLUSH, FULL HOUSE, FOUR KIND, STRAIGHT FLUSH, FIVE KIND — and stronger hands mean stronger effects. Ring cards substitute any *number* in the combo (they stay heal cards, so they break a flush).
-- **No RPG grind**: there is no equipment and no leveling. Deck composition is your entire progression.
+- **Card combat**: battles are fought with a deck of up to 20 cards; you stage a hand of up to 5 cards per turn, each costing energy from a pool that starts at 1 and grows to 5 via story milestones (Carl's lesson, chests, Monster Hunt, mimic).
+- **Poker combos**: the values of the cards in your hand form poker hands — PAIR, TWO PAIR, SHORT STRAIGHT (3-card run, unlocked by the STRAIGHT gem), THREE KIND, STRAIGHT, FLUSH, FULL HOUSE, FOUR KIND, STRAIGHT FLUSH, FIVE KIND — and stronger hands mean stronger effects. Ring cards substitute any *number* in the combo (they stay heal cards, so they break a flush).
+- **No XP grind**: no levels or experience. Deck composition, your energy pool, and up to 3 equipped gems are your entire progression.
 - **Loot cards**: every victory drops a procedurally generated card (names, values, riders, rarity tiers). Keep it, build it into your deck, or sell it to a merchant for gold, the in-game currency.
-- **Status effects**: POISON, BURN, and FREEZE ride on card hits with stacking rules and per-round ticks.
-- **Persistence**: battery-backed SRAM save/load with slots.
+- **Status effects**: POISON (confuses the victim into friendly fire), BURN (wounds over time), and FREEZE/ICE (locks cards) ride on card hits with deterministic chance rolls, stacking rules, and per-round ticks.
+- **Gems**: passive skills (e.g. SHORT STRAIGHT) won by staking 50 at the chuck-a-luck table and equipped manually on the GEM tab (max 3 at once); owning alone unlocks nothing.
+- **Side activities**: Carl's tutorial spar on the Field, a chuck-a-luck dice table in the Village Area, shops with BUY/SELL tabs, and a 4-tab quick screen (DECK / QUEST / HERO / GEM).
+- **Persistence**: battery-backed SRAM save/load with slots, plus automatic saves (map entries, milestones) and QUEST-tab save & quit.
 
 ### What's in the demo
 
-The demo's world is **14 connected rooms**: the Field and Town; a Forest branch
-(Mossy Glade → Deep Woods → Sunken Grove, plus the Overgrown Shrine); a
-desolate South Field / Howling Ridge spur; and a Castle chain (Entry → Great
-Hall → the Ruined Castle → the Throne Room, where the Lord of Slimes waits).
-The rooms are populated with enemy encounters (slimes, bats, kobolds, spiders,
-and a mimic) and a few NPCs who offer advice.
+The demo's world is **17 connected maps**: Wake Grove (spawn) and the Emerald Plains Field (Carl's tutorial spar, cache chest); Oakhaven Town and the Village Area (merchant, heal mage, dog/skeleton key quest, Nis's chuck-a-luck table); a Forest branch
+(Whispering Forest → Grassy Forest); a
+Craggy Mountain Pass and Desolate South Field / Howling Ridge spur with underground tunnels; and a Castle chain (Castle Entry → Great
+Hall → the Ruined Castle → the Throne Room, where the Lord of Slimes waits, then the demo ending).
+The maps are populated with enemy encounters (slimes, slime knights, bats, kobolds, spiders,
+and a mimic) and NPCs who offer advice, quests, and minigames.
 
 ## About Gallia Belgica Systems
 
@@ -94,7 +102,7 @@ Host-Side AI Agent / Test Runner (Python)
 
 #### Key LLM-First Capabilities
 
-- **Declarative Scenario Fixtures**: 193 deterministic scenarios in `tools/scenarios/tests/*.json` that configure map coordinates, story flags, party stats, decks, hands, inventory, and enemy states before running scripted inputs.
+- **Declarative Scenario Fixtures**: 525 deterministic scenarios in `tools/scenarios/tests/*.json` that configure map coordinates, story flags, party stats, decks, hands, inventory, and enemy states before running scripted inputs.
 - **Parallel Test Harness**: Runs test scenarios concurrently across host CPU cores (`make test-harness JOBS=16`), achieving over 7x speedup compared to serial execution.
 - **Structured Telemetry**: Every state transition, map crossing, collision, dialogue event, quest update, card action, combo resolution, loot drop, and battle action emits structured telemetry into a bounded ring buffer.
 - **Semantic State Snapshots**: Agents inspect exact world coordinates, active screens, dialogue trees, story flags, deck/collection contents, and combat stats rather than parsing pixel frames.
@@ -112,27 +120,33 @@ The codebase includes a complete, playable vertical slice proving all core syste
   - Collision detection, walkability allowlists, and warp gates;
   - Persistent actors, NPC patrolling, and proximity interaction.
 - **Card Combat** (see [`docs/card-battle.md`](docs/card-battle.md)):
-  - Attack/defend phases with a 5-card hand drawn from your deck (up to 20 copies);
-  - Number-based **poker-style combos**: the hand you make determines the tier — PAIR, TWO PAIR, THREE KIND, STRAIGHT, FLUSH, FULL HOUSE, FOUR KIND, STRAIGHT FLUSH, FIVE KIND;
+  - Attack/defend phases with a hand of up to 5 cards drawn from your deck (max 20 cards total), each costing energy;
+  - Number-based **poker-style combos**: the hand you make determines the tier — PAIR, TWO PAIR, SHORT STRAIGHT (gem-gated 3-card run), THREE KIND, STRAIGHT, FLUSH, FULL HOUSE, FOUR KIND, STRAIGHT FLUSH, FIVE KIND;
   - **Ring cards substitute any number** in the combo (they stay heal cards, so they break a flush);
   - Card types (sword, shield, bow, heal, dagger) with deterministic effect resolution and a visible turn timer;
   - Live combo preview on the battle HUD (mirrors resolution, including ring trials).
 - **Deck & Collection** (see [`docs/deck.md`](docs/deck.md)):
   - 20-card combat deck with draw/discard/reshuffle;
-  - Collection management through the quick screen (add/remove deck copies, filter/sort);
+  - Collection management through the quick screen's DECK tab (add/remove deck copies, filter/sort, per-side lists);
   - Deck state is persistent and saveable.
+- **Gems & Energy** (see [`docs/short-straight.md`](docs/short-straight.md)):
+  - Energy pool starts at 1 AP and grows to 5 via milestones (tutorial, chests, Monster Hunt, mimic);
+  - Equipable gem passives (max 3, GEM tab) such as SHORT STRAIGHT, won at the chuck-a-luck table.
 - **Procedural Card Loot** (Borderlands-inspired, see [`docs/loot.md`](docs/loot.md)):
   - Enemies drop **cards**, not generic items — every drop is either deck material or sellable loot;
-  - Procedural card synthesis (names, values, riders) with rarity tiers;
-  - Cards can be sold back to the merchant for **gold**, the game's currency.
+  - Procedural card synthesis (names, values, riders, materials) with rarity tiers and rank gates;
+  - Cards can be sold back to the merchant for **gold**; prices depend on AP cost/material and drift with the market (see [`docs/economy.md`](docs/economy.md)).
 - **Status Effects** (see [`docs/combo-system.md`](docs/combo-system.md)):
-  - POISON, BURN, and FREEZE as on-hit riders with deterministic chance rolls, stacking rules, and per-round ticks.
+  - POISON (confuses into friendly fire), BURN (wounds), and FREEZE/ICE (locks cards) as on-hit riders with deterministic chance rolls, stacking rules, and per-round ticks.
+- **Minigames & Tutorial**:
+  - Carl's sparring tutorial on the Field (YES/NO lesson, AP grant);
+  - Chuck-a-luck dice game in the Village Area (bet gold; staking 50 in one sitting wins the STRAIGHT gem).
 - **Story & Events**:
   - Dialogue player with multi-step choices and branch conditions;
-  - Scripted quest system with multi-stage state tracking;
+  - Scripted quest system with multi-stage state tracking (Monster Hunt, merchant delivery, dog/skeleton key trade);
   - Global story flags and variables.
 - **Persistence**:
-  - Battery-backed SRAM save/load with versioned formats and slot management.
+  - Battery-backed SRAM save/load with versioned formats and slot management, plus autosaves on map entries/milestones and QUEST-tab save & quit.
 - **Audio Architecture**:
   - Hardware Timer-driven music clock (`TIMA` overflow ISR) running at fixed 256 Hz tempo regardless of main loop load or LCD redraws.
 
@@ -153,7 +167,7 @@ src/
 ├── debug/      Harness telemetry, scenario loader, assertions, RNG control
 │
 └── game/       GAME CONTENT (All game-specific tables live here)
-    ├── game_ids.h          Named story flags, variables, currencies, and actors
+    ├── game_ids.h          Named story flags, variables, currencies, gems, and actors
     ├── content.c           New game initialization and victory hooks
     ├── events_content.c    Scripted events and quest triggers
     ├── dialogue_content.c  Dialogue scripts and NPC lines
@@ -162,6 +176,9 @@ src/
     ├── quests_content.c    Quest registry rows and objectives
     ├── scenes_content.c    Scene definitions and map layouts
     ├── shops_content.c     Shop inventories and pricing
+    ├── gems_content.c      Gem registry (passive skills, e.g. SHORT STRAIGHT)
+    ├── gamble_content.c    Chuck-a-luck dice rules
+    ├── economy.c           Gold/market pricing
     ├── loot_drop_banked.c  Per-enemy drop tables and loot synthesis
     └── tiles_content.c     World tilesets and graphical definitions
 ```
@@ -204,7 +221,7 @@ All build tools, compilers, emulators, and test runners are automatically provid
 | `make memmap` | Check ROM and WRAM memory budget | Invariant check (`_HOME < 0x8000`) |
 | `make lint` | Compile-to-assembly `-Wall` pass over all sources | Warning report |
 | `make screenshots` | Headless PyBoy walkthrough capture | `screenshots/*.png` |
-| `make gifs` | Regenerate the README GIFs (boot, kobold battle, overworld, boss) | `screenshots/boot.gif`, `screenshots/battle.gif`, `screenshots/overworld.gif`, `screenshots/boss.gif` |
+| `make gifs` | Regenerate the README GIFs (boot, kobold battle, heal, overworld, boss) | `screenshots/boot.gif`, `screenshots/battle.gif`, `screenshots/heal.gif`, `screenshots/overworld.gif`, `screenshots/boss.gif` |
 | `make run` | Launch release ROM in emulator | Game window |
 | `make run-debug` | Launch debug ROM in emulator | Debug game window |
 | `make screenshot` | Capture headless emulator screenshot | `build/screenshot.png` |
@@ -361,6 +378,9 @@ make test-scenario SCENARIO=town_arrival
 - [`docs/deck.md`](docs/deck.md) — Deck system: 20-card deck, draw/discard, collection.
 - [`docs/deck-management.md`](docs/deck-management.md) — Quick-screen deck management UX.
 - [`docs/loot.md`](docs/loot.md) — Procedural card loot, rarity, and gold economy.
+- [`docs/economy.md`](docs/economy.md) — Gold/market pricing: AP-cost/material prices and drift.
+- [`docs/short-straight.md`](docs/short-straight.md) — SHORT STRAIGHT tier and STRAIGHT gem gate.
+- [`docs/chuck-a-luck.md`](docs/chuck-a-luck.md) — Village dice game and gem prize.
 - [`docs/implementing-card-phases.md`](docs/implementing-card-phases.md) — Implementation status of the card phases.
 - [`docs/dialogue-boxes.md`](docs/dialogue-boxes.md) — Dialogue box rendering and camera alignment.
 

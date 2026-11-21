@@ -10,7 +10,7 @@ classifies while the STRAIGHT gem is equipped -- see §Gem gate), and
 
 The tier lives behind the GEM tab: it only classifies while
 `VARIABLE_ID_GEM_EQUIPPED` has the `GEM_STRAIGHT` bit (the STRAIGHT gem,
-won at the chuck-a-luck table by leaving +20 net up in one sitting,
+won at the chuck-a-luck table by staking 50 in one sitting,
 docs/chuck-a-luck.md; equipped manually on the GEM tab).  Unequipped,
 the ladder is exactly the old one -- bare pairs and high cards are
 unchanged (scenario `gem_combo_locked`).
@@ -56,10 +56,13 @@ bit, the tab through `screen_row`.
   the trial that maximizes the healed amount (extending runs instead of
   sitting idle at v=10), and combo_short_best lets a richer ringed pair
   beat a low short straight.
-* **Suited bonus**: N/A in practice. Single-weapon values skip by two
-  (swords/bows 1,3,5,7,9; daggers/shields/rings 1,2,4,6,8), so no
-  three same-suit cards can ever be sequential. The existing +25% rule
-  would apply automatically if a future band ever allows it -- no
+* **Suited bonus**: N/A in practice, except low daggers and bows.
+  Single-weapon values skip by two (swords 1,3,5,7,9; shields/rings
+  1,2,4,6,8), so no three same-suit cards can ever be sequential --
+  except daggers and bows (both run 1,2,3,5,7): DA1+DA2+DA3 or
+  BO1+BO2+BO3 is a suited run and takes the suited bonus
+  (COMBO_SUITED_BONUS) where the
+  tier awards it.  The existing rule applies automatically, no
   special-casing needed.
 * **Rings (joker)**: free synergy. The existing best-tier trial loop
   (v = 1..10, keep best) completes runs automatically, e.g. SW4 + SW6
@@ -105,9 +108,10 @@ TWO_PAIR (150).
 
 Why 130 over 120 or 100:
 - 100/110 are invisible on small runs: 1+2+3=6 × 110% truncates to 6,
-  the same no-bonus feel as today's pair-of-1s (base 2 × 145% → 2).
+  the same no-bonus feel as the old pair-of-1s (base 2 × 145% → 2;
+  now 150% → 3 since the suited bonus went to COMBO_SUITED_BONUS).
 - 120 and 130 both give 7 for 1,2,3; they separate on mid runs
-  (4,5,6: 18 vs 19; 7,8,9: 29 vs 31).
+  (4,5,6: 18 vs 19; 7,8,9: 28 vs 31).
 - The extra card + energy cost and the permanently-unsuited status
   justify a small premium over PAIR's 120.
 - 140+ is too strong (+21-29% EV here; it starts outscoring dedicated
@@ -115,7 +119,7 @@ Why 130 over 120 or 100:
 
 Concrete damage at 130% (truncated): 1,2,3→7 · 2,3,4→11 · 3,4,5→15 ·
 4,5,6→19 · 5,6,7→23 · 6,7,8→27 · 7,8,9→31. For reference: pair of 5s
-(base 10) is 12 unsuited / 14 suited; three-kind of 5s is 27.
+(base 10) is 12 unsuited / 15 suited; three-kind of 5s is 27.
 
 One former quirk is gone by construction: a 5-card stage of two-pair +
 run (e.g. 2,3,3,4,4) resolves as TWO_PAIR (via the best-subset rule
@@ -133,12 +137,10 @@ player-only -- same as every other tier.
 ## Worked examples (multiplier 130)
 
 * Starter + cache: SW1 + DA2 + SW3 → base 6 → DMG 7.
-* Mid game: SW4 + DA6? no -- 4,5,6 needs SW4 + IRON_SWORD? no: 4,5,6 =
-  e.g. bronze dagger DA4? (dagger bands 1,2,4,6,8: DA4 exists) + SW5 +
-  SW6? no SW6 (swords odd). E.g. DA4 + RG5? rings heal... attack example:
-  SH4? shields don't attack. Say SW5 + DA4 + BRONZE? Keep it simple:
-  3,4,5 = SW3 + DA4 + SW5 → base 12 → DMG 15.
-* High end: 7,8,9 = steel sword + mythril dagger + mythril bow → base 24 → DMG 31.
+* Mid game: 1,2,3 suited = DA1 + DA2 + DA3 (the only same-weapon run in
+  the game: daggers run 1,2,3,5,7) → base 6 → DMG 9.  A mixed 1,2,3
+  (e.g. SW1 + DA2 + SW3) scores the same base unsuited.
+* High end: 7,8,9 = steel sword + mythril shield + mythril sword → base 24 → DMG 31.
 
 ## Implementation (done 2026-10-23, best-subset 2026-10-24)
 
@@ -172,8 +174,9 @@ player-only -- same as every other tier.
   cost of the whole feature is a widened tab condition + target swap
   (~6 B; the GEM nav/render bodies forward to the quest bodies in-bank
   so the fixed dispatch needs no new branches).  Bank-3 pressure funded
-  two evictions to the overflow bank: `save_op_banked` and
-  `loot_synth_banked` (both self-contained, single fixed dispatch each).
+  two evictions out of the fixed/overflow banks: `save_op_banked` (now
+  bank 12 with room to spare) and `loot_synth_banked` (bank 8; both
+  self-contained, single fixed dispatch each).
   `make memmap` + `make stack-budget` gates stay green.
 * Tests: `gem_combo_short` (3-run + 130-vs-120 pin: 4,5,6 gives 19),
   `gem_combo_4run` (top-three: 1,2,3,4 gives 11),

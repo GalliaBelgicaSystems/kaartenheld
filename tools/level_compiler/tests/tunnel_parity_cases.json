@@ -71,6 +71,17 @@
         "a": {"exits": [{"x": 1, "y": 2, "target_scene": "b", "target_x": 9, "target_y": 9, "tunnel": "tunnel_drift"}]},
         "b": {"exits": [{"x": 5, "y": 6, "target_scene": "a", "target_x": 1, "target_y": 2, "tunnel": "tunnel_drift"}]}
       }
+    },
+    {
+      "name": "named_entry_tunnel",
+      "tunnel": "tunnel_named",
+      "ok": false,
+      "py_fragment": "target_entry",
+      "ts_fragment": "target_entry",
+      "levels": {
+        "a": {"exits": [{"x": 1, "y": 2, "target_scene": "b", "target_x": 5, "target_y": 6, "tunnel": "tunnel_named", "target_entry": "stairs_up"}]},
+        "b": {"exits": [{"x": 5, "y": 6, "target_scene": "a", "target_x": 1, "target_y": 2, "tunnel": "tunnel_named"}]}
+      }
     }
   ]
 }

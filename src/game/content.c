@@ -1,4 +1,5 @@
 #include "content.h"
+#include "economy.h"
 #include "game_ids.h"
 #include "story.h"
 #include "event.h"
@@ -44,6 +45,14 @@ void game_new_game(GameState *state)
     if (!state) return;
     game_state_zero(state);
 
+    /* Cross-session outro state is NOT GameState (module WRAM) and would
+     * otherwise leak across a LOAD/RESET mid-session (AGENTS.md §20):
+     * a fresh game never starts demo-completed, mid-despair, or
+     * partway through the THANKS hold.  BSS zero covers boot; this
+     * covers scenario_load_state() and every new-game path. */
+    g_demo_completed = 0;
+    g_slime_despair = 0;
+
     /* Player start is compiled from the wake-grove spawn (the single source of
      * truth).  scene_spawn() runs the banked table read; the fallback for
      * bad map ids lives in that banked body, so this fixed-bank call site
@@ -74,13 +83,18 @@ void game_new_game(GameState *state)
      * and the debugger never disagree about what a fight will stage. */
     state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 1;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
+    state->currency.amount[CURRENCY_ID_ARROWS - 1] = HERO_START_ARROWS;
+    /* Neutral market at boot (game_state_zero leaves 0, which is outside
+     * the valid 24-48 band; readers treat out-of-band as neutral, but a
+     * new game states it explicitly). */
+    state->economy.market_index = ECONOMY_INDEX_NEUTRAL;
 
     /* Starter deck (docs/deck-management.md §1), granted from the generated
      * hero table (screens/hero.json via battle_compile.py) so the editor
      * owns the contents: each entry is granted once to the collection and
      * once to the draw pile, preserving exact draw order.  The bank-2
      * table is staged one byte at a time (no large stack or WRAM scratch
-     * needed); deck_add_card/deck_collection_add enforce max_copies. */
+     * needed); deck_add_card enforces the 5-per-identity deck limit. */
     {
         uint8_t n = 0;
         uint8_t i;
@@ -91,6 +105,10 @@ void game_new_game(GameState *state)
             banked_copy(2, &id, &g_hero_starter_deck_ids[i], 1);
             deck_collection_add(&state->cards, id, 1);
         }
+        /* Ungated grant path: the ident gate skips its pool check on
+         * d == 0, so the pre-decked starter survives a stale pool value
+         * in the shared staging byte. */
+        g_bk_byte_d = 0;
         for (i = 0; i < n; i++) {
             banked_copy(2, &id, &g_hero_starter_deck_ids[i], 1);
             deck_add_card(&state->cards, id);
@@ -124,4 +142,41 @@ ScreenId game_screen_after_victory(const Game *g)
         return SCREEN_ENDING;
     }
     return SCREEN_OVERWORLD;
+}
+
+void game_slime_despair_outro(void)
+{
+    /* The battle screen guarantees a live game; the single global Game
+     * instance is always the battle owner (main.c drives everything from
+     * &g_game).  After the desperation move and explosion sound, open the
+     * Lord of Slimes defeat dialogue in the Throne Room. */
+    g_slime_despair = 0;
+    world_on_battle_end(&g_game, false);
+    dialogue_start_def(&g_game.dialogue, (DialogueId)DIALOGUE_ID_SLIME_LORD_DEFEAT);
+    screen_change(&g_game, SCREEN_DIALOGUE);
+}
+
+void game_slime_despair_wake(void)
+{
+    /* Fade to white, then wake the hero in the finale backdrop
+     * (SCENE_DEMO_END_WAKE_SCENE) and play the strange wake dialogue. */
+    g_slime_despair = 1;
+    g_bk_call_bank = 10;
+    g_bk_call_target = (uint16_t)&game_despair_fade_out_banked;
+    banked_call_run();
+#ifdef TEST_LEVELS
+    scene_load(&g_game, SCENE_TEST_FOREST, 12, 10);
+#else
+    scene_load(&g_game, SCENE_DEMO_END_WAKE_SCENE, 12, 10);
+#endif
+    /* scene_load leaves facing untouched, so route it explicitly to the
+     * authored spawn facing (UP) instead of the engage direction.  Reset
+     * the render cache explicitly (screen_change is a no-op here because
+     * g_game.screen is already SCREEN_DIALOGUE; leaving prev_map_id on
+     * the throne room would trigger an LCD-off full_redraw every frame
+     * on the wake map). */
+    g_game.world.player.facing = DIRECTION_UP;
+    g_game.prev_screen = SCREEN_BATTLE;
+    dialogue_start_def(&g_game.dialogue, (DialogueId)DIALOGUE_ID_STRANGE_WAKE);
+    game_render_reset(&g_game);
 }

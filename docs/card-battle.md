@@ -102,7 +102,7 @@ markers throughout the doc point to the exact source. A quick summary:
 * Defend resolution — shields block incoming enemy damage with straight/flush bonuses; non-shields are inert (0 block, 0 combo).
 * Card consumption — played cards are always discarded and replaced from the deck.
 * Reset deck (Fisher-Yates shuffle), draw/discard/draw-to-replace.
-* 20-second decision timer that auto-executes on expiry.
+* 20-second decision timer that misses on expiry unless SELECT validated the hand (staged-but-unvalidated cards are dropped, nothing is spent; expiry with nothing staged is a MISSED! whiff the same way -- an explicit empty SELECT keeps the historic quick-attack auto-play).
 * Explicit battle state machine plus a tutorial-slime battle.
 * Telemetry for every important transition; regression scenarios under `make test-harness`.
 
@@ -948,24 +948,24 @@ Its distinction can be expanded later.
 
 ---
 
-## Fire — sword element
+## Fire — bow element
 
 There is no Fire *card type*. Fire (and later Ice) is an **element carried on
-a weapon**: the Fire Sword renders as `SW4` and has the BURN on-hit rider
+a weapon**: the Fire Bow renders as `BO4` and has the BURN on-hit rider
 (`STATUS_BURN`, see `docs/loot.md §34`). Example:
 
 ```text
-F SW   (battle code SW4)
+F BO   (battle code BO4)
 ```
 
 Description:
 
 ```text
-Sword: physical (with a chance to burn the target)
+Bow: physical (with a chance to burn the target)
 ```
 
-Elemental weaknesses can be added later; the fire effect walks a sword until
-then.
+Elemental weaknesses can be added later; the fire effect walks with the bow
+until then.
 
 ---
 

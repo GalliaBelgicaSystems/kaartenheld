@@ -41,7 +41,7 @@ pb.memory[game_addr + 6] = 5
 pb.send_input(WindowEvent.PRESS_ARROW_RIGHT)
 
 prev_scx = pb.memory[0xFF43]
-prev_vram = bytes([pb.memory[0x9800 + i] for i in range(32 * 18)])
+prev_vram = bytes([pb.memory[0x9800 + i] for i in range(32 * 32)])
 
 scx_changes = 0
 zero_vram_writes = 0
@@ -56,8 +56,8 @@ for t in range(240):
         lcd_off_count += 1
 
     scx = pb.memory[0xFF43]
-    curr_vram = bytes([pb.memory[0x9800 + i] for i in range(32 * 18)])
-    diffs = [i for i in range(32 * 18) if curr_vram[i] != prev_vram[i]]
+    curr_vram = bytes([pb.memory[0x9800 + i] for i in range(32 * 32)])
+    diffs = [i for i in range(32 * 32) if curr_vram[i] != prev_vram[i]]
 
     if scx != prev_scx:
         scx_changes += 1

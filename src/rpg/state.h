@@ -8,15 +8,16 @@
 #include "rpg/deck.h"
 
 /* Fixed-size capacity limits for the Game Boy.  No dynamic allocation.
- * Sized to what the game actually uses (single hero, gold-only currency,
- * hero + weapon progression): every unused slot is WRAM + SRAM + checksum
- * time on every save.  Grow a cap when a mechanic needs it, never in
- * advance.  tools/walkthrough/state_reader.py mirrors these sizes. */
+ * Sized to what the game actually uses (single hero, gold + arrows
+ * currencies, hero + weapon progression): every unused slot is WRAM +
+ * SRAM + checksum time on every save.  Grow a cap when a mechanic needs
+ * it, never in advance.  tools/walkthrough/state_reader.py mirrors
+ * these sizes. */
 #define MAX_PARTY_MEMBERS     1
 #define MAX_STATE_FLAGS       64
 #define MAX_STATE_VARIABLES   16
 #define MAX_PERSISTENT_ACTORS 16
-#define MAX_CURRENCIES        1
+#define MAX_CURRENCIES        2
 #define MAX_PROGRESSION_TARGETS 2
 
 /* Generic, saveable identifiers.  The game layer decides what a given
@@ -97,6 +98,18 @@ typedef struct {
     uint16_t progress;
 } ProgressionState;
 
+/* Persistent economy state (docs/economy.md §6): one global market index
+ * shared by all shops plus the transaction counters for the next update.
+ * Appended last: keep initializers in sync.  market_index is in 1/32
+ * units (32 = neutral 100%, range 24-48 = 75%-150%); gold_in counts
+ * enemy-loot gold only (sales excluded, §6.1); counters saturate. */
+typedef struct {
+    uint8_t market_index;
+    uint16_t gold_in;
+    uint16_t gold_out;
+    uint8_t battles;
+} EconomyState;
+
 typedef struct {
     ProgressionTarget target;
     ProgressionState state;
@@ -130,6 +143,7 @@ typedef struct {
     CurrencyState currency;
     WorldState world;
     ProgressionStore progression;
+    EconomyState economy;
 } GameState;
 
 void game_state_zero(GameState *state);

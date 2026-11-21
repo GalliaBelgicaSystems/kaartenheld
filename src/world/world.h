@@ -12,34 +12,45 @@ typedef enum {
     WORLD_TILESET_FOREST   = 2,
     WORLD_TILESET_VILLAGE  = 12,
     WORLD_TILESET_DESOLATE = 14,
-    WORLD_TILESET_CASTLE   = 15
+    WORLD_TILESET_CASTLE   = 15,
+    WORLD_TILESET_UNDERGROUND = 16
 } WorldTilesetKind;
 
 /* Hard caps for the tile buffer: a scene may be any size up to these.
  * The overworld camera windows a WORLD_VIEW_W x WORLD_VIEW_H view out of
- * the scene and scrolls it with the scroll offset.  The caps match the
- * renderer + hardware limits: ui_draw_world_map() draws a 32x18 window
- * once at map load and the 32x32 BG tilemap ring is 32 wide, so a wider
- * or taller scene would wrap/clobber VRAM instead of displaying.  The
- * 32-wide stride also keeps every map[y][x] lookup a shift, not a
- * multiply, on the multiply-less SM83. */
+ * the scene and scrolls it with the scroll offset.  The view is 20x17:
+ * physical screen row 17 is owned by the Window-layer status-bar HUD
+ * (see ow_hud_banked.c), so the world viewport stops above it and the
+ * last map row scrolls into view instead of hiding under the bar.
+ * The caps match the renderer + hardware limits: ui_draw_world_map()
+ * draws a 32x32 window once at map load and the 32x32 BG tilemap ring
+ * is 32 wide and 32 tall, so a wider or taller scene would wrap/clobber
+ * VRAM instead of displaying.  The 32-wide stride also keeps every
+ * map[y][x] lookup a shift, not a multiply, on the multiply-less SM83. */
 #define WORLD_WIDTH  32
-#define WORLD_HEIGHT 18
+#define WORLD_HEIGHT 32
 
 /* Overworld camera view window in tiles.  The camera (World.scroll_x/y)
  * keeps the player inside this window, scrolling as the player crosses its
  * edge and clamping at the scene bounds (world width/height). */
 #define WORLD_VIEW_W 20
-#define WORLD_VIEW_H 18
+#define WORLD_VIEW_H 17
 
-/* Maximum concurrent hostile actors in a scene (compile-time constant). */
-#define MAX_WORLD_ACTORS 4
+/* Maximum concurrent hostile actors in a scene (compile-time constant).
+ * Raised 4 -> 7 for the south corridor overlap (south_ridge runs kobold
+ * + bat + slime + 2 spiders + 2 slime knights; south_field runs 2
+ * slimes + bat + spider + knight).  OAM still fits: worst case
+ * 1 + 7*4 = 29 actor entries, markers live at fixed slots 30-37
+ * (ui_world_sprite_banked.c).  The debug snapshot still reports only
+ * the first MAX_SNAPSHOT_ACTORS actives (telemetry.h): bumping the
+ * snapshot would rewrite the harness wire format for no fixture
+ * benefit (fixtures never exceed 4). */
+#define MAX_WORLD_ACTORS 7
 
-/* Pursuit-alert display length (frames at 60 fps) after entering a map
- * with live chasers.  Set by the bank-8 marks refresh on entry (it
- * self-detects the map change; world_load_map only spawns the actors),
- * drained per frame by the same refresh; the "!" OAM marks show while
- * it runs. */
+/* Pursuit-alert display length (frames at 60 fps) after a chaser
+ * (AI_CHASE / AI_CHASE_FAST) first spots the hero (actor.h
+ * AI_CHASE_SIGHT).  Armed by the bank-8 marks sight scan, drained per
+ * frame by the same refresh; the "!" OAM marks show while it runs. */
 #define ALERT_TTL_FRAMES 150
 #define NO_ACTOR_INDEX   0xFF
 
@@ -159,13 +170,18 @@ typedef enum {
     TILE_FOREST_60 = 68,
     TILE_FOREST_61 = 69,
     TILE_FOREST_62 = 70,
+    /* VRAM slot 63 = the water block's last cell (sheet (5,4)):
+     * "water bottom right corner wall" (forest_water_bottom_right_corner_wall).
+     * The sheet cell is remapped into this slot at encode time (Makefile
+     * --tile-coords) because slots 69+ are unreachable from the forest
+     * value range.  This value had no tile before the rewire. */
     TILE_FOREST_63 = 71,
     /* Forest row-4 extension (hut + mailbox, sheet slots 64..68): TileType
      * 0xFF is the empty-cell sentinel and the enum must stay <= 0xFE
      * (g_tiletype_fits_u8; 254 kept clear as buffer), so these live in
      * the free 136..140 gap, NOT contiguously after 71 (72+ belongs to
      * castle/village).  The renderer maps them with (value - 72), not
-     * (value - TILE_FOREST_00): see ui_draw_world_cell.
+     * (value - TILE_FOREST_00): see ui_draw_terrain_cell.
      * value = 72 + VRAM slot.  (141..145 went to the castle exit +
      * extension, 251..253 to the rest of the castle extension.) */
     TILE_FOREST_64 = 136,
@@ -174,8 +190,8 @@ typedef enum {
     TILE_FOREST_67 = 139,
     TILE_FOREST_68 = 140,
 
-    /* Castle Landscape tiles: 36 tiles in sheet scan order (0..35),
-     * mapping 1:1 to the 36 castle VRAM slots (RPG_TILE_BASE_WORLD):
+    /* Castle Landscape tiles: 45 tiles in sheet scan order (0..44),
+     * mapping 1:1 to the 45 castle VRAM slots (RPG_TILE_BASE_WORLD):
      * TILE_CASTLE_<i> renders VRAM block slot i.  Suffixes stay scan
      * indices, NOT values.
      *
@@ -185,12 +201,14 @@ typedef enum {
      * evicted legacy desolate WALL_00..WALL_10 (unreferenced by every
      * level; the legacy engine ranges in ui.c now start at WALL_11).
      * 251..253 (top of the u8 range, still <= 0xFE per g_tiletype_fits_u8)
-     * stay with the chandelier/vase row as before.  Values 184..186
-     * (ex-red-square/MERCHANT/STAIRCASE) are free again.  Both empty
-     * cells share one tile id.  ui.c maps the 141..156 block through a
-     * 16-byte slot table (one range check instead of a branch ladder);
-     * the generated walk/glyph tables absorb the values with no hand
-     * edits. */
+     * stay with the chandelier/vase row as before.  The sheet's fifth
+     * row takes the last free values 184..186 (ex-red-square/MERCHANT/
+     * STAIRCASE) for the carpet corners + exit up; the row's remaining
+     * empty cells share the black-emptiness value 156 under new
+     * TILE_CASTLE_37..44 ids.  ui.c maps the 141..156 block through a
+     * 16-byte slot table plus a 3-byte table for 184..186 (one range
+     * check each instead of a branch ladder); the generated walk/glyph
+     * tables absorb the values with no hand edits. */
     TILE_CASTLE_00 = 72,
     TILE_CASTLE_01 = 73,
     TILE_CASTLE_02 = 74,
@@ -225,7 +243,17 @@ typedef enum {
     TILE_CASTLE_31 = 153,
     TILE_CASTLE_32 = 154,
     TILE_CASTLE_33 = 155,
-    TILE_CASTLE_34 = 156,
+    TILE_CASTLE_34 = 184,
+    TILE_CASTLE_35 = 185,
+    TILE_CASTLE_36 = 186,
+    TILE_CASTLE_37 = 156,
+    TILE_CASTLE_38 = 156,
+    TILE_CASTLE_39 = 156,
+    TILE_CASTLE_40 = 156,
+    TILE_CASTLE_41 = 156,
+    TILE_CASTLE_42 = 156,
+    TILE_CASTLE_43 = 156,
+    TILE_CASTLE_44 = 156,
 
     /* Village Landscape tiles: 48 tiles in sheet scan order (0..47),
      * mapping 1:1 to the 48-tile village VRAM block (RPG_TILE_BASE_WORLD).
@@ -383,13 +411,93 @@ typedef enum {
     TILE_DESOLATE_LANDSCAPE_61 = 248,
     TILE_DESOLATE_LANDSCAPE_62 = 249,
     TILE_DESOLATE_LANDSCAPE_63 = 250,
+    /* Underground tiles: 31 defs in sheet scan order (vram slots 0..35;
+     * slots 32..35 share one void def (slot-32 art), like castle 37..44).
+     * The u8 TileType space is fully spent, so every tile ALIASES a live
+     * value from a kind-gated range instead of taking a new one.
+     * Aliasing is safe because every renderer branch except the
+     * gateless castle runs (141..156, 184..186, 251..253 -- all avoided
+     * here) is gated on tileset kind: a value shared with a forest /
+     * village / desolate tile can never render as that tile while kind
+     * is UNDERGROUND, and vice versa.  The aliasing contract (enforced
+     * by tools/level_compiler/generate_tiles.py, which fails the build
+     * on a mismatch): each TILE_UNDERGROUND_<i> must match the live
+     * tile's (walkable, glyph) EXACTLY, or movement/palette/screen-buffer
+     * behavior corrupts BOTH tilesets sharing the value.
+   * Mapping (vram slot -> value -> donor):
+   *   30 skeleton bone art    -> 254 (own art; the table in ui.c covers
+   *                             208..254 with 251..253 void)
+   *   31 skeleton no-bone art -> 254 shared (exact-match alias: same
+   *                             walkable glyph as slot 30, so the
+   *                             generate_tiles alias rule passes; the
+   *                             bone-taken swap is a fixed-bank VRAM
+   *                             content swap by game_after_tileset_load,
+   *                             never a map-value change)
+   *   00..19 walls            -> 228..247 (desolate solid '#')
+     *   20,22,23,24 floors      -> 208..211 (desolate walkable ',')
+     *   21 stairs (exit)         -> 227 (desolate exit, walkable '>')
+     *   25..28 interior corners  -> 212..214 + 220 (desolate solid '#';
+     *                             215/216 are treetrunk 't' art and are
+     *                             never aliased)
+     *   29 solid floor           -> 226 (desolate plain floor, walkable '.';
+     *                             exact-match alias: the new floor derives
+     *                             '.', same as the donor)
+     *   32..35 void (one def)    -> 221 (desolate solid '#'; the manifest
+     *                             forces glyph '#' over the object default
+     *                             so the entry matches)
+     * All values sit in one contiguous run (208..216, 220/221, 226/227,
+     * 228..250)
+   * plus the skeleton's own value 254,
+     * so the renderer maps them through a single fixed-bank slot table
+     * (s_ug_slot in ui.c; the fixed bank has room again after the
+     * semantic-refill move-out).  A banked-table read was tried first,
+     * but fixed-bank code itself executes from the switchable window
+     * (ROM bank 1: ui.c links above 0x4000), so an inline bank select
+     * would unmap the code mid-execution -- only the WRAM trampoline
+     * may switch banks. */
+    TILE_UNDERGROUND_00 = 228,
+    TILE_UNDERGROUND_01 = 229,
+    TILE_UNDERGROUND_02 = 230,
+    TILE_UNDERGROUND_03 = 231,
+    TILE_UNDERGROUND_04 = 232,
+    TILE_UNDERGROUND_05 = 233,
+    TILE_UNDERGROUND_06 = 234,
+    TILE_UNDERGROUND_07 = 235,
+    TILE_UNDERGROUND_08 = 236,
+    TILE_UNDERGROUND_09 = 237,
+    TILE_UNDERGROUND_10 = 238,
+    TILE_UNDERGROUND_11 = 239,
+    TILE_UNDERGROUND_12 = 240,
+    TILE_UNDERGROUND_13 = 241,
+    TILE_UNDERGROUND_14 = 242,
+    TILE_UNDERGROUND_15 = 243,
+    TILE_UNDERGROUND_16 = 244,
+    TILE_UNDERGROUND_17 = 245,
+    TILE_UNDERGROUND_18 = 246,
+    TILE_UNDERGROUND_19 = 247,
+    TILE_UNDERGROUND_20 = 208,
+    TILE_UNDERGROUND_21 = 227,
+    TILE_UNDERGROUND_22 = 209,
+    TILE_UNDERGROUND_23 = 210,
+    TILE_UNDERGROUND_24 = 211,
+    TILE_UNDERGROUND_25 = 212,
+    TILE_UNDERGROUND_26 = 213,
+    TILE_UNDERGROUND_27 = 214,
+    TILE_UNDERGROUND_28 = 220,
+    TILE_UNDERGROUND_29 = 221,
+    TILE_UNDERGROUND_FLOOR = 226,
+    TILE_UNDERGROUND_1E = 254,
 } TileType;
 
 /* Tile ids live in uint8_t map arrays with 0xFF reserved as a sentinel
- * (empty/unset cell), so the enum must never reach it -- only 254 is
- * still clear past the castle extension (251..253), and it stays clear
- * as buffer.  Enforced by g_tiletype_fits_u8 in world.c (kept out of
- * this header so the 2 bytes are emitted once). */
+ * (empty/unset cell), so the enum must never reach it -- 254 was the
+ * last clear value past the castle extension (251..253) and now belongs
+ * to the underground skeleton tiles (walkable bone art the tunnel
+ * skeleton NPC stands on; with-bone and no-bone share 254 under the
+ * exact-match alias rule).  The u8 TileType space is now fully spent:
+ * any further tile needs an alias or a repurposed value (see
+ * generate_tiles.py landscape_entries).  Enforced by g_tiletype_fits_u8
+ * in world.c (kept out of this header so the 2 bytes are emitted once). */
 
 /* Frames between autonomous patrol steps for hostile actors (~0.53 seconds). */
 #define PATROL_STEP_INTERVAL 32
@@ -474,8 +582,9 @@ typedef struct {
     /* Movement animation state (runtime only, never persistent).  When
      * move_state == MOVE_STATE_MOVING, the player is animating from
      * player.position toward move_target over MOVE_FRAMES; the tile
-     * position only commits at the end of the walk.  The renderer derives
-     * the sub-tile pixel position from (position, target, progress). */
+     * position only commits at the end of the walk.  The renderer
+     * derives the sub-tile pixel position from (position, target,
+     * progress).  Diagonal wall-hug slides run at the same speed. */
     uint8_t move_state;      /* MoveState */
     uint8_t move_target_x;   /* target tile committed at the end of the walk */
     uint8_t move_target_y;
@@ -515,8 +624,10 @@ typedef struct {
     uint8_t encounter_cooldown;
 } World;
 
-/* Neighbor edge indices (n,s,e,w), shared by the move decision and the
- * banked edge-spawn body. */
+/* Neighbor edge indices (n,s,e,w), shared by the move decision (the staged
+ * move_dir must match the decide path exactly: corners resolve N/S
+ * before E/W). Edge entry itself is the destination's arrival-side named
+ * entry (or its main spawn), never a mirror. */
 typedef enum {
     NBR_N = 0,
     NBR_S = 1,
@@ -532,9 +643,13 @@ void world_change_map(World *w, MapId map_id, uint8_t spawn_x, uint8_t spawn_y,
 /* Overworld camera: keep the player centred in the WORLD_VIEW_W x
  * WORLD_VIEW_H view, clamped at the scene bounds (scenes smaller than the
  * view never scroll; near a scene edge the player moves off-centre while
- * the camera stays at the boundary).  The camera glides smoothly in pixels
- * (SCX/SCY); scroll_x/y (= camera_px/8) drive the tile window and the
- * snapshot.  Called once per overworld frame. */
+ * the camera stays at the boundary).  The vertical centre stays at
+ * player_py - 72 (row 9 of the 17-row view, one below exact centre):
+ * keeping the old offset leaves every above-bottom camera position
+ * bit-identical and only the bottom clamp reveals one more row.  The
+ * camera glides smoothly in pixels (SCX/SCY); scroll_x/y (= camera_px/8)
+ * drive the tile window and the snapshot.  Called once per overworld
+ * frame. */
 void world_update_scroll(World *w);
 
 /* Animated movement: world_try_begin_move validates the target and starts

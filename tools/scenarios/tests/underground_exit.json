@@ -1,0 +1,51 @@
+{
+ "name": "underground_exit",
+ "test": true,
+ "description": "Step north onto the Underground stairs gate at (10,4): the point exit fires to TEST_CASTLE",
+ "actions": [
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  },
+  {
+   "type": "press",
+   "button": "UP"
+  },
+  {
+   "type": "wait",
+   "frames": 16
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "scene",
+   "expected": "TEST_CASTLE"
+  },
+  {
+   "type": "player_position",
+   "expected_x": 10,
+   "expected_y": 10
+  },
+  {
+   "type": "event_occurred",
+   "event": "MAP_CHANGED"
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_UNDERGROUND",
+  "player": {
+   "x": 10,
+   "y": 6,
+   "facing": "UP"
+  },
+  "seed": 5007
+ }
+}

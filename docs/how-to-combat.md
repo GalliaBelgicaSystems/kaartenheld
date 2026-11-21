@@ -14,35 +14,39 @@ You always strike first each round, then block.
 
 The field holds a single slime, **CARL**, in a grove of trees, old
 stumps and grass tufts. Walk into him and a dialogue box opens first:
-it is dangerous to go alone, and he will teach you how to fight -- his
-full field guide (targeting, swords, shields, bows, `HE` rings that hit
-for 0 but heal and build poker hands, riders included,
-repeated on every later visit). Close the lesson and the spar starts by
-itself — no second bump needed. Pressing A while facing him teaches
-and spars exactly the same. He never leaves: bump him any time to
-hear the guide again.
+it is dangerous to go alone, and he asks if you want to learn how to
+fight — answer **YES** (the default) and the spar starts by itself, no
+second bump needed. Answer NO and he lets you walk away; bump him any
+time to hear the offer again. He never leaves: come back any time to
+spar again — and if you manage to bring down his 10 HP, he graduates
+you. The spar hands over **+1 action point** as soon as it starts (his
+opening lesson says so).
 
 ![Carl waits on the field](../screenshots/08-carl-field.png)
 
 East of him sits a treasure chest with your first POISON_DAGGER (the
 starter deck carries none); the Merchant sells more. Bumping the chest
-also plays a reward speech and grants **+1 action point**, same as beating
-Carl — whichever comes first wins, the second is a harmless no-op, so the
-order never matters.
+also plays a reward speech and grants **+1 action point**.
 
 He is a friendly practice dummy whose every word is green, so you know
 it is him speaking.
 
-![Carl's lesson](../screenshots/08-carl-tutor.png)
+![Carl's offer](../screenshots/08-carl-tutor.png)
 
-Walk into him to spar: a solo fight against his 10 HP. His practice
-deck deals **0 damage**, so you cannot lose — learn the round below at
-your own pace (the battle timer still runs, but nothing can hurt you).
-There is no target arrow over Carl: with a single foe there is nothing
-to aim at. On your turn the top reads `CARL: PICK CARDS`, then
-`DO POKER HANDS.` below it. The screen coaches the buttons too:
-`L/R` moves the cursor, `A` chooses the card, `SELECT` confirms the
-hand — same wording every phase.
+Walk into him and say YES to spar: a solo fight against his 10 HP. His
+practice deck deals **0 damage**, so you cannot lose — learn the round
+below at your own pace (the battle timer still runs, but nothing can hurt
+you). With a single foe the target arrow
+stays parked on him; on your turn the top reads `TARGET CARL`. Carl coaches through
+normal dialogue boxes: how to attack (he hands over **+1 AP** to do
+poker hands, then: pick cards with `A`, move the cursor with `L/R`,
+confirm the hand with `SELECT`) when the spar opens, how to
+defend (pick `SHIELD` cards, `SELECT` confirms the block — and daggers
+counterattack during defense) on his first attack, what the poker hands
+mean (pairs hit harder, trips more, straights, flushes, suited bonus)
+when the round comes back to you, and finally how to flee (`B` with an
+empty hand) once you have hurt him again. From then on he jeers you
+once per attack (`UCH!`, `EW!`, ... looping).
 
 ![Pick cards, then SELECT](../screenshots/09-battle.png)
 
@@ -51,14 +55,13 @@ On his turn he coaches the block (`SHIELD` cards stop his swing,
 
 ![Block with shields, then SELECT](../screenshots/10-battle-defend.png)
 
-Beat him and he gives a graduation speech: real fights begin, AP
+Flee whenever you are done -- Carl sees you off with a farewell and
+stays for a rematch. Beat his 10 HP and he graduates you instead. AP
 limits how many cards you can play (your pool starts at **1 AP** per
-phase and grows by story rewards, up to **5**). Bumping into him
-afterwards repeats the whole field guide from his lesson (swords,
-shields, bows, rings that hit for 0 but heal and build poker hands,
-riders) — but never the extra AP.
+phase and grows by story rewards — the spar, the chest, the Monster
+Hunt and the mimic — up to **5**).
 
-![Good luck, and +1 AP](../screenshots/11-victory-speech.png)
+![Wise to flee](../screenshots/11-farewell-speech.png)
 
 ## One round, step by step
 
@@ -130,7 +133,7 @@ whole play:
 | STR FLUSH | 5 sequential, same symbol | 350% |
 | FIVE KIND | all 5 same value | 400% |
 
-Same-symbol hands get **+25%** on top. Final effect, always rounded
+Same-symbol hands get **+30%** on top. Final effect, always rounded
 down: `base × multiplier / 100`, where **base counts only the cards
 forming the poker hand** — extras deal/block 0. A lone high card scores
 just itself (`SW2 + BO3` with no pair hits for 3, not 5); a
@@ -170,15 +173,16 @@ better tiers (a lone ring can't form a hand, so ring-only selections
 still block 0).
 
 **Daggers are the exception:** played alone (daggers plus optionally
-rings, but no shields/swords/bows), they **counterattack** — the
-attacker takes dagger damage (attack-phase poker scaling, poison
-included) while you still take the full incoming swing. Mixed with
-shields, swords or bows the daggers are simply lost. A dagger + ring
+rings, but no shields/swords/bows), they **counterattack first** — the
+attacker takes the FULL dagger damage (attack-phase poker scaling,
+poison included) before the swing, and when the counter kills the
+attacker the swing never lands (no damage to you).  Otherwise you still take the full
+incoming swing.  Mixed with
+shields, swords or bows the daggers are simply lost.  A dagger + ring
 deck can therefore always attack and heal, never blocking.
 
 While staging, the COMBO row forecasts the swing (`DMG`) beside your
-pending counter (`CNT`) — or `DEF` for shield hands. No counter is
-shown when the incoming hit would kill you.
+pending counter (`CNT`) — or `DEF` for shield hands.
 
 ```
 net = incoming - (participating shields, scaled)
@@ -212,11 +216,11 @@ iron ring once his shop opens, and loot can contain more:
 
 | Status | Does | From |
 |---|---|---|
-| POISON | 1 HP/round **and greys out 2 of your hand cards** for 2 rounds | poison daggers, bat/spider swings |
-| BURN | 1 HP/round | fire swords |
-| FREEZE | you skip your whole action (attack *and* the incoming block); enemies skip their swing | ice swords |
+| POISON | **confuses** the victim for 2 rounds (no damage): enemies attack their allies (or themselves), you play a random hand | poison daggers, bat/spider swings |
+| BURN | 10% of the hit that lit it (min 1 HP/round) | fire bows |
+| ICE | **greys out 2 cards** for 2 rounds (unplayable while grey) | ice bows |
 
-Greyed cards can't be selected (cursor skips them). Re-poisoning
+Greyed cards can't be selected (cursor skips them). Re-icing
 refreshes the duration, not which cards are grey. Failed applications
 show as resisted.
 

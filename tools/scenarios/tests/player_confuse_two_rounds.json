@@ -1,0 +1,150 @@
+{
+  "name": "player_confuse_two_rounds",
+  "test": true,
+  "description": "Hero poisoned organically in PLAYER_DEFEND (Bat bow card) stays confused for 2 full rounds (duration 2 with defend-phase grace skipping the landing defend-end tick, then Attack+Defend x2 = 4 auto-plays) before STATUS_EXPIRED(POISON, hero) fires and control returns normally.",
+  "initial_state": {
+    "scene": "TEST_CASTLE",
+    "player": {
+      "x": 11,
+      "y": 7,
+      "facing": "RIGHT"
+    },
+    "party": {
+      "HERO": {
+        "hp": 99,
+        "max_hp": 99
+      }
+    },
+    "variables": {
+      "MONSTERS_DEFEATED": 1
+    },
+    "deck": {
+      "WOODEN_SHIELD": 20
+    },
+    "seed": 4
+  },
+  "actions": [
+    {
+      "type": "press",
+      "button": "RIGHT"
+    },
+    {
+      "type": "wait",
+      "frames": 60
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 0,
+      "hp": 99
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 1,
+      "hp": 0
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 2,
+      "hp": 0
+    },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 },
+    { "type": "press", "button": "SELECT" },
+    { "type": "wait", "frames": 75 }
+  ],
+  "assertions": [
+    {
+      "type": "game_state",
+      "expected": "BATTLE"
+    },
+    {
+      "type": "event_occurred",
+      "event": "STATUS_APPLIED"
+    },
+    {
+      "type": "event_arg",
+      "event": "STATUS_APPLIED",
+      "index": 0,
+      "value": 1
+    },
+    {
+      "type": "event_arg",
+      "event": "STATUS_APPLIED",
+      "index": 1,
+      "value": 1
+    },
+    {
+      "type": "event_arg",
+      "event": "STATUS_APPLIED",
+      "index": 2,
+      "value": 2
+    },
+    {
+      "type": "event_count",
+      "event": "STATUS_TICKED",
+      "count": 1
+    },
+    {
+      "type": "event_arg",
+      "event": "STATUS_TICKED",
+      "index": 0,
+      "value": 0
+    },
+    {
+      "type": "event_arg",
+      "event": "STATUS_TICKED",
+      "index": 2,
+      "value": 1
+    },
+    {
+      "type": "event_occurred",
+      "event": "STATUS_EXPIRED"
+    },
+    {
+      "type": "event_arg",
+      "event": "STATUS_EXPIRED",
+      "index": 0,
+      "value": 1
+    },
+    {
+      "type": "event_arg",
+      "event": "STATUS_EXPIRED",
+      "index": 1,
+      "value": 0
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 9,
+      "contains": "Confused!"
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 10,
+      "contains": "You play randomly!"
+    }
+  ]
+}

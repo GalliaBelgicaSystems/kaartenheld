@@ -1,4 +1,4 @@
-#pragma bank 2
+#pragma bank 11
 
 #include <stdint.h>
 #include <gb/gb.h>
@@ -8,8 +8,9 @@
 /* Release-only title-logo home.  The harness (debug) build must keep the
  * logo in bank 5 (tiles_content.c): moving it flips a layout-sensitive
  * SDCC miscompile in the dialogue path (AGENTS.md 52.19).  The release
- * build keeps it in bank 2 (spare after the actors moved to bank 4).  The
- * fixed title wrapper selects the matching bank. */
+ * build keeps it in bank 11 (pristine: the world/sfx banks are over
+ * budget and bank 2 hosts the shop renderer).  The fixed title wrapper
+ * selects the matching bank. */
 const uint8_t g_title_logo_tiles[768] = {
 #include "gfx/title_logo_tiles.inc"
 };

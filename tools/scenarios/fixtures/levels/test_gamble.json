@@ -601,6 +601,30 @@
         "enemy_type": "kobold",
         "dialogue": "DIALOGUE_ID_KOBOLD_INVITE"
       }
+    },
+    {
+      "id": "test_gamble_house_door",
+      "type": "signpost",
+      "position": {
+        "x": 3,
+        "y": 3
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
+        "display_name": "HOUSE",
+        "dialogue": "DIALOGUE_ID_HOUSE_DOOR",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "#",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
     }
   ],
   "regions": [

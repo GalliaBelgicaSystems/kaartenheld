@@ -4,11 +4,18 @@
   "label": "Dog",
   "category": "minion",
   "sprite": null,
-  "overworld": { "cells": ["dog_f0", "dog_f1"], "palette": "sprites9" },
+  "overworld": {
+    "cells": [
+      "dog_f0",
+      "dog_f1"
+    ],
+    "palette": "sprites10"
+  },
   "name": "DOG",
   "hp": 1,
   "max_hp": 1,
   "battle_id": "BATTLE_NONE",
+  "rank": 0,
   "gold_reward": 0,
   "reward_currency": "CURRENCY_ID_GOLD"
 }

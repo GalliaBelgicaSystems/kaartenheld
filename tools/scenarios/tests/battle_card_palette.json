@@ -1,7 +1,7 @@
 {
  "name": "battle_card_palette",
  "test": true,
- "description": "Battle CGB palette bytes (g_tilemap_attr_mirror): card frame cells carry the paper slot (0), the weapon and digit cells the type weapon slot (5=fight2), the enemy target caret the HUD arrow slot (3=field), and the timer bar the bar slot (0). End-to-end encode==display check for the card/HUD display mapping (the JSON manifest check is host-side only).",
+ "description": "Battle CGB palette bytes (g_tilemap_attr_mirror): card frame cells carry the paper slot (0), the weapon and digit cells the type weapon slot (5=fight2), the solo enemy target caret (boss screen, centered under the 3-wide art) the HUD arrow slot (3=field), and the timer bar the bar slot (0). End-to-end encode==display check for the card/HUD display mapping (the JSON manifest check is host-side only).",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -59,8 +59,8 @@
   },
   {
    "type": "tilemap_attr",
-   "row": 5,
-   "col": 0,
+   "row": 6,
+   "col": 10,
    "expected": 3
   },
   {

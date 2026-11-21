@@ -17,3 +17,4 @@ __pycache__/
 generated/
 node_modules/
 tools/level_editor/dist/
+review.txt

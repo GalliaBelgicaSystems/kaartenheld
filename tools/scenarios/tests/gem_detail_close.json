@@ -69,8 +69,8 @@
   },
   {
    "type": "screen_row_not_contains",
-   "row": 9,
-   "contains": "SEL:BACK"
+   "row": 16,
+   "contains": "B:BACK"
   }
  ],
  "initial_state": {

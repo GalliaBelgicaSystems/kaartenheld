@@ -22,6 +22,14 @@ typedef enum {
 #define COMBO_UNPACK_PHASE(b) ((uint8_t)(((uint8_t)(b)) & 0x01))
 #define COMBO_UNPACK_EFFECT(b) ((uint8_t)(((uint8_t)(b)) >> 1))
 
+/* Suited bonus (percent points added to the tier multiplier when every
+ * effective card shares one symbol and a tier was made).  Single source
+ * of truth: combo_content.c (full-set + pair-subset compares in
+ * combo_short_best, final multiplier in combo_resolve_banked) and the
+ * counter preview in ui_battle_content.c must all use this -- never a
+ * hardcoded literal -- so the next balance tweak is a one-line change. */
+#define COMBO_SUITED_BONUS 30
+
 /* Poker hand tiers (docs/combo-system.md hand table).  Strict sizes:
  * STRAIGHT / FLUSH / STRAIGHT_FLUSH / FIVE_KIND require all five
  * selected cards; pairs and kinds work at any count >= 2; the SHORT
@@ -56,8 +64,9 @@ typedef struct {
     uint8_t tier;        /* HandTier */
     uint8_t suited;      /* all selected share one symbol (telemetry) */
     uint16_t multiplier; /* EFFECTIVE percent incl. suited bonus:
-                          * tier % + 25 when suited -- the exact scalar
-                          * effect resolution applies to base_power */
+                          * tier % + COMBO_SUITED_BONUS when suited -- the
+                          * exact scalar effect resolution applies to
+                          * base_power */
     uint16_t base_power;
 } ComboResult;
 

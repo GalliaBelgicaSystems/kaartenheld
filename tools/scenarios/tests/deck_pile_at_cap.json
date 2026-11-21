@@ -1,0 +1,113 @@
+{
+ "name": "deck_pile_at_cap",
+ "test": true,
+ "description": "Pressing A on a PILE row whose 5-per-identity deck cap is already full reports AT CAP cleanly: with 10 POISON_DAGGER owned and 5 decked, PILE still lists the remaining 5 copies and A shows AT CAP on row 16 without adding a 6th copy.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 9102,
+  "variables": {
+   "ENERGY_POOL": 9
+  }
+ },
+ "actions": [
+  {
+   "type": "add_item",
+   "item": "POISON_DAGGER",
+   "quantity": 10
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "deck_add",
+   "card": "POISON_DAGGER"
+  },
+  {
+   "type": "wait",
+   "frames": 2
+  },
+  {
+   "type": "press",
+   "button": "START"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
+   "type": "press",
+   "button": "DOWN"
+  },
+  {
+   "type": "wait",
+   "frames": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "ITEM"
+  },
+  {
+   "type": "screen_row",
+   "row": 16,
+   "contains": "AT CAP"
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 10
+  },
+  {
+   "type": "deck_contains",
+   "card_id": 68,
+   "expected": 5
+  }
+ ]
+}

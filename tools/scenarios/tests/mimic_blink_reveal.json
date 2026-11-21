@@ -1,0 +1,31 @@
+{
+ "name": "mimic_blink_reveal",
+ "test": true,
+ "description": "Castle mimic flashes its true face (OAM 105) for ~10 of every 64 anim ticks: same staging as mimic_blink_closed, stepped into the reveal window. The pair proves the 54/10 asymmetric duty.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 59
+  }
+ ],
+ "assertions": [
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "oam_tile",
+   "entry": 2,
+   "expected": 105
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_CASTLE",
+  "player": {
+   "x": 5,
+   "y": 14,
+   "facing": "UP"
+  },
+  "seed": 777
+ }
+}

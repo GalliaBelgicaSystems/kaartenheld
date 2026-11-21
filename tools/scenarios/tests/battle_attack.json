@@ -1,7 +1,7 @@
 {
  "name": "battle_attack",
  "test": true,
- "description": "Enter battle with Carl and attack once: the starter deck's first card SW1 deals 1 damage, dropping him from 10 to 9 HP",
+ "description": "Enter battle with Carl and attack once: the starter deck's first card SW1 deals 1 damage, dropping him from 30 to 29 HP. SFX count is 6: the target-cursor blip, 4 Carl lesson-box confirms (dialogue confirms play the cursor blip), and the attack.",
  "actions": [
   {
    "type": "wait",
@@ -46,6 +46,16 @@
   {
    "type": "wait",
    "frames": 20
+  },
+  {
+   "type": "set_hand",
+   "cards": [
+    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SW", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SH", "value": 1, "cost": 1, "uses": 255},
+    {"type": "SW", "value": 3, "cost": 1, "uses": 255}
+   ]
   },
   {
    "type": "press",
@@ -107,7 +117,7 @@
   },
   {
    "type": "sfx_count",
-   "expected": 2
+   "expected": 6
   },
   {
    "type": "sfx_last",
@@ -115,12 +125,12 @@
   },
   {
    "type": "battle_enemy_hp",
-   "expected": 9
+   "expected": 29
   },
   {
    "type": "screen_row",
    "row": 2,
-   "contains": "9/10"
+   "contains": "29/30"
   }
  ],
  "initial_state": {

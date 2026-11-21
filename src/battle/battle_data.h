@@ -62,8 +62,15 @@ typedef struct EnemyTypeDef {
     uint8_t ow_tile;  // shared overworld OAM base tile (ENEMY_OW_BASE + blob offset), 0xFF = legacy SPRITE_KIND path
     uint8_t ow_w;  // overworld sprite width in tiles (1 = single-tile sprite, 2 = 2x2 grid)
     uint8_t ow_h;  // overworld sprite height in tiles (1 = single-tile sprite, 2 = 2x2 grid)
-    uint8_t ow_frames;  // overworld animation frames (cells / (ow_w*ow_h), 0 when ow_tile is 0xFF)
+    uint8_t ow_frames;  // overworld animation frames (cells / (ow_w*ow_h), 0 when ow_tile is 0xFF).
+                        // Bit 7 set = asymmetric reveal blink (see overworld.blink in enemy_type.schema.json):
+                        // frame0 rest pose ~54/64 frames, frame1 flash ~10/64. Low 7 bits stay the frame count.
     uint8_t ow_palette;  // CGB OAM palette index
+    uint8_t ow_idle_tile;  // standing-pose base tile (blob offset + ENEMY_OW_BASE), 0 = none
+                        // (shown only for never-moving AI_NONE actors; movers always take walk frames).
+    uint8_t rank;        // enemy rank R0-R6 (docs/enemies_ranking.md §4.1):
+                         // loot quality is centered on this rank's material row
+                         // (last field: existing generated offsets stay readable).
 } EnemyTypeDef;
 
 /* WRAM cache for the active battle screen's HUD layout.
@@ -128,8 +135,10 @@ typedef struct CardSkinDef {
     uint8_t weapon_color[5];   /* per-type box/icon CGB palette (UI_COLOR_*) */
     uint8_t uses_type;         /* BATTLE_CARD_TYPE whose finite-use cards draw
                                   the arrow counter on the floor row; 0xFF = none */
-    uint8_t uses_tile[6];      /* remaining uses 0..5 -> arrow icon tile */
-    uint8_t uses_power_tile;   /* power-row glyph for the uses_type (nine icon) */
+    uint8_t uses_tile[7];      /* remaining uses 0..6 -> arrow icon tile */
+    uint8_t uses_power_tile;   /* legacy power-row glyph for the uses_type
+                                 (nine icon; unused since hand cards show
+                                 their real power digit) */
 } CardSkinDef;
 
 extern const CardSkinDef g_card_skin;   /* generated (bank 4) */

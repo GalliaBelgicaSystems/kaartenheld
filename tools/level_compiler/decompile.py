@@ -56,11 +56,13 @@ CANONICAL_FLOOR = {
     "forest": "forest_plain_floor_2",
     "desolate_landscape": "desolate_landscape_plain_floor_1",
     "castle": "castle_plain_floor",
+    "underground": "underground_floor_with_debris_1",
 }
 CANONICAL_WALL = {
     "forest": "forest_top_wall_1",
     "desolate_landscape": "desolate_landscape_top_wall_1",
     "castle": "castle_top_wall",
+    "underground": "underground_top_wall_1",
 }
 
 # Canonical sprite refs per tileset, keyed by SPRITE_KIND suffix. Every id
@@ -240,14 +242,25 @@ def parse_flag_names(text):
 def load_tiletype_numbers():
     mapping = {}
     for m in re.finditer(r"^\s*(TILE_[A-Z0-9_]+)\s*=\s*(\d+)", WORLD_H.read_text(), re.M):
-        mapping[int(m.group(2))] = m.group(1)
+        # First wins: aliased values (TILE_UNDERGROUND_*, see world.h)
+        # resolve to their original owner's name, so existing tilesets
+        # keep decompiling to their own art.
+        mapping.setdefault(int(m.group(2)), m.group(1))
     if 0 not in mapping or 1 not in mapping or 2 not in mapping:
         raise DecompileError("TileType enum missing TILE_FLOOR/WALL/EXIT")
     return mapping
 
 
-def tile_value_to_id(value, tileset_id, const_by_value, gb_to_tileid, home_tileset):
-    """Reverse map_base_tile_const: ROM grid value -> 'tileset.tile_id'."""
+def tile_value_to_id(value, tileset_id, const_by_value, gb_to_tileid, home_tileset,
+                       name_to_value=None):
+    """Reverse map_base_tile_const: ROM grid value -> 'tileset.tile_id'.
+
+    Aliased values (TILE_UNDERGROUND_*, see world.h) share their number
+    with a live tile from another tileset, so the bare value->name map
+    cannot pick the home art.  The home manifest wins: name_to_value
+    resolves the home tileset's own constants to values first."""
+    if name_to_value is None:
+        name_to_value = {n: v for v, n in const_by_value.items()}
     if value == 0:
         try:
             return f"{tileset_id}.{CANONICAL_FLOOR[tileset_id]}"
@@ -258,6 +271,11 @@ def tile_value_to_id(value, tileset_id, const_by_value, gb_to_tileid, home_tiles
             return f"{tileset_id}.{CANONICAL_WALL[tileset_id]}"
         except KeyError:
             raise DecompileError(f"no canonical wall for tileset '{tileset_id}'")
+    for (ts, const), tid in gb_to_tileid.items():
+        if ts != home_tileset:
+            continue
+        if name_to_value.get(const) == value:
+            return f"{home_tileset}.{tid}"
     name = const_by_value.get(value)
     if name is None:
         raise DecompileError(f"terrain holds unknown TileType value {value}")
@@ -328,7 +346,7 @@ def infer_type_and_props(row, warnings, ctx):
     elif inter == "INTERACTION_DIALOGUE":
         if ent == "ENTITY_ID_SIGNPOST":
             otype = "signpost"
-        elif ent == "ENTITY_ID_AMULET":
+        elif ent == "ENTITY_ID_SHOPKEYS":
             otype = "item"
         else:
             otype = "npc"
@@ -385,10 +403,13 @@ def parse_scenes(scenes_text, name_to_value):
     scenes = []
     for row in split_row_groups(scenes_body):
         f = split_fields(row)
-        if len(f) not in (16, 17):
+        if len(f) not in (16, 17, 29):
             raise DecompileError(f"scene row has {len(f)} fields: {row[:60]!r}")
         # 17th field (terrain_bank) is a compile-time placement detail with
         # no JSON counterpart: parsed positionally, never roundtripped.
+        # 29-field rows append 12 edge-entry bytes (x/y/facing per
+        # north/south/east/west, 0xFF facing = absent); 16/17-field legacy
+        # rows predate entries and merge as absent.
         m = re.fullmatch(r"&g_all_exits\[(\d+)\]", f[4].strip())
         facing = f[10].strip()
         if facing not in FACING_REVERSE:
@@ -403,6 +424,19 @@ def parse_scenes(scenes_text, name_to_value):
         neighbors = []
         for raw in f[12:16]:
             neighbors.append(raw.strip())
+        entries = {}
+        if len(f) == 29:
+            for key, bx in zip(("north", "south", "east", "west"), (17, 20, 23, 26)):
+                fx = f[bx + 2].strip()
+                if fx in ("0xFF", "255", "0XFF"):
+                    continue
+                if fx not in FACING_REVERSE:
+                    raise DecompileError(f"unknown entry facing {fx!r}")
+                entries[key] = {
+                    "x": parse_int(f[bx]),
+                    "y": parse_int(f[bx + 1]),
+                    "facing": FACING_REVERSE[fx],
+                }
         scenes.append({
             "map": f[0].strip(),
             "music": f[1].strip(),
@@ -417,6 +451,7 @@ def parse_scenes(scenes_text, name_to_value):
             "spawn_facing": FACING_REVERSE[facing],
             "default_tile": default_tile,
             "neighbors": neighbors,
+            "entries": entries,
         })
     terrain = {}
     for m in re.finditer(r"(?:static\s+)?const SceneTerrainBlock (s_\w+)\[\]", scenes_text):
@@ -599,10 +634,25 @@ def decompile_levels(levels_dir, write):
         # -- player spawn: compiled into SceneDefinition, merged back so
         # the JSON stays the single source of truth.  Editorial spawn keys
         # the ROM cannot hold (animation_frames, ...) are preserved verbatim.
+        # Named edge entries merge the same way (absent entries stay absent).
         spawn = level.setdefault("player", {}).setdefault("spawn", {})
         spawn["x"] = sc["spawn_x"]
         spawn["y"] = sc["spawn_y"]
         spawn["facing"] = sc["spawn_facing"]
+        if sc.get("entries"):
+            entry = level.setdefault("player", {}).setdefault("entry", {})
+            for key in ("north", "south", "east", "west"):
+                if key in sc["entries"]:
+                    e = sc["entries"][key]
+                    entry[key] = {"x": e["x"], "y": e["y"], "facing": e["facing"]}
+                else:
+                    entry.pop(key, None)
+            if not entry:
+                (level.get("player", {}) or {}).pop("entry", None)
+        # Legacy rows (16/17 fields) predate entries: leave level entry
+        # keys untouched so a stale C file can never destroy them (the
+        # roundtrip gate fails loudly until recompiled instead).  Stair
+        # entries are JSON-only (never compiled) and stay untouched.
 
         # -- default ground: compiled into SceneDefinition.default_tile.
         # Keep the author's spelling when it compiles to the same TileType
@@ -646,6 +696,8 @@ def decompile_levels(levels_dir, write):
             # decompile roundtrip never silently unlinks a pair.  A
             # retargeted mouth matches nothing and loses its id loudly at
             # the next compile (dangling-tunnel error), never silently.
+            # target_entry is likewise JSON-only (the C row holds the
+            # resolved landing): keep it on a mouth match.
             new_exit = {
                 "x": e["gate_x"], "y": e["gate_y"],
                 "target_scene": target,
@@ -655,6 +707,8 @@ def decompile_levels(levels_dir, write):
             }
             if old is not None and old.get("tunnel"):
                 new_exit["tunnel"] = old["tunnel"]
+            if old is not None and (old.get("target_entry") or "").strip():
+                new_exit["target_entry"] = old["target_entry"]
             new_exits.append(new_exit)
         level["exits"] = new_exits
 

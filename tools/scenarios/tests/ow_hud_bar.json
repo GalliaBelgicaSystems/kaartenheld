@@ -1,0 +1,59 @@
+{
+  "name": "ow_hud_bar",
+  "test": true,
+  "description": "Overworld bottom-row status bar: white row 17 carries 3 hearts (12 HP = HHh), AP value (pool 2), arrows (12) and gold (125G); col 19 stays untouched for the spinner",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 10
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "screen_row",
+      "row": 17,
+      "contains": "HHh"
+    },
+    {
+      "type": "screen_row",
+      "row": 17,
+      "contains": "A02"
+    },
+    {
+      "type": "screen_row",
+      "row": 17,
+      "contains": ">12"
+    },
+    {
+      "type": "screen_row",
+      "row": 17,
+      "contains": "125G"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_FOREST",
+    "player": {
+      "x": 8,
+      "y": 6,
+      "facing": "DOWN"
+    },
+    "seed": 5005,
+    "party": {
+      "HERO": {
+        "hp": 12,
+        "max_hp": 15
+      }
+    },
+    "variables": {
+      "ENERGY_POOL": 2
+    },
+    "currency": {
+      "GOLD": 125,
+      "ARROWS": 12
+    }
+  }
+}

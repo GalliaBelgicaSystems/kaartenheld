@@ -1,7 +1,7 @@
 {
   "name": "gem_combo_short",
   "test": true,
-  "description": "Short straight basics (gem equipped): SW4 + BO5 + SW6 is a 3-run, base 15, tier SHORT STRAIGHT x130, damage 15*130/100=19 (also pins 130 over the 120 fallback, which would read 18). Kills the 10 HP slime.",
+  "description": "Short straight basics (gem equipped): SW4 + BO5 + SW6 is a 3-run, base 15, tier SHORT STRAIGHT x130, damage 15*130/100=19 (also pins 130 over the 120 fallback, which would read 18). Kills Carl (staged HP; unkillable at 99 in real play).",
   "initial_state": {
    "scene": "TEST_FIELD",
    "player": {
@@ -21,6 +21,11 @@
     "frames": 5
    },
    {
+    "type": "set_enemy_hp",
+    "index": 0,
+    "hp": 19
+  },
+  {
     "type": "set_hand_card",
     "index": 0,
     "card_type": "SW",

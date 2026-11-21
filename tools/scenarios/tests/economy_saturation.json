@@ -1,0 +1,48 @@
+{
+ "name": "economy_saturation",
+ "test": true,
+ "description": "Saturation stops (docs/economy.md §7): an out-of-band market pin (200) clamps to neutral 32 on apply, so the POISON_DAGGER debug buy charges the neutral 8g; and a 5000g grant on top of a 9900g wallet clamps at the 9999 HUD ceiling instead of wrapping int16. Final 9999 - 8 = 9991g with the index pinned at 32.",
+ "actions": [
+  {
+   "type": "set_market_index",
+   "index": 200
+  },
+  {
+   "type": "add_currency",
+   "currency": "GOLD",
+   "amount": 5000
+  },
+  {
+   "type": "buy_item",
+   "item": "POISON_DAGGER"
+  }
+ ],
+ "assertions": [
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 9991
+  },
+  {
+   "type": "market_index",
+   "expected": 32
+  },
+  {
+   "type": "inventory",
+   "item": "POISON_DAGGER",
+   "expected": 1
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 4,
+   "y": 4,
+   "facing": "DOWN"
+  },
+  "seed": 8205,
+  "currency": {
+   "GOLD": 9900
+  }
+ }
+}

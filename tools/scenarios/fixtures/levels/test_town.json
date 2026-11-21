@@ -6,7 +6,10 @@
     "height": 18,
     "tileset": "village",
     "music": "MUSIC_TOWN",
-    "map_id": "MAP_TOWN"
+    "map_id": "MAP_TOWN",
+    "obj_palettes": {
+      "6": "sprites10"
+    }
   },
   "default_walkable": "village.village_plain_floor_1",
   "layers": {
@@ -513,7 +516,7 @@
       "properties": {
         "entity_id": "ENTITY_ID_WIZARD",
         "display_name": "WIZARD",
-        "save": 0,
+        "dialogue": "DIALOGUE_ID_WIZARD_AUTOSAVE",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [
@@ -553,6 +556,31 @@
       }
     },
     {
+      "id": "test_town_village_dog",
+      "type": "npc",
+      "position": {
+        "x": 4,
+        "y": 8
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_VILLAGE_DOG",
+        "display_name": "VILLAGE DOG",
+        "dialogue": "DIALOGUE_ID_DOG_HINT",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "?",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "dog"
+      }
+    },
+    {
       "id": "test_town_dog",
       "type": "npc",
       "position": {
@@ -575,6 +603,30 @@
         "gold_reward": 0,
         "ai": "AI_NONE",
         "enemy_type": "npc_dog"
+      }
+    },
+    {
+      "id": "test_town_house_door",
+      "type": "signpost",
+      "position": {
+        "x": 3,
+        "y": 3
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
+        "display_name": "HOUSE",
+        "dialogue": "DIALOGUE_ID_HOUSE_DOOR",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "#",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
       }
     }
   ],
