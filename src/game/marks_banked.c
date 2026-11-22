@@ -277,34 +277,16 @@ void ow_oam_restore_banked(void)
  *   (no byte codes, no MUSIC_CHANGED -- a sting is not a track change).
  * MONSTERS_DEFEATED threshold 3 mirrors the QUEST_COMPLETE event row
  * (events_content.c); keep in sync if that row ever changes. */
-static void marks_refresh(void)
+/* Stream battle OAM tiles and ITEM DECK AP pip BG tiles when needed.
+ * Called from game_render() inside the LCD-off window on screen entry,
+ * and as a fallback in marks_refresh() on steady frames (e.g. tab switch
+ * to DECK inside SCREEN_ITEM). */
+void marks_screen_stream_banked(void)
 {
-    uint8_t i;
-
-    g_bk_byte_c = 0;
-    g_bk_byte_d = 0;
-    /* Mark glyphs (!/? at 126-127) stream on the first tick of any screen
-     * (free ids everywhere).  Pips + riders stream only on
-     * battle/item/shop ticks: in the overworld those ids hold hero
-     * idle/walk + blob-tail art, so a shop row painted a rider OAM id
-     * without this shows blob art (e.g. a guard sprite for poison).
-     * Same-tick guarantee as before (this runs in game_update
-     * before the render), so the first battle/item/shop frame already
-     * draws resident art.  Shop exit needs no restore: overworld entry
-     * restreams the blob side (ui_restore_ow_oam). */
-    marks_load_mark_tiles();
     if (g_game.screen == SCREEN_BATTLE || g_game.screen == SCREEN_ITEM ||
         g_game.screen == SCREEN_SHOP) {
         marks_load_battle_tiles();
     }
-    /* Menu AP pip BG tiles (236-240) stream on ITEM ticks while the DECK
-     * tab is active (item_menu_tab 0; tabs share the screen id).  Same
-     * LCD-safe pattern as the OAM loader above (BANKED_VRAM_WRITE per
-     * byte) and same-tick guarantee: the tick runs before the render,
-     * so the first DECK frame already stamps resident art.  One-shot
-     * per menu stay (s_ap_pip_loaded); overworld entry wipes the window
-     * via the world tileset reload and re-arms through
-     * ow_oam_restore_banked, ITEM entry through the invalidate above. */
     if (g_game.screen == SCREEN_ITEM && g_game.item_menu_tab == 0 &&
         !s_ap_pip_loaded) {
         uint8_t d, j;
@@ -318,6 +300,24 @@ static void marks_refresh(void)
                 dst++;
             }
         }
+    }
+}
+
+static void marks_refresh(void)
+{
+    uint8_t i;
+
+    g_bk_byte_c = 0;
+    g_bk_byte_d = 0;
+    /* Mark glyphs (!/? at 126-127) stream on the first tick of any screen
+     * (free ids everywhere).  Battle OAM + DECK AP pips only stream here
+     * when the current screen is already rendered (render_cache valid),
+     * never on a transition frame before game_render() hides real OAM
+     * and turns the LCD off. */
+    marks_load_mark_tiles();
+    if (g_game.render_cache.valid &&
+        g_game.render_cache.prev_screen == g_game.screen) {
+        marks_screen_stream_banked();
     }
 
     /* Fresh-load re-arm: load_game_slot clears g_jingle_done's seeded

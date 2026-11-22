@@ -954,9 +954,9 @@ static void ic_draw_cards_list(Game *g)
     ic_draw_row16(g);
     IC_DRAW_TEXT(0, 17, NULL, 20);
     menu_stamp_chrome(17, 0, UI_TILE_BUTTON_DPAD_LR);
-    IC_DRAW_TEXT(2, 17, "SIDE", 4);
-    menu_stamp_chrome(17, 7, UI_TILE_BUTTON_B);
-    IC_DRAW_TEXT(9, 17, "BACK", 11);
+    IC_DRAW_TEXT(1, 17, "SIDE", 4);
+    menu_stamp_chrome(17, 6, UI_TILE_BUTTON_B);
+    IC_DRAW_TEXT(7, 17, "BACK", 13);
 }
 
 /* Row-16 message/side-footer draw: pads to 20 cols in one pass. */
@@ -985,19 +985,19 @@ static void ic_draw_row16(Game *g)
     } else if (g->item_menu_side == 0) {
         IC_DRAW_TEXT(0, 16, NULL, 20);
         menu_stamp_chrome(16, 0, UI_TILE_BUTTON_A);
-        IC_DRAW_TEXT(2, 16, "TO DECK", 7);
-        menu_stamp_chrome(16, 10, UI_TILE_BUTTON_SELECT_1);
-        menu_stamp_chrome(16, 11, UI_TILE_BUTTON_SELECT_2);
-        menu_stamp_chrome(16, 12, UI_TILE_BUTTON_SELECT_3);
-        IC_DRAW_TEXT(14, 16, "INFO", 6);
+        IC_DRAW_TEXT(1, 16, "TO DECK", 7);
+        menu_stamp_chrome(16, 9, UI_TILE_BUTTON_SELECT_1);
+        menu_stamp_chrome(16, 10, UI_TILE_BUTTON_SELECT_2);
+        menu_stamp_chrome(16, 11, UI_TILE_BUTTON_SELECT_3);
+        IC_DRAW_TEXT(12, 16, "INFO", 8);
     } else {
         IC_DRAW_TEXT(0, 16, NULL, 20);
         menu_stamp_chrome(16, 0, UI_TILE_BUTTON_A);
-        IC_DRAW_TEXT(2, 16, "TO PILE", 7);
-        menu_stamp_chrome(16, 10, UI_TILE_BUTTON_SELECT_1);
-        menu_stamp_chrome(16, 11, UI_TILE_BUTTON_SELECT_2);
-        menu_stamp_chrome(16, 12, UI_TILE_BUTTON_SELECT_3);
-        IC_DRAW_TEXT(14, 16, "INFO", 6);
+        IC_DRAW_TEXT(1, 16, "TO PILE", 7);
+        menu_stamp_chrome(16, 9, UI_TILE_BUTTON_SELECT_1);
+        menu_stamp_chrome(16, 10, UI_TILE_BUTTON_SELECT_2);
+        menu_stamp_chrome(16, 11, UI_TILE_BUTTON_SELECT_3);
+        IC_DRAW_TEXT(12, 16, "INFO", 8);
     }
 }
 
@@ -1153,7 +1153,7 @@ static void ic_draw_card_detail_page(Game *g)
         menu_stamp_chrome(15, bx, UI_TILE_MENUS_BOTTOM_BORDER);
     IC_DRAW_TEXT(0, 16, NULL, 20);
     menu_stamp_chrome(16, 0, UI_TILE_BUTTON_B);
-    IC_DRAW_TEXT(2, 16, "BACK", 18);
+    IC_DRAW_TEXT(1, 16, "BACK", 19);
     ic_blank_row(17);
 }
 

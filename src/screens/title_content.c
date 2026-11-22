@@ -254,7 +254,8 @@ void title_content_render(void)
 
     if (!showing) {
         title_draw_graphic();
-        title_draw_text(g_title_prompt_x, g_title_prompt_y, g_title_prompt_text, 20);
+        title_draw_text(g_title_prompt_x, g_title_prompt_y, g_title_prompt_text, 6);
+        title_draw_text((uint8_t)(g_title_prompt_x + 9), g_title_prompt_y, "", 11);
         title_stamp_button((uint8_t)(g_title_prompt_x + 6), g_title_prompt_y, UI_TILE_BUTTON_START_1);
         title_stamp_button((uint8_t)(g_title_prompt_x + 7), g_title_prompt_y, UI_TILE_BUTTON_START_2);
         title_stamp_button((uint8_t)(g_title_prompt_x + 8), g_title_prompt_y, UI_TILE_BUTTON_START_3);
@@ -346,5 +347,6 @@ void intro_content_render(void)
     for (i = 0; i < count; i++) {
         title_draw_text(3, (uint8_t)(6 + i), lines[i], 16);
     }
-    title_draw_text(5, 16, "[A] NEXT", 10);
+    title_stamp_button(5, 16, UI_TILE_BUTTON_A);
+    title_draw_text(6, 16, "NEXT", 10);
 }

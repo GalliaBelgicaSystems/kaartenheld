@@ -25,6 +25,16 @@ static void simple_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
     BANKED_VRAM_WRITE(dst, tile);
 }
 
+static void simple_stamp_button(uint8_t x, uint8_t y, uint8_t tile)
+{
+    volatile uint8_t *dst;
+    if (y >= 18 || x >= 20) return;
+    VBK_REG = 0;
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    simple_vram_sync_write(dst, tile);
+    g_ui_screen_buf[y][x] = ' ';
+}
+
 static void simple_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
 {
     uint8_t i;
@@ -58,7 +68,7 @@ static void simple_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max
 void ending_content_render(void)
 {
     uint8_t i;
-    static const char * const s_lines[9] = {
+    static const char * const s_lines[8] = {
         "      THE END",
         "--------------------",
         "Congratulations on",
@@ -66,10 +76,9 @@ void ending_content_render(void)
         "demo of Kaartenheld!",
         "Follow",
         "@GBelgicaSystems",
-        "on X for updates!",
-        "[A] RESTART"
+        "on X for updates!"
     };
-    static const uint8_t s_rows[9] = { 1, 2, 4, 5, 6, 8, 9, 10, 14 };
+    static const uint8_t s_rows[8] = { 1, 2, 4, 5, 6, 8, 9, 10 };
     /* Ending page: pure white background, black text.  Program every BG
      * slot to the document ramp (both light shades read white, both dark
      * read black) so the whole screen is one sheet whatever attribute a
@@ -93,9 +102,11 @@ void ending_content_render(void)
         }
     }
 
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < 8; i++) {
         simple_draw_text(0, s_rows[i], s_lines[i], 20);
     }
+    simple_stamp_button(0, 14, UI_TILE_BUTTON_A);
+    simple_draw_text(1, 14, "RESTART", 19);
 }
 
 void game_over_content_render(void)
@@ -106,5 +117,6 @@ void game_over_content_render(void)
     simple_draw_text(3, 8, "CONTINUE?", 9);
     simple_draw_text(0, 11, (choice == 0) ? "> YES" : "  YES", 5);
     simple_draw_text(0, 12, (choice != 0) ? "> NO" : "  NO", 4);
-    simple_draw_text(1, 16, "[A] CONFIRM", 11);
+    simple_stamp_button(1, 16, UI_TILE_BUTTON_A);
+    simple_draw_text(2, 16, "CONFIRM", 18);
 }

@@ -29,6 +29,16 @@ static void credits_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
     BANKED_VRAM_WRITE(dst, tile);
 }
 
+static void credits_stamp_button(uint8_t x, uint8_t y, uint8_t tile)
+{
+    volatile uint8_t *dst;
+    if (y >= 18 || x >= 20) return;
+    VBK_REG = 0;
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    credits_vram_sync_write(dst, tile);
+    g_ui_screen_buf[y][x] = ' ';
+}
+
 static void credits_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
 {
     uint8_t i;
@@ -70,5 +80,6 @@ void credits_content_render(void)
     credits_draw_text(0, 9, "Art by Florent", 14);
     credits_draw_text(0, 10, "Berault", 7);
     credits_draw_text(0, 12, "Music by Jonas Bryan", 20);
-    credits_draw_text(5, 16, "[A] BACK", 8);
+    credits_stamp_button(5, 16, UI_TILE_BUTTON_A);
+    credits_draw_text(6, 16, "BACK", 14);
 }

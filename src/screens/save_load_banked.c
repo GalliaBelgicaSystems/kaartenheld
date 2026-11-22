@@ -109,17 +109,15 @@ void save_load_content_render(void)
         sl_draw_text(9, s_sl_y, (s_sl_present & (1 << s_sl_pos)) ? "SAVED" : "(EMPTY)", 7);
     }
     sl_stamp_button(0, 11, UI_TILE_BUTTON_A);
-    sl_draw_text(2, 11, (s_sl_game->save_slot_mode == 2) ? "START" : "LOAD ", 5);
-    sl_draw_text(7, 11, NULL, 1);
-    sl_stamp_button(10, 11, UI_TILE_BUTTON_B);
-    sl_draw_text(12, 11, "BACK", 8);
+    sl_draw_text(1, 11, (s_sl_game->save_slot_mode == 2) ? "START" : "LOAD", 5);
+    sl_stamp_button(8, 11, UI_TILE_BUTTON_B);
+    sl_draw_text(9, 11, "BACK", 4);
     if (s_sl_game->save_slot_message >= 1 && s_sl_game->save_slot_message <= 3) {
-        sl_draw_text(2, 13, (s_sl_game->save_slot_message == 1) ? "Game Saved!" : ((s_sl_game->save_slot_message == 3) ? "Overwrite?   YES" : "Slot is empty!"), 16);
+        sl_draw_text(2, 13, (s_sl_game->save_slot_message == 1) ? "Game Saved!" : ((s_sl_game->save_slot_message == 3) ? "Overwrite?  YES" : "Slot is empty!"), 16);
         if (s_sl_game->save_slot_message == 3) {
             sl_stamp_button(13, 13, UI_TILE_BUTTON_A);
-            sl_draw_text(2, 14, NULL, 20);
             sl_stamp_button(2, 14, UI_TILE_BUTTON_B);
-            sl_draw_text(4, 14, "NO", 16);
+            sl_draw_text(3, 14, "NO", 2);
         }
     }
 }
