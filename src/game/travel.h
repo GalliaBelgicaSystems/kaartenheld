@@ -82,6 +82,8 @@ typedef struct {
     uint8_t water_per_day;  /* water burned per travel day */
     uint8_t hunt_food_min;  /* forage yield range (food found) */
     uint8_t hunt_food_max;
+    uint8_t hunt_water_min; /* forage yield range (water found) */
+    uint8_t hunt_water_max;
     uint8_t hunt_delay_min; /* forage detour range (extra steps) */
     uint8_t hunt_delay_max;
     uint8_t rest_heal;   /* HP restored by resting */
@@ -132,6 +134,7 @@ extern uint8_t g_travel_seen;    /* an event rolled this journey (guarantee) */
 extern uint8_t g_travel_in_ruins; /* suspended in the ruins map */
 extern uint8_t g_travel_amount;  /* camp result size (food/heal/steps saved) */
 extern uint8_t g_travel_extra;   /* camp detour size (extra steps added) */
+extern uint8_t g_travel_water;   /* camp water found (hunt result) */
 extern uint8_t g_travel_nofood;  /* consecutive starving days (no food) */
 extern uint8_t g_travel_nowater; /* consecutive starving days (no water) */
 

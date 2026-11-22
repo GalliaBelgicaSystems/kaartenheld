@@ -825,7 +825,10 @@ def test_camp():
         select_foot(d)
         assert d.ap() == 5, d.ap()
         # HUNT: +1..5 found (-1 eaten), +0..2 steps, -1 day.
+        # HUNT: +1..5 food and +0..2 water found (-1/-2 eaten),
+        # +0..2 steps, -1 day.
         f0 = d.food()
+        w0 = d.water()
         day0 = d.day()
         tot0 = d.total_steps()
         d.press("down", settle=12)  # CONTINUE -> HUNT
@@ -836,12 +839,17 @@ def test_camp():
         assert d.wait_for(lambda: d.text_has("FOOD"), ticks=120), d.rows()
         net = d.food() - f0
         assert 0 <= net <= 4, (f0, d.food())
+        wnet = d.water() - w0
+        assert -2 <= wnet <= 0, (w0, d.water())
         assert d.day() == day0 - 1, (d.day(), day0)
         detour = d.total_steps() - tot0
         assert 0 <= detour <= 2, detour
-        print("hunt OK: net +%d food, detour +%d, day -1" % (net, detour))
+        print("hunt OK: net +%d food %+d water, detour +%d, day -1"
+              % (net, wnet, detour))
         d.press("a", settle=20)  # dismiss
-        # STARVE (water): two dry hunts cost 5 HP on the second day.
+        # STARVE (water): two dry study days cost 5 HP on the
+        # second one (study burns days without foraging, so the
+        # tally is exact and no road event can interfere).
         import struct
         addr = d.r.state + OFF_VARIABLES + 2 * (13 - 1)
         raw = struct.pack("<h", 0)
@@ -849,14 +857,17 @@ def test_camp():
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
         assert d.water() == 0, d.water()
-        d.press("down", settle=12)
-        d.press("a", settle=30)  # hunt 1: dry day 1, no damage
-        assert d.wait_for(lambda: d.text_has("YOU FORAGE."), ticks=300)
+        for _ in range(3):
+            d.press("down", settle=12)  # CONTINUE -> HUNT -> REST -> MAP
+        assert d.wait_for(lambda: d.text_has("> MAP"), ticks=200), d.rows()
+        d.press("a", settle=30)  # study 1: dry day 1, no damage
+        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300)
         assert d.r.hero()["hp"] == 15, d.r.hero()
         d.press("a", settle=20)
-        d.press("down", settle=12)
-        d.press("a", settle=30)  # hunt 2: dry day 2, -5 HP
-        assert d.wait_for(lambda: d.text_has("YOU FORAGE."), ticks=300)
+        for _ in range(3):
+            d.press("down", settle=12)
+        d.press("a", settle=30)  # study 2: dry day 2, -5 HP
+        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300)
         assert d.r.hero()["hp"] == 10, d.r.hero()
         print("starve OK: 2 dry days cost 5 HP (15 -> 10)")
         d.press("a", settle=20)

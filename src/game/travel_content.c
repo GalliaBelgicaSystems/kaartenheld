@@ -19,6 +19,8 @@ const TravelRoute g_travel_routes[] = {
         2, /* water_per_day */
         1, /* hunt_food_min */
         5, /* hunt_food_max */
+        0, /* hunt_water_min */
+        2, /* hunt_water_max */
         0, /* hunt_delay_min */
         2, /* hunt_delay_max */
         5, /* rest_heal */

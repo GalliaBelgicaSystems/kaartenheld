@@ -205,12 +205,15 @@ def load_routes(scenes, event_ids):
         if not isinstance(hunt, dict):
             fail("%s: camp.hunt must be an object" % rid)
         for key, lo, hi in (("food_min", 0, 30), ("food_max", 0, 30),
+                             ("water_min", 0, 30), ("water_max", 0, 30),
                              ("delay_min", 0, 10), ("delay_max", 0, 10)):
             v = hunt.get(key)
             if not isinstance(v, int) or not (lo <= v <= hi):
                 fail("%s: camp.hunt.%s must be %d..%d" % (rid, key, lo, hi))
         if hunt["food_max"] < hunt["food_min"]:
             fail("%s: camp.hunt.food_max < food_min" % rid)
+        if hunt["water_max"] < hunt["water_min"]:
+            fail("%s: camp.hunt.water_max < water_min" % rid)
         if hunt["delay_max"] < hunt["delay_min"]:
             fail("%s: camp.hunt.delay_max < delay_min" % rid)
         rest = camp.get("rest")
@@ -316,6 +319,8 @@ def emit(routes, events, scenes, battle_ids):
         lines.append("        %d, /* water_per_day */" % doc["supply"]["water_per_day"])
         lines.append("        %d, /* hunt_food_min */" % doc["camp"]["hunt"]["food_min"])
         lines.append("        %d, /* hunt_food_max */" % doc["camp"]["hunt"]["food_max"])
+        lines.append("        %d, /* hunt_water_min */" % doc["camp"]["hunt"]["water_min"])
+        lines.append("        %d, /* hunt_water_max */" % doc["camp"]["hunt"]["water_max"])
         lines.append("        %d, /* hunt_delay_min */" % doc["camp"]["hunt"]["delay_min"])
         lines.append("        %d, /* hunt_delay_max */" % doc["camp"]["hunt"]["delay_max"])
         lines.append("        %d, /* rest_heal */" % doc["camp"]["rest"]["heal"])

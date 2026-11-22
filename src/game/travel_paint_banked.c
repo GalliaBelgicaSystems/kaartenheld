@@ -356,6 +356,23 @@ static void tp_found(void)
     tp_text(2, 11, s_line, 20);
 }
 
+/* "+N WATER" (hunt yield, staged in g_travel_water). */
+static void tp_drunk(void)
+{
+    uint8_t n;
+    s_line[0] = '+';
+    n = tp_u16(g_travel_water, &s_line[1]);
+    n = (uint8_t)(1 + n);
+    s_line[n] = ' ';
+    s_line[(uint8_t)(n + 1)] = 'W';
+    s_line[(uint8_t)(n + 2)] = 'A';
+    s_line[(uint8_t)(n + 3)] = 'T';
+    s_line[(uint8_t)(n + 4)] = 'E';
+    s_line[(uint8_t)(n + 5)] = 'R';
+    s_line[(uint8_t)(n + 6)] = '\0';
+    tp_text(2, 10, s_line, 20);
+}
+
 /* "+N STEPS" (hunt/rest detour, staged in g_travel_extra). */
 static void tp_detour(void)
 {
@@ -577,6 +594,7 @@ void travel_paint_banked(void)
             tp_cost();
         } else if (g_travel_msg == TRAVEL_MSG_HUNTED) {
             tp_text(2, 9, "YOU FORAGE.", 20);
+            tp_drunk();
             tp_found();
             tp_detour();
         } else if (g_travel_msg == TRAVEL_MSG_RESTED) {

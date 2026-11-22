@@ -28,6 +28,7 @@ uint8_t g_travel_seen;
 uint8_t g_travel_in_ruins;
 uint8_t g_travel_amount;
 uint8_t g_travel_extra;
+uint8_t g_travel_water;
 uint8_t g_travel_nofood;
 uint8_t g_travel_nowater;
 
@@ -112,6 +113,7 @@ void travel_start(uint8_t route)
     g_travel_in_ruins = 0;
     g_travel_amount = 0;
     g_travel_extra = 0;
+    g_travel_water = 0;
     g_travel_nofood = 0;
     g_travel_nowater = 0;
     for (i = 0; i < s_route.method_count; i++) {
@@ -251,6 +253,7 @@ static void travel_confirm_method(Game *g)
     g_travel_in_ruins = 0;
     g_travel_amount = 0;
     g_travel_extra = 0;
+    g_travel_water = 0;
     g_travel_nofood = 0;
     g_travel_nowater = 0;
     game_render_reset(g);
@@ -275,6 +278,7 @@ void travel_open_supply(uint8_t route)
     g_travel_in_ruins = 0;
     g_travel_amount = 0;
     g_travel_extra = 0;
+    g_travel_water = 0;
     g_travel_nofood = 0;
     g_travel_nowater = 0;
     g_travel_msg = TRAVEL_MSG_NONE;
@@ -380,6 +384,7 @@ static void travel_arrive(Game *g)
     g_travel_in_ruins = 0;
     g_travel_amount = 0;
     g_travel_extra = 0;
+    g_travel_water = 0;
     g_travel_nofood = 0;
     g_travel_nowater = 0;
     scene_load(g, scene, x, y);
@@ -462,20 +467,26 @@ static uint8_t travel_roll_range(uint8_t lo, uint8_t hi)
 }
 
 /* Camp: hunt/forage.  Burns the day, always finds food (route
- * yield range), and may add a detour (route delay range).  No step
- * is travelled and no road event rolls -- the day is spent off the
- * trail.  Staged amounts ride g_travel_amount/extra for the paint. */
+ * yield range) plus some water (route water range), and may add a
+ * detour (route delay range).  No step is travelled and no road
+ * event rolls -- the day is spent off the trail.  Staged amounts
+ * ride g_travel_amount/water/extra for the paint. */
 static void travel_do_hunt(Game *g)
 {
     uint8_t found;
+    uint8_t drunk;
     uint8_t delay;
     int16_t food;
+    int16_t water;
     if (!g) return;
     found = travel_roll_range(s_route.hunt_food_min, s_route.hunt_food_max);
+    drunk = travel_roll_range(s_route.hunt_water_min, s_route.hunt_water_max);
     delay = travel_roll_range(s_route.hunt_delay_min, s_route.hunt_delay_max);
     travel_burn_days(g, 1);
     food = game_variable_get(&g->state, VARIABLE_ID_FOOD);
     game_variable_set(&g->state, VARIABLE_ID_FOOD, (int16_t)(food + found));
+    water = game_variable_get(&g->state, VARIABLE_ID_WATER);
+    game_variable_set(&g->state, VARIABLE_ID_WATER, (int16_t)(water + drunk));
     if (g_travel_total <= (uint8_t)(255 - delay)) {
         g_travel_total = (uint8_t)(g_travel_total + delay);
     } else {
@@ -488,6 +499,7 @@ static void travel_do_hunt(Game *g)
     }
     g_travel_amount = found;
     g_travel_extra = delay;
+    g_travel_water = drunk;
     g_travel_msg = TRAVEL_MSG_HUNTED;
     g_travel_choice = 0;
     audio_play_sfx(SFX_CASH);
