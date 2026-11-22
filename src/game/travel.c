@@ -301,23 +301,11 @@ static void travel_update_supply(Game *g)
 {
     if (!g) return;
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_LEFT)) {
-        if (g_travel_choice == 0) {
-            g_travel_choice = 2;
-        } else {
-            g_travel_choice = (uint8_t)(g_travel_choice - 1);
-        }
-        audio_play_sfx(SFX_CURSOR);
-        game_render_reset(g);
+        travel_cycle_choice(g, 2, 0);
         return;
     }
     if (input_pressed(INPUT_DOWN) || input_pressed(INPUT_RIGHT)) {
-        if (g_travel_choice >= 2) {
-            g_travel_choice = 0;
-        } else {
-            g_travel_choice = (uint8_t)(g_travel_choice + 1);
-        }
-        audio_play_sfx(SFX_CURSOR);
-        game_render_reset(g);
+        travel_cycle_choice(g, 2, 1);
         return;
     }
     if (input_pressed(INPUT_B)) {
@@ -583,17 +571,22 @@ static void travel_do_rest(Game *g)
 }
 
 /* Camp: study the map.  Burns the day plus extra study rations (a
- * careful survey eats and drinks whether or not it finds anything:
- * the save range starts at 0, so there is no guarantee of a
- * shortcut).  Mapping away the final step completes the journey on
- * the spot. */
+ * careful survey eats and drinks whether or not it finds anything).
+ * The save range starts at 0 and a separate lost range may pile on
+ * extra steps instead, so there is no guaranteed shortcut -- and a
+ * bad read can cost the schedule.  Mapping away the final step
+ * completes the journey on the spot. */
 static void travel_do_study(Game *g)
 {
     uint8_t saved;
+    uint8_t lost;
+    int16_t net;
     int16_t food;
     int16_t water;
     if (!g) return;
     saved = travel_roll_range(s_route.study_save_min, s_route.study_save_max);
+    lost = travel_roll_range(s_route.study_lost_min, s_route.study_lost_max);
+    net = (int16_t)((int16_t)saved - (int16_t)lost);
     travel_burn_days(g, 1);
     if (travel_hero_dead(g)) {
         travel_game_over(g);
@@ -613,16 +606,62 @@ static void travel_do_study(Game *g)
     } else if (water > 0) {
         game_variable_set(&g->state, VARIABLE_ID_WATER, 0);
     }
-    g_travel_amount = saved;
-    g_travel_extra = 0;
-    g_travel_choice = 0;
-    if (saved >= g_travel_left) {
-        travel_arrive(g);
+    if (net > 0) {
+        g_travel_amount = (uint8_t)net;
+        g_travel_extra = 0;
+        if (net >= g_travel_left) {
+            travel_arrive(g);
+            return;
+        }
+        g_travel_left = (uint8_t)((int16_t)g_travel_left - net);
+        g_travel_total = (uint8_t)((int16_t)g_travel_total - net);
+        travel_show_msg(g, TRAVEL_MSG_STUDIED, SFX_CONFIRM);
         return;
     }
-    g_travel_left = (uint8_t)(g_travel_left - saved);
-    g_travel_total = (uint8_t)(g_travel_total - saved);
+    if (net < 0) {
+        travel_add_steps((uint8_t)(0 - net));
+        g_travel_amount = 0;
+        g_travel_extra = (uint8_t)(0 - net);
+        travel_show_msg(g, TRAVEL_MSG_LOST, SFX_BACK);
+        return;
+    }
+    g_travel_amount = 0;
+    g_travel_extra = 0;
     travel_show_msg(g, TRAVEL_MSG_STUDIED, SFX_CONFIRM);
+}
+
+/* Weighted pool pick: rejection-sample a byte under the weight
+ * sum, walk the cumulative weights, and stage the picked event
+ * with the alert.  One copy for the guarantee and the normal roll.
+ * The compiler guarantees a non-empty pool (and nonzero weights)
+ * wherever this runs, so the sample always terminates. */
+static void travel_stage_pick(Game *g)
+{
+    uint8_t pick;
+    uint8_t i;
+    uint8_t cum;
+    uint8_t sum;
+    sum = 0;
+    for (i = 0; i < s_method.pool_count; i++) {
+        sum = (uint8_t)(sum + s_method.pool_weight[i]);
+    }
+    do {
+        pick = (uint8_t)rng_next();
+    } while (pick >= sum);
+    cum = 0;
+    g_travel_event = 0;
+    for (i = 0; i < s_method.pool_count; i++) {
+        cum = (uint8_t)(cum + s_method.pool_weight[i]);
+        if (pick < cum) {
+            g_travel_event = s_method.pool_event[i];
+            break;
+        }
+    }
+    travel_load_event(g_travel_event);
+    g_travel_choice = 0;
+    g_travel_seen = 1;
+    audio_play_sfx(SFX_ALERT);
+    game_render_reset(g);
 }
 
 /* Advance one step: count down, arrive on the last step, otherwise
@@ -631,10 +670,7 @@ static void travel_do_study(Game *g)
 static void travel_advance(Game *g)
 {
     uint16_t roll;
-    uint8_t pick;
     uint8_t i;
-    uint8_t cum;
-    uint8_t sum;
     if (!g) return;
     if (g_travel_left == 0) {
         travel_arrive(g);
@@ -664,10 +700,8 @@ static void travel_advance(Game *g)
             }
         }
         if (g_travel_event != TRAVEL_EVENT_NONE) {
-            g_travel_choice = 0;
             g_travel_seen = 1;
-            audio_play_sfx(SFX_ALERT);
-            game_render_reset(g);
+            travel_show_msg(g, TRAVEL_MSG_NONE, SFX_ALERT);
             return;
         }
     }
@@ -676,57 +710,15 @@ static void travel_advance(Game *g)
      * never reach here with steps).  Starvation above already covers
      * empty-belly trips. */
     if (g_travel_left == 1 && !g_travel_seen && s_method.pool_count > 0) {
-        sum = 0;
-        for (i = 0; i < s_method.pool_count; i++) {
-            sum = (uint8_t)(sum + s_method.pool_weight[i]);
-        }
-        if (sum > 0) {
-            do {
-                pick = (uint8_t)rng_next();
-            } while (pick >= sum);
-            cum = 0;
-            g_travel_event = 0;
-            for (i = 0; i < s_method.pool_count; i++) {
-                cum = (uint8_t)(cum + s_method.pool_weight[i]);
-                if (pick < cum) {
-                    g_travel_event = s_method.pool_event[i];
-                    break;
-                }
-            }
-            travel_load_event(g_travel_event);
-            g_travel_choice = 0;
-            g_travel_seen = 1;
-            audio_play_sfx(SFX_ALERT);
-            game_render_reset(g);
-            return;
-        }
+        travel_stage_pick(g);
+        return;
     }
     if ((uint8_t)roll >= s_method.frequency) {
         g_travel_choice = 0;
         game_render_reset(g);
         return;
     }
-    sum = 0;
-    for (i = 0; i < s_method.pool_count; i++) {
-        sum = (uint8_t)(sum + s_method.pool_weight[i]);
-    }
-    do {
-        pick = (uint8_t)rng_next();
-    } while (pick >= sum);
-    cum = 0;
-    g_travel_event = 0;
-    for (i = 0; i < s_method.pool_count; i++) {
-        cum = (uint8_t)(cum + s_method.pool_weight[i]);
-        if (pick < cum) {
-            g_travel_event = s_method.pool_event[i];
-            break;
-        }
-    }
-    travel_load_event(g_travel_event);
-    g_travel_choice = 0;
-    g_travel_seen = 1;
-    audio_play_sfx(SFX_ALERT);
-    game_render_reset(g);
+    travel_stage_pick(g);
 }
 
 static void travel_enter_ruins(Game *g);

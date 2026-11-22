@@ -608,6 +608,9 @@ void travel_paint_banked(void)
             } else {
                 tp_shortcut();
             }
+        } else if (g_travel_msg == TRAVEL_MSG_LOST) {
+            tp_text(2, 9, "YOU GET LOST.", 20);
+            tp_detour();
         } else {
             tp_text(2, 9, "YOU WAKE UP HURT.", 20);
             tp_text(2, 10, "+1 STEP RECOVERY", 20);

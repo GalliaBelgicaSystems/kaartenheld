@@ -31,6 +31,8 @@ const TravelRoute g_travel_routes[] = {
         2, /* starve_water_every */
         0, /* study_save_min */
         2, /* study_save_max */
+        0, /* study_lost_min */
+        2, /* study_lost_max */
         2, /* study_food */
         4, /* study_water */
         2, /* method_count */

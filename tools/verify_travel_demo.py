@@ -860,13 +860,15 @@ def test_camp():
             d.press("down", settle=12)  # CONTINUE -> HUNT -> REST -> MAP
         assert d.wait_for(lambda: d.text_has("> STUDY MAP"), ticks=200), d.rows()
         d.press("a", settle=30)  # study 1: dry day 1, no damage
-        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300)
+        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP.")
+                          or d.text_has("YOU GET LOST."), ticks=300)
         assert d.r.hero()["hp"] == 15, d.r.hero()
         d.press("a", settle=20)
         for _ in range(3):
             d.press("down", settle=12)
         d.press("a", settle=30)  # study 2: dry day 2, -5 HP
-        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300)
+        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP.")
+                          or d.text_has("YOU GET LOST."), ticks=300)
         assert d.r.hero()["hp"] == 10, d.r.hero()
         print("starve OK: 2 dry days cost 5 HP (15 -> 10)")
         d.press("a", settle=20)
@@ -895,19 +897,24 @@ def test_camp():
         d.press("down", settle=12)  # -> STUDY MAP
         assert d.wait_for(lambda: d.text_has("> STUDY MAP"), ticks=200), d.rows()
         d.press("a", settle=30)
-        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300), \
+        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP.")
+                          or d.text_has("YOU GET LOST."), ticks=300), \
             d.rows()
         assert d.day() == day0 - 1, (d.day(), day0)
         assert d.food() == (f0 - 3 if f0 >= 3 else 0), (f0, d.food())
         assert d.water() == (w0 - 6 if w0 >= 6 else 0), (w0, d.water())
         left1 = d.pb.memory[d.r.sym.wram("g_travel_left")]
-        # study may arrive (saved the last step): accept either.
+        # study may arrive (net saved the last step): accept either.
         st = d.scene()
         if st["scene_id"] == SCENE_ACT2_TOWN:
             print("study OK: mapped away the final step, arrived")
         else:
-            assert 0 <= left0 - left1 <= 2, (left0, left1)
-            print("study OK: saved %d steps, day -1" % (left0 - left1))
+            assert -2 <= left0 - left1 <= 2, (left0, left1)
+            if left1 > left0:
+                print("study OK: got lost, +%d steps, day -1"
+                      % (left1 - left0))
+            else:
+                print("study OK: saved %d steps, day -1" % (left0 - left1))
             d.press("a", settle=20)
         # STARVE TO DEATH: 4 HP and two more dry days is a cold
         # game over, not a floor.
@@ -923,7 +930,8 @@ def test_camp():
         for _ in range(3):
             d.press("down", settle=12)  # -> STUDY MAP
         d.press("a", settle=30)  # dry day 1: 4 HP left, no damage
-        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300)
+        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP.")
+                          or d.text_has("YOU GET LOST."), ticks=300)
         assert d.r.hero()["hp"] == 4, d.r.hero()
         d.press("a", settle=20)
         for _ in range(3):

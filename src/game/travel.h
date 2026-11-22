@@ -50,6 +50,7 @@
 #define TRAVEL_MSG_HUNTED 6
 #define TRAVEL_MSG_RESTED 7
 #define TRAVEL_MSG_STUDIED 8
+#define TRAVEL_MSG_LOST 9
 
 /* Camp menu options (IDLE view, g_travel_choice order). */
 #define TRAVEL_CAMP_CONTINUE 0
@@ -94,6 +95,8 @@ typedef struct {
     uint8_t starve_water_every;
     uint8_t study_save_min; /* map-study shortcut range (steps saved) */
     uint8_t study_save_max;
+    uint8_t study_lost_min; /* map-study getting-lost range (extra steps) */
+    uint8_t study_lost_max;
     uint8_t study_food;  /* extra rations a study day costs (on top) */
     uint8_t study_water; /* extra water a study day costs (on top) */
     uint8_t method_count;
