@@ -197,6 +197,13 @@ void overworld_screen_render(Game *g)
              * so their exits restore correctly too. */
             ui_restore_dialogue_rows(w);
         } else {
+            /* Returning from a non-overworld/non-dialogue screen runs
+             * with the LCD off (game_render); restore overworld OAM
+             * tiles + OBJ palettes here before placing sprites. */
+            if (rc->prev_screen != SCREEN_OVERWORLD &&
+                rc->prev_screen != SCREEN_DIALOGUE) {
+                ui_restore_ow_oam();
+            }
             /* Any other overworld (re)draw -- gate crossing, battle/menu
              * return, boot: the streaming LCD-on repaint (instant full
              * redraw fallback inside, same end state). */

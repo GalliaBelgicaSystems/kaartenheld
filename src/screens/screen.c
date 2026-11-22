@@ -76,14 +76,13 @@ void screen_change(Game *g, ScreenId screen)
     if (g->screen == screen) return;
 
     /* The player sprite only belongs on the overworld (and behind the
-     * dialogue box, which redraws the world): hide it for every other
-     * screen.  The transition wipe hide for world/dialogue targets is
-     * handled centrally in game_render() (any full redraw calls
-     * ui_sprite_begin_transition() before the redraw runs). */
+     * dialogue box, which redraws the world): hide it in shadow OAM
+     * for every other screen.  SCX/SCY reset and VRAM/OAM streaming
+     * run later in game_render() inside ui_lcd_off() so the outgoing
+     * screen never shows shifted scroll or overwritten tiles for 1-2
+     * frames. */
     if (screen != SCREEN_OVERWORLD && screen != SCREEN_DIALOGUE) {
         ui_sprite_hide();
-        SCX_REG = 0;
-        SCY_REG = 0;
     }
 
     old_screen = g->screen;
@@ -92,38 +91,17 @@ void screen_change(Game *g, ScreenId screen)
 
     /* Screens that own VRAM block-1 art (battle enemy art shares slots
      * 128+ with world tiles) must not leak it into the next overworld
-     * redraw, and battles OAM-time-share tile ids with overworld art
-     * (AP pips 1-4 over hero idle/walk at 96-99, pip 5 plus riders over
-     * the blob tail at 122-125).  See the per-branch notes below. */
+     * redraw; ui_invalidate_tileset() only clears WRAM cache sentinels,
+     * while ui_restore_ow_oam() runs inside overworld_screen_render()
+     * with the LCD off. */
     if (screen == SCREEN_OVERWORLD) {
         if (old_screen != SCREEN_DIALOGUE) {
-            /* Non-dialogue screens may own VRAM block-1 art (battle
-             * enemy art shares slots 128+) or foreign CRAM, so force a
-             * reload.  Dialogue never touches either: an overlay box
-             * keeps the world tileset/CRAM, and a dialogue entered from
-             * battle/gamble reloads both itself when it repaints the
-             * backdrop (dialogue_screen.c).  Invalidating here would
-             * leave the caches cold for the rest of the map stay, so
-             * the next same-kind gate crossing could never hit them. */
             ui_invalidate_tileset();
         }
-        /* Unconditional: battles time-share OAM tile ids with overworld
-         * art (AP pips over hero idle/walk, pip 5 plus riders over the
-         * blob tail), and a dialogue entered from battle never restreams
-         * them. */
-        ui_restore_ow_oam();
-    }
-
-    /* BATTLE/ITEM/SHOP entry re-arms the time-shared OAM tile stream
-     * (AP pips over hero 96-99, pip 5 + riders over blob tail 122-125):
-     * the next tick restreams before the first render, so the hand
-     * never shows hero/blob pixels with correct OAM ids.  Covers boot-
-     * random flags (harness skips CRT0) and any clobber path that did
-     * not clear the flag.  Same-frame guarantee: screen_update runs
-     * before the tick, which runs before the render. */
-    if (screen == SCREEN_BATTLE || screen == SCREEN_ITEM ||
-        screen == SCREEN_SHOP || screen == SCREEN_TITLE ||
-        screen == SCREEN_SAVE_LOAD) {
+    } else if (screen != SCREEN_DIALOGUE) {
+        /* Clear the time-shared OAM / menu chrome WRAM flags on entry;
+         * game_render() streams the required tiles once ui_lcd_off()
+         * has blanked the display. */
         g_bk_call_bank = 11;
         g_bk_call_target = (uint16_t)&menus_entry_invalidate_banked;
         banked_call_run();

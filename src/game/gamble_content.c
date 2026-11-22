@@ -626,12 +626,12 @@ static void gamble_draw_controls(void)
     gamble_draw_text_line(0, 16, 0, 20);
     gamble_stamp_button(0, 16, UI_TILE_BUTTON_A);
     if (g_gamble.phase == GAMBLE_PHASE_RESULT) {
-        gamble_draw_text_line(2, 16, "AGAIN", 5);
+        gamble_draw_text_line(1, 16, "AGAIN", 5);
     } else {
-        gamble_draw_text_line(2, 16, "ROLL", 4);
+        gamble_draw_text_line(1, 16, "ROLL", 4);
     }
-    gamble_stamp_button(8, 16, UI_TILE_BUTTON_B);
-    gamble_draw_text_line(10, 16, "LEAVE", 10);
+    gamble_stamp_button(7, 16, UI_TILE_BUTTON_B);
+    gamble_draw_text_line(8, 16, "LEAVE", 12);
     gamble_color_span(0, 16, 20, UI_COLOR_NONE);
 }
 

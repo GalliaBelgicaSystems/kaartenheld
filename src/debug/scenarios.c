@@ -159,6 +159,10 @@ static void scenario_load_state(void)
      * loader support is needed.  The banked frame body auto-initializes
      * on entry.  The farewell dialogue is exercised by pressing B. */
 
+    if (g_game.screen == SCREEN_OVERWORLD) {
+        ui_restore_ow_oam();
+    }
+
     game_render_reset(&g_game);
 
     debug_snapshot();

@@ -48,7 +48,7 @@ TITLE_LINES = (
     "Slimes stands",
     "between all that",
     "lives and the end.",
-    "[A] NEXT",
+    "NEXT",
 )
 
 

@@ -23,6 +23,16 @@ static void tutorial_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
     BANKED_VRAM_WRITE(dst, tile);
 }
 
+static void tutorial_stamp_button(uint8_t x, uint8_t y, uint8_t tile)
+{
+    volatile uint8_t *dst;
+    if (y >= 18 || x >= 20) return;
+    VBK_REG = 0;
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    tutorial_vram_sync_write(dst, tile);
+    g_ui_screen_buf[y][x] = ' ';
+}
+
 static void tutorial_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
 {
     uint8_t i;
@@ -72,5 +82,8 @@ void tutorial_content_render(void)
     for (i = 0; i < count; i++) {
         tutorial_draw_text(2, (uint8_t)(5 + i), lines[i], 18);
     }
-    tutorial_draw_text(2, 16, "[LR] NAV  [B] EXIT", 18);
+    tutorial_stamp_button(2, 16, UI_TILE_BUTTON_DPAD_LR);
+    tutorial_draw_text(3, 16, "NAV  ", 5);
+    tutorial_stamp_button(8, 16, UI_TILE_BUTTON_B);
+    tutorial_draw_text(9, 16, "EXIT", 11);
 }

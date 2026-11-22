@@ -72,7 +72,7 @@
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "[LR] NAV"
+   "contains": "NAV"
   },
   {
    "type": "event_occurred",
