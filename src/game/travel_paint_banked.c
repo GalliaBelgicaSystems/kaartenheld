@@ -205,12 +205,31 @@ static void tp_supplies(void)
     tp_text(2, 8, s_line, 20);
 }
 
+/* "HP 15/15" (hero pool, so the REST heal is visible). */
+static void tp_hp(void)
+{
+    uint8_t hp;
+    uint8_t max_hp;
+    uint8_t n;
+    hp = g_game.state.party.members[0].hp;
+    max_hp = g_game.state.party.members[0].max_hp;
+    s_line[0] = 'H';
+    s_line[1] = 'P';
+    s_line[2] = ' ';
+    n = tp_u16(hp, &s_line[3]);
+    n = (uint8_t)(3 + n);
+    s_line[n] = '/';
+    n++;
+    n = (uint8_t)(n + tp_u16(max_hp, &s_line[n]));
+    s_line[n] = '\0';
+    tp_text(2, 4, s_line, 20);
+}
+
 static void tp_step(void)
 {
     uint8_t n;
     uint8_t m;
-    uint8_t done;
-    done = (uint8_t)(g_travel_total - g_travel_left);
+    uint8_t done;    done = (uint8_t)(g_travel_total - g_travel_left);
     s_line[0] = 'S';
     s_line[1] = 'T';
     s_line[2] = 'E';
@@ -302,6 +321,93 @@ static void tp_daycost(const TravelEvent *e)
     } else {
         s_line[(uint8_t)(n + 4)] = 'S';
         s_line[(uint8_t)(n + 5)] = '\0';
+    }
+    tp_text(2, 11, s_line, 20);
+}
+
+/* One camp menu row: "> CONTINUE", "  HUNT", ... (IDLE options). */
+static void tp_camp(uint8_t idx, uint8_t y, const char *label)
+{
+    uint8_t i;
+    s_line[0] = (idx == g_travel_choice) ? '>' : ' ';
+    s_line[1] = ' ';
+    i = 0;
+    while (label[i] != '\0' && i < 16) {
+        s_line[(uint8_t)(2 + i)] = label[i];
+        i++;
+    }
+    s_line[(uint8_t)(2 + i)] = '\0';
+    tp_text(2, y, s_line, 20);
+}
+
+/* "+N FOOD" (hunt yield, staged in g_travel_amount). */
+static void tp_found(void)
+{
+    uint8_t n;
+    s_line[0] = '+';
+    n = tp_u16(g_travel_amount, &s_line[1]);
+    n = (uint8_t)(1 + n);
+    s_line[n] = ' ';
+    s_line[(uint8_t)(n + 1)] = 'F';
+    s_line[(uint8_t)(n + 2)] = 'O';
+    s_line[(uint8_t)(n + 3)] = 'O';
+    s_line[(uint8_t)(n + 4)] = 'D';
+    s_line[(uint8_t)(n + 5)] = '\0';
+    tp_text(2, 11, s_line, 20);
+}
+
+/* "+N STEPS" (hunt/rest detour, staged in g_travel_extra). */
+static void tp_detour(void)
+{
+    uint8_t n;
+    s_line[0] = '+';
+    n = tp_u16(g_travel_extra, &s_line[1]);
+    n = (uint8_t)(1 + n);
+    s_line[n] = ' ';
+    s_line[(uint8_t)(n + 1)] = 'S';
+    s_line[(uint8_t)(n + 2)] = 'T';
+    s_line[(uint8_t)(n + 3)] = 'E';
+    s_line[(uint8_t)(n + 4)] = 'P';
+    if (g_travel_extra == 1) {
+        s_line[(uint8_t)(n + 5)] = '\0';
+    } else {
+        s_line[(uint8_t)(n + 5)] = 'S';
+        s_line[(uint8_t)(n + 6)] = '\0';
+    }
+    tp_text(2, 12, s_line, 20);
+}
+
+/* "+N HP" (rest heal, staged in g_travel_amount). */
+static void tp_healed(void)
+{
+    uint8_t n;
+    s_line[0] = '+';
+    n = tp_u16(g_travel_amount, &s_line[1]);
+    n = (uint8_t)(1 + n);
+    s_line[n] = ' ';
+    s_line[(uint8_t)(n + 1)] = 'H';
+    s_line[(uint8_t)(n + 2)] = 'P';
+    s_line[(uint8_t)(n + 3)] = '\0';
+    tp_text(2, 11, s_line, 20);
+}
+
+/* "-N STEPS" (study shortcut, staged in g_travel_amount). */
+static void tp_shortcut(void)
+{
+    uint8_t n;
+    s_line[0] = '-';
+    n = tp_u16(g_travel_amount, &s_line[1]);
+    n = (uint8_t)(1 + n);
+    s_line[n] = ' ';
+    s_line[(uint8_t)(n + 1)] = 'S';
+    s_line[(uint8_t)(n + 2)] = 'T';
+    s_line[(uint8_t)(n + 3)] = 'E';
+    s_line[(uint8_t)(n + 4)] = 'P';
+    if (g_travel_amount == 1) {
+        s_line[(uint8_t)(n + 5)] = '\0';
+    } else {
+        s_line[(uint8_t)(n + 5)] = 'S';
+        s_line[(uint8_t)(n + 6)] = '\0';
     }
     tp_text(2, 11, s_line, 20);
 }
@@ -421,8 +527,12 @@ void travel_paint_banked(void)
     tp_gold();
     tp_days();
     tp_supplies();
+    tp_hp();
     if (view == TRAVEL_VIEW_IDLE) {
-        tp_text(2, 9, "[A] CONTINUE", 20);
+        tp_camp(0, 9, "CONTINUE");
+        tp_camp(1, 10, "HUNT");
+        tp_camp(2, 11, "REST");
+        tp_camp(3, 12, "MAP");
     } else if (view == TRAVEL_VIEW_SUPPLY) {
         tp_supply(0, 9, "FOOD");
         tp_supply(1, 11, "WATER");
@@ -465,6 +575,21 @@ void travel_paint_banked(void)
         } else if (g_travel_msg == TRAVEL_MSG_NOGOLD) {
             tp_text(2, 9, "NOT ENOUGH GOLD.", 20);
             tp_cost();
+        } else if (g_travel_msg == TRAVEL_MSG_HUNTED) {
+            tp_text(2, 9, "YOU FORAGE.", 20);
+            tp_found();
+            tp_detour();
+        } else if (g_travel_msg == TRAVEL_MSG_RESTED) {
+            tp_text(2, 9, "YOU REST.", 20);
+            tp_healed();
+            tp_detour();
+        } else if (g_travel_msg == TRAVEL_MSG_STUDIED) {
+            tp_text(2, 9, "YOU STUDY MAP.", 20);
+            if (g_travel_amount == 0) {
+                tp_text(2, 11, "NO SHORTCUT.", 20);
+            } else {
+                tp_shortcut();
+            }
         } else {
             tp_text(2, 9, "YOU WAKE UP HURT.", 20);
             tp_text(2, 10, "+1 STEP RECOVERY", 20);

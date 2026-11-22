@@ -26,6 +26,10 @@ uint8_t g_travel_choice;
 uint8_t g_travel_msg;
 uint8_t g_travel_seen;
 uint8_t g_travel_in_ruins;
+uint8_t g_travel_amount;
+uint8_t g_travel_extra;
+uint8_t g_travel_nofood;
+uint8_t g_travel_nowater;
 
 /* Staged table rows: copied from bank 9 on stage, read by logic and
  * render from WRAM (never map a ROM window around a render). */
@@ -106,6 +110,10 @@ void travel_start(uint8_t route)
     g_travel_choice = 0;
     g_travel_seen = 0;
     g_travel_in_ruins = 0;
+    g_travel_amount = 0;
+    g_travel_extra = 0;
+    g_travel_nofood = 0;
+    g_travel_nowater = 0;
     for (i = 0; i < s_route.method_count; i++) {
         if (s_route.methods[i].cost_gold == 0) {
             g_travel_choice = i;
@@ -123,14 +131,61 @@ bool game_travel_active(void)
 }
 
 /* Burn n days off the Convergence clock (floor at zero, never
- * negative) plus the road rations (1 food + 2 water per day, floored).
- * Crossing zero flips the Lord supreme (one-way): late ambushes use
- * their buffed HP and the end fight reads the same flag. */
+ * negative) plus the route's road rations (food/water per day from
+ * the route table, floored -- a desert route drinks more).  Days
+ * spent with no food or no water count up their own starvation
+ * tally; every Nth such day costs HP (floored at 1, like the battle
+ * defeat floor -- hunger weakens, it never kills outright).  A day
+ * with supplies resets that tally.  Crossing zero flips the Lord
+ * supreme (one-way): late ambushes use their buffed HP and the end
+ * fight reads the same flag. */
+static void travel_starve_tick(Game *g, uint8_t nofood, uint8_t nowater)
+{
+    uint8_t hp;
+    uint8_t max_hp;
+    if (!g) return;
+    hp = g->state.party.members[0].hp;
+    max_hp = g->state.party.members[0].max_hp;
+    /* Modulo-free "every Nth" cadence (no % or / in fixed bank,
+     * AGENTS.md 52.18): count up, pay out on reaching the beat. */
+    if (nofood) {
+        g_travel_nofood++;
+        if (g_travel_nofood >= s_route.starve_food_every) {
+            g_travel_nofood = 0;
+            if (hp > s_route.starve_food_hp) {
+                hp = (uint8_t)(hp - s_route.starve_food_hp);
+            } else {
+                hp = 1;
+            }
+        }
+    } else {
+        g_travel_nofood = 0;
+    }
+    if (nowater) {
+        g_travel_nowater++;
+        if (g_travel_nowater >= s_route.starve_water_every) {
+            g_travel_nowater = 0;
+            if (hp > s_route.starve_water_hp) {
+                hp = (uint8_t)(hp - s_route.starve_water_hp);
+            } else {
+                hp = 1;
+            }
+        }
+    } else {
+        g_travel_nowater = 0;
+    }
+    if (hp > max_hp) hp = max_hp;
+    if (hp == 0) hp = 1;
+    g->state.party.members[0].hp = hp;
+    g->world.player.hp = hp;
+}
+
 static void travel_burn_days(Game *g, uint8_t n)
 {
     int16_t day;
     int16_t food;
     int16_t water;
+    int16_t rate;
     uint8_t i;
     if (!g) return;
     for (i = 0; i < n; i++) {
@@ -139,15 +194,22 @@ static void travel_burn_days(Game *g, uint8_t n)
             game_variable_set(&g->state, VARIABLE_ID_DAY, (int16_t)(day - 1));
         }
         food = game_variable_get(&g->state, VARIABLE_ID_FOOD);
-        if (food > 0) {
-            game_variable_set(&g->state, VARIABLE_ID_FOOD, (int16_t)(food - 1));
+        rate = (int16_t)s_route.food_per_day;
+        if (food > rate) {
+            game_variable_set(&g->state, VARIABLE_ID_FOOD, (int16_t)(food - rate));
+        } else if (food > 0) {
+            game_variable_set(&g->state, VARIABLE_ID_FOOD, 0);
         }
         water = game_variable_get(&g->state, VARIABLE_ID_WATER);
-        if (water > 2) {
-            game_variable_set(&g->state, VARIABLE_ID_WATER, (int16_t)(water - 2));
+        rate = (int16_t)s_route.water_per_day;
+        if (water > rate) {
+            game_variable_set(&g->state, VARIABLE_ID_WATER, (int16_t)(water - rate));
         } else if (water > 0) {
             game_variable_set(&g->state, VARIABLE_ID_WATER, 0);
         }
+        travel_starve_tick(g,
+            (uint8_t)(game_variable_get(&g->state, VARIABLE_ID_FOOD) <= 0),
+            (uint8_t)(game_variable_get(&g->state, VARIABLE_ID_WATER) <= 0));
     }
     day = game_variable_get(&g->state, VARIABLE_ID_DAY);
     if (day == 0 &&
@@ -187,6 +249,10 @@ static void travel_confirm_method(Game *g)
     g_travel_event = TRAVEL_EVENT_NONE;
     g_travel_seen = 0;
     g_travel_in_ruins = 0;
+    g_travel_amount = 0;
+    g_travel_extra = 0;
+    g_travel_nofood = 0;
+    g_travel_nowater = 0;
     game_render_reset(g);
 }
 
@@ -207,6 +273,10 @@ void travel_open_supply(uint8_t route)
     g_travel_choice = 0;
     g_travel_seen = 0;
     g_travel_in_ruins = 0;
+    g_travel_amount = 0;
+    g_travel_extra = 0;
+    g_travel_nofood = 0;
+    g_travel_nowater = 0;
     g_travel_msg = TRAVEL_MSG_NONE;
     g_travel_active = 1;
     screen_change(&g_game, SCREEN_JOURNEY);
@@ -308,6 +378,10 @@ static void travel_arrive(Game *g)
     g_travel_choice = 0;
     g_travel_seen = 0;
     g_travel_in_ruins = 0;
+    g_travel_amount = 0;
+    g_travel_extra = 0;
+    g_travel_nofood = 0;
+    g_travel_nowater = 0;
     scene_load(g, scene, x, y);
     def = scene_definition_for_map(g->world.map_id);
     audio_play_music(def ? def->music : MUSIC_OVERWORLD);
@@ -366,6 +440,118 @@ static void travel_resolve_help(Game *g)
         audio_play_sfx(SFX_CONFIRM);
     }
     g_travel_choice = 0;
+    game_render_reset(g);
+}
+
+/* Uniform range roll without % or / (fixed-bank budget, AGENTS.md
+ * 52.18): rejection-sample a byte under the span, like the pool
+ * pick below.  Returns min when the range is empty or a point
+ * (span 0 means a 256-wide range, unreachable through the
+ * compiler's caps -- belt and braces against a hang). */
+static uint8_t travel_roll_range(uint8_t lo, uint8_t hi)
+{
+    uint8_t span;
+    uint8_t r;
+    if (hi <= lo) return lo;
+    span = (uint8_t)(hi - lo + 1);
+    if (span == 0) return lo;
+    do {
+        r = (uint8_t)rng_next();
+    } while (r >= span);
+    return (uint8_t)(lo + r);
+}
+
+/* Camp: hunt/forage.  Burns the day, always finds food (route
+ * yield range), and may add a detour (route delay range).  No step
+ * is travelled and no road event rolls -- the day is spent off the
+ * trail.  Staged amounts ride g_travel_amount/extra for the paint. */
+static void travel_do_hunt(Game *g)
+{
+    uint8_t found;
+    uint8_t delay;
+    int16_t food;
+    if (!g) return;
+    found = travel_roll_range(s_route.hunt_food_min, s_route.hunt_food_max);
+    delay = travel_roll_range(s_route.hunt_delay_min, s_route.hunt_delay_max);
+    travel_burn_days(g, 1);
+    food = game_variable_get(&g->state, VARIABLE_ID_FOOD);
+    game_variable_set(&g->state, VARIABLE_ID_FOOD, (int16_t)(food + found));
+    if (g_travel_total <= (uint8_t)(255 - delay)) {
+        g_travel_total = (uint8_t)(g_travel_total + delay);
+    } else {
+        g_travel_total = 255;
+    }
+    if (g_travel_left <= (uint8_t)(255 - delay)) {
+        g_travel_left = (uint8_t)(g_travel_left + delay);
+    } else {
+        g_travel_left = 255;
+    }
+    g_travel_amount = found;
+    g_travel_extra = delay;
+    g_travel_msg = TRAVEL_MSG_HUNTED;
+    g_travel_choice = 0;
+    audio_play_sfx(SFX_CASH);
+    game_render_reset(g);
+}
+
+/* Camp: rest.  Burns the day, restores route HP, and adds the route
+ * rest delay (the day off still costs the schedule). */
+static void travel_do_rest(Game *g)
+{
+    uint8_t hp;
+    uint8_t delay;
+    if (!g) return;
+    delay = s_route.rest_delay;
+    travel_burn_days(g, 1);
+    {
+        int16_t healed;
+        healed = (int16_t)g->state.party.members[0].hp;
+        healed = (int16_t)(healed + (int16_t)s_route.rest_heal);
+        if (healed > (int16_t)g->state.party.members[0].max_hp) {
+            healed = (int16_t)g->state.party.members[0].max_hp;
+        }
+        hp = (uint8_t)healed;
+    }
+    g->state.party.members[0].hp = hp;
+    g->world.player.hp = hp;
+    if (g_travel_total <= (uint8_t)(255 - delay)) {
+        g_travel_total = (uint8_t)(g_travel_total + delay);
+    } else {
+        g_travel_total = 255;
+    }
+    if (g_travel_left <= (uint8_t)(255 - delay)) {
+        g_travel_left = (uint8_t)(g_travel_left + delay);
+    } else {
+        g_travel_left = 255;
+    }
+    g_travel_amount = s_route.rest_heal;
+    g_travel_extra = delay;
+    g_travel_msg = TRAVEL_MSG_RESTED;
+    g_travel_choice = 0;
+    audio_play_sfx(SFX_CONFIRM);
+    game_render_reset(g);
+}
+
+/* Camp: study the map.  Burns the day and may shorten what is left
+ * (route save range).  Mapping away the final step completes the
+ * journey on the spot. */
+static void travel_do_study(Game *g)
+{
+    uint8_t saved;
+    if (!g) return;
+    saved = travel_roll_range(s_route.study_save_min, s_route.study_save_max);
+    travel_burn_days(g, 1);
+    g_travel_amount = saved;
+    g_travel_extra = 0;
+    g_travel_choice = 0;
+    if (saved >= g_travel_left) {
+        travel_arrive(g);
+        return;
+    }
+    g_travel_left = (uint8_t)(g_travel_left - saved);
+    g_travel_total = (uint8_t)(g_travel_total - saved);
+    g_travel_msg = TRAVEL_MSG_STUDIED;
+    audio_play_sfx(SFX_CONFIRM);
     game_render_reset(g);
 }
 
@@ -442,6 +628,7 @@ static void travel_advance(Game *g)
         }
     }
     if ((uint8_t)roll >= s_method.frequency) {
+        g_travel_choice = 0;
         game_render_reset(g);
         return;
     }
@@ -591,6 +778,7 @@ void travel_update(Game *g)
         if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
             g_travel_msg = TRAVEL_MSG_NONE;
             g_travel_event = TRAVEL_EVENT_NONE;
+            g_travel_choice = 0;
             audio_play_sfx(SFX_CONFIRM);
             game_render_reset(g);
         }
@@ -616,9 +804,41 @@ void travel_update(Game *g)
         travel_update_event(g);
         return;
     }
+    /* Camp menu: one action per day.  UP/LEFT move up the list,
+     * DOWN/RIGHT move down (wraps over the four options); A/START
+     * works the selected day. */
+    if (input_pressed(INPUT_UP) || input_pressed(INPUT_LEFT)) {
+        if (g_travel_choice == 0) {
+            g_travel_choice = 3;
+        } else {
+            g_travel_choice = (uint8_t)(g_travel_choice - 1);
+        }
+        audio_play_sfx(SFX_CURSOR);
+        game_render_reset(g);
+        return;
+    }
+    if (input_pressed(INPUT_DOWN) || input_pressed(INPUT_RIGHT)) {
+        if (g_travel_choice >= 3) {
+            g_travel_choice = 0;
+        } else {
+            g_travel_choice = (uint8_t)(g_travel_choice + 1);
+        }
+        audio_play_sfx(SFX_CURSOR);
+        game_render_reset(g);
+        return;
+    }
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
-        audio_play_sfx(SFX_CONFIRM);
-        travel_advance(g);
+        if (g_travel_choice == TRAVEL_CAMP_HUNT) {
+            travel_do_hunt(g);
+        } else if (g_travel_choice == TRAVEL_CAMP_REST) {
+            travel_do_rest(g);
+        } else if (g_travel_choice == TRAVEL_CAMP_STUDY) {
+            travel_do_study(g);
+        } else {
+            audio_play_sfx(SFX_CONFIRM);
+            travel_advance(g);
+            g_travel_choice = 0;
+        }
     }
 }
 

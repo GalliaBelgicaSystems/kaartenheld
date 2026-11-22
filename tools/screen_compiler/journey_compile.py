@@ -13,8 +13,10 @@ main game or its memory budget.
 Route schema:
     id, name (<=20 chars), start (scene in levels/registry.json),
     destination (scene), dest_x/dest_y (inside the level bounds),
-    steps (1..255), frequency (0..255, per-step event chance),
-    pool (1..4 entries of {event, weight 1..255}).
+    supply (food/water prices + food_per_day/water_per_day burn),
+    camp (hunt food_min/max + delay_min/max, rest heal + delay,
+    starve food/water hp + every, study save_min/max),
+    methods (1..2 entries, see below).
 
 Event schemas (kind):
     battle: text (<=20), battle (BATTLE_* in src/world/actor.h).
@@ -191,10 +193,51 @@ def load_routes(scenes, event_ids):
         if not isinstance(supply, dict):
             fail("%s: supply must be an object with food_price/water_price"
                  % rid)
-        for key in ("food_price", "water_price"):
+        for key in ("food_price", "water_price", "food_per_day",
+                    "water_per_day"):
             v = supply.get(key)
             if not isinstance(v, int) or not (0 <= v <= 255):
                 fail("%s: supply.%s must be 0..255" % (rid, key))
+        camp = doc.get("camp")
+        if not isinstance(camp, dict):
+            fail("%s: camp needs hunt/rest/starve/study" % rid)
+        hunt = camp.get("hunt")
+        if not isinstance(hunt, dict):
+            fail("%s: camp.hunt must be an object" % rid)
+        for key, lo, hi in (("food_min", 0, 30), ("food_max", 0, 30),
+                             ("delay_min", 0, 10), ("delay_max", 0, 10)):
+            v = hunt.get(key)
+            if not isinstance(v, int) or not (lo <= v <= hi):
+                fail("%s: camp.hunt.%s must be %d..%d" % (rid, key, lo, hi))
+        if hunt["food_max"] < hunt["food_min"]:
+            fail("%s: camp.hunt.food_max < food_min" % rid)
+        if hunt["delay_max"] < hunt["delay_min"]:
+            fail("%s: camp.hunt.delay_max < delay_min" % rid)
+        rest = camp.get("rest")
+        if not isinstance(rest, dict):
+            fail("%s: camp.rest must be an object" % rid)
+        for key, lo, hi in (("heal", 0, 30), ("delay", 0, 10)):
+            v = rest.get(key)
+            if not isinstance(v, int) or not (lo <= v <= hi):
+                fail("%s: camp.rest.%s must be %d..%d" % (rid, key, lo, hi))
+        starve = camp.get("starve")
+        if not isinstance(starve, dict):
+            fail("%s: camp.starve must be an object" % rid)
+        for key, lo, hi in (("food_hp", 0, 30), ("food_every", 1, 10),
+                             ("water_hp", 0, 30), ("water_every", 1, 10)):
+            v = starve.get(key)
+            if not isinstance(v, int) or not (lo <= v <= hi):
+                fail("%s: camp.starve.%s must be %d..%d"
+                     % (rid, key, lo, hi))
+        study = camp.get("study")
+        if not isinstance(study, dict):
+            fail("%s: camp.study must be an object" % rid)
+        for key in ("save_min", "save_max"):
+            v = study.get(key)
+            if not isinstance(v, int) or not (0 <= v <= 20):
+                fail("%s: camp.study.%s must be 0..20" % (rid, key))
+        if study["save_max"] < study["save_min"]:
+            fail("%s: camp.study.save_max < save_min" % rid)
         methods = doc.get("methods")
         if not isinstance(methods, list) or \
                 not (1 <= len(methods) <= TRAVEL_METHODS_MAX):
@@ -269,6 +312,20 @@ def emit(routes, events, scenes, battle_ids):
                      % (doc["dest_x"], doc["dest_y"]))
         lines.append("        %d, /* food_price */" % doc["supply"]["food_price"])
         lines.append("        %d, /* water_price */" % doc["supply"]["water_price"])
+        lines.append("        %d, /* food_per_day */" % doc["supply"]["food_per_day"])
+        lines.append("        %d, /* water_per_day */" % doc["supply"]["water_per_day"])
+        lines.append("        %d, /* hunt_food_min */" % doc["camp"]["hunt"]["food_min"])
+        lines.append("        %d, /* hunt_food_max */" % doc["camp"]["hunt"]["food_max"])
+        lines.append("        %d, /* hunt_delay_min */" % doc["camp"]["hunt"]["delay_min"])
+        lines.append("        %d, /* hunt_delay_max */" % doc["camp"]["hunt"]["delay_max"])
+        lines.append("        %d, /* rest_heal */" % doc["camp"]["rest"]["heal"])
+        lines.append("        %d, /* rest_delay */" % doc["camp"]["rest"]["delay"])
+        lines.append("        %d, /* starve_food_hp */" % doc["camp"]["starve"]["food_hp"])
+        lines.append("        %d, /* starve_food_every */" % doc["camp"]["starve"]["food_every"])
+        lines.append("        %d, /* starve_water_hp */" % doc["camp"]["starve"]["water_hp"])
+        lines.append("        %d, /* starve_water_every */" % doc["camp"]["starve"]["water_every"])
+        lines.append("        %d, /* study_save_min */" % doc["camp"]["study"]["save_min"])
+        lines.append("        %d, /* study_save_max */" % doc["camp"]["study"]["save_max"])
         lines.append("        %d, /* method_count */" % len(doc["methods"]))
         lines.append("        {")
         for m in doc["methods"]:

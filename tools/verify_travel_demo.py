@@ -12,6 +12,9 @@ inside `nix develop` for PyBoy)
   defeat:  lose on purpose (HP floor 1, +1 step, resume)
   flee:    flee resumes the journey
   days:    day burn, zero crossing, late-buffed slime
+  camp:    daily camp menu (shipped tuning): HUNT finds 1-5 food
+           with a 0-2 step detour, REST heals 5 for +1 step, STUDY
+           saves 0-2 steps, 2 dry days cost 5 HP.
   ruins:   route pool forced to [ruins_sight] @100% (rebuild ROM
            first): EXPLORE enters the 3-room map with no day burn,
            the relic chest grants +1 AP, LEAVE RUINS? YES resumes
@@ -260,7 +263,10 @@ def boot_to_journey(d):
 def select_foot(d):
     # default choice is the free method (ON FOOT): confirm straight in
     d.press("a", settle=20)
-    assert d.wait_for(lambda: d.text_has("[A] CONTINUE"), ticks=300), d.rows()
+    assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300), d.rows()
+    assert d.text_has("HUNT"), d.rows()
+    assert d.text_has("REST"), d.rows()
+    assert d.text_has("MAP"), d.rows()
     print("foot selected OK")
 
 
@@ -807,6 +813,91 @@ def test_ruins_ignore():
             d.close()
 
 
+def test_camp():
+    """Daily camp menu (shipped tuning, no forced pool needed: camp
+    actions roll no road events, so the deterministic stream cannot
+    interfere).  HUNT nets found-1 food with a 0-2 detour, REST heals
+    5 for +1 step, STUDY saves 0-2 steps, and two consecutive dry
+    days cost 5 HP (route starve tuning)."""
+    d = D()
+    try:
+        boot_to_journey(d)
+        select_foot(d)
+        assert d.ap() == 5, d.ap()
+        # HUNT: +1..5 found (-1 eaten), +0..2 steps, -1 day.
+        f0 = d.food()
+        day0 = d.day()
+        tot0 = d.total_steps()
+        d.press("down", settle=12)  # CONTINUE -> HUNT
+        assert d.wait_for(lambda: d.text_has("> HUNT"), ticks=200), d.rows()
+        d.press("a", settle=30)
+        assert d.wait_for(lambda: d.text_has("YOU FORAGE."), ticks=300), \
+            d.rows()
+        assert d.wait_for(lambda: d.text_has("FOOD"), ticks=120), d.rows()
+        net = d.food() - f0
+        assert 0 <= net <= 4, (f0, d.food())
+        assert d.day() == day0 - 1, (d.day(), day0)
+        detour = d.total_steps() - tot0
+        assert 0 <= detour <= 2, detour
+        print("hunt OK: net +%d food, detour +%d, day -1" % (net, detour))
+        d.press("a", settle=20)  # dismiss
+        # STARVE (water): two dry hunts cost 5 HP on the second day.
+        import struct
+        addr = d.r.state + OFF_VARIABLES + 2 * (13 - 1)
+        raw = struct.pack("<h", 0)
+        d.pb.memory[addr] = raw[0]
+        d.pb.memory[addr + 1] = raw[1]
+        d.tick(2)
+        assert d.water() == 0, d.water()
+        d.press("down", settle=12)
+        d.press("a", settle=30)  # hunt 1: dry day 1, no damage
+        assert d.wait_for(lambda: d.text_has("YOU FORAGE."), ticks=300)
+        assert d.r.hero()["hp"] == 15, d.r.hero()
+        d.press("a", settle=20)
+        d.press("down", settle=12)
+        d.press("a", settle=30)  # hunt 2: dry day 2, -5 HP
+        assert d.wait_for(lambda: d.text_has("YOU FORAGE."), ticks=300)
+        assert d.r.hero()["hp"] == 10, d.r.hero()
+        print("starve OK: 2 dry days cost 5 HP (15 -> 10)")
+        d.press("a", settle=20)
+        # REST: +5 HP (capped), +1 step, -1 day.
+        tot0 = d.total_steps()
+        day0 = d.day()
+        d.press("down", settle=12)
+        d.press("down", settle=12)  # CONTINUE -> HUNT -> REST
+        assert d.wait_for(lambda: d.text_has("> REST"), ticks=200), d.rows()
+        d.press("a", settle=30)
+        assert d.wait_for(lambda: d.text_has("YOU REST."), ticks=300), \
+            d.rows()
+        assert d.r.hero()["hp"] == 15, d.r.hero()
+        assert d.day() == day0 - 1, (d.day(), day0)
+        assert d.total_steps() == tot0 + 1, d.total_steps()
+        print("rest OK: HP 10 -> 15, +1 step, day -1")
+        d.press("a", settle=20)
+        # STUDY: saves 0-2 steps for one day.
+        left0 = d.pb.memory[d.r.sym.wram("g_travel_left")]
+        day0 = d.day()
+        d.press("down", settle=12)
+        d.press("down", settle=12)
+        d.press("down", settle=12)  # -> MAP
+        assert d.wait_for(lambda: d.text_has("> MAP"), ticks=200), d.rows()
+        d.press("a", settle=30)
+        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300), \
+            d.rows()
+        assert d.day() == day0 - 1, (d.day(), day0)
+        left1 = d.pb.memory[d.r.sym.wram("g_travel_left")]
+        # study may arrive (saved the last step): accept either.
+        st = d.scene()
+        if st["scene_id"] == SCENE_ACT2_TOWN:
+            print("study OK: mapped away the final step, arrived")
+        else:
+            assert 0 <= left0 - left1 <= 2, (left0, left1)
+            print("study OK: saved %d steps, day -1" % (left0 - left1))
+            d.press("a", settle=20)
+    finally:
+        d.close()
+
+
 def test_full():
     d = D()
     try:
@@ -876,6 +967,8 @@ if __name__ == "__main__":
         test_nogold()
     elif mode == "days":
         test_days()
+    elif mode == "camp":
+        test_camp()
     elif mode == "ruins":
         test_ruins()
     elif mode == "ruins_ignore":

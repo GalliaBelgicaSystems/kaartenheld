@@ -15,6 +15,20 @@ const TravelRoute g_travel_routes[] = {
         2, 7, /* dest_x, dest_y */
         2, /* food_price */
         1, /* water_price */
+        1, /* food_per_day */
+        2, /* water_per_day */
+        1, /* hunt_food_min */
+        5, /* hunt_food_max */
+        0, /* hunt_delay_min */
+        2, /* hunt_delay_max */
+        5, /* rest_heal */
+        1, /* rest_delay */
+        3, /* starve_food_hp */
+        2, /* starve_food_every */
+        5, /* starve_water_hp */
+        2, /* starve_water_every */
+        0, /* study_save_min */
+        2, /* study_save_max */
         2, /* method_count */
         {
             { /* carriage */

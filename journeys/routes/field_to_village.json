@@ -5,7 +5,34 @@
   "destination": "act2_town",
   "dest_x": 2,
   "dest_y": 7,
-  "supply": { "food_price": 2, "water_price": 1 },
+  "supply": {
+    "food_price": 2,
+    "water_price": 1,
+    "food_per_day": 1,
+    "water_per_day": 2
+  },
+  "camp": {
+    "hunt": {
+      "food_min": 1,
+      "food_max": 5,
+      "delay_min": 0,
+      "delay_max": 2
+    },
+    "rest": {
+      "heal": 5,
+      "delay": 1
+    },
+    "starve": {
+      "food_hp": 3,
+      "food_every": 2,
+      "water_hp": 5,
+      "water_every": 2
+    },
+    "study": {
+      "save_min": 0,
+      "save_max": 2
+    }
+  },
   "methods": [
     {
       "id": "carriage",
@@ -22,9 +49,18 @@
       "steps": 10,
       "frequency": 35,
       "pool": [
-        { "event": "ambush_slimes", "weight": 50 },
-        { "event": "traveler_help", "weight": 50 },
-        { "event": "ruins_sight", "weight": 50 }
+        {
+          "event": "ambush_slimes",
+          "weight": 50
+        },
+        {
+          "event": "traveler_help",
+          "weight": 50
+        },
+        {
+          "event": "ruins_sight",
+          "weight": 50
+        }
       ]
     }
   ]
