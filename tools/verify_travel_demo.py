@@ -11,12 +11,19 @@ inside `nix develop` for PyBoy)
   ignore:  same tuning; ignore keeps the schedule
   defeat:  lose on purpose: cold game over (no floor, no resume)
   flee:    flee resumes the journey
-  days:    day burn, zero crossing, late-buffed slime
-  events:  route pool forced to [bandits] @100% (rebuild ROM first):
-           PAY path effects + delta line, FIGHT path staged battle.
+  days:    day burn, zero crossing, late-buffed slime (long route
+           + clear weather forced; rebuild ROM first)
+  events:  route pools forced to single events + clear weather
+           (rebuild ROM first):
+           SHARE path on the act-1 road, FIGHT path on act 2.
   camp:    daily camp menu (shipped tuning): HUNT finds 1-5 food
-           with a 0-2 step detour, REST heals 5 for +1 step, STUDY
-           saves 0-2 steps, 2 dry days cost 5 HP.
+           and 0-2 water with a 0-2 step detour, REST heals 5 for
+           +1 step, STUDY costs 2 food / 4 water and saves 0-2
+           steps (or wanders lost +0-2), 2 dry days cost 5 HP.
+  acts:    per-road per-act tables (shipped tuning): chapter 1
+           walks the 8-step act-1 road, the town signpost walks
+           the 10-step act-2 return road, chapter 2 walks the
+           10-step act-2 road.
   ruins:   route pool forced to [ruins_sight] @100% (rebuild ROM
            first): EXPLORE enters the 3-room map with no day burn,
            the relic chest grants +1 AP, LEAVE RUINS? YES resumes
@@ -114,6 +121,9 @@ class D:
 
     def water(self):
         return self.r.variable(13)
+
+    def weather(self):
+        return self.pb.memory[self.r.sym.wram("g_travel_weather")]
 
     def poke_day(self, v):
         import struct
@@ -452,12 +462,21 @@ def test_flee():
 def test_days():
     """Day counter: steps and victories burn days; zero flips the Lord
     supreme (buffed late ambushes + LATE! row).
-    NOTE: run with a long route (steps=99, ambush pool @255) so retries
-    can never arrive mid-test; restore shipped tuning afterwards.
+    NOTE: run with a long route (steps=99, ambush pool @255, weather
+    forced clear) so retries can never arrive mid-test and snow can
+    never double a step burn; restore shipped tuning afterwards.
     (With the shipped 10-step route the walk below still fits: it
     advances ~5 times, so arrival cannot trigger.)"""
     d = D()
     try:
+        # Chapter 2 walks the act-2 road (the forced 99-step one);
+        # a fresh boot starts chapter 1 (8-step act-1 road).
+        import struct
+        addr = d.r.state + OFF_VARIABLES + 2 * (1 - 1)
+        raw = struct.pack("<h", 2)
+        d.pb.memory[addr] = raw[0]
+        d.pb.memory[addr + 1] = raw[1]
+        d.tick(2)
         boot_to_journey(d)
         select_foot(d)
         assert d.total_steps() >= 10, d.total_steps()
@@ -740,6 +759,54 @@ def _finish_trip(d):
     assert st["scene_id"] == SCENE_ACT2_TOWN, st
 
 
+def test_risk():
+    """Every scenario shares 50/50 success/failure odds (route pool
+    forced to [stranded_merchant] @100% and weather forced clear,
+    rebuild ROM first): walk
+    the whole journey always sharing, and assert both the success
+    line (+12G) and the fail line show up with the right effects."""
+    d = D()
+    try:
+        boot_to_journey(d)
+        select_foot(d)
+        seen_success = 0
+        seen_fail = 0
+        for _ in range(40):
+            st = d.scene()
+            if st["scene_id"] == SCENE_ACT2_TOWN:
+                break
+            if d.screen() != SCREEN_JOURNEY:
+                d.tick(30)
+                continue
+            if not d.text_has("MERCHANT NEEDS"):
+                d.press("a", settle=20)
+                continue
+            gold0 = d.gold()
+            food0 = d.food()
+            d.press("a", settle=20)  # SHARE
+            if d.wait_for(lambda: d.text_has("HE PAYS IN GOLD."),
+                          ticks=120):
+                seen_success += 1
+                assert d.gold() == gold0 + 12, (gold0, d.gold())
+                assert d.text_has("+12G"), d.rows()
+            elif d.wait_for(lambda: d.text_has("EMPTY PURSE."),
+                            ticks=120):
+                seen_fail += 1
+                assert d.gold() == gold0, (gold0, d.gold())
+            else:
+                assert False, d.rows()
+            d.press("a", settle=20)  # dismiss
+            assert d.food() == max(0, food0 - 2), (food0, d.food())
+        st = d.scene()
+        assert st["scene_id"] == SCENE_ACT2_TOWN, st
+        assert seen_success >= 1, "never rolled success"
+        assert seen_fail >= 1, "never rolled failure"
+        print("risk OK: %d success, %d fail (50/50 branch both live)"
+              % (seen_success, seen_fail))
+    finally:
+        d.close()
+
+
 def test_ruins():
     """Roadside ruins (shipped tuning, reboot until the prompt stages):
     EXPLORE -> 3-room map, relic chest +1 AP, LEAVE RUINS? YES resumes
@@ -951,13 +1018,15 @@ def test_camp():
 
 
 def test_events():
-    """Representative new choice mechanics (route pool forced to
-    [bandits] @100%, rebuild ROM first): PAY applies food/gold
-    effects with a delta line; FIGHT dispatches the staged battle
-    event and pays victory gold on return."""
+    """Representative new choice mechanics (route pools forced to
+    single events and weather forced clear, rebuild ROM first): on
+    the act-1 road the
+    stranded merchant's SHARE path applies food/gold effects with a
+    delta line; on the act-2 road (chapter 2) the bandits' FIGHT
+    path dispatches the staged battle event and pays victory gold."""
     d = D()
     try:
-        # PAY path.
+        # SHARE path (act-1 road).
         boot_to_journey(d)
         select_foot(d)
         f0 = d.food()
@@ -965,25 +1034,33 @@ def test_events():
         day0 = d.day()
         for _ in range(6):
             d.press("a", settle=30)
-            if d.text_has("BANDITS BLOCK"):
+            if d.text_has("MERCHANT NEEDS"):
                 break
-        assert d.text_has("BANDITS BLOCK"), d.rows()
-        assert d.text_has("> PAY FIGHT"), d.rows()
-        d.press("a", settle=30)  # PAY
-        assert d.wait_for(lambda: d.text_has("THEY LET YOU PASS."),
+        assert d.text_has("MERCHANT NEEDS"), d.rows()
+        assert d.text_has("> SHARE LEAVE"), d.rows()
+        d.press("a", settle=30)  # SHARE
+        assert d.wait_for(lambda: d.text_has("HE PAYS IN GOLD."),
                           ticks=300), d.rows()
-        assert d.text_has("-4F"), d.rows()
-        assert d.text_has("-6G"), d.rows()
-        assert d.food() == f0 - 5, (f0, d.food())  # step ration + toll
-        assert d.gold() == gold0 - 6, (gold0, d.gold())
+        assert d.text_has("+12G"), d.rows()
+        assert d.text_has("-2F"), d.rows()
+        assert d.food() == f0 - 3, (f0, d.food())  # step + share
+        assert d.gold() == gold0 + 12, (gold0, d.gold())
         assert d.day() == day0 - 1, (day0, d.day())  # step only
-        print("events PAY OK: -4 food, -6 gold, delta line")
+        print("events SHARE OK: -2 food, +12 gold, delta line")
         d.press("a", settle=20)
         d.close()
-        # FIGHT path: fresh boot, decline payment, win the staged trio.
+        d = None
+        # FIGHT path (act-2 road via chapter 2).
         d = D()
+        import struct
+        addr = d.r.state + OFF_VARIABLES + 2 * (1 - 1)
+        raw = struct.pack("<h", 2)
+        d.pb.memory[addr] = raw[0]
+        d.pb.memory[addr + 1] = raw[1]
+        d.tick(2)
         boot_to_journey(d)
         select_foot(d)
+        assert d.total_steps() == 10, d.total_steps()
         gold0 = d.gold()
         day0 = d.day()
         for _ in range(6):
@@ -1006,7 +1083,102 @@ def test_events():
         print("events FIGHT OK: staged battle won, +14G, day burned")
         d.press("a", settle=20)
     finally:
+        if d is not None:
+            d.close()
+
+
+def test_acts():
+    """Per-road, per-act journey tables (shipped tuning): chapter 1
+    walks the act-1 road (8 steps), the town signpost walks the
+    act-2 return road back to the field (10 steps), and chapter 2
+    walks the act-2 road (10 steps)."""
+    d = None
+    try:
+        # Act-1 road on chapter 1: 8 steps to town.
+        d = D()
+        assert d.r.variable(1) == 1, d.r.variable(1)
+        boot_to_journey(d)
+        select_foot(d)
+        assert d.total_steps() == 8, d.total_steps()
+        print("act-1 road OK: 8 steps")
+        _finish_trip(d)
+        st = d.scene()
+        assert st["scene_id"] == SCENE_ACT2_TOWN, st
+        assert (st["player_x"], st["player_y"]) == (2, 7), st
+        # Return leg from the town signpost: 10 steps to the field.
+        for _ in range(5):
+            d.press("right", settle=14)
+            if d.screen() == SCREEN_JOURNEY:
+                break
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=300), d.screen()
+        assert d.wait_for(lambda: d.text_has("FIELD ROAD"), ticks=300)
+        d.press("a", settle=20)  # foot
+        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
+        assert d.total_steps() == 10, d.total_steps()
+        print("return road OK: 10 steps")
+        # Provision for the road home (the demo boots light and the
+        # outward leg eats the rations; like the other poke setups).
+        import struct
+        d.poke_php(15)
+        addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
+        raw = struct.pack("<h", 15)
+        d.pb.memory[addr] = raw[0]
+        d.pb.memory[addr + 1] = raw[1]
+        addr = d.r.state + OFF_VARIABLES + 2 * (13 - 1)
+        raw = struct.pack("<h", 30)
+        d.pb.memory[addr] = raw[0]
+        d.pb.memory[addr + 1] = raw[1]
+        d.tick(2)
+        assert d.food() == 15 and d.water() == 30, (d.food(), d.water())
+        for _ in range(80):
+            st = d.scene()
+            if st["scene_id"] == SCENE_ACT2_FIELD:
+                break
+            if d.screen() == SCREEN_BATTLE:
+                assert win_fight(d)
+                d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
+                d.press("a", settle=20)
+            elif d.screen() == SCREEN_JOURNEY:
+                if d.text_has("AMBUSH!"):
+                    d.press("a", settle=30)
+                elif d.text_has("TRAVELER NEEDS"):
+                    d.press("down", settle=12)
+                    d.press("a", settle=20)
+                    d.wait_for(lambda: d.text_has("YOU WALK ON."),
+                               ticks=300)
+                    d.press("a", settle=20)
+                elif d.text_has("YOU SPOT OLD RUINS"):
+                    d.press("down", settle=12)
+                    d.press("a", settle=20)
+                    d.wait_for(lambda: d.text_has("YOU WALK ON."),
+                               ticks=300)
+                    d.press("a", settle=20)
+                else:
+                    d.press("a", settle=20)
+            else:
+                d.tick(30)
+        st = d.scene()
+        assert st["scene_id"] == SCENE_ACT2_FIELD, st
+        print("return trip OK: arrived back on the field")
         d.close()
+        d = None
+        # Same road, different act: chapter 2 walks the act-2 table.
+        d = D()
+        import struct
+        addr = d.r.state + OFF_VARIABLES + 2 * (1 - 1)
+        raw = struct.pack("<h", 2)
+        d.pb.memory[addr] = raw[0]
+        d.pb.memory[addr + 1] = raw[1]
+        d.tick(2)
+        assert d.r.variable(1) == 2, d.r.variable(1)
+        boot_to_journey(d)
+        select_foot(d)
+        assert d.total_steps() == 10, d.total_steps()
+        print("act-2 road OK: 10 steps")
+    finally:
+        if d is not None:
+            d.close()
 
 
 def test_full():
@@ -1015,6 +1187,7 @@ def test_full():
         boot_to_journey(d)
         select_foot(d)
         seen = 0
+        prev_event = 255
         for _ in range(80):
             st = d.scene()
             if st["scene_id"] == SCENE_ACT2_TOWN:
@@ -1024,16 +1197,17 @@ def test_full():
                 d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
                 d.press("a", settle=20)
             elif d.screen() == SCREEN_JOURNEY:
-                if d.text_has("TRAVELER NEEDS"):
+                cur = d.pb.memory[d.r.sym.wram("g_travel_event")]
+                if cur != 255 and prev_event == 255:
                     seen += 1
+                prev_event = cur
+                if d.text_has("TRAVELER NEEDS"):
                     d.press("a", settle=20)  # help
                     d.wait_for(lambda: d.text_has("YOU SHARE"), ticks=300)
                     d.press("a", settle=20)
                 elif d.text_has("AMBUSH!"):
-                    seen += 1
                     d.press("a", settle=20)
                 elif d.text_has("YOU SPOT OLD RUINS"):
-                    seen += 1
                     # full trip skips the detour: IGNORE keeps the schedule
                     d.press("down", settle=12)  # toggle to IGNORE
                     assert d.wait_for(lambda: d.text_has("EXPLORE>IGNORE"),
@@ -1052,6 +1226,38 @@ def test_full():
         assert seen >= 1, "no random event on foot trip?"
         print("full-trip arrival OK; gold %d; events %d"
               % (d.gold(), seen))
+    finally:
+        d.close()
+
+
+def test_weather():
+    """Ambient weather (shipped act-2 tuning): the first travelled
+    step rolls a condition on the travel stream, the route line shows
+    it, and the day's burn follows it (rain eases water, heat drinks
+    more, snow burns a second day)."""
+    WX = ["CLEAR", "RAIN", "STORM", "HEAT", "COLD", "WIND", "SNOW", "FOG"]
+    d = D()
+    try:
+        boot_to_journey(d)
+        select_foot(d)
+        assert d.weather() == 0xFF, d.weather()
+        f0 = d.food()
+        w0 = d.water()
+        day0 = d.day()
+        d.press("a", settle=20)  # CONTINUE: first step, weather rolls
+        w = d.weather()
+        assert 0 <= w <= 7, w
+        assert WX[w] in d.rows()[3], (d.rows()[3], WX[w])
+        dd = day0 - d.day()
+        assert dd in (1, 2), (day0, d.day(), WX[w])
+        if WX[w] == "SNOW":
+            assert dd == 2, (day0, d.day())
+        df = f0 - d.food()
+        dw = w0 - d.water()
+        assert 0 <= df <= 2, (f0, d.food(), WX[w])
+        assert 0 <= dw <= 3, (w0, d.water(), WX[w])
+        print("weather OK: %s, day -%d, food -%d, water -%d"
+              % (WX[w], dd, df, dw))
     finally:
         d.close()
 
@@ -1080,11 +1286,17 @@ if __name__ == "__main__":
         test_days()
     elif mode == "events":
         test_events()
+    elif mode == "risk":
+        test_risk()
     elif mode == "camp":
         test_camp()
+    elif mode == "acts":
+        test_acts()
     elif mode == "ruins":
         test_ruins()
     elif mode == "ruins_ignore":
         test_ruins_ignore()
+    elif mode == "weather":
+        test_weather()
     else:
         test_full()

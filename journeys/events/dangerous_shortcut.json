@@ -5,11 +5,25 @@
   "opt1": "TAKE",
   "opt1_effects": {
     "text": "THORNS AND ALL.",
+    "risk": 50,
     "hurt": 5,
-    "save": 3
+    "save": 3,
+    "wx": {
+      "fog": {"save": -2},
+      "rain": {"hurt": 2}
+    },
+    "fail": {
+      "text": "THORN HELL.",
+      "hurt": 8,
+      "save": 1
+    }
   },
   "opt2": "STAY",
   "opt2_effects": {
-    "text": "SAFE AND SLOW."
+    "text": "SAFE AND SLOW.",
+    "risk": 50,
+    "fail": {
+      "text": "SAFE AND SLOW."
+    }
   }
 }

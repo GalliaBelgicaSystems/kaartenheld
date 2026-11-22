@@ -5,11 +5,21 @@
   "opt1": "REST",
   "opt1_effects": {
     "text": "BLESSING REST.",
+    "risk": 50,
     "heal": 6,
-    "days": 1
+    "days": 1,
+    "fail": {
+      "text": "RESTLESS DREAMS.",
+      "heal": 2,
+      "days": 1
+    }
   },
   "opt2": "PASS BY",
   "opt2_effects": {
-    "text": "YOU WALK ON."
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
   }
 }

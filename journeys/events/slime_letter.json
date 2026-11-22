@@ -4,10 +4,18 @@
   "text": "A DROPPED LETTER.",
   "opt1": "READ",
   "opt1_effects": {
-    "text": "LORD OF SLIMES..."
+    "text": "LORD OF SLIMES...",
+    "risk": 50,
+    "fail": {
+      "text": "INK BLURRED."
+    }
   },
   "opt2": "LEAVE",
   "opt2_effects": {
-    "text": "YOU WALK ON."
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
   }
 }

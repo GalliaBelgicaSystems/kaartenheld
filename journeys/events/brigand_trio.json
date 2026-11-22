@@ -7,5 +7,8 @@
   "enemy_hp": 14,
   "victory_gold": 14,
   "victory_days": 1,
-  "late_enemy_hp": 20
+  "late_enemy_hp": 20,
+  "acts": [
+    2
+  ]
 }

@@ -5,10 +5,22 @@
   "opt1": "LISTEN",
   "opt1_effects": {
     "text": "SHORTCUTS REVEALED.",
-    "save": 1
+    "risk": 50,
+    "save": 1,
+    "fail": {
+      "text": "BAD RUMORS.",
+      "delay": 1
+    }
   },
   "opt2": "WALK ON",
   "opt2_effects": {
-    "text": "YOU WALK ON."
-  }
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
 }

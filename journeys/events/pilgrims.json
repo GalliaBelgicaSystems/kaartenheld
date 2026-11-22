@@ -5,11 +5,24 @@
   "opt1": "WAIT",
   "opt1_effects": {
     "text": "THEY PASS ON.",
-    "days": 1
+    "risk": 50,
+    "days": 1,
+    "fail": {
+      "text": "LONG PRAYERS.",
+      "days": 2
+    }
   },
   "opt2": "PUSH",
   "opt2_effects": {
     "text": "SHOVING THROUGH.",
-    "hurt": 3
-  }
+    "risk": 50,
+    "hurt": 3,
+    "fail": {
+      "text": "TRAMPLED.",
+      "hurt": 5
+    }
+  },
+  "acts": [
+    1
+  ]
 }

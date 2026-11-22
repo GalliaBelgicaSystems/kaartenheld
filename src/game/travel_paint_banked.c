@@ -22,7 +22,7 @@
  * per-access di, LCD-off fast path), mirroring screen_content.c.
  */
 
-#pragma bank 14
+#pragma bank 11
 
 /* File-static scratch (WRAM, never stack: AGENTS.md 52.14). */
 static char s_line[21];
@@ -245,10 +245,54 @@ static void tp_step(void)
     tp_text(2, 5, s_line, 20);
 }
 
+/* Ambient weather name (same vocabulary as travel.h; literals live in
+ * this bank, so no cross-bank pointer table). */
+static const char *tp_wx_name(uint8_t w)
+{
+    if (w == TRAVEL_WEATHER_CLEAR) return "CLEAR";
+    if (w == TRAVEL_WEATHER_RAIN) return "RAIN";
+    if (w == TRAVEL_WEATHER_STORM) return "STORM";
+    if (w == TRAVEL_WEATHER_HEAT) return "HEAT";
+    if (w == TRAVEL_WEATHER_COLD) return "COLD";
+    if (w == TRAVEL_WEATHER_WIND) return "WIND";
+    if (w == TRAVEL_WEATHER_SNOW) return "SNOW";
+    if (w == TRAVEL_WEATHER_FOG) return "FOG";
+    return "";
+}
+
+/* Route line with the active weather appended ("FIELD ROAD STORM").
+ * Truncated at the 20-col row; clear days show the road alone. */
+static void tp_route(void)
+{
+    uint8_t n;
+    uint8_t k;
+    const char *wx;
+    n = 0;
+    while (n < 20 && s_route.name[n] != '\0') {
+        s_line[n] = s_route.name[n];
+        n++;
+    }
+    if (g_travel_weather != TRAVEL_WEATHER_NONE) {
+        wx = tp_wx_name(g_travel_weather);
+        if (n < 19) {
+            s_line[n] = ' ';
+            n++;
+        }
+        k = 0;
+        while (n < 20 && wx[k] != '\0') {
+            s_line[n] = wx[k];
+            n++;
+            k++;
+        }
+    }
+    s_line[n] = '\0';
+    tp_text(2, 3, s_line, 20);
+}
+
 static void tp_method_duration(void)
 {
     uint8_t steps;
-    steps = g_travel_routes[g_travel_route].methods[g_travel_choice].steps;
+    steps = s_route.methods[g_travel_choice].steps;
     if (steps == 0) {
         tp_text(2, 5, "INSTANT", 20);
     } else {
@@ -347,32 +391,51 @@ static void tp_delta_days(int16_t net)
     }
 }
 
-/* Generic choice-outcome line for the picked option (gold, food,
- * water, HP, net steps, net days; zero parts skipped, capped at the
- * 18-col row by the diff-skipping writer). */
-static void tp_delta(const TravelEvent *e, uint8_t opt1)
+/* Generic choice-outcome line (gold, food, water, HP, net steps,
+ * net days; zero parts skipped, capped at the 18-col row by the
+ * diff-skipping writer). */
+static void tp_delta_core(int16_t gold, int8_t food, int8_t water,
+                          int16_t hp, int16_t steps, int8_t days)
 {
-    int16_t hp;
-    int16_t steps;
-    int16_t days;
     s_n = 0;
-    tp_delta_part(opt1 ? e->opt1_gold : e->opt2_gold, 'G');
-    tp_delta_part(opt1 ? e->opt1_food : e->opt2_food, 'F');
-    tp_delta_part(opt1 ? e->opt1_water : e->opt2_water, 'W');
-    hp = (int16_t)((int16_t)(opt1 ? e->opt1_heal : e->opt2_heal) -
-                   (int16_t)(opt1 ? e->opt1_hurt : e->opt2_hurt));
+    tp_delta_part(gold, 'G');
+    tp_delta_part(food, 'F');
+    tp_delta_part(water, 'W');
     if (hp != 0) {
         tp_delta_part(hp, 'H');
         s_line[s_n] = 'P';
         s_n = (uint8_t)(s_n + 1);
     }
-    steps = (int16_t)((int16_t)(opt1 ? e->opt1_delay : e->opt2_delay) -
-                      (int16_t)(opt1 ? e->opt1_save : e->opt2_save));
     tp_delta_steps(steps);
-    days = (int16_t)(opt1 ? e->opt1_days : e->opt2_days);
     tp_delta_days(days);
     s_line[s_n] = '\0';
     tp_text(2, 11, s_line, 20);
+}
+
+static void tp_delta(const TravelEvent *e, uint8_t opt1)
+{
+    int16_t hp;
+    int16_t steps;
+    hp = (int16_t)((int16_t)(opt1 ? e->opt1_heal : e->opt2_heal) -
+                   (int16_t)(opt1 ? e->opt1_hurt : e->opt2_hurt));
+    steps = (int16_t)((int16_t)(opt1 ? e->opt1_delay : e->opt2_delay) -
+                      (int16_t)(opt1 ? e->opt1_save : e->opt2_save));
+    tp_delta_core(opt1 ? e->opt1_gold : e->opt2_gold,
+                  opt1 ? e->opt1_food : e->opt2_food,
+                  opt1 ? e->opt1_water : e->opt2_water,
+                  hp, steps,
+                  (int8_t)(opt1 ? e->opt1_days : e->opt2_days));
+}
+
+static void tp_fail_delta(uint8_t opt1)
+{
+    const TravelEventFailOpt *f;
+    int16_t hp;
+    int16_t steps;
+    f = opt1 ? &s_event_fail.opt1 : &s_event_fail.opt2;
+    hp = (int16_t)((int16_t)f->heal - (int16_t)f->hurt);
+    steps = (int16_t)((int16_t)f->delay - (int16_t)f->save);
+    tp_delta_core(f->gold, f->food, f->water, hp, steps, f->days);
 }
 
 /* "> HELP IGNORE" / "  HELP>IGNORE" (choice options from the row). */
@@ -547,7 +610,7 @@ static void tp_method(uint8_t idx, uint8_t y)
     const TravelMethod *m;
     uint8_t k;
     uint8_t i;
-    m = &g_travel_routes[g_travel_route].methods[idx];
+    m = &s_route.methods[idx];
     s_line[0] = (idx == g_travel_choice) ? '>' : ' ';
     s_line[1] = ' ';
     i = 0;
@@ -575,7 +638,7 @@ static void tp_supply(uint8_t idx, uint8_t y, const char *label)
     uint8_t k;
     uint8_t i;
     const TravelRoute *r;
-    r = &g_travel_routes[g_travel_route];
+    r = &s_route;
     if (!label) return;
     count = g_game.state.variables.values[idx == 0 ? VARIABLE_ID_FOOD - 1
                                                    : VARIABLE_ID_WATER - 1];
@@ -605,7 +668,7 @@ static void tp_cost(void)
 {
     const TravelMethod *m;
     uint8_t n;
-    m = &g_travel_routes[g_travel_route].methods[g_travel_choice];
+    m = &s_route.methods[g_travel_choice];
     s_line[0] = 'N';
     s_line[1] = 'E';
     s_line[2] = 'E';
@@ -619,18 +682,15 @@ static void tp_cost(void)
 }
 
 /* No-arg dispatch body: reads view + staged state straight from WRAM
- * and same-bank ROM.  The fixed wrapper validates the render cache. */
+ * (route/event/fail rows are staged by the fixed loader, so this body
+ * runs from any bank).  The fixed wrapper validates the render cache. */
 void travel_paint_banked(void)
 {
     const TravelRoute *r;
     const TravelEvent *e;
     uint8_t view;
-    r = &g_travel_routes[g_travel_route];
-    if (g_travel_event == TRAVEL_EVENT_NONE) {
-        e = &g_travel_events[0];
-    } else {
-        e = &g_travel_events[g_travel_event];
-    }
+    r = &s_route;
+    e = &s_event;
     if (g_travel_supply) {
         view = TRAVEL_VIEW_SUPPLY;
     } else if (g_travel_msg != TRAVEL_MSG_NONE) {
@@ -647,7 +707,7 @@ void travel_paint_banked(void)
         view = TRAVEL_VIEW_HELP;
     }
     tp_frame("TRAVEL");
-    tp_text(2, 3, r->name, 20);
+    tp_route();
     if (view == TRAVEL_VIEW_METHOD) {
         tp_method_duration();
     } else if (!g_travel_supply) {
@@ -690,11 +750,21 @@ void travel_paint_banked(void)
         }
     } else {
         if (g_travel_msg == TRAVEL_MSG_HELPED) {
-            tp_text(2, 9, e->text2, 20);
-            tp_delta(e, 1);
+            if (g_travel_failed) {
+                tp_text(2, 9, s_event_fail.opt1.text, 20);
+                tp_fail_delta(1);
+            } else {
+                tp_text(2, 9, e->text2, 20);
+                tp_delta(e, 1);
+            }
         } else if (g_travel_msg == TRAVEL_MSG_IGNORED) {
-            tp_text(2, 9, e->text3, 20);
-            tp_delta(e, 0);
+            if (g_travel_failed) {
+                tp_text(2, 9, s_event_fail.opt2.text, 20);
+                tp_fail_delta(0);
+            } else {
+                tp_text(2, 9, e->text3, 20);
+                tp_delta(e, 0);
+            }
         } else if (g_travel_msg == TRAVEL_MSG_WON) {
             tp_loot(e);
             tp_daycost(e);

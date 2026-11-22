@@ -1,0 +1,216 @@
+{
+  "id": "village_to_field",
+  "name": "FIELD ROAD",
+  "start": "field",
+  "destination": "act2_field",
+  "dest_x": 5,
+  "dest_y": 7,
+  "supply": {
+    "food_price": 2,
+    "water_price": 1,
+    "food_per_day": 1,
+    "water_per_day": 2
+  },
+  "camp": {
+    "hunt": {
+      "food_min": 1,
+      "food_max": 5,
+      "water_min": 0,
+      "water_max": 2,
+      "delay_min": 0,
+      "delay_max": 2
+    },
+    "rest": {
+      "heal": 5,
+      "delay": 1
+    },
+    "starve": {
+      "food_hp": 3,
+      "food_every": 2,
+      "water_hp": 5,
+      "water_every": 2
+    },
+    "study": {
+      "save_min": 0,
+      "save_max": 2,
+      "lost_min": 0,
+      "lost_max": 2,
+      "food": 2,
+      "water": 4
+    }
+  },
+  "weather": {
+    "clear": {
+      "weight": 85,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 0,
+      "water": 0
+    },
+    "rain": {
+      "weight": 30,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 0,
+      "water": -1
+    },
+    "storm": {
+      "weight": 25,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 1,
+      "water": 0
+    },
+    "heat": {
+      "weight": 15,
+      "days_min": 1,
+      "days_max": 3,
+      "food": 0,
+      "water": 1
+    },
+    "cold": {
+      "weight": 30,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 1,
+      "water": 0
+    },
+    "wind": {
+      "weight": 30,
+      "days_min": 1,
+      "days_max": 1,
+      "food": 1,
+      "water": 0
+    },
+    "snow": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 1,
+      "water": 1
+    },
+    "fog": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 1,
+      "food": 0,
+      "water": 0
+    }
+  },
+  "methods": [
+    {
+      "id": "carriage",
+      "name": "CARRIAGE",
+      "cost_gold": 50,
+      "steps": 0,
+      "frequency": 0,
+      "pool": []
+    },
+    {
+      "id": "foot",
+      "name": "ON FOOT",
+      "cost_gold": 0,
+      "steps": 10,
+      "frequency": 35,
+      "pool": [
+        {
+          "event": "ambush_slimes",
+          "weight": 6
+        },
+        {
+          "event": "skirmish_bats",
+          "weight": 4
+        },
+        {
+          "event": "skirmish_spiders",
+          "weight": 4
+        },
+        {
+          "event": "weak_beast",
+          "weight": 4
+        },
+        {
+          "event": "brigand_trio",
+          "weight": 4
+        },
+        {
+          "event": "bandits",
+          "weight": 3
+        },
+        {
+          "event": "passage_guard",
+          "weight": 3
+        },
+        {
+          "event": "occupied_camp",
+          "weight": 3
+        },
+        {
+          "event": "wounded_monster",
+          "weight": 3
+        },
+        {
+          "event": "powerful_enemy",
+          "weight": 3
+        },
+        {
+          "event": "strange_noises",
+          "weight": 3
+        },
+        {
+          "event": "protect_caravan",
+          "weight": 3
+        },
+        {
+          "event": "landslide",
+          "weight": 3
+        },
+        {
+          "event": "river_crossing",
+          "weight": 3
+        },
+        {
+          "event": "storm_shelter",
+          "weight": 3
+        },
+        {
+          "event": "strange_fog",
+          "weight": 3
+        },
+        {
+          "event": "spoiled_food",
+          "weight": 3
+        },
+        {
+          "event": "water_source",
+          "weight": 3
+        },
+        {
+          "event": "pack_breaks",
+          "weight": 3
+        },
+        {
+          "event": "battle_signs",
+          "weight": 3
+        },
+        {
+          "event": "watched",
+          "weight": 3
+        },
+        {
+          "event": "slime_tree",
+          "weight": 3
+        },
+        {
+          "event": "waystone",
+          "weight": 3
+        },
+        {
+          "event": "convergence_talk",
+          "weight": 3
+        }
+      ]
+    }
+  ],
+  "act": 2
+}

@@ -5,11 +5,21 @@
   "opt1": "SEARCH",
   "opt1_effects": {
     "text": "PICKED CLEAN-ISH.",
-    "gold": 6
+    "risk": 50,
+    "gold": 6,
+    "fail": {
+      "text": "FALSE BOTTOM.",
+      "gold": 2
+    }
   },
   "opt2": "HURRY ON",
   "opt2_effects": {
     "text": "NO DAWDLING.",
-    "save": 1
+    "risk": 50,
+    "save": 1,
+    "fail": {
+      "text": "TWISTED ANKLE.",
+      "hurt": 2
+    }
   }
 }

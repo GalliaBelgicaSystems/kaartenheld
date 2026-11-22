@@ -5,11 +5,20 @@
   "opt1": "SEARCH",
   "opt1_effects": {
     "text": "LEFTOVERS FOUND.",
+    "risk": 50,
     "gold": 5,
-    "food": 2
+    "food": 2,
+    "fail": {
+      "text": "PICKED CLEAN.",
+      "food": 1
+    }
   },
   "opt2": "LEAVE",
   "opt2_effects": {
-    "text": "YOU WALK ON."
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
   }
 }

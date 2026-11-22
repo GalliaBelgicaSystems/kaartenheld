@@ -5,12 +5,24 @@
   "opt1": "MEND",
   "opt1_effects": {
     "text": "STITCHED UP.",
-    "days": 1
+    "risk": 50,
+    "days": 1,
+    "fail": {
+      "text": "STILL LEAKS.",
+      "food": -1,
+      "days": 1
+    }
   },
   "opt2": "DUMP",
   "opt2_effects": {
     "text": "LIGHTER LOAD.",
+    "risk": 50,
     "food": -2,
-    "water": -2
+    "water": -2,
+    "fail": {
+      "text": "LOST MORE.",
+      "food": -3,
+      "water": -3
+    }
   }
 }

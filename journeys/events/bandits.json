@@ -5,12 +5,27 @@
   "opt1": "PAY",
   "opt1_effects": {
     "text": "THEY LET YOU PASS.",
+    "risk": 50,
     "gold": -6,
-    "food": -4
+    "food": -4,
+    "fail": {
+      "text": "OUTNUMBERED.",
+      "gold": -9,
+      "food": -6
+    }
   },
   "opt2": "FIGHT",
   "opt2_effects": {
     "text": "DRAW WEAPONS!",
-    "battle": "brigand_trio"
-  }
+    "risk": 50,
+    "battle": "brigand_trio",
+    "fail": {
+      "text": "SURROUNDED!",
+      "battle": "brigand_trio",
+      "hurt": 4
+    }
+  },
+  "acts": [
+    2
+  ]
 }

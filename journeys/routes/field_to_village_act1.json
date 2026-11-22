@@ -1,0 +1,268 @@
+{
+  "id": "field_to_village_act1",
+  "name": "FIELD ROAD",
+  "start": "field",
+  "destination": "act2_town",
+  "dest_x": 2,
+  "dest_y": 7,
+  "supply": {
+    "food_price": 2,
+    "water_price": 1,
+    "food_per_day": 1,
+    "water_per_day": 2
+  },
+  "camp": {
+    "hunt": {
+      "food_min": 1,
+      "food_max": 5,
+      "water_min": 0,
+      "water_max": 2,
+      "delay_min": 0,
+      "delay_max": 2
+    },
+    "rest": {
+      "heal": 5,
+      "delay": 1
+    },
+    "starve": {
+      "food_hp": 3,
+      "food_every": 2,
+      "water_hp": 5,
+      "water_every": 2
+    },
+    "study": {
+      "save_min": 0,
+      "save_max": 2,
+      "lost_min": 0,
+      "lost_max": 2,
+      "food": 2,
+      "water": 4
+    }
+  },
+  "weather": {
+    "clear": {
+      "weight": 130,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 0,
+      "water": 0
+    },
+    "rain": {
+      "weight": 30,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 0,
+      "water": -1
+    },
+    "storm": {
+      "weight": 5,
+      "days_min": 1,
+      "days_max": 1,
+      "food": 1,
+      "water": 0
+    },
+    "heat": {
+      "weight": 15,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 0,
+      "water": 1
+    },
+    "cold": {
+      "weight": 10,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 1,
+      "water": 0
+    },
+    "wind": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 1,
+      "food": 1,
+      "water": 0
+    },
+    "snow": {
+      "weight": 0,
+      "days_min": 1,
+      "days_max": 1,
+      "food": 1,
+      "water": 1
+    },
+    "fog": {
+      "weight": 25,
+      "days_min": 1,
+      "days_max": 1,
+      "food": 0,
+      "water": 0
+    }
+  },
+  "methods": [
+    {
+      "id": "carriage",
+      "name": "CARRIAGE",
+      "cost_gold": 50,
+      "steps": 0,
+      "frequency": 0,
+      "pool": []
+    },
+    {
+      "id": "foot",
+      "name": "ON FOOT",
+      "cost_gold": 0,
+      "steps": 8,
+      "frequency": 35,
+      "pool": [
+        {
+          "event": "abandoned_camp",
+          "weight": 3
+        },
+        {
+          "event": "abandoned_village",
+          "weight": 3
+        },
+        {
+          "event": "ambush_slimes",
+          "weight": 5
+        },
+        {
+          "event": "battle_signs",
+          "weight": 3
+        },
+        {
+          "event": "cook_meal",
+          "weight": 3
+        },
+        {
+          "event": "dangerous_shortcut",
+          "weight": 3
+        },
+        {
+          "event": "depot_parts",
+          "weight": 3
+        },
+        {
+          "event": "distress_signal",
+          "weight": 3
+        },
+        {
+          "event": "former_enemy",
+          "weight": 3
+        },
+        {
+          "event": "help_settlement",
+          "weight": 3
+        },
+        {
+          "event": "join_journey",
+          "weight": 3
+        },
+        {
+          "event": "landslide",
+          "weight": 3
+        },
+        {
+          "event": "lost_child",
+          "weight": 3
+        },
+        {
+          "event": "old_shrine",
+          "weight": 3
+        },
+        {
+          "event": "pack_breaks",
+          "weight": 3
+        },
+        {
+          "event": "pilgrims",
+          "weight": 3
+        },
+        {
+          "event": "repair_cart",
+          "weight": 3
+        },
+        {
+          "event": "river_crossing",
+          "weight": 3
+        },
+        {
+          "event": "route_info",
+          "weight": 3
+        },
+        {
+          "event": "ruined_monument",
+          "weight": 3
+        },
+        {
+          "event": "ruins_sight",
+          "weight": 3
+        },
+        {
+          "event": "share_food",
+          "weight": 3
+        },
+        {
+          "event": "slime_letter",
+          "weight": 3
+        },
+        {
+          "event": "spoiled_food",
+          "weight": 3
+        },
+        {
+          "event": "storm_shelter",
+          "weight": 3
+        },
+        {
+          "event": "stranded_merchant",
+          "weight": 3
+        },
+        {
+          "event": "strange_fog",
+          "weight": 3
+        },
+        {
+          "event": "strange_light",
+          "weight": 3
+        },
+        {
+          "event": "supply_cache",
+          "weight": 3
+        },
+        {
+          "event": "supply_merchant",
+          "weight": 3
+        },
+        {
+          "event": "trade_food_parts",
+          "weight": 3
+        },
+        {
+          "event": "traveler_help",
+          "weight": 6
+        },
+        {
+          "event": "watched",
+          "weight": 3
+        },
+        {
+          "event": "water_source",
+          "weight": 3
+        },
+        {
+          "event": "wild_berries",
+          "weight": 3
+        },
+        {
+          "event": "wounded_adventurer",
+          "weight": 3
+        },
+        {
+          "event": "wrong_sign",
+          "weight": 3
+        }
+      ]
+    }
+  ],
+  "act": 1
+}

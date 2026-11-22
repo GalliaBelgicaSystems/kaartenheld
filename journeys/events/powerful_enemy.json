@@ -5,11 +5,26 @@
   "opt1": "FIGHT",
   "opt1_effects": {
     "text": "DRAW WEAPONS!",
-    "battle": "brigand_trio"
+    "risk": 50,
+    "battle": "brigand_trio",
+    "fail": {
+      "text": "THEIR CHAMPION.",
+      "battle": "brigand_trio",
+      "hurt": 5
+    }
   },
   "opt2": "FLEE",
   "opt2_effects": {
     "text": "LIVE TO WALK.",
-    "delay": 2
-  }
+    "risk": 50,
+    "delay": 2,
+    "fail": {
+      "text": "CUT OFF.",
+      "hurt": 2,
+      "delay": 3
+    }
+  },
+  "acts": [
+    2
+  ]
 }

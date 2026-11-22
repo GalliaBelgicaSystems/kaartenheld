@@ -5,11 +5,25 @@
   "opt1": "FIGHT",
   "opt1_effects": {
     "text": "DRAW WEAPONS!",
-    "battle": "skirmish_spiders"
+    "risk": 50,
+    "battle": "skirmish_spiders",
+    "fail": {
+      "text": "FROM BEHIND!",
+      "battle": "skirmish_spiders",
+      "hurt": 3
+    }
   },
   "opt2": "DETOUR",
   "opt2_effects": {
     "text": "LONG WAY ROUND.",
-    "delay": 2
-  }
+    "risk": 50,
+    "delay": 2,
+    "fail": {
+      "text": "RAVINE MAZE.",
+      "delay": 3
+    }
+  },
+  "acts": [
+    2
+  ]
 }

@@ -5,10 +5,22 @@
   "opt1": "FOLLOW",
   "opt1_effects": {
     "text": "BERRY TRAIL.",
-    "food": 2
+    "risk": 50,
+    "food": 2,
+    "fail": {
+      "text": "INTO A BOG.",
+      "hurt": 2
+    }
   },
   "opt2": "AVOID",
   "opt2_effects": {
-    "text": "YOU WALK ON."
-  }
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    2
+  ]
 }

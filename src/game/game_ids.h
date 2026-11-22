@@ -77,6 +77,8 @@
 #define EVENT_ID_RUINS_CHEST    (EVENT_ID_FIRST_GAME + 31)
 #define EVENT_ID_RUINS_EXIT     (EVENT_ID_FIRST_GAME + 32)
 #define EVENT_ID_RUINS_CHEST_EMPTY (EVENT_ID_FIRST_GAME + 33)
+#define EVENT_ID_TRAVEL_DEMO_ACT1 (EVENT_ID_FIRST_GAME + 34)
+#define EVENT_ID_TRAVEL_RETURN  (EVENT_ID_FIRST_GAME + 35)
 #endif
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
@@ -205,7 +207,7 @@ typedef enum {
  * build) is full.  Keep in sync with events_content.c's `#pragma bank`. */
 #define GAME_EVENT_BANK  10
 #ifdef TRAVEL_DEMO
-#define GAME_EVENT_COUNT 34
+#define GAME_EVENT_COUNT 36
 #else
 #define GAME_EVENT_COUNT 29
 #endif

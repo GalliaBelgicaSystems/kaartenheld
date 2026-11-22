@@ -5,11 +5,22 @@
   "opt1": "TOSS IT",
   "opt1_effects": {
     "text": "CLEAN PACK.",
-    "food": -3
+    "risk": 50,
+    "food": -3,
+    "fail": {
+      "text": "SPOILED THE REST.",
+      "food": -5
+    }
   },
   "opt2": "RISK IT",
   "opt2_effects": {
     "text": "BAD IDEA.",
-    "hurt": 4
+    "risk": 50,
+    "hurt": 4,
+    "fail": {
+      "text": "VIOLENTLY ILL.",
+      "hurt": 7,
+      "days": 1
+    }
   }
 }

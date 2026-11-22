@@ -1,11 +1,11 @@
-#pragma bank 14
+#pragma bank 11
 
 #include "game.h"
 #include "game_ids.h"
 #include "banked.h"
 #include "travel.h"
 
-/* ── Travel day-burn body, bank-14 ───────────────────────────────
+/* ── Travel day-burn body, bank-11 ───────────────────────────────
  * The fixed bank sits hard against 0x8000 (AGENTS.md §52.18), so the
  * pure day-burn arithmetic lives here behind the thin fixed-bank
  * wrapper travel_burn_days(): the wrapper stages the day count and
@@ -119,7 +119,7 @@ static void tb_starve(uint8_t nofood, uint8_t nowater)
     g_game.world.player.hp = hp;
 }
 
-/* Banked camp-action body (bank 14).  Action id arrives in
+/* Banked camp-action body (bank 11).  Action id arrives in
  * g_bk_byte_a (0 hunt, 1 rest, 2 study); results go straight to
  * WRAM (g_travel_amount/extra/water/msg, counters, GameState) with
  * the arrive flag in g_bk_byte_b and the sfx id in g_bk_byte_c.
@@ -225,6 +225,45 @@ void travel_camp_banked(void)
     g_travel_msg = TRAVEL_MSG_STUDIED;
 }
 
+/* Roll the ambient weather for a new day (travel stream).  No-op
+ * while a condition is still in force or the road runs no climate
+ * (all weights zero keeps old routes weather-free). */
+static void tb_weather_roll(void)
+{
+    uint8_t i;
+    uint8_t sum;
+    uint8_t r;
+    uint8_t cum;
+    uint8_t w;
+    w = 0;
+    if (g_travel_weather != TRAVEL_WEATHER_NONE &&
+        g_travel_weather_left > 0) return;
+    sum = 0;
+    for (i = 0; i < TRAVEL_WEATHER_COUNT; i++) {
+        sum = (uint8_t)(sum + s_route.weather_weight[i]);
+    }
+    if (sum == 0) {
+        g_travel_weather = TRAVEL_WEATHER_NONE;
+        g_travel_weather_left = 0;
+        return;
+    }
+    do {
+        tb_rng_step();
+        r = (uint8_t)g_travel_rng;
+    } while (r >= sum);
+    cum = 0;
+    for (i = 0; i < TRAVEL_WEATHER_COUNT; i++) {
+        cum = (uint8_t)(cum + s_route.weather_weight[i]);
+        if (r < cum) {
+            w = i;
+            break;
+        }
+    }
+    g_travel_weather = w;
+    g_travel_weather_left = tb_roll(s_route.weather_days_min[w],
+                                    s_route.weather_days_max[w]);
+}
+
 /* No-arg dispatch body: day count arrives staged in g_bk_byte_a.
  * Burns Convergence days, route rations, starvation tallies, and
  * flips the Lord supreme at zero -- the fixed-bank loop it replaces,
@@ -238,14 +277,21 @@ void travel_burn_banked(void)
     int16_t food;
     int16_t water;
     int16_t rate;
+    uint8_t w;
     n = g_bk_byte_a;
     for (i = 0; i < n; i++) {
+        tb_weather_roll();
+        w = g_travel_weather;
         day = tb_get(VARIABLE_ID_DAY);
         if (day > 0) {
             tb_set(VARIABLE_ID_DAY, (int16_t)(day - 1));
         }
         food = tb_get(VARIABLE_ID_FOOD);
         rate = (int16_t)s_route.food_per_day;
+        if (w != TRAVEL_WEATHER_NONE) {
+            rate = (int16_t)(rate + (int16_t)s_route.weather_food[w]);
+            if (rate < 0) rate = 0;
+        }
         if (food > rate) {
             tb_set(VARIABLE_ID_FOOD, (int16_t)(food - rate));
         } else if (food > 0) {
@@ -253,6 +299,10 @@ void travel_burn_banked(void)
         }
         water = tb_get(VARIABLE_ID_WATER);
         rate = (int16_t)s_route.water_per_day;
+        if (w != TRAVEL_WEATHER_NONE) {
+            rate = (int16_t)(rate + (int16_t)s_route.weather_water[w]);
+            if (rate < 0) rate = 0;
+        }
         if (water > rate) {
             tb_set(VARIABLE_ID_WATER, (int16_t)(water - rate));
         } else if (water > 0) {
@@ -260,6 +310,9 @@ void travel_burn_banked(void)
         }
         tb_starve((uint8_t)(tb_get(VARIABLE_ID_FOOD) <= 0),
                   (uint8_t)(tb_get(VARIABLE_ID_WATER) <= 0));
+        if (w != TRAVEL_WEATHER_NONE && g_travel_weather_left > 0) {
+            g_travel_weather_left--;
+        }
     }
     day = tb_get(VARIABLE_ID_DAY);
     if (day == 0 && tb_get(VARIABLE_ID_LORD_POWER) == 0) {

@@ -12,6 +12,7 @@ const TravelRoute g_travel_routes[] = {
     { /* field_to_village */
         "FIELD ROAD", /* name */
         25, /* dest_scene (act2_town) */
+        2, /* act (road act) */
         2, 7, /* dest_x, dest_y */
         2, /* food_price */
         1, /* water_price */
@@ -35,6 +36,11 @@ const TravelRoute g_travel_routes[] = {
         2, /* study_lost_max */
         2, /* study_food */
         4, /* study_water */
+        { 90, 35, 20, 30, 20, 25, 15, 20 }, /* weather_weight (clear..fog) */
+        { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
+        { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
+        { 0, 0, 1, 0, 1, 1, 1, 0 }, /* weather_food (extra/day) */
+        { 0, -1, 0, 1, 0, 0, 1, 0 }, /* weather_water (extra/day) */
         2, /* method_count */
         {
             { /* carriage */
@@ -50,16 +56,124 @@ const TravelRoute g_travel_routes[] = {
                 "ON FOOT", /* name */
                 0, /* cost_gold */
                 10, /* steps (0 = instant) */
-                255, /* frequency */
-                59, /* pool_count */
-                { 3, 50, 33, 35, 36, 54, 6, 0, 1, 2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 55, 56, 57, 58, 0, 0, 0, 0, 0 }, /* pool_event */
-                { 6, 6, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0 }, /* pool_weight */
+                35, /* frequency */
+                37, /* pool_count */
+                { 0, 2, 3, 4, 5, 6, 8, 14, 16, 17, 18, 19, 20, 22, 23, 25, 27, 28, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 51, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 3, 6, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+            },
+        },
+    },
+    { /* field_to_village_act1 */
+        "FIELD ROAD", /* name */
+        25, /* dest_scene (act2_town) */
+        1, /* act (road act) */
+        2, 7, /* dest_x, dest_y */
+        2, /* food_price */
+        1, /* water_price */
+        1, /* food_per_day */
+        2, /* water_per_day */
+        1, /* hunt_food_min */
+        5, /* hunt_food_max */
+        0, /* hunt_water_min */
+        2, /* hunt_water_max */
+        0, /* hunt_delay_min */
+        2, /* hunt_delay_max */
+        5, /* rest_heal */
+        1, /* rest_delay */
+        3, /* starve_food_hp */
+        2, /* starve_food_every */
+        5, /* starve_water_hp */
+        2, /* starve_water_every */
+        0, /* study_save_min */
+        2, /* study_save_max */
+        0, /* study_lost_min */
+        2, /* study_lost_max */
+        2, /* study_food */
+        4, /* study_water */
+        { 130, 30, 5, 15, 10, 20, 0, 25 }, /* weather_weight (clear..fog) */
+        { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
+        { 2, 2, 1, 2, 2, 1, 1, 1 }, /* weather_days_max */
+        { 0, 0, 1, 0, 1, 1, 1, 0 }, /* weather_food (extra/day) */
+        { 0, -1, 0, 1, 0, 0, 1, 0 }, /* weather_water (extra/day) */
+        2, /* method_count */
+        {
+            { /* carriage */
+                "CARRIAGE", /* name */
+                50, /* cost_gold */
+                0, /* steps (0 = instant) */
+                0, /* frequency */
+                0, /* pool_count */
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+            },
+            { /* foot */
+                "ON FOOT", /* name */
+                0, /* cost_gold */
+                8, /* steps (0 = instant) */
+                35, /* frequency */
+                37, /* pool_count */
+                { 0, 1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19, 21, 24, 25, 26, 27, 28, 29, 32, 34, 35, 36, 38, 39, 41, 42, 43, 44, 45, 46, 49, 50, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 3, 3, 5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+            },
+        },
+    },
+    { /* village_to_field */
+        "FIELD ROAD", /* name */
+        24, /* dest_scene (act2_field) */
+        2, /* act (road act) */
+        5, 7, /* dest_x, dest_y */
+        2, /* food_price */
+        1, /* water_price */
+        1, /* food_per_day */
+        2, /* water_per_day */
+        1, /* hunt_food_min */
+        5, /* hunt_food_max */
+        0, /* hunt_water_min */
+        2, /* hunt_water_max */
+        0, /* hunt_delay_min */
+        2, /* hunt_delay_max */
+        5, /* rest_heal */
+        1, /* rest_delay */
+        3, /* starve_food_hp */
+        2, /* starve_food_every */
+        5, /* starve_water_hp */
+        2, /* starve_water_every */
+        0, /* study_save_min */
+        2, /* study_save_max */
+        0, /* study_lost_min */
+        2, /* study_lost_max */
+        2, /* study_food */
+        4, /* study_water */
+        { 85, 30, 25, 15, 30, 30, 20, 20 }, /* weather_weight (clear..fog) */
+        { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
+        { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
+        { 0, 0, 1, 0, 1, 1, 1, 0 }, /* weather_food (extra/day) */
+        { 0, -1, 0, 1, 0, 0, 1, 0 }, /* weather_water (extra/day) */
+        2, /* method_count */
+        {
+            { /* carriage */
+                "CARRIAGE", /* name */
+                50, /* cost_gold */
+                0, /* steps (0 = instant) */
+                0, /* frequency */
+                0, /* pool_count */
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+            },
+            { /* foot */
+                "ON FOOT", /* name */
+                0, /* cost_gold */
+                10, /* steps (0 = instant) */
+                35, /* frequency */
+                24, /* pool_count */
+                { 2, 30, 31, 48, 5, 3, 20, 17, 51, 22, 40, 23, 14, 25, 35, 38, 34, 46, 19, 4, 45, 33, 47, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 6, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
         },
     },
 };
 
-const uint8_t g_travel_route_count = 1;
+const uint8_t g_travel_route_count = 3;
 
 const TravelEvent g_travel_events[] = {
     { /* abandoned_camp */
@@ -77,6 +191,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         5, 0, /* opt gold */
         2, 0, /* opt food */
         0, 0, /* opt water */
@@ -101,6 +216,7 @@ const TravelEvent g_travel_events[] = {
         "PASS BY", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         6, 0, /* opt gold */
         2, 0, /* opt food */
         0, 0, /* opt water */
@@ -108,30 +224,6 @@ const TravelEvent g_travel_events[] = {
         0, 0, /* opt hurt */
         1, 0, /* opt delay */
         0, 0, /* opt save */
-        0, 0, /* opt days */
-    },
-    { /* altered_roads */
-        TRAVEL_EVENT_CHOICE,
-        0, /* battle */
-        "", /* enemy_name (unused) */
-        0, /* enemy_hp */
-        0, /* victory_gold (unused) */
-        0, /* victory_days (unused) */
-        0, /* late_enemy_hp (unused) */
-        "ROAD MARKS FRESH.", /* text */
-        "CLEARED PATH.", /* opt1 result */
-        "YOU WALK ON.", /* opt2 result */
-        "FOLLOW", /* opt1 label */
-        "AVOID", /* opt2 label */
-        255, /* opt1 battle event or 255 */
-        255, /* opt2 battle event or 255 */
-        0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
-        0, 0, /* opt heal */
-        0, 0, /* opt hurt */
-        0, 0, /* opt delay */
-        1, 0, /* opt save */
         0, 0, /* opt days */
     },
     { /* ambush_slimes */
@@ -148,6 +240,7 @@ const TravelEvent g_travel_events[] = {
         "", /* opt1 (unused) */
         "", /* opt2 (unused) */
         255, 255, /* opt battles (none) */
+        0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -171,7 +264,8 @@ const TravelEvent g_travel_events[] = {
         "PAY", /* opt1 label */
         "FIGHT", /* opt2 label */
         255, /* opt1 battle event or 255 */
-        6, /* opt2 battle event or 255 */
+        5, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         -6, 0, /* opt gold */
         -4, 0, /* opt food */
         0, 0, /* opt water */
@@ -196,6 +290,7 @@ const TravelEvent g_travel_events[] = {
         "HURRY ON", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         6, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -219,36 +314,13 @@ const TravelEvent g_travel_events[] = {
         "", /* opt1 (unused) */
         "", /* opt2 (unused) */
         255, 255, /* opt battles (none) */
+        0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
-        0, 0, /* opt save */
-        0, 0, /* opt days */
-    },
-    { /* collapsed_bridge */
-        TRAVEL_EVENT_CHOICE,
-        0, /* battle */
-        "", /* enemy_name (unused) */
-        0, /* enemy_hp */
-        0, /* victory_gold (unused) */
-        0, /* victory_days (unused) */
-        0, /* late_enemy_hp (unused) */
-        "BRIDGE IS DOWN.", /* text */
-        "SOAKED THROUGH.", /* opt1 result */
-        "LONG WAY ROUND.", /* opt2 result */
-        "FORD", /* opt1 label */
-        "DETOUR", /* opt2 label */
-        255, /* opt1 battle event or 255 */
-        255, /* opt2 battle event or 255 */
-        0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
-        0, 0, /* opt heal */
-        3, 0, /* opt hurt */
-        0, 2, /* opt delay */
         0, 0, /* opt save */
         0, 0, /* opt days */
     },
@@ -267,6 +339,7 @@ const TravelEvent g_travel_events[] = {
         "WALK ON", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -291,6 +364,7 @@ const TravelEvent g_travel_events[] = {
         "DECLINE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         -5, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -315,6 +389,7 @@ const TravelEvent g_travel_events[] = {
         "STAY", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -339,6 +414,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         9, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -363,6 +439,7 @@ const TravelEvent g_travel_events[] = {
         "IGNORE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         8, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -387,6 +464,7 @@ const TravelEvent g_travel_events[] = {
         "AVOID", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         8, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -395,30 +473,6 @@ const TravelEvent g_travel_events[] = {
         0, 0, /* opt delay */
         0, 0, /* opt save */
         0, 0, /* opt days */
-    },
-    { /* heavy_rain */
-        TRAVEL_EVENT_CHOICE,
-        0, /* battle */
-        "", /* enemy_name (unused) */
-        0, /* enemy_hp */
-        0, /* victory_gold (unused) */
-        0, /* victory_days (unused) */
-        0, /* late_enemy_hp (unused) */
-        "RAIN SLOWS ROAD.", /* text */
-        "RESTED AND DRY.", /* opt1 result */
-        "MISERABLE MILES.", /* opt2 result */
-        "WAIT OUT", /* opt1 label */
-        "PUSH ON", /* opt2 label */
-        255, /* opt1 battle event or 255 */
-        255, /* opt2 battle event or 255 */
-        0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
-        2, 0, /* opt heal */
-        0, 3, /* opt hurt */
-        0, 0, /* opt delay */
-        0, 0, /* opt save */
-        1, 0, /* opt days */
     },
     { /* help_settlement */
         TRAVEL_EVENT_CHOICE,
@@ -435,6 +489,7 @@ const TravelEvent g_travel_events[] = {
         "PASS BY", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         10, 0, /* opt gold */
         4, 0, /* opt food */
         0, 0, /* opt water */
@@ -459,6 +514,7 @@ const TravelEvent g_travel_events[] = {
         "DECLINE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -483,6 +539,7 @@ const TravelEvent g_travel_events[] = {
         "DETOUR", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -507,6 +564,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -514,30 +572,6 @@ const TravelEvent g_travel_events[] = {
         0, 0, /* opt hurt */
         1, 0, /* opt delay */
         0, 0, /* opt save */
-        0, 0, /* opt days */
-    },
-    { /* messenger */
-        TRAVEL_EVENT_CHOICE,
-        0, /* battle */
-        "", /* enemy_name (unused) */
-        0, /* enemy_hp */
-        0, /* victory_gold (unused) */
-        0, /* victory_days (unused) */
-        0, /* late_enemy_hp (unused) */
-        "MESSENGER HAS NEWS.", /* text */
-        "WASHOUT AVOIDED.", /* opt1 result */
-        "YOU WALK ON.", /* opt2 result */
-        "HEAR", /* opt1 label */
-        "HURRY ON", /* opt2 label */
-        255, /* opt1 battle event or 255 */
-        255, /* opt2 battle event or 255 */
-        0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
-        0, 0, /* opt heal */
-        0, 0, /* opt hurt */
-        0, 0, /* opt delay */
-        1, 0, /* opt save */
         0, 0, /* opt days */
     },
     { /* night_stalker */
@@ -555,6 +589,7 @@ const TravelEvent g_travel_events[] = {
         "SLEEP", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -577,8 +612,9 @@ const TravelEvent g_travel_events[] = {
         "SILENT STEPS.", /* opt2 result */
         "FIGHT", /* opt1 label */
         "SNEAK BY", /* opt2 label */
-        35, /* opt1 battle event or 255 */
+        30, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -603,6 +639,7 @@ const TravelEvent g_travel_events[] = {
         "PASS BY", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -627,6 +664,7 @@ const TravelEvent g_travel_events[] = {
         "DUMP", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, -2, /* opt food */
         0, -2, /* opt water */
@@ -649,8 +687,9 @@ const TravelEvent g_travel_events[] = {
         "LONG WAY ROUND.", /* opt2 result */
         "FIGHT", /* opt1 label */
         "DETOUR", /* opt2 label */
-        36, /* opt1 battle event or 255 */
+        31, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -675,6 +714,7 @@ const TravelEvent g_travel_events[] = {
         "PUSH", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -697,8 +737,9 @@ const TravelEvent g_travel_events[] = {
         "LIVE TO WALK.", /* opt2 result */
         "FIGHT", /* opt1 label */
         "FLEE", /* opt2 label */
-        6, /* opt1 battle event or 255 */
+        5, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -721,8 +762,9 @@ const TravelEvent g_travel_events[] = {
         "YOU WALK ON.", /* opt2 result */
         "GUARD", /* opt1 label */
         "DECLINE", /* opt2 label */
-        6, /* opt1 battle event or 255 */
+        5, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -747,6 +789,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         14, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -755,30 +798,6 @@ const TravelEvent g_travel_events[] = {
         0, 0, /* opt delay */
         0, 0, /* opt save */
         2, 0, /* opt days */
-    },
-    { /* risky_shortcut */
-        TRAVEL_EVENT_CHOICE,
-        0, /* battle */
-        "", /* enemy_name (unused) */
-        0, /* enemy_hp */
-        0, /* victory_gold (unused) */
-        0, /* victory_days (unused) */
-        0, /* late_enemy_hp (unused) */
-        "CLIFF PATH BECKONS.", /* text */
-        "WORTH THE SWEAT.", /* opt1 result */
-        "STEADY GOING.", /* opt2 result */
-        "TAKE", /* opt1 label */
-        "LONG WAY", /* opt2 label */
-        255, /* opt1 battle event or 255 */
-        255, /* opt2 battle event or 255 */
-        0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
-        0, 0, /* opt heal */
-        4, 0, /* opt hurt */
-        0, 2, /* opt delay */
-        3, 0, /* opt save */
-        0, 0, /* opt days */
     },
     { /* river_crossing */
         TRAVEL_EVENT_CHOICE,
@@ -795,6 +814,7 @@ const TravelEvent g_travel_events[] = {
         "BRIDGE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, -4, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -819,6 +839,7 @@ const TravelEvent g_travel_events[] = {
         "WALK ON", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -843,6 +864,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -866,6 +888,7 @@ const TravelEvent g_travel_events[] = {
         "", /* opt1 (unused) */
         "", /* opt2 (unused) */
         255, 255, /* opt battles (none) */
+        0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -890,6 +913,7 @@ const TravelEvent g_travel_events[] = {
         "REFUSE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         6, 0, /* opt gold */
         -4, 0, /* opt food */
         0, 0, /* opt water */
@@ -913,6 +937,7 @@ const TravelEvent g_travel_events[] = {
         "", /* opt1 (unused) */
         "", /* opt2 (unused) */
         255, 255, /* opt battles (none) */
+        0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -936,6 +961,7 @@ const TravelEvent g_travel_events[] = {
         "", /* opt1 (unused) */
         "", /* opt2 (unused) */
         255, 255, /* opt battles (none) */
+        0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -960,6 +986,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -984,6 +1011,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         4, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1008,6 +1036,7 @@ const TravelEvent g_travel_events[] = {
         "RISK IT", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         -3, 0, /* opt food */
         0, 0, /* opt water */
@@ -1032,6 +1061,7 @@ const TravelEvent g_travel_events[] = {
         "PUSH ON", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1056,6 +1086,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         12, 0, /* opt gold */
         -2, 0, /* opt food */
         0, 0, /* opt water */
@@ -1080,6 +1111,7 @@ const TravelEvent g_travel_events[] = {
         "AVOID", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         2, 0, /* opt food */
         0, 0, /* opt water */
@@ -1104,6 +1136,7 @@ const TravelEvent g_travel_events[] = {
         "PUSH ON", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1128,6 +1161,7 @@ const TravelEvent g_travel_events[] = {
         "CAMP", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         5, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1150,8 +1184,9 @@ const TravelEvent g_travel_events[] = {
         "YOU WALK ON.", /* opt2 result */
         "CHECK", /* opt1 label */
         "IGNORE", /* opt2 label */
-        36, /* opt1 battle event or 255 */
+        31, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1176,6 +1211,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         3, 0, /* opt food */
         3, 0, /* opt water */
@@ -1200,6 +1236,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         -6, 0, /* opt gold */
         3, 0, /* opt food */
         2, 0, /* opt water */
@@ -1207,30 +1244,6 @@ const TravelEvent g_travel_events[] = {
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
         0, 0, /* opt save */
-        0, 0, /* opt days */
-    },
-    { /* suspicious_shortcut */
-        TRAVEL_EVENT_CHOICE,
-        0, /* battle */
-        "", /* enemy_name (unused) */
-        0, /* enemy_hp */
-        0, /* victory_gold (unused) */
-        0, /* victory_days (unused) */
-        0, /* late_enemy_hp (unused) */
-        "SHORTCUT ON OFFER.", /* text */
-        "ROUGH BUT QUICK.", /* opt1 result */
-        "YOU WALK ON.", /* opt2 result */
-        "TAKE", /* opt1 label */
-        "DECLINE", /* opt2 label */
-        255, /* opt1 battle event or 255 */
-        255, /* opt2 battle event or 255 */
-        0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
-        0, 0, /* opt heal */
-        4, 0, /* opt hurt */
-        0, 0, /* opt delay */
-        2, 0, /* opt save */
         0, 0, /* opt days */
     },
     { /* trade_food_parts */
@@ -1248,6 +1261,7 @@ const TravelEvent g_travel_events[] = {
         "DECLINE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         8, 0, /* opt gold */
         -3, 0, /* opt food */
         0, 0, /* opt water */
@@ -1272,6 +1286,7 @@ const TravelEvent g_travel_events[] = {
         "IGNORE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         15, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1296,6 +1311,7 @@ const TravelEvent g_travel_events[] = {
         "HURRY", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1320,6 +1336,7 @@ const TravelEvent g_travel_events[] = {
         "FILL UP", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         2, 6, /* opt water */
@@ -1344,6 +1361,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1367,6 +1385,7 @@ const TravelEvent g_travel_events[] = {
         "", /* opt1 (unused) */
         "", /* opt2 (unused) */
         255, 255, /* opt battles (none) */
+        0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1391,6 +1410,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         3, 0, /* opt food */
         0, 0, /* opt water */
@@ -1415,6 +1435,7 @@ const TravelEvent g_travel_events[] = {
         "LEAVE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         10, 0, /* opt gold */
         -1, 0, /* opt food */
         -1, 0, /* opt water */
@@ -1437,8 +1458,9 @@ const TravelEvent g_travel_events[] = {
         "WIDE BERTH.", /* opt2 result */
         "FINISH", /* opt1 label */
         "AVOID", /* opt2 label */
-        54, /* opt1 battle event or 255 */
+        48, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1463,6 +1485,7 @@ const TravelEvent g_travel_events[] = {
         "IGNORE", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
+        128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
         0, 0, /* opt food */
         0, 0, /* opt water */
@@ -1474,4 +1497,1446 @@ const TravelEvent g_travel_events[] = {
     },
 };
 
-const uint8_t g_travel_event_count = 59;
+const uint8_t g_travel_event_count = 53;
+
+/* Fail branches: same order as g_travel_events. */
+const TravelEventFail g_travel_event_fails[] = {
+    { /* abandoned_camp */
+        { /* opt1 fail */
+            "PICKED CLEAN.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            1, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* abandoned_village */
+        { /* opt1 fail */
+            "CAVED-IN CELLAR.", /* text */
+            255, /* fail battle or 255 */
+            2, /* fail gold */
+            1, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            1, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* ambush_slimes */
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+    },
+    { /* bandits */
+        { /* opt1 fail */
+            "OUTNUMBERED.", /* text */
+            255, /* fail battle or 255 */
+            -9, /* fail gold */
+            -6, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "SURROUNDED!", /* text */
+            5, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            4, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* battle_signs */
+        { /* opt1 fail */
+            "FALSE BOTTOM.", /* text */
+            255, /* fail battle or 255 */
+            2, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "TWISTED ANKLE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            2, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* brigand_trio */
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+    },
+    { /* convergence_talk */
+        { /* opt1 fail */
+            "TALL TALES.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* cook_meal */
+        { /* opt1 fail */
+            "GRISTLY STEW.", /* text */
+            255, /* fail battle or 255 */
+            -5, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            2, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* dangerous_shortcut */
+        { /* opt1 fail */
+            "THORN HELL.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            8, /* fail hurt */
+            0, /* fail delay */
+            1, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "SAFE AND SLOW.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* depot_parts */
+        { /* opt1 fail */
+            "RUSTED JUNK.", /* text */
+            255, /* fail battle or 255 */
+            3, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* distress_signal */
+        { /* opt1 fail */
+            "FALSE ALARM.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU HESITATE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* former_enemy */
+        { /* opt1 fail */
+            "OLD GRUDGES.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            3, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* help_settlement */
+        { /* opt1 fail */
+            "POOR HARVEST.", /* text */
+            255, /* fail battle or 255 */
+            4, /* fail gold */
+            2, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            2, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* join_journey */
+        { /* opt1 fail */
+            "HE SNORES.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            2, /* fail heal */
+            0, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* landslide */
+        { /* opt1 fail */
+            "FALLING ROCKS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            7, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "LONG WAY.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            3, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* lost_child */
+        { /* opt1 fail */
+            "WRONG TURNS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            2, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* night_stalker */
+        { /* opt1 fail */
+            "NO SLEEP.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            2, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            1, /* fail days */
+        },
+        { /* opt2 fail */
+            "NEST OF TICKS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            8, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* occupied_camp */
+        { /* opt1 fail */
+            "THEY WERE READY.", /* text */
+            30, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            2, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "TWIG SNAPS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* old_shrine */
+        { /* opt1 fail */
+            "RESTLESS DREAMS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            2, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            1, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* pack_breaks */
+        { /* opt1 fail */
+            "STILL LEAKS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            -1, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            1, /* fail days */
+        },
+        { /* opt2 fail */
+            "LOST MORE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            -3, /* fail food */
+            -3, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* passage_guard */
+        { /* opt1 fail */
+            "FROM BEHIND!", /* text */
+            31, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            3, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "RAVINE MAZE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            3, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* pilgrims */
+        { /* opt1 fail */
+            "LONG PRAYERS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            2, /* fail days */
+        },
+        { /* opt2 fail */
+            "TRAMPLED.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            5, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* powerful_enemy */
+        { /* opt1 fail */
+            "THEIR CHAMPION.", /* text */
+            5, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            5, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "CUT OFF.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            2, /* fail hurt */
+            3, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* protect_caravan */
+        { /* opt1 fail */
+            "AMBUSH ON ROAD.", /* text */
+            5, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            3, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* repair_cart */
+        { /* opt1 fail */
+            "AXLE CRACKS.", /* text */
+            255, /* fail battle or 255 */
+            7, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            3, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* river_crossing */
+        { /* opt1 fail */
+            "SWEPT DOWNSTREAM.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            5, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "TOLL DOUBLED.", /* text */
+            255, /* fail battle or 255 */
+            -8, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* route_info */
+        { /* opt1 fail */
+            "BAD RUMORS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* ruined_monument */
+        { /* opt1 fail */
+            "ERODED SCRIPT.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* ruins_sight */
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+    },
+    { /* share_food */
+        { /* opt1 fail */
+            "NOTHING TO GIVE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            -4, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* skirmish_bats */
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+    },
+    { /* skirmish_spiders */
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+    },
+    { /* slime_letter */
+        { /* opt1 fail */
+            "INK BLURRED.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* slime_tree */
+        { /* opt1 fail */
+            "STICKY MESS.", /* text */
+            255, /* fail battle or 255 */
+            1, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* spoiled_food */
+        { /* opt1 fail */
+            "SPOILED THE REST.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            -5, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "VIOLENTLY ILL.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            7, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            1, /* fail days */
+        },
+    },
+    { /* storm_shelter */
+        { /* opt1 fail */
+            "LEAKY CAVE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            2, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            1, /* fail days */
+        },
+        { /* opt2 fail */
+            "STRUCK BY HAIL.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            8, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* stranded_merchant */
+        { /* opt1 fail */
+            "EMPTY PURSE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            -2, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* strange_animals */
+        { /* opt1 fail */
+            "INTO A BOG.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            2, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* strange_fog */
+        { /* opt1 fail */
+            "FOG LINGERS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            2, /* fail days */
+        },
+        { /* opt2 fail */
+            "CLIFF EDGE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            4, /* fail hurt */
+            2, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* strange_light */
+        { /* opt1 fail */
+            "WILL-O-WISP.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            3, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "RESTLESS NIGHT.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            1, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            1, /* fail days */
+        },
+    },
+    { /* strange_noises */
+        { /* opt1 fail */
+            "THEY HEARD YOU.", /* text */
+            31, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            2, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* supply_cache */
+        { /* opt1 fail */
+            "EMPTY HOLE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* supply_merchant */
+        { /* opt1 fail */
+            "SHORT WEIGHT.", /* text */
+            255, /* fail battle or 255 */
+            -6, /* fail gold */
+            1, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* trade_food_parts */
+        { /* opt1 fail */
+            "BAD DEAL.", /* text */
+            255, /* fail battle or 255 */
+            4, /* fail gold */
+            -3, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* traveler_help */
+        { /* opt1 fail */
+            "EMPTY PURSE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* watched */
+        { /* opt1 fail */
+            "IT WAVES BACK.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "DEAD END.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            1, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* water_source */
+        { /* opt1 fail */
+            "BITTER WATER.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            2, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "LEAKY SKIN.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            3, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* waystone */
+        { /* opt1 fail */
+            "COLD STONE.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* weak_beast */
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+    },
+    { /* wild_berries */
+        { /* opt1 fail */
+            "SOUR BATCH.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            1, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* wounded_adventurer */
+        { /* opt1 fail */
+            "HE DIES SMILING.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            -1, /* fail food */
+            -1, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* wounded_monster */
+        { /* opt1 fail */
+            "IT LASHES OUT.", /* text */
+            48, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            2, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "IT FOLLOWS.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            2, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+    { /* wrong_sign */
+        { /* opt1 fail */
+            "REALLY WRONG.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            4, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+        { /* opt2 fail */
+            "YOU WALK ON.", /* text */
+            255, /* fail battle or 255 */
+            0, /* fail gold */
+            0, /* fail food */
+            0, /* fail water */
+            0, /* fail heal */
+            0, /* fail hurt */
+            0, /* fail delay */
+            0, /* fail save */
+            0, /* fail days */
+        },
+    },
+};
+
+const uint8_t g_travel_event_fail_count = 53;
+
+/* Weather interactions: sparse (event, option, weather) deltas. */
+const TravelWxMod g_travel_wxmods[] = {
+    { /* dangerous_shortcut opt1 in fog */
+        8, /* event */
+        0, /* option (0 = opt1) */
+        7, /* weather (fog) */
+        0, /* hurt delta */
+        0, /* delay delta */
+        -2, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+    { /* dangerous_shortcut opt1 in rain */
+        8, /* event */
+        0, /* option (0 = opt1) */
+        1, /* weather (rain) */
+        2, /* hurt delta */
+        0, /* delay delta */
+        0, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+    { /* landslide opt1 in rain */
+        14, /* event */
+        0, /* option (0 = opt1) */
+        1, /* weather (rain) */
+        2, /* hurt delta */
+        0, /* delay delta */
+        0, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+    { /* landslide opt1 in storm */
+        14, /* event */
+        0, /* option (0 = opt1) */
+        2, /* weather (storm) */
+        3, /* hurt delta */
+        0, /* delay delta */
+        0, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+    { /* river_crossing opt1 in rain */
+        25, /* event */
+        0, /* option (0 = opt1) */
+        1, /* weather (rain) */
+        2, /* hurt delta */
+        0, /* delay delta */
+        0, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+    { /* river_crossing opt1 in storm */
+        25, /* event */
+        0, /* option (0 = opt1) */
+        2, /* weather (storm) */
+        4, /* hurt delta */
+        0, /* delay delta */
+        0, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+    { /* storm_shelter opt2 in storm */
+        35, /* event */
+        1, /* option (0 = opt1) */
+        2, /* weather (storm) */
+        3, /* hurt delta */
+        0, /* delay delta */
+        0, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+    { /* storm_shelter opt2 in rain */
+        35, /* event */
+        1, /* option (0 = opt1) */
+        1, /* weather (rain) */
+        1, /* hurt delta */
+        0, /* delay delta */
+        0, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+    { /* wrong_sign opt1 in fog */
+        52, /* event */
+        0, /* option (0 = opt1) */
+        7, /* weather (fog) */
+        0, /* hurt delta */
+        2, /* delay delta */
+        0, /* save delta */
+        0, /* days delta */
+        0, /* food delta */
+        0, /* water delta */
+    },
+};
+
+const uint8_t g_travel_wxmod_count = 9;
+
+
+/* Weather-interaction applicator (this bank, next to its tables). */
+static int8_t wx_clamp(int16_t v, int16_t lo, int16_t hi)
+{
+    if (v < lo) return (int8_t)lo;
+    if (v > hi) return (int8_t)hi;
+    return (int8_t)v;
+}
+
+void travel_wx_apply_banked(void)
+{
+    uint8_t i;
+    uint8_t battle;
+    uint8_t fbattle;
+    int8_t *hurt;
+    int8_t *delay;
+    int8_t *save;
+    int8_t *days;
+    int8_t *food;
+    int8_t *water;
+    int8_t *fhurt;
+    int8_t *fdelay;
+    int8_t *fsave;
+    int8_t *fdays;
+    int8_t *ffood;
+    int8_t *fwater;
+    const TravelWxMod *m;
+    if (g_travel_weather == TRAVEL_WEATHER_NONE) return;
+    if (s_event.kind != TRAVEL_EVENT_CHOICE) return;
+    for (i = 0; i < g_travel_wxmod_count; i++) {
+        m = &g_travel_wxmods[i];
+        if (m->event != g_travel_event) continue;
+        if (m->weather != g_travel_weather) continue;
+        if (m->option == 0) {
+            hurt = &s_event.opt1_hurt;
+            delay = &s_event.opt1_delay;
+            save = &s_event.opt1_save;
+            days = &s_event.opt1_days;
+            food = &s_event.opt1_food;
+            water = &s_event.opt1_water;
+            battle = s_event.opt1_battle;
+            fhurt = &s_event_fail.opt1.hurt;
+            fdelay = &s_event_fail.opt1.delay;
+            fsave = &s_event_fail.opt1.save;
+            fdays = &s_event_fail.opt1.days;
+            ffood = &s_event_fail.opt1.food;
+            fwater = &s_event_fail.opt1.water;
+            fbattle = s_event_fail.opt1.battle;
+        } else if (m->option == 1) {
+            hurt = &s_event.opt2_hurt;
+            delay = &s_event.opt2_delay;
+            save = &s_event.opt2_save;
+            days = &s_event.opt2_days;
+            food = &s_event.opt2_food;
+            water = &s_event.opt2_water;
+            battle = s_event.opt2_battle;
+            fhurt = &s_event_fail.opt2.hurt;
+            fdelay = &s_event_fail.opt2.delay;
+            fsave = &s_event_fail.opt2.save;
+            fdays = &s_event_fail.opt2.days;
+            ffood = &s_event_fail.opt2.food;
+            fwater = &s_event_fail.opt2.water;
+            fbattle = s_event_fail.opt2.battle;
+        } else {
+            continue;
+        }
+        *hurt = wx_clamp((int16_t)(*hurt + m->hurt), 0, 30);
+        *fhurt = wx_clamp((int16_t)(*fhurt + m->hurt), 0, 30);
+        if (battle == 0xFF) {
+            *delay = wx_clamp((int16_t)(*delay + m->delay), 0, 10);
+            *save = wx_clamp((int16_t)(*save + m->save), 0, 10);
+            *days = wx_clamp((int16_t)(*days + m->days), 0, 10);
+            *food = wx_clamp((int16_t)(*food + m->food), -30, 30);
+            *water = wx_clamp((int16_t)(*water + m->water), -30, 30);
+        }
+        if (fbattle == 0xFF) {
+            *fdelay = wx_clamp((int16_t)(*fdelay + m->delay), 0, 10);
+            *fsave = wx_clamp((int16_t)(*fsave + m->save), 0, 10);
+            *fdays = wx_clamp((int16_t)(*fdays + m->days), 0, 10);
+            *ffood = wx_clamp((int16_t)(*ffood + m->food), -30, 30);
+            *fwater = wx_clamp((int16_t)(*fwater + m->water), -30, 30);
+        }
+    }
+}

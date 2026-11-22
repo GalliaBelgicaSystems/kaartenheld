@@ -5,12 +5,22 @@
   "opt1": "DRINK",
   "opt1_effects": {
     "text": "COOL AND DEEP.",
+    "risk": 50,
     "water": 2,
-    "heal": 2
+    "heal": 2,
+    "fail": {
+      "text": "BITTER WATER.",
+      "water": 2
+    }
   },
   "opt2": "FILL UP",
   "opt2_effects": {
     "text": "SKINS BULGING.",
-    "water": 6
+    "risk": 50,
+    "water": 6,
+    "fail": {
+      "text": "LEAKY SKIN.",
+      "water": 3
+    }
   }
 }

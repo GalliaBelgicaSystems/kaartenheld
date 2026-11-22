@@ -5,11 +5,25 @@
   "opt1": "WATCH",
   "opt1_effects": {
     "text": "LONG NIGHT.",
-    "days": 1
+    "risk": 50,
+    "days": 1,
+    "fail": {
+      "text": "NO SLEEP.",
+      "hurt": 2,
+      "days": 1
+    }
   },
   "opt2": "SLEEP",
   "opt2_effects": {
     "text": "WOKE UP BITTEN.",
-    "hurt": 5
-  }
+    "risk": 50,
+    "hurt": 5,
+    "fail": {
+      "text": "NEST OF TICKS.",
+      "hurt": 8
+    }
+  },
+  "acts": [
+    2
+  ]
 }

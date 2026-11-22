@@ -5,11 +5,24 @@
   "opt1": "FIGHT",
   "opt1_effects": {
     "text": "DRAW WEAPONS!",
-    "battle": "skirmish_bats"
+    "risk": 50,
+    "battle": "skirmish_bats",
+    "fail": {
+      "text": "THEY WERE READY.",
+      "battle": "skirmish_bats",
+      "hurt": 2
+    }
   },
   "opt2": "SNEAK BY",
   "opt2_effects": {
     "text": "SILENT STEPS.",
-    "save": 1
-  }
+    "risk": 50,
+    "save": 1,
+    "fail": {
+      "text": "TWIG SNAPS."
+    }
+  },
+  "acts": [
+    2
+  ]
 }

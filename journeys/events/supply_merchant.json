@@ -5,12 +5,25 @@
   "opt1": "BUY",
   "opt1_effects": {
     "text": "STOCKED UP.",
+    "risk": 50,
     "gold": -6,
     "food": 3,
-    "water": 2
+    "water": 2,
+    "fail": {
+      "text": "SHORT WEIGHT.",
+      "gold": -6,
+      "food": 1
+    }
   },
   "opt2": "LEAVE",
   "opt2_effects": {
-    "text": "YOU WALK ON."
-  }
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
 }

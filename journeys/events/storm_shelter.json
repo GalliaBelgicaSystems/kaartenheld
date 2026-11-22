@@ -5,11 +5,26 @@
   "opt1": "SHELTER",
   "opt1_effects": {
     "text": "WAIT IT OUT.",
-    "days": 1
+    "risk": 50,
+    "days": 1,
+    "fail": {
+      "text": "LEAKY CAVE.",
+      "hurt": 2,
+      "days": 1
+    }
   },
   "opt2": "PUSH ON",
   "opt2_effects": {
     "text": "BATTERED ON.",
-    "hurt": 5
+    "risk": 50,
+    "hurt": 5,
+    "wx": {
+      "storm": {"hurt": 3},
+      "rain": {"hurt": 1}
+    },
+    "fail": {
+      "text": "STRUCK BY HAIL.",
+      "hurt": 8
+    }
   }
 }

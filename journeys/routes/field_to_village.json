@@ -39,6 +39,64 @@
       "water": 4
     }
   },
+  "weather": {
+    "clear": {
+      "weight": 90,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 0,
+      "water": 0
+    },
+    "rain": {
+      "weight": 35,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 0,
+      "water": -1
+    },
+    "storm": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 1,
+      "water": 0
+    },
+    "heat": {
+      "weight": 30,
+      "days_min": 1,
+      "days_max": 3,
+      "food": 0,
+      "water": 1
+    },
+    "cold": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 1,
+      "water": 0
+    },
+    "wind": {
+      "weight": 25,
+      "days_min": 1,
+      "days_max": 1,
+      "food": 1,
+      "water": 0
+    },
+    "snow": {
+      "weight": 15,
+      "days_min": 1,
+      "days_max": 2,
+      "food": 1,
+      "water": 1
+    },
+    "fog": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 1,
+      "food": 0,
+      "water": 0
+    }
+  },
   "methods": [
     {
       "id": "carriage",
@@ -53,47 +111,15 @@
       "name": "ON FOOT",
       "cost_gold": 0,
       "steps": 10,
-      "frequency": 255,
+      "frequency": 35,
       "pool": [
-        {
-          "event": "ambush_slimes",
-          "weight": 6
-        },
-        {
-          "event": "traveler_help",
-          "weight": 6
-        },
-        {
-          "event": "ruins_sight",
-          "weight": 4
-        },
-        {
-          "event": "skirmish_bats",
-          "weight": 4
-        },
-        {
-          "event": "skirmish_spiders",
-          "weight": 4
-        },
-        {
-          "event": "weak_beast",
-          "weight": 4
-        },
-        {
-          "event": "brigand_trio",
-          "weight": 4
-        },
         {
           "event": "abandoned_camp",
           "weight": 3
         },
         {
-          "event": "abandoned_village",
-          "weight": 3
-        },
-        {
-          "event": "altered_roads",
-          "weight": 3
+          "event": "ambush_slimes",
+          "weight": 6
         },
         {
           "event": "bandits",
@@ -104,15 +130,11 @@
           "weight": 3
         },
         {
-          "event": "collapsed_bridge",
-          "weight": 3
+          "event": "brigand_trio",
+          "weight": 4
         },
         {
           "event": "convergence_talk",
-          "weight": 3
-        },
-        {
-          "event": "cook_meal",
           "weight": 3
         },
         {
@@ -120,39 +142,7 @@
           "weight": 3
         },
         {
-          "event": "depot_parts",
-          "weight": 3
-        },
-        {
-          "event": "distress_signal",
-          "weight": 3
-        },
-        {
-          "event": "former_enemy",
-          "weight": 3
-        },
-        {
-          "event": "heavy_rain",
-          "weight": 3
-        },
-        {
-          "event": "help_settlement",
-          "weight": 3
-        },
-        {
-          "event": "join_journey",
-          "weight": 3
-        },
-        {
           "event": "landslide",
-          "weight": 3
-        },
-        {
-          "event": "lost_child",
-          "weight": 3
-        },
-        {
-          "event": "messenger",
           "weight": 3
         },
         {
@@ -176,10 +166,6 @@
           "weight": 3
         },
         {
-          "event": "pilgrims",
-          "weight": 3
-        },
-        {
           "event": "powerful_enemy",
           "weight": 3
         },
@@ -188,19 +174,7 @@
           "weight": 3
         },
         {
-          "event": "repair_cart",
-          "weight": 3
-        },
-        {
-          "event": "risky_shortcut",
-          "weight": 3
-        },
-        {
           "event": "river_crossing",
-          "weight": 3
-        },
-        {
-          "event": "route_info",
           "weight": 3
         },
         {
@@ -208,8 +182,16 @@
           "weight": 3
         },
         {
-          "event": "share_food",
-          "weight": 3
+          "event": "ruins_sight",
+          "weight": 4
+        },
+        {
+          "event": "skirmish_bats",
+          "weight": 4
+        },
+        {
+          "event": "skirmish_spiders",
+          "weight": 4
         },
         {
           "event": "slime_letter",
@@ -225,10 +207,6 @@
         },
         {
           "event": "storm_shelter",
-          "weight": 3
-        },
-        {
-          "event": "stranded_merchant",
           "weight": 3
         },
         {
@@ -252,16 +230,8 @@
           "weight": 3
         },
         {
-          "event": "supply_merchant",
-          "weight": 3
-        },
-        {
-          "event": "suspicious_shortcut",
-          "weight": 3
-        },
-        {
-          "event": "trade_food_parts",
-          "weight": 3
+          "event": "traveler_help",
+          "weight": 6
         },
         {
           "event": "watched",
@@ -276,11 +246,11 @@
           "weight": 3
         },
         {
-          "event": "wild_berries",
-          "weight": 3
+          "event": "weak_beast",
+          "weight": 4
         },
         {
-          "event": "wounded_adventurer",
+          "event": "wild_berries",
           "weight": 3
         },
         {
@@ -293,5 +263,6 @@
         }
       ]
     }
-  ]
+  ],
+  "act": 2
 }

@@ -5,12 +5,23 @@
   "opt1": "LOOK",
   "opt1_effects": {
     "text": "COLD FIRE CACHE.",
-    "gold": 5
+    "risk": 50,
+    "gold": 5,
+    "fail": {
+      "text": "WILL-O-WISP.",
+      "hurt": 3
+    }
   },
   "opt2": "CAMP",
   "opt2_effects": {
     "text": "EARLY REST.",
+    "risk": 50,
     "heal": 3,
-    "days": 1
+    "days": 1,
+    "fail": {
+      "text": "RESTLESS NIGHT.",
+      "heal": 1,
+      "days": 1
+    }
   }
 }

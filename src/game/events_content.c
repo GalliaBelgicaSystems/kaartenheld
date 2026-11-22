@@ -52,6 +52,17 @@ const EventDefinition g_events[] = {
         {{ EVENT_ACTION_TRAVEL_SUPPLY, 0, 0, 0 }}
     },
     {
+        /* Same road, younger days: while the Convergence countdown is
+         * still chapter 1 the field signpost walks the act-1 road
+         * table (route 1) instead of the act-2 one.  First-match wins,
+         * so this precedes the act-2 fallthrough below. */
+        EVENT_ID_TRAVEL_DEMO_ACT1, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_FIELD,
+        1,
+        {{ EVENT_COND_VARIABLE, VARIABLE_ID_CHAPTER, 1, false, false }},
+        1,
+        {{ EVENT_ACTION_JOURNEY_START, 1, 0, 0 }}
+    },
+    {
         /* Travel-demo prototype: the field signpost starts the
          * field-to-village journey (route 0) instead of teleporting.
          * First-match wins, so this precedes the signpost dialogue
@@ -61,6 +72,15 @@ const EventDefinition g_events[] = {
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
         {{ EVENT_ACTION_JOURNEY_START, 0, 0, 0 }}
+    },
+    {
+        /* Return leg: the village signpost walks the act-2 road back
+         * to the field (route 2, its own pool) instead of talking. */
+        EVENT_ID_TRAVEL_RETURN, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_TOWN,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_JOURNEY_START, 2, 0, 0 }}
     },
     {
         /* Sunken-ruins AP chest (travel demo, one-shot via its own

@@ -5,10 +5,22 @@
   "opt1": "GUIDE",
   "opt1_effects": {
     "text": "SAFE AT LAST.",
-    "delay": 1
+    "risk": 50,
+    "delay": 1,
+    "fail": {
+      "text": "WRONG TURNS.",
+      "delay": 2
+    }
   },
   "opt2": "LEAVE",
   "opt2_effects": {
-    "text": "YOU WALK ON."
-  }
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
 }

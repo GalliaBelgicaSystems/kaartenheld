@@ -5,11 +5,24 @@
   "opt1": "EAT",
   "opt1_effects": {
     "text": "HOT AND GOOD.",
+    "risk": 50,
     "gold": -5,
-    "heal": 6
+    "heal": 6,
+    "fail": {
+      "text": "GRISTLY STEW.",
+      "gold": -5,
+      "heal": 2
+    }
   },
   "opt2": "DECLINE",
   "opt2_effects": {
-    "text": "YOU WALK ON."
-  }
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
 }

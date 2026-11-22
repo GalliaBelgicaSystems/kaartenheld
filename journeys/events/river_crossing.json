@@ -5,11 +5,26 @@
   "opt1": "FORD",
   "opt1_effects": {
     "text": "COLD AND FAST.",
-    "hurt": 3
+    "risk": 50,
+    "hurt": 3,
+    "wx": {
+      "rain": {"hurt": 2},
+      "storm": {"hurt": 4}
+    },
+    "fail": {
+      "text": "SWEPT DOWNSTREAM.",
+      "hurt": 5,
+      "delay": 1
+    }
   },
   "opt2": "BRIDGE",
   "opt2_effects": {
     "text": "TOLL BRIDGE.",
-    "gold": -4
+    "risk": 50,
+    "gold": -4,
+    "fail": {
+      "text": "TOLL DOUBLED.",
+      "gold": -8
+    }
   }
 }

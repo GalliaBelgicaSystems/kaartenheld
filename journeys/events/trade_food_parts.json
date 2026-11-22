@@ -5,11 +5,24 @@
   "opt1": "TRADE",
   "opt1_effects": {
     "text": "FAIR TRADE.",
+    "risk": 50,
     "gold": 8,
-    "food": -3
+    "food": -3,
+    "fail": {
+      "text": "BAD DEAL.",
+      "gold": 4,
+      "food": -3
+    }
   },
   "opt2": "DECLINE",
   "opt2_effects": {
-    "text": "YOU WALK ON."
-  }
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
 }

@@ -26,6 +26,19 @@
 #define TRAVEL_OPT_LEN 8
 #define TRAVEL_METHODS_MAX 2
 
+/* Fixed weather vocabulary (shared by route tables and event
+ * interactions; the compiler resolves names to these ids). */
+#define TRAVEL_WEATHER_COUNT 8
+#define TRAVEL_WEATHER_NONE 0xFF
+#define TRAVEL_WEATHER_CLEAR 0
+#define TRAVEL_WEATHER_RAIN 1
+#define TRAVEL_WEATHER_STORM 2
+#define TRAVEL_WEATHER_HEAT 3
+#define TRAVEL_WEATHER_COLD 4
+#define TRAVEL_WEATHER_WIND 5
+#define TRAVEL_WEATHER_SNOW 6
+#define TRAVEL_WEATHER_FOG 7
+
 #define TRAVEL_EVENT_BATTLE 1
 #define TRAVEL_EVENT_CHOICE 2
 #define TRAVEL_EVENT_RUINS 3
@@ -76,6 +89,7 @@ typedef struct {
 typedef struct {
     char name[TRAVEL_TEXT_LEN + 1];
     uint8_t dest_scene;
+    uint8_t act;         /* road act (pools admit only matching events) */
     uint8_t dest_x;
     uint8_t dest_y;
     uint8_t food_price;  /* gold per ration (supply merchant) */
@@ -100,6 +114,11 @@ typedef struct {
     uint8_t study_lost_max;
     uint8_t study_food;  /* extra rations a study day costs (on top) */
     uint8_t study_water; /* extra water a study day costs (on top) */
+    uint8_t weather_weight[TRAVEL_WEATHER_COUNT]; /* roll weights (0 = off) */
+    uint8_t weather_days_min[TRAVEL_WEATHER_COUNT]; /* duration range */
+    uint8_t weather_days_max[TRAVEL_WEATHER_COUNT];
+    int8_t weather_food[TRAVEL_WEATHER_COUNT];  /* extra rations/day */
+    int8_t weather_water[TRAVEL_WEATHER_COUNT]; /* extra water/day */
     uint8_t method_count;
     TravelMethod methods[TRAVEL_METHODS_MAX];
 } TravelRoute;
@@ -119,6 +138,8 @@ typedef struct {
     char opt2[TRAVEL_OPT_LEN + 1];
     uint8_t opt1_battle; /* choice: battle-event index or 0xFF (fight!) */
     uint8_t opt2_battle;
+    uint8_t opt1_risk;   /* % chance this option FAILS (always 50) */
+    uint8_t opt2_risk;
     int16_t opt1_gold;   /* choice effects, applied on confirm */
     int16_t opt2_gold;
     int8_t opt1_food;    /* +/- rations (floored at zero) */
@@ -137,10 +158,50 @@ typedef struct {
     int8_t opt2_days;
 } TravelEvent;
 
+/* One failed-outcome block (same fields, own result text). */
+typedef struct {
+    char text[TRAVEL_TEXT_LEN + 1];
+    uint8_t battle;
+    int16_t gold;
+    int8_t food;
+    int8_t water;
+    int8_t heal;
+    int8_t hurt;
+    int8_t delay;
+    int8_t save;
+    int8_t days;
+} TravelEventFailOpt;
+
+typedef struct {
+    TravelEventFailOpt opt1;
+    TravelEventFailOpt opt2;
+} TravelEventFail;
+
+/* One weather interaction: additive deltas applied to an option's
+ * numbers (both branches) while that weather is active.  Sparse table
+ * (bank 14): only declared (event, option, weather) triples emit. */
+typedef struct {
+    uint8_t event;
+    uint8_t option;  /* 0 = opt1, 1 = opt2 */
+    uint8_t weather; /* TRAVEL_WEATHER_* */
+    int8_t hurt;
+    int8_t delay;
+    int8_t save;
+    int8_t days;
+    int8_t food;
+    int8_t water;
+} TravelWxMod;
+
 extern const TravelRoute g_travel_routes[];
 extern const uint8_t g_travel_route_count;
 extern const TravelEvent g_travel_events[];
 extern const uint8_t g_travel_event_count;
+/* Parallel fail-outcome table (same generated file, ROM bank 14):
+ * fail[i] holds both options' failure branches for event i. */
+extern const TravelEventFail g_travel_event_fails[];
+/* Sparse weather-interaction table (same generated file, bank 14). */
+extern const TravelWxMod g_travel_wxmods[];
+extern const uint8_t g_travel_wxmod_count;
 
 /* Transient travel state (WRAM BSS, travel.c).  Zero at boot covers
  * inactive (AGENTS.md 52.27: no nonzero initializer). */
@@ -162,14 +223,31 @@ extern uint8_t g_travel_water;   /* camp water found (hunt result) */
 extern uint8_t g_travel_nofood;  /* consecutive starving days (no food) */
 extern uint8_t g_travel_nowater; /* consecutive starving days (no water) */
 extern uint16_t g_travel_rng;    /* camp-action RNG stream (banked bodies) */
+extern uint8_t g_travel_failed;  /* last choice failed its risk roll */
+/* Active ambient weather (TRAVEL_WEATHER_* or NONE) + days left.
+ * BSS zero boots CLEAR with no days left; the burn body rolls a fresh
+ * condition whenever the counter hits zero, and travel_clear_state
+ * resets to NONE at journey start, so the boot value never applies. */
+extern uint8_t g_travel_weather;
+extern uint8_t g_travel_weather_left;
+extern TravelEventFail s_event_fail; /* staged fail row (WRAM scratch) */
 
-/* Staged table rows (bank-9 copies, valid while travelling). */
-const TravelRoute *travel_route_row(void);
-const TravelMethod *travel_method_row(void);
-const TravelEvent *travel_event_row(void);
+/* Staged table rows (travel.c WRAM, copied from bank 14 on stage,
+ * read by logic and render from WRAM -- never map a ROM window
+ * around a render).  Non-static so the banked bodies (paint, camp
+ * and burn logic) read them directly; fixed code keeps using the
+ * row accessors below. */
+extern TravelRoute s_route;
+extern TravelMethod s_method;
+extern TravelEvent s_event;
+extern TravelEventFail s_event_fail;
 
 /* Current screen view for the renderer. */
 uint8_t travel_view(void);
+
+/* No-arg banked weather-bake body (emitted into travel_content.c,
+ * ROM bank 14, next to the tables it reads). */
+void travel_wx_apply_banked(void);
 
 /* Per-frame input/logic for the journey screen. */
 void travel_update(struct Game *g);

@@ -1,7 +1,7 @@
 {
   "act": 2,
   "id": "act2_town",
-  "name": "Act 2 — Oakhaven Town",
+  "name": "Act 2 \u2014 Oakhaven Town",
   "map": {
     "width": 20,
     "height": 18,
@@ -596,6 +596,30 @@
           "INTERACTABLE"
         ],
         "visual": "#",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE"
+      }
+    },
+    {
+      "id": "town_signpost",
+      "type": "signpost",
+      "position": {
+        "x": 5,
+        "y": 7
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_SIGNPOST",
+        "display_name": "SIGNPOST",
+        "dialogue": "DIALOGUE_ID_VILLAGE_SIGNPOST",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "?",
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
