@@ -37,7 +37,7 @@
   {
    "type": "screen_row",
    "row": 14,
-   "contains": "PRESS START"
+   "contains": "PRESS"
   },
   {
    "type": "screen_row_not_contains",

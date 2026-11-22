@@ -44,7 +44,10 @@ static const uint8_t s_menus_hero_slots[16] = {
       UI_TILE_MENUS_HERO_COUNT == 16u && \
       UI_TILE_MENUS_STATUS_COUNT == 4u && \
       UI_TILE_MENUS_STATUS_BASE == 248u && \
-      UI_TILE_MENUS_LIST_SCROLL_UP == 245u)
+      UI_TILE_MENUS_LIST_SCROLL_UP == 245u && \
+      UI_TILE_BUTTON_COUNT == 10u && \
+      UI_TILE_BUTTON_A == 176u && \
+      UI_TILE_BUTTON_SELECT_3 == 185u)
 #error "menu chrome VRAM layout mismatch with ui.h"
 #endif
 #if !(UI_TILE_STATUS_HEART_FULL == 208u && UI_TILE_STATUS_ARROWS == 211u)
@@ -55,6 +58,11 @@ static const uint8_t s_menus_hero_slots[16] = {
  * singles + 16 hero cells, then the 4 row-1 status icons appended).
  * Appended-last so the chrome indices above never move. */
 #define MENUS_STATUS_CELL_BASE 28u
+
+/* Button header base (gfx rule --tile-coords order: 12 row-0
+ * singles + 16 hero cells + 4 status icons, then the 10 button cells
+ * appended).  Appended-last so the chrome indices above never move. */
+#define MENUS_BUTTON_CELL_BASE 32u
 
 /* Paper-white document ramp (CRAM slot 4): byte-identical to the
  * battle fight3 ramp (white, tan, dark red, dark bronze).  The HUD
@@ -85,7 +93,7 @@ static uint8_t menus_bit_rev(uint8_t b)
     return r;
 }
 
-/* Stream the menu chrome sheet (28 + 4 cells, 512 bytes) to its VRAM
+/* Stream the menu chrome sheet (28 + 4 + 10 cells, 672 bytes) to its VRAM
  * slots.  Same LCD-safe pattern as the bank-8 OAM streamers
  * (BANKED_VRAM_WRITE per byte: the entry transition repaints with the
  * LCD on). */
@@ -117,6 +125,15 @@ static void menus_chrome_stream(void)
         src = &menus_tile_tiles[((uint16_t)(UI_TILE_MENUS_COUNT + k) << 4)];
         dst = (volatile uint8_t *)(0x8000u +
                                    ((uint16_t)s_menus_hero_slots[k] << 4));
+        for (j = 0; j < 16; j++) {
+            BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
+            dst++;
+        }
+    }
+    for (k = 0; k < UI_TILE_BUTTON_COUNT; k++) {
+        src = &menus_tile_tiles[((uint16_t)(MENUS_BUTTON_CELL_BASE + k) << 4)];
+        dst = (volatile uint8_t *)(0x8000u +
+                                   ((uint16_t)(UI_TILE_BUTTON_A + k) << 4));
         for (j = 0; j < 16; j++) {
             BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
             dst++;

@@ -75,7 +75,7 @@
     {
       "type": "screen_row",
       "row": 16,
-      "contains": "A:ROLL B:LEAVE"
+      "contains": "ROLL"
     },
     {
       "type": "event_occurred",

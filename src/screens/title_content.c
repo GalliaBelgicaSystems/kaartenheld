@@ -63,6 +63,16 @@ static void title_put_char(uint8_t x, uint8_t y, char ch)
     }
 }
 
+static void title_stamp_button(uint8_t x, uint8_t y, uint8_t tile)
+{
+    volatile uint8_t *dst;
+    if (y >= 18 || x >= 20) return;
+    VBK_REG = 0;
+    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    title_vram_sync_write(dst, tile);
+    g_ui_screen_buf[y][x] = ' ';
+}
+
 static void title_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
 {
     uint8_t i;
@@ -245,6 +255,9 @@ void title_content_render(void)
     if (!showing) {
         title_draw_graphic();
         title_draw_text(g_title_prompt_x, g_title_prompt_y, g_title_prompt_text, 20);
+        title_stamp_button((uint8_t)(g_title_prompt_x + 6), g_title_prompt_y, UI_TILE_BUTTON_START_1);
+        title_stamp_button((uint8_t)(g_title_prompt_x + 7), g_title_prompt_y, UI_TILE_BUTTON_START_2);
+        title_stamp_button((uint8_t)(g_title_prompt_x + 8), g_title_prompt_y, UI_TILE_BUTTON_START_3);
         if (g_title_credits_enabled) {
             title_draw_text(g_title_credits_x, g_title_credits_y, g_title_credits_text, 20);
         }

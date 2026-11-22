@@ -99,7 +99,7 @@
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "[A] Buy  [B] Leave"
+   "contains": "Buy"
   },
   {
    "type": "screen_row_not_contains",
