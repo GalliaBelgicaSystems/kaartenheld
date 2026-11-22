@@ -1,0 +1,14 @@
+{
+  "id": "messenger",
+  "kind": "choice",
+  "text": "MESSENGER HAS NEWS.",
+  "opt1": "HEAR",
+  "opt1_effects": {
+    "text": "WASHOUT AVOIDED.",
+    "save": 1
+  },
+  "opt2": "HURRY ON",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

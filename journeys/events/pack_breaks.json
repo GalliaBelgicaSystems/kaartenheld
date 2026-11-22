@@ -1,0 +1,16 @@
+{
+  "id": "pack_breaks",
+  "kind": "choice",
+  "text": "YOUR PACK TEARS.",
+  "opt1": "MEND",
+  "opt1_effects": {
+    "text": "STITCHED UP.",
+    "days": 1
+  },
+  "opt2": "DUMP",
+  "opt2_effects": {
+    "text": "LIGHTER LOAD.",
+    "food": -2,
+    "water": -2
+  }
+}

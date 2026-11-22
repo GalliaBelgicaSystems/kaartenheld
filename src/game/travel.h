@@ -20,9 +20,10 @@
 #include <stdbool.h>
 #include "screen.h"
 
-#define TRAVEL_POOL_MAX 4
+#define TRAVEL_POOL_MAX 64
 #define TRAVEL_TEXT_LEN 20
 #define TRAVEL_NAME_LEN 11
+#define TRAVEL_OPT_LEN 8
 #define TRAVEL_METHODS_MAX 2
 
 #define TRAVEL_EVENT_BATTLE 1
@@ -105,17 +106,35 @@ typedef struct {
 
 typedef struct {
     uint8_t kind;
-    uint8_t battle;
+    uint8_t battle;                 /* battle events: BATTLE_* table id */
     char enemy_name[TRAVEL_NAME_LEN + 1];
     uint8_t enemy_hp;
-    int16_t reward_gold; /* victory_gold (battle) or help gold (choice) */
-    uint8_t victory_days; /* days the fight costs (battle only) */
-    uint8_t late_hp;      /* enemy_hp once DAY hits zero (battle only) */
-    uint8_t delay;       /* help detour steps (choice only) */
-    uint8_t ignore_days; /* days walking on costs (choice only) */
-    char text[TRAVEL_TEXT_LEN + 1];
-    char text2[TRAVEL_TEXT_LEN + 1];
-    char text3[TRAVEL_TEXT_LEN + 1];
+    int16_t victory_gold;           /* battle: loot gold on victory */
+    uint8_t victory_days;           /* battle: days the fight costs */
+    uint8_t late_hp;                /* battle: enemy_hp once DAY hits zero */
+    char text[TRAVEL_TEXT_LEN + 1]; /* prompt (all kinds) */
+    char text2[TRAVEL_TEXT_LEN + 1];/* opt1 result (choice) */
+    char text3[TRAVEL_TEXT_LEN + 1];/* opt2 result (choice) */
+    char opt1[TRAVEL_OPT_LEN + 1];  /* choice option labels */
+    char opt2[TRAVEL_OPT_LEN + 1];
+    uint8_t opt1_battle; /* choice: battle-event index or 0xFF (fight!) */
+    uint8_t opt2_battle;
+    int16_t opt1_gold;   /* choice effects, applied on confirm */
+    int16_t opt2_gold;
+    int8_t opt1_food;    /* +/- rations (floored at zero) */
+    int8_t opt2_food;
+    int8_t opt1_water;   /* +/- water (floored at zero) */
+    int8_t opt2_water;
+    int8_t opt1_heal;    /* HP restored (capped at max) */
+    int8_t opt2_heal;
+    int8_t opt1_hurt;    /* HP damage (can kill: cold game over) */
+    int8_t opt2_hurt;
+    int8_t opt1_delay;   /* extra steps added (detour) */
+    int8_t opt2_delay;
+    int8_t opt1_save;    /* steps shaved (arrives at zero) */
+    int8_t opt2_save;
+    int8_t opt1_days;    /* extra days burned (starvation applies) */
+    int8_t opt2_days;
 } TravelEvent;
 
 extern const TravelRoute g_travel_routes[];
@@ -142,6 +161,7 @@ extern uint8_t g_travel_extra;   /* camp detour size (extra steps added) */
 extern uint8_t g_travel_water;   /* camp water found (hunt result) */
 extern uint8_t g_travel_nofood;  /* consecutive starving days (no food) */
 extern uint8_t g_travel_nowater; /* consecutive starving days (no water) */
+extern uint16_t g_travel_rng;    /* camp-action RNG stream (banked bodies) */
 
 /* Staged table rows (bank-9 copies, valid while travelling). */
 const TravelRoute *travel_route_row(void);

@@ -1,0 +1,14 @@
+{
+  "id": "wrong_sign",
+  "kind": "choice",
+  "text": "SIGN LOOKS WRONG.",
+  "opt1": "FOLLOW",
+  "opt1_effects": {
+    "text": "WRONG WAY!",
+    "delay": 2
+  },
+  "opt2": "IGNORE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

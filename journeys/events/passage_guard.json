@@ -1,0 +1,15 @@
+{
+  "id": "passage_guard",
+  "kind": "choice",
+  "text": "BEAST GUARDS PASS.",
+  "opt1": "FIGHT",
+  "opt1_effects": {
+    "text": "DRAW WEAPONS!",
+    "battle": "skirmish_spiders"
+  },
+  "opt2": "DETOUR",
+  "opt2_effects": {
+    "text": "LONG WAY ROUND.",
+    "delay": 2
+  }
+}

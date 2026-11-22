@@ -1,0 +1,14 @@
+{
+  "id": "protect_caravan",
+  "kind": "choice",
+  "text": "GUARDS WANTED.",
+  "opt1": "GUARD",
+  "opt1_effects": {
+    "text": "DRAW WEAPONS!",
+    "battle": "brigand_trio"
+  },
+  "opt2": "DECLINE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

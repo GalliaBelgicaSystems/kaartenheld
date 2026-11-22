@@ -1,0 +1,15 @@
+{
+  "id": "old_shrine",
+  "kind": "choice",
+  "text": "OLD SHRINE INVITES.",
+  "opt1": "REST",
+  "opt1_effects": {
+    "text": "BLESSING REST.",
+    "heal": 6,
+    "days": 1
+  },
+  "opt2": "PASS BY",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "strange_fog",
+  "kind": "choice",
+  "text": "FOG CLOSES IN.",
+  "opt1": "WAIT",
+  "opt1_effects": {
+    "text": "FOG LIFTS.",
+    "days": 1
+  },
+  "opt2": "PUSH ON",
+  "opt2_effects": {
+    "text": "LOST TIME.",
+    "hurt": 2,
+    "delay": 1
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "strange_light",
+  "kind": "choice",
+  "text": "LIGHT ON HORIZON.",
+  "opt1": "LOOK",
+  "opt1_effects": {
+    "text": "COLD FIRE CACHE.",
+    "gold": 5
+  },
+  "opt2": "CAMP",
+  "opt2_effects": {
+    "text": "EARLY REST.",
+    "heal": 3,
+    "days": 1
+  }
+}

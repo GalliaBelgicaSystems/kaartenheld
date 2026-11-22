@@ -22,7 +22,7 @@ void travel_screen_render(Game *g)
     if (!g) return;
     rc = &g->render_cache;
     if (rc->valid && rc->prev_screen == SCREEN_JOURNEY) return;
-    g_bk_call_bank = 12;
+    g_bk_call_bank = 14;
     g_bk_call_target = (uint16_t)&travel_paint_banked;
     banked_call_run();
     rc->valid = true;

@@ -1,0 +1,11 @@
+{
+  "id": "brigand_trio",
+  "kind": "battle",
+  "text": "BRIGANDS ATTACK!",
+  "battle": "BATTLE_SLIME_TRIO",
+  "enemy_name": "BRIGANDS",
+  "enemy_hp": 14,
+  "victory_gold": 14,
+  "victory_days": 1,
+  "late_enemy_hp": 20
+}

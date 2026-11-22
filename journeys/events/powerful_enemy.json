@@ -1,0 +1,15 @@
+{
+  "id": "powerful_enemy",
+  "kind": "choice",
+  "text": "HUGE FOE LOOMS.",
+  "opt1": "FIGHT",
+  "opt1_effects": {
+    "text": "DRAW WEAPONS!",
+    "battle": "brigand_trio"
+  },
+  "opt2": "FLEE",
+  "opt2_effects": {
+    "text": "LIVE TO WALK.",
+    "delay": 2
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "dangerous_shortcut",
+  "kind": "choice",
+  "text": "DARK PATH BECKONS.",
+  "opt1": "TAKE",
+  "opt1_effects": {
+    "text": "THORNS AND ALL.",
+    "hurt": 5,
+    "save": 3
+  },
+  "opt2": "STAY",
+  "opt2_effects": {
+    "text": "SAFE AND SLOW."
+  }
+}

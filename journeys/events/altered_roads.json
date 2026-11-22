@@ -1,0 +1,14 @@
+{
+  "id": "altered_roads",
+  "kind": "choice",
+  "text": "ROAD MARKS FRESH.",
+  "opt1": "FOLLOW",
+  "opt1_effects": {
+    "text": "CLEARED PATH.",
+    "save": 1
+  },
+  "opt2": "AVOID",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

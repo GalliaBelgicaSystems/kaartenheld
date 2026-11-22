@@ -1,0 +1,13 @@
+{
+  "id": "slime_letter",
+  "kind": "choice",
+  "text": "A DROPPED LETTER.",
+  "opt1": "READ",
+  "opt1_effects": {
+    "text": "LORD OF SLIMES..."
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

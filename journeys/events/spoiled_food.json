@@ -1,0 +1,15 @@
+{
+  "id": "spoiled_food",
+  "kind": "choice",
+  "text": "FOOD HAS SPOILED.",
+  "opt1": "TOSS IT",
+  "opt1_effects": {
+    "text": "CLEAN PACK.",
+    "food": -3
+  },
+  "opt2": "RISK IT",
+  "opt2_effects": {
+    "text": "BAD IDEA.",
+    "hurt": 4
+  }
+}

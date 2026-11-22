@@ -31,16 +31,18 @@ uint8_t g_travel_extra;
 uint8_t g_travel_water;
 uint8_t g_travel_nofood;
 uint8_t g_travel_nowater;
+uint16_t g_travel_rng;
 
 /* Staged table rows: copied from bank 9 on stage, read by logic and
- * render from WRAM (never map a ROM window around a render). */
-static TravelRoute s_route;
+ * render from WRAM (never map a ROM window around a render).  Non-
+ * static: the banked day-burn body (travel_logic_banked.c, bank 14)
+ * reads the route tuning straight from WRAM. */
+TravelRoute s_route;
 static TravelMethod s_method;
 static TravelEvent s_event;
 
 static void travel_arrive(Game *g);
 void travel_abandon(Game *g);
-static uint8_t travel_roll_range(uint8_t lo, uint8_t hi);
 static void travel_add_steps(uint8_t delay);
 static void travel_clear_state(void);
 static void travel_show_msg(Game *g, uint8_t msg, uint8_t sfx);
@@ -79,21 +81,21 @@ uint8_t travel_steps_done(void)
 
 static void travel_load_route(uint8_t route)
 {
-    banked_copy(12, (uint8_t *)&s_route,
+    banked_copy(14, (uint8_t *)&s_route,
                 (const uint8_t *)&g_travel_routes[route],
                 (uint8_t)sizeof(TravelRoute));
 }
 
 static void travel_load_event(uint8_t event)
 {
-    banked_copy(12, (uint8_t *)&s_event,
+    banked_copy(14, (uint8_t *)&s_event,
                 (const uint8_t *)&g_travel_events[event],
                 (uint8_t)sizeof(TravelEvent));
 }
 
 static void travel_load_method(uint8_t method)
 {
-    banked_copy(12, (uint8_t *)&s_method,
+    banked_copy(14, (uint8_t *)&s_method,
                 (const uint8_t *)&g_travel_routes[g_travel_route].methods[method],
                 (uint8_t)sizeof(TravelMethod));
 }
@@ -131,86 +133,26 @@ bool game_travel_active(void)
  * negative) plus the route's road rations (food/water per day from
  * the route table, floored -- a desert route drinks more).  Days
  * spent with no food or no water count up their own starvation
- * tally; every Nth such day costs HP (floored at 1, like the battle
- * defeat floor -- hunger weakens, it never kills outright).  A day
- * with supplies resets that tally.  Crossing zero flips the Lord
- * supreme (one-way): late ambushes use their buffed HP and the end
- * fight reads the same flag. */
-static void travel_starve_tick(Game *g, uint8_t nofood, uint8_t nowater)
-{
-    uint8_t hp;
-    if (!g) return;
-    hp = g->state.party.members[0].hp;
-    /* Modulo-free "every Nth" cadence (no % or / in fixed bank,
-     * AGENTS.md 52.18): count up, pay out on reaching the beat. */
-    if (nofood) {
-        g_travel_nofood++;
-        if (g_travel_nofood >= s_route.starve_food_every) {
-            g_travel_nofood = 0;
-            /* No floor: hunger can kill outright (a travel death is
-             * a cold hard game over, routed by the callers). */
-            if (hp > s_route.starve_food_hp) {
-                hp = (uint8_t)(hp - s_route.starve_food_hp);
-            } else {
-                hp = 0;
-            }
-        }
-    } else {
-        g_travel_nofood = 0;
-    }
-    if (nowater) {
-        g_travel_nowater++;
-        if (g_travel_nowater >= s_route.starve_water_every) {
-            g_travel_nowater = 0;
-            if (hp > s_route.starve_water_hp) {
-                hp = (uint8_t)(hp - s_route.starve_water_hp);
-            } else {
-                hp = 0;
-            }
-        }
-    } else {
-        g_travel_nowater = 0;
-    }
-    g->state.party.members[0].hp = hp;
-    g->world.player.hp = hp;
-}
+ * tally; every Nth such day costs HP outright (a travel death is a
+ * cold hard game over, routed by the callers).  A day with supplies
+ * resets that tally.  Crossing zero flips the Lord supreme (one-way):
+ * late ambushes use their buffed HP and the end fight reads the same
+ * flag.
+ *
+ * Thin fixed-bank wrapper (fixed bank sits hard against 0x8000,
+ * AGENTS.md §52.18): the loop lives as the bank-14 body
+ * travel_burn_banked() (travel_logic_banked.c); only the staging
+ * call stays fixed. */
+void travel_burn_banked(void);
 
 static void travel_burn_days(Game *g, uint8_t n)
 {
-    int16_t day;
-    int16_t food;
-    int16_t water;
-    int16_t rate;
-    uint8_t i;
     if (!g) return;
-    for (i = 0; i < n; i++) {
-        day = game_variable_get(&g->state, VARIABLE_ID_DAY);
-        if (day > 0) {
-            game_variable_set(&g->state, VARIABLE_ID_DAY, (int16_t)(day - 1));
-        }
-        food = game_variable_get(&g->state, VARIABLE_ID_FOOD);
-        rate = (int16_t)s_route.food_per_day;
-        if (food > rate) {
-            game_variable_set(&g->state, VARIABLE_ID_FOOD, (int16_t)(food - rate));
-        } else if (food > 0) {
-            game_variable_set(&g->state, VARIABLE_ID_FOOD, 0);
-        }
-        water = game_variable_get(&g->state, VARIABLE_ID_WATER);
-        rate = (int16_t)s_route.water_per_day;
-        if (water > rate) {
-            game_variable_set(&g->state, VARIABLE_ID_WATER, (int16_t)(water - rate));
-        } else if (water > 0) {
-            game_variable_set(&g->state, VARIABLE_ID_WATER, 0);
-        }
-        travel_starve_tick(g,
-            (uint8_t)(game_variable_get(&g->state, VARIABLE_ID_FOOD) <= 0),
-            (uint8_t)(game_variable_get(&g->state, VARIABLE_ID_WATER) <= 0));
-    }
-    day = game_variable_get(&g->state, VARIABLE_ID_DAY);
-    if (day == 0 &&
-        game_variable_get(&g->state, VARIABLE_ID_LORD_POWER) == 0) {
-        game_variable_set(&g->state, VARIABLE_ID_LORD_POWER, 1);
-    }
+    (void)g;
+    g_bk_call_bank = 14;
+    g_bk_call_target = (uint16_t)&travel_burn_banked;
+    g_bk_byte_a = n;
+    banked_call_run();
 }
 
 /* Confirm the picked method.  Paid instant methods deduct and arrive
@@ -242,6 +184,10 @@ static void travel_confirm_method(Game *g)
     travel_clear_state();
     g_travel_total = s_method.steps;
     g_travel_left = s_method.steps;
+    /* Seed the camp-action stream from the shared RNG (one draw per
+     * journey; nonzero seeds can never hit the xorshift fixed point). */
+    g_travel_rng = rng_next();
+    if (!g_travel_rng) g_travel_rng = 0xACE1;
     game_render_reset(g);
 }
 
@@ -405,40 +351,87 @@ static void travel_open_ambush(Game *g)
     screen_change(g, SCREEN_BATTLE);
 }
 
-/* Resolve the staged help/ignore choice.  Helping pays event gold
- * through the single currency writer and appends the detour; ignoring
- * keeps the schedule (the faster trip). */
+/* Resolve the staged road-event choice.  One generic path for every
+ * choice event: the picked option may start a fight (staged battle
+ * event), burn days, move gold/rations, heal or hurt, and add or
+ * shave steps.  Resources floor at zero, heals cap at max, and any
+ * death (day toll or hurt) is a cold game over.  The event stays
+ * staged so the message render still sees its row (cleared on
+ * dismiss); the cursor is left on the picked option for the paint. */
 static void travel_resolve_help(Game *g)
 {
+    int16_t v;
+    int16_t healed;
+    uint8_t hurt;
+    uint8_t delay;
+    uint8_t save;
+    uint8_t is_opt1;
     if (!g) return;
-    if (g_travel_choice == 0) {
-        currency_add(&g->state, CURRENCY_ID_GOLD, s_event.reward_gold);
-        travel_add_steps(s_event.delay);
-        /* Keep the event staged: the message render shows its result
-         * line (cleared on dismiss). */
-        travel_show_msg(g, TRAVEL_MSG_HELPED, SFX_CASH);
+    is_opt1 = (uint8_t)(g_travel_choice == 0);
+    if (is_opt1 ? (s_event.opt1_battle != 0xFF)
+                : (s_event.opt2_battle != 0xFF)) {
+        g_travel_event = is_opt1 ? s_event.opt1_battle : s_event.opt2_battle;
+        g_travel_choice = 0;
+        travel_open_ambush(g);
         return;
     }
-    travel_burn_days(g, s_event.ignore_days); /* walking on still costs */
-    travel_show_msg(g, TRAVEL_MSG_IGNORED, SFX_CONFIRM);
-}
-
-/* Uniform range roll without % or / (fixed-bank budget, AGENTS.md
- * 52.18): rejection-sample a byte under the span, like the pool
- * pick below.  Returns min when the range is empty or a point
- * (span 0 means a 256-wide range, unreachable through the
- * compiler's caps -- belt and braces against a hang). */
-static uint8_t travel_roll_range(uint8_t lo, uint8_t hi)
-{
-    uint8_t span;
-    uint8_t r;
-    if (hi <= lo) return lo;
-    span = (uint8_t)(hi - lo + 1);
-    if (span == 0) return lo;
-    do {
-        r = (uint8_t)rng_next();
-    } while (r >= span);
-    return (uint8_t)(lo + r);
+    travel_burn_days(g, is_opt1 ? (uint8_t)s_event.opt1_days
+                                : (uint8_t)s_event.opt2_days);
+    if (travel_hero_dead(g)) {
+        travel_game_over(g);
+        return;
+    }
+    v = (int16_t)currency_get(&g->state, CURRENCY_ID_GOLD);
+    v = (int16_t)(v + (is_opt1 ? s_event.opt1_gold : s_event.opt2_gold));
+    if (v < 0) {
+        /* Pay what you have: clamp the spend at zero. */
+        currency_add(&g->state, CURRENCY_ID_GOLD,
+                     (int16_t)(0 - currency_get(&g->state, CURRENCY_ID_GOLD)));
+    } else {
+        currency_add(&g->state, CURRENCY_ID_GOLD,
+                     is_opt1 ? s_event.opt1_gold : s_event.opt2_gold);
+    }
+    v = game_variable_get(&g->state, VARIABLE_ID_FOOD);
+    v = (int16_t)(v + (is_opt1 ? s_event.opt1_food : s_event.opt2_food));
+    if (v < 0) v = 0;
+    game_variable_set(&g->state, VARIABLE_ID_FOOD, v);
+    v = game_variable_get(&g->state, VARIABLE_ID_WATER);
+    v = (int16_t)(v + (is_opt1 ? s_event.opt1_water : s_event.opt2_water));
+    if (v < 0) v = 0;
+    game_variable_set(&g->state, VARIABLE_ID_WATER, v);
+    healed = (int16_t)g->state.party.members[0].hp;
+    healed = (int16_t)(healed + (is_opt1 ? s_event.opt1_heal
+                                         : s_event.opt2_heal));
+    if (healed > (int16_t)g->state.party.members[0].max_hp) {
+        healed = (int16_t)g->state.party.members[0].max_hp;
+    }
+    hurt = is_opt1 ? (uint8_t)s_event.opt1_hurt : (uint8_t)s_event.opt2_hurt;
+    if (hurt > 0) {
+        if (healed > (int16_t)hurt) {
+            healed = (int16_t)(healed - (int16_t)hurt);
+        } else {
+            healed = 0;
+        }
+    }
+    g->state.party.members[0].hp = (uint8_t)healed;
+    g->world.player.hp = (uint8_t)healed;
+    if (travel_hero_dead(g)) {
+        travel_game_over(g);
+        return;
+    }
+    delay = is_opt1 ? (uint8_t)s_event.opt1_delay
+                    : (uint8_t)s_event.opt2_delay;
+    travel_add_steps(delay);
+    save = is_opt1 ? (uint8_t)s_event.opt1_save : (uint8_t)s_event.opt2_save;
+    if (save >= g_travel_left) {
+        travel_arrive(g);
+        return;
+    }
+    g_travel_left = (uint8_t)(g_travel_left - save);
+    g_travel_total = (uint8_t)(g_travel_total - save);
+    travel_show_msg(g, is_opt1 ? TRAVEL_MSG_HELPED : TRAVEL_MSG_IGNORED,
+                   (is_opt1 ? s_event.opt1_gold : s_event.opt2_gold) > 0
+                       ? SFX_CASH : SFX_CONFIRM);
 }
 
 /* Grow both journey counters by a detour (clamped, never wraps):
@@ -477,12 +470,12 @@ static void travel_clear_state(void)
     g_travel_nowater = 0;
 }
 
-/* Show a result line: stage the message, reset the menu cursor,
- * blip, repaint (one copy for the camp/event resolves). */
+/* Show a result line: stage the message, blip, repaint (one copy
+ * for the camp/event resolves).  The menu cursor is left alone: the
+ * choice paint reads the picked option until the dismiss resets it. */
 static void travel_show_msg(Game *g, uint8_t msg, uint8_t sfx)
 {
     g_travel_msg = msg;
-    g_travel_choice = 0;
     audio_play_sfx(sfx);
     game_render_reset(g);
 }
@@ -508,126 +501,32 @@ static void travel_cycle_choice(Game *g, uint8_t max, uint8_t down)
     game_render_reset(g);
 }
 
-/* Camp: hunt/forage.  Burns the day, always finds food (route
- * yield range) plus some water (route water range), and may add a
- * detour (route delay range).  No step is travelled and no road
- * event rolls -- the day is spent off the trail.  Staged amounts
- * ride g_travel_amount/water/extra for the paint. */
-static void travel_do_hunt(Game *g)
-{
-    uint8_t found;
-    uint8_t drunk;
-    uint8_t delay;
-    int16_t food;
-    int16_t water;
-    if (!g) return;
-    found = travel_roll_range(s_route.hunt_food_min, s_route.hunt_food_max);
-    drunk = travel_roll_range(s_route.hunt_water_min, s_route.hunt_water_max);
-    delay = travel_roll_range(s_route.hunt_delay_min, s_route.hunt_delay_max);
-    travel_burn_days(g, 1);
-    if (travel_hero_dead(g)) {
-        travel_game_over(g);
-        return;
-    }
-    food = game_variable_get(&g->state, VARIABLE_ID_FOOD);
-    game_variable_set(&g->state, VARIABLE_ID_FOOD, (int16_t)(food + found));
-    water = game_variable_get(&g->state, VARIABLE_ID_WATER);
-    game_variable_set(&g->state, VARIABLE_ID_WATER, (int16_t)(water + drunk));
-    travel_add_steps(delay);
-    g_travel_amount = found;
-    g_travel_extra = delay;
-    g_travel_water = drunk;
-    travel_show_msg(g, TRAVEL_MSG_HUNTED, SFX_CASH);
-}
+void travel_camp_banked(void);
 
-/* Camp: rest.  Burns the day, restores route HP, and adds the route
- * rest delay (the day off still costs the schedule). */
-static void travel_do_rest(Game *g)
+/* Camp menu actions (0 hunt, 1 rest, 2 study): thin fixed-bank
+ * wrapper -- the bank-14 travel_camp_banked() body owns the rolls,
+ * rations, HP and step math behind one staging call (the fixed bank
+ * sits hard against 0x8000, AGENTS.md §52.18); this plays the
+ * staged jingle and routes the fixed-bank exits (death, arrival). */
+static void travel_do_camp(Game *g, uint8_t action)
 {
-    uint8_t hp;
-    uint8_t delay;
+    uint8_t sfx;
     if (!g) return;
-    delay = s_route.rest_delay;
-    travel_burn_days(g, 1);
+    g_bk_call_bank = 14;
+    g_bk_call_target = (uint16_t)&travel_camp_banked;
+    g_bk_byte_a = action;
+    banked_call_run();
+    sfx = g_bk_byte_c;
+    audio_play_sfx(sfx);
     if (travel_hero_dead(g)) {
         travel_game_over(g);
         return;
     }
-    {
-        int16_t healed;
-        healed = (int16_t)g->state.party.members[0].hp;
-        healed = (int16_t)(healed + (int16_t)s_route.rest_heal);
-        if (healed > (int16_t)g->state.party.members[0].max_hp) {
-            healed = (int16_t)g->state.party.members[0].max_hp;
-        }
-        hp = (uint8_t)healed;
-    }
-    g->state.party.members[0].hp = hp;
-    g->world.player.hp = hp;
-    travel_add_steps(delay);
-    g_travel_amount = s_route.rest_heal;
-    g_travel_extra = delay;
-    travel_show_msg(g, TRAVEL_MSG_RESTED, SFX_CONFIRM);
-}
-
-/* Camp: study the map.  Burns the day plus extra study rations (a
- * careful survey eats and drinks whether or not it finds anything).
- * The save range starts at 0 and a separate lost range may pile on
- * extra steps instead, so there is no guaranteed shortcut -- and a
- * bad read can cost the schedule.  Mapping away the final step
- * completes the journey on the spot. */
-static void travel_do_study(Game *g)
-{
-    uint8_t saved;
-    uint8_t lost;
-    int16_t net;
-    int16_t food;
-    int16_t water;
-    if (!g) return;
-    saved = travel_roll_range(s_route.study_save_min, s_route.study_save_max);
-    lost = travel_roll_range(s_route.study_lost_min, s_route.study_lost_max);
-    net = (int16_t)((int16_t)saved - (int16_t)lost);
-    travel_burn_days(g, 1);
-    if (travel_hero_dead(g)) {
-        travel_game_over(g);
+    if (g_bk_byte_b) {
+        travel_arrive(g);
         return;
     }
-    food = game_variable_get(&g->state, VARIABLE_ID_FOOD);
-    if (food > (int16_t)s_route.study_food) {
-        game_variable_set(&g->state, VARIABLE_ID_FOOD,
-                          (int16_t)(food - (int16_t)s_route.study_food));
-    } else if (food > 0) {
-        game_variable_set(&g->state, VARIABLE_ID_FOOD, 0);
-    }
-    water = game_variable_get(&g->state, VARIABLE_ID_WATER);
-    if (water > (int16_t)s_route.study_water) {
-        game_variable_set(&g->state, VARIABLE_ID_WATER,
-                          (int16_t)(water - (int16_t)s_route.study_water));
-    } else if (water > 0) {
-        game_variable_set(&g->state, VARIABLE_ID_WATER, 0);
-    }
-    if (net > 0) {
-        g_travel_amount = (uint8_t)net;
-        g_travel_extra = 0;
-        if (net >= g_travel_left) {
-            travel_arrive(g);
-            return;
-        }
-        g_travel_left = (uint8_t)((int16_t)g_travel_left - net);
-        g_travel_total = (uint8_t)((int16_t)g_travel_total - net);
-        travel_show_msg(g, TRAVEL_MSG_STUDIED, SFX_CONFIRM);
-        return;
-    }
-    if (net < 0) {
-        travel_add_steps((uint8_t)(0 - net));
-        g_travel_amount = 0;
-        g_travel_extra = (uint8_t)(0 - net);
-        travel_show_msg(g, TRAVEL_MSG_LOST, SFX_BACK);
-        return;
-    }
-    g_travel_amount = 0;
-    g_travel_extra = 0;
-    travel_show_msg(g, TRAVEL_MSG_STUDIED, SFX_CONFIRM);
+    game_render_reset(g);
 }
 
 /* Weighted pool pick: rejection-sample a byte under the weight
@@ -833,6 +732,7 @@ void travel_update(Game *g)
         g_travel_fought = 0;
         if (g_travel_msg == TRAVEL_MSG_NONE) {
             g_travel_event = TRAVEL_EVENT_NONE;
+            g_travel_choice = 0;
         }
         game_render_reset(g);
         return;
@@ -840,6 +740,7 @@ void travel_update(Game *g)
     if (g_travel_msg != TRAVEL_MSG_NONE) {
         if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
             g_travel_event = TRAVEL_EVENT_NONE;
+            g_travel_choice = 0;
             travel_show_msg(g, TRAVEL_MSG_NONE, SFX_CONFIRM);
         }
         return;
@@ -875,11 +776,11 @@ void travel_update(Game *g)
     }
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         if (g_travel_choice == TRAVEL_CAMP_HUNT) {
-            travel_do_hunt(g);
+            travel_do_camp(g, 0);
         } else if (g_travel_choice == TRAVEL_CAMP_REST) {
-            travel_do_rest(g);
+            travel_do_camp(g, 1);
         } else if (g_travel_choice == TRAVEL_CAMP_STUDY) {
-            travel_do_study(g);
+            travel_do_camp(g, 2);
         } else {
             audio_play_sfx(SFX_CONFIRM);
             travel_advance(g);
@@ -895,7 +796,7 @@ void travel_update(Game *g)
 void travel_on_victory(void)
 {
     travel_load_event(g_travel_event);
-    currency_add(&g_game.state, CURRENCY_ID_GOLD, s_event.reward_gold);
+    currency_add(&g_game.state, CURRENCY_ID_GOLD, s_event.victory_gold);
     travel_burn_days(&g_game, s_event.victory_days);
     g_travel_msg = TRAVEL_MSG_WON;
 }

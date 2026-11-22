@@ -1,0 +1,16 @@
+{
+  "id": "heavy_rain",
+  "kind": "choice",
+  "text": "RAIN SLOWS ROAD.",
+  "opt1": "WAIT OUT",
+  "opt1_effects": {
+    "text": "RESTED AND DRY.",
+    "heal": 2,
+    "days": 1
+  },
+  "opt2": "PUSH ON",
+  "opt2_effects": {
+    "text": "MISERABLE MILES.",
+    "hurt": 3
+  }
+}

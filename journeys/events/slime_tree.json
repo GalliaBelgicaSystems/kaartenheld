@@ -1,0 +1,14 @@
+{
+  "id": "slime_tree",
+  "kind": "choice",
+  "text": "SLIME COVERS A TREE.",
+  "opt1": "SCRAPE",
+  "opt1_effects": {
+    "text": "VALUABLE GOO.",
+    "gold": 4
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

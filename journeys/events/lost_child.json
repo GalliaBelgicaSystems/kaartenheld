@@ -1,0 +1,14 @@
+{
+  "id": "lost_child",
+  "kind": "choice",
+  "text": "LOST CHILD ASKS WAY.",
+  "opt1": "GUIDE",
+  "opt1_effects": {
+    "text": "SAFE AT LAST.",
+    "delay": 1
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "cook_meal",
+  "kind": "choice",
+  "text": "COOK OFFERS A MEAL.",
+  "opt1": "EAT",
+  "opt1_effects": {
+    "text": "HOT AND GOOD.",
+    "gold": -5,
+    "heal": 6
+  },
+  "opt2": "DECLINE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

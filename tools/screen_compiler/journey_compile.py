@@ -20,9 +20,11 @@ Route schema:
 
 Event schemas (kind):
     battle: text (<=20), battle (BATTLE_* in src/world/actor.h).
-    choice: text (<=20, prompt), help_text (<=20, result line),
-            help_reward_gold (0..30000), help_delay_steps (0..255),
-            ignore_text (<=20).
+    choice: text (<=20 prompt), opt1/opt2 (<=8 option labels),
+            opt1_effects/opt2_effects objects: text (<=20 result),
+            optional battle (battle event id: that option fights),
+            or numeric effects (gold -30000..30000, food/water
+            -30..30, heal/hurt 0..30, delay/save/days 0..10).
     ruins: text (<=20, prompt), explore_text (<=20, enter line),
             ignore_text (<=20).
 
@@ -47,11 +49,12 @@ LEVELS_DIR = REPO_ROOT / "levels"
 
 OUT_DEFAULT = REPO_ROOT / "src" / "game" / "travel_content.c"
 
-TRAVEL_POOL_MAX = 4
+TRAVEL_POOL_MAX = 64
 TRAVEL_TEXT_LEN = 20
 TRAVEL_NAME_LEN = 11
+TRAVEL_OPT_LEN = 8
 TRAVEL_METHODS_MAX = 2
-TRAVEL_BANK = 12
+TRAVEL_BANK = 14
 
 
 def fail(msg):
@@ -137,21 +140,39 @@ def load_events(battle_ids):
                            "victory_days": days, "late_hp": late})
         elif kind == "choice":
             check_text("text", doc.get("text"), eid)
-            check_text("help_text", doc.get("help_text"), eid)
-            check_text("ignore_text", doc.get("ignore_text"), eid)
-            gold = doc.get("help_reward_gold")
-            delay = doc.get("help_delay_steps")
-            ignore = doc.get("ignore_days")
-            if not isinstance(gold, int) or not (0 <= gold <= 30000):
-                fail("%s: help_reward_gold must be 0..30000" % eid)
-            if not isinstance(delay, int) or not (0 <= delay <= 255):
-                fail("%s: help_delay_steps must be 0..255" % eid)
-            if not isinstance(ignore, int) or not (0 <= ignore <= 255):
-                fail("%s: ignore_days must be 0..255" % eid)
+            for opt in ("opt1", "opt2"):
+                label = doc.get(opt)
+                if not isinstance(label, str) or not (1 <= len(label) <= TRAVEL_OPT_LEN):
+                    fail("%s: %s must be 1..%d chars" % (eid, opt, TRAVEL_OPT_LEN))
+                check_text(opt, label, eid)
+                opt_doc = doc.get(opt + "_effects")
+                if opt_doc is None:
+                    opt_doc = {}
+                if not isinstance(opt_doc, dict):
+                    fail("%s: %s_effects must be an object" % (eid, opt))
+                check_text(opt + "_text", opt_doc.get("text"), eid)
+                battle_ref = opt_doc.get("battle", None)
+                if battle_ref is not None:
+                    for key in ("gold", "food", "water", "heal", "hurt",
+                                "delay", "save", "days"):
+                        if key in opt_doc:
+                            fail("%s: %s_effects mixes battle with '%s'"
+                                 % (eid, opt, key))
+                else:
+                    for key, lo, hi in (("gold", -30000, 30000),
+                                        ("food", -30, 30),
+                                        ("water", -30, 30),
+                                        ("heal", 0, 30),
+                                        ("hurt", 0, 30),
+                                        ("delay", 0, 10),
+                                        ("save", 0, 10),
+                                        ("days", 0, 10)):
+                        v = opt_doc.get(key, 0)
+                        if not isinstance(v, int) or not (lo <= v <= hi):
+                            fail("%s: %s_effects.%s must be %d..%d"
+                                 % (eid, opt, key, lo, hi))
             events.append({"id": eid, "kind": "choice",
-                           "text": doc["text"], "help_text": doc["help_text"],
-                           "ignore_text": doc["ignore_text"],
-                           "gold": gold, "delay": delay, "ignore": ignore})
+                           "text": doc["text"], "doc": doc})
         elif kind == "ruins":
             check_text("text", doc.get("text"), eid)
             check_text("explore_text", doc.get("explore_text"), eid)
@@ -389,27 +410,69 @@ def emit(routes, events, scenes, battle_ids):
             lines.append("        %d, /* victory_gold */" % e["victory_gold"])
             lines.append("        %d, /* victory_days */" % e["victory_days"])
             lines.append("        %d, /* late_enemy_hp */" % e["late_hp"])
-            lines.append("        0, /* delay */")
-            lines.append("        0, /* ignore_days (unused) */")
             lines.append("        %s, /* text */" % c_str(e["text"]))
-            lines.append('        "", /* text2 */')
-            lines.append('        "", /* text3 */')
-        else:
-            if e["kind"] == "ruins":
-                lines.append("        TRAVEL_EVENT_RUINS,")
-            else:
-                lines.append("        TRAVEL_EVENT_CHOICE,")
+            lines.append('        "", /* text2 (unused) */')
+            lines.append('        "", /* text3 (unused) */')
+            lines.append('        "", /* opt1 (unused) */')
+            lines.append('        "", /* opt2 (unused) */')
+            lines.append("        255, 255, /* opt battles (none) */")
+            lines.append("        0, 0, /* opt gold */")
+            lines.append("        0, 0, /* opt food */")
+            lines.append("        0, 0, /* opt water */")
+            lines.append("        0, 0, /* opt heal */")
+            lines.append("        0, 0, /* opt hurt */")
+            lines.append("        0, 0, /* opt delay */")
+            lines.append("        0, 0, /* opt save */")
+            lines.append("        0, 0, /* opt days */")
+        elif e["kind"] == "ruins":
+            lines.append("        TRAVEL_EVENT_RUINS,")
             lines.append("        0, /* battle */")
             lines.append('        "", /* enemy_name (unused) */')
             lines.append("        0, /* enemy_hp */")
-            lines.append("        %d, /* reward_gold */" % e["gold"])
+            lines.append("        0, /* victory_gold (unused) */")
             lines.append("        0, /* victory_days (unused) */")
             lines.append("        0, /* late_enemy_hp (unused) */")
-            lines.append("        %d, /* delay */" % e["delay"])
-            lines.append("        %d, /* ignore_days */" % e["ignore"])
             lines.append("        %s, /* text */" % c_str(e["text"]))
-            lines.append("        %s, /* help result */" % c_str(e["help_text"]))
+            lines.append("        %s, /* explore result */" % c_str(e["help_text"]))
             lines.append("        %s, /* ignore result */" % c_str(e["ignore_text"]))
+            lines.append('        "", /* opt1 (unused) */')
+            lines.append('        "", /* opt2 (unused) */')
+            lines.append("        255, 255, /* opt battles (none) */")
+            lines.append("        0, 0, /* opt gold */")
+            lines.append("        0, 0, /* opt food */")
+            lines.append("        0, 0, /* opt water */")
+            lines.append("        0, 0, /* opt heal */")
+            lines.append("        0, 0, /* opt hurt */")
+            lines.append("        0, 0, /* opt delay */")
+            lines.append("        0, 0, /* opt save */")
+            lines.append("        0, 0, /* opt days */")
+        else:
+            lines.append("        TRAVEL_EVENT_CHOICE,")
+            lines.append("        0, /* battle */")
+            lines.append('        "", /* enemy_name (unused) */')
+            lines.append("        0, /* enemy_hp */")
+            lines.append("        0, /* victory_gold (unused) */")
+            lines.append("        0, /* victory_days (unused) */")
+            lines.append("        0, /* late_enemy_hp (unused) */")
+            lines.append("        %s, /* text */" % c_str(e["text"]))
+            doc = e["doc"]
+            for opt in ("opt1", "opt2"):
+                lines.append("        %s, /* %s result */"
+                             % (c_str(doc[opt + "_effects"]["text"]), opt))
+            for opt in ("opt1", "opt2"):
+                lines.append("        %s, /* %s label */"
+                             % (c_str(doc[opt]), opt))
+            for opt in ("opt1", "opt2"):
+                ref = doc[opt + "_effects"].get("battle", None)
+                idx = event_index[ref] if ref is not None else 255
+                lines.append("        %d, /* %s battle event or 255 */"
+                             % (idx, opt))
+            for key in ("gold", "food", "water", "heal", "hurt",
+                        "delay", "save", "days"):
+                vals = [doc[opt + "_effects"].get(key, 0)
+                        for opt in ("opt1", "opt2")]
+                lines.append("        %d, %d, /* opt %s */"
+                             % (vals[0], vals[1], key))
         lines.append("    },")
     lines.append("};")
     lines.append("")
@@ -422,6 +485,17 @@ def compile_all(out_path):
     battle_ids = load_battle_ids()
     scenes = load_registry()
     events = load_events(battle_ids)
+    by_id = {e["id"]: e for e in events}
+    for e in events:
+        if e["kind"] == "choice":
+            for opt in ("opt1", "opt2"):
+                ref = e["doc"][opt + "_effects"].get("battle", None)
+                if ref is not None and ref not in by_id:
+                    fail("%s: %s_effects.battle '%s' is not an event"
+                         % (e["id"], opt, ref))
+                if ref is not None and by_id[ref]["kind"] != "battle":
+                    fail("%s: %s_effects.battle '%s' is not a battle event"
+                         % (e["id"], opt, ref))
     routes = load_routes(scenes, {e["id"] for e in events})
     text = emit(routes, events, scenes, battle_ids)
     if out_path is not None:

@@ -1,0 +1,11 @@
+{
+  "id": "skirmish_bats",
+  "kind": "battle",
+  "text": "BAT ATTACKS!",
+  "battle": "BATTLE_BAT",
+  "enemy_name": "BAT",
+  "enemy_hp": 8,
+  "victory_gold": 6,
+  "victory_days": 1,
+  "late_enemy_hp": 12
+}

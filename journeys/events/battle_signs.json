@@ -1,0 +1,15 @@
+{
+  "id": "battle_signs",
+  "kind": "choice",
+  "text": "SIGNS OF A BATTLE.",
+  "opt1": "SEARCH",
+  "opt1_effects": {
+    "text": "PICKED CLEAN-ISH.",
+    "gold": 6
+  },
+  "opt2": "HURRY ON",
+  "opt2_effects": {
+    "text": "NO DAWDLING.",
+    "save": 1
+  }
+}

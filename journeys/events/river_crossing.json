@@ -1,0 +1,15 @@
+{
+  "id": "river_crossing",
+  "kind": "choice",
+  "text": "RIVER RUNS FAST.",
+  "opt1": "FORD",
+  "opt1_effects": {
+    "text": "COLD AND FAST.",
+    "hurt": 3
+  },
+  "opt2": "BRIDGE",
+  "opt2_effects": {
+    "text": "TOLL BRIDGE.",
+    "gold": -4
+  }
+}

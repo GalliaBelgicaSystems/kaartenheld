@@ -1,0 +1,14 @@
+{
+  "id": "route_info",
+  "kind": "choice",
+  "text": "TRAVELER HAS NEWS.",
+  "opt1": "LISTEN",
+  "opt1_effects": {
+    "text": "SHORTCUTS REVEALED.",
+    "save": 1
+  },
+  "opt2": "WALK ON",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

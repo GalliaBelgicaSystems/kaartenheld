@@ -1,0 +1,16 @@
+{
+  "id": "abandoned_village",
+  "kind": "choice",
+  "text": "EMPTY VILLAGE LOOMS.",
+  "opt1": "SEARCH",
+  "opt1_effects": {
+    "text": "LEFT IN HASTE.",
+    "gold": 6,
+    "food": 2,
+    "delay": 1
+  },
+  "opt2": "PASS BY",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

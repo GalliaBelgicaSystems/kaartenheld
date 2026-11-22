@@ -1,0 +1,14 @@
+{
+  "id": "waystone",
+  "kind": "choice",
+  "text": "WAYSTONE FLICKERS.",
+  "opt1": "TOUCH",
+  "opt1_effects": {
+    "text": "WARMTH SPREADS.",
+    "heal": 3
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

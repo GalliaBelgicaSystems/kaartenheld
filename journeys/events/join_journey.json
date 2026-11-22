@@ -1,0 +1,15 @@
+{
+  "id": "join_journey",
+  "kind": "choice",
+  "text": "WALK TOGETHER?",
+  "opt1": "ACCEPT",
+  "opt1_effects": {
+    "text": "SHARED MEAL.",
+    "heal": 5,
+    "delay": 1
+  },
+  "opt2": "DECLINE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

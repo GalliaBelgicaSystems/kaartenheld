@@ -1,0 +1,15 @@
+{
+  "id": "suspicious_shortcut",
+  "kind": "choice",
+  "text": "SHORTCUT ON OFFER.",
+  "opt1": "TAKE",
+  "opt1_effects": {
+    "text": "ROUGH BUT QUICK.",
+    "hurt": 4,
+    "save": 2
+  },
+  "opt2": "DECLINE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

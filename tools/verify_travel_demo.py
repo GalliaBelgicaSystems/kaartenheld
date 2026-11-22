@@ -12,6 +12,8 @@ inside `nix develop` for PyBoy)
   defeat:  lose on purpose: cold game over (no floor, no resume)
   flee:    flee resumes the journey
   days:    day burn, zero crossing, late-buffed slime
+  events:  route pool forced to [bandits] @100% (rebuild ROM first):
+           PAY path effects + delta line, FIGHT path staged battle.
   camp:    daily camp menu (shipped tuning): HUNT finds 1-5 food
            with a 0-2 step detour, REST heals 5 for +1 step, STUDY
            saves 0-2 steps, 2 dry days cost 5 HP.
@@ -948,13 +950,72 @@ def test_camp():
         d.close()
 
 
+def test_events():
+    """Representative new choice mechanics (route pool forced to
+    [bandits] @100%, rebuild ROM first): PAY applies food/gold
+    effects with a delta line; FIGHT dispatches the staged battle
+    event and pays victory gold on return."""
+    d = D()
+    try:
+        # PAY path.
+        boot_to_journey(d)
+        select_foot(d)
+        f0 = d.food()
+        gold0 = d.gold()
+        day0 = d.day()
+        for _ in range(6):
+            d.press("a", settle=30)
+            if d.text_has("BANDITS BLOCK"):
+                break
+        assert d.text_has("BANDITS BLOCK"), d.rows()
+        assert d.text_has("> PAY FIGHT"), d.rows()
+        d.press("a", settle=30)  # PAY
+        assert d.wait_for(lambda: d.text_has("THEY LET YOU PASS."),
+                          ticks=300), d.rows()
+        assert d.text_has("-4F"), d.rows()
+        assert d.text_has("-6G"), d.rows()
+        assert d.food() == f0 - 5, (f0, d.food())  # step ration + toll
+        assert d.gold() == gold0 - 6, (gold0, d.gold())
+        assert d.day() == day0 - 1, (day0, d.day())  # step only
+        print("events PAY OK: -4 food, -6 gold, delta line")
+        d.press("a", settle=20)
+        d.close()
+        # FIGHT path: fresh boot, decline payment, win the staged trio.
+        d = D()
+        boot_to_journey(d)
+        select_foot(d)
+        gold0 = d.gold()
+        day0 = d.day()
+        for _ in range(6):
+            d.press("a", settle=30)
+            if d.text_has("BANDITS BLOCK"):
+                break
+        assert d.text_has("BANDITS BLOCK"), d.rows()
+        d.press("down", settle=12)  # toggle to FIGHT
+        assert d.wait_for(lambda: d.text_has("PAY>FIGHT"), ticks=200), \
+            d.rows()
+        d.press("a", settle=30)  # FIGHT
+        assert d.wait_for(lambda: d.screen() == SCREEN_BATTLE,
+                          ticks=600), "no battle (screen=%d)" % d.screen()
+        assert win_fight(d), "brigands not won"
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=600), "no journey resume"
+        assert d.text_has("+14G LOOT!"), d.rows()
+        assert d.gold() == gold0 + 14, (gold0, d.gold())
+        assert d.day() == day0 - 2, (day0, d.day())  # step + victory
+        print("events FIGHT OK: staged battle won, +14G, day burned")
+        d.press("a", settle=20)
+    finally:
+        d.close()
+
+
 def test_full():
     d = D()
     try:
         boot_to_journey(d)
         select_foot(d)
         seen = 0
-        for _ in range(40):
+        for _ in range(80):
             st = d.scene()
             if st["scene_id"] == SCENE_ACT2_TOWN:
                 break
@@ -1017,6 +1078,8 @@ if __name__ == "__main__":
         test_nogold()
     elif mode == "days":
         test_days()
+    elif mode == "events":
+        test_events()
     elif mode == "camp":
         test_camp()
     elif mode == "ruins":

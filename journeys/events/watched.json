@@ -1,0 +1,14 @@
+{
+  "id": "watched",
+  "kind": "choice",
+  "text": "EYES ON THE RIDGE.",
+  "opt1": "CALL OUT",
+  "opt1_effects": {
+    "text": "GONE LIKE SMOKE."
+  },
+  "opt2": "HURRY",
+  "opt2_effects": {
+    "text": "QUICKEN PACE.",
+    "save": 1
+  }
+}

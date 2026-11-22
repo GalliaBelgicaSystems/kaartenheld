@@ -1,0 +1,13 @@
+{
+  "id": "ruined_monument",
+  "kind": "choice",
+  "text": "OLD STONE RECORDS.",
+  "opt1": "READ",
+  "opt1_effects": {
+    "text": "ANCIENT EVENT..."
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

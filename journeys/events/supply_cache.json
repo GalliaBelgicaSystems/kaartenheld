@@ -1,0 +1,16 @@
+{
+  "id": "supply_cache",
+  "kind": "choice",
+  "text": "BURIED CACHE HERE.",
+  "opt1": "DIG",
+  "opt1_effects": {
+    "text": "JACKPOT.",
+    "food": 3,
+    "water": 3,
+    "delay": 1
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

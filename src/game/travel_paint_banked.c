@@ -22,7 +22,7 @@
  * per-access di, LCD-off fast path), mirroring screen_content.c.
  */
 
-#pragma bank 12
+#pragma bank 14
 
 /* File-static scratch (WRAM, never stack: AGENTS.md 52.14). */
 static char s_line[21];
@@ -266,24 +266,136 @@ static void tp_method_duration(void)
     }
 }
 
-/* "+15G +1 STEP" (help reward line). */
-static void tp_reward(const TravelEvent *e)
+/* Append one signed delta ("+15G", "-2F") with a unit char. */
+static void tp_delta_part(int16_t v, char unit)
 {
-    uint8_t n;
-    s_line[0] = '+';
-    n = tp_u16((uint16_t)e->reward_gold, &s_line[1]);
-    n = (uint8_t)(1 + n);
-    s_line[n] = 'G';
-    s_line[(uint8_t)(n + 1)] = ' ';
-    s_line[(uint8_t)(n + 2)] = '+';
-    n = (uint8_t)(n + 3);
-    n = (uint8_t)(n + tp_u16(e->delay, &s_line[n]));
-    s_line[n] = ' ';
-    s_line[(uint8_t)(n + 1)] = 'S';
-    s_line[(uint8_t)(n + 2)] = 'T';
-    s_line[(uint8_t)(n + 3)] = 'E';
-    s_line[(uint8_t)(n + 4)] = 'P';
-    s_line[(uint8_t)(n + 5)] = '\0';
+    uint16_t mag;
+    if (v == 0) return;
+    if (s_n != 0) {
+        s_line[s_n] = ' ';
+        s_n = (uint8_t)(s_n + 1);
+    }
+    if (v < 0) {
+        s_line[s_n] = '-';
+        mag = (uint16_t)(0 - v);
+    } else {
+        s_line[s_n] = '+';
+        mag = (uint16_t)v;
+    }
+    s_n = (uint8_t)(s_n + 1);
+    s_n = (uint8_t)(s_n + tp_u16(mag, &s_line[s_n]));
+    s_line[s_n] = unit;
+    s_n = (uint8_t)(s_n + 1);
+}
+
+/* Append net steps ("+1 STEP", "-2 STEPS"). */
+static void tp_delta_steps(int16_t net)
+{
+    uint16_t mag;
+    if (net == 0) return;
+    if (s_n != 0) {
+        s_line[s_n] = ' ';
+        s_n = (uint8_t)(s_n + 1);
+    }
+    if (net < 0) {
+        s_line[s_n] = '-';
+        mag = (uint16_t)(0 - net);
+    } else {
+        s_line[s_n] = '+';
+        mag = (uint16_t)net;
+    }
+    s_n = (uint8_t)(s_n + 1);
+    s_n = (uint8_t)(s_n + tp_u16(mag, &s_line[s_n]));
+    s_line[s_n] = ' ';
+    s_line[(uint8_t)(s_n + 1)] = 'S';
+    s_line[(uint8_t)(s_n + 2)] = 'T';
+    s_line[(uint8_t)(s_n + 3)] = 'E';
+    s_line[(uint8_t)(s_n + 4)] = 'P';
+    s_n = (uint8_t)(s_n + 5);
+    if (mag != 1) {
+        s_line[s_n] = 'S';
+        s_n = (uint8_t)(s_n + 1);
+    }
+}
+
+/* Append net days ("+1 DAY", "-2 DAYS"). */
+static void tp_delta_days(int16_t net)
+{
+    uint16_t mag;
+    if (net == 0) return;
+    if (s_n != 0) {
+        s_line[s_n] = ' ';
+        s_n = (uint8_t)(s_n + 1);
+    }
+    if (net < 0) {
+        s_line[s_n] = '-';
+        mag = (uint16_t)(0 - net);
+    } else {
+        s_line[s_n] = '+';
+        mag = (uint16_t)net;
+    }
+    s_n = (uint8_t)(s_n + 1);
+    s_n = (uint8_t)(s_n + tp_u16(mag, &s_line[s_n]));
+    s_line[s_n] = ' ';
+    s_line[(uint8_t)(s_n + 1)] = 'D';
+    s_line[(uint8_t)(s_n + 2)] = 'A';
+    s_line[(uint8_t)(s_n + 3)] = 'Y';
+    s_n = (uint8_t)(s_n + 4);
+    if (mag != 1) {
+        s_line[s_n] = 'S';
+        s_n = (uint8_t)(s_n + 1);
+    }
+}
+
+/* Generic choice-outcome line for the picked option (gold, food,
+ * water, HP, net steps, net days; zero parts skipped, capped at the
+ * 18-col row by the diff-skipping writer). */
+static void tp_delta(const TravelEvent *e, uint8_t opt1)
+{
+    int16_t hp;
+    int16_t steps;
+    int16_t days;
+    s_n = 0;
+    tp_delta_part(opt1 ? e->opt1_gold : e->opt2_gold, 'G');
+    tp_delta_part(opt1 ? e->opt1_food : e->opt2_food, 'F');
+    tp_delta_part(opt1 ? e->opt1_water : e->opt2_water, 'W');
+    hp = (int16_t)((int16_t)(opt1 ? e->opt1_heal : e->opt2_heal) -
+                   (int16_t)(opt1 ? e->opt1_hurt : e->opt2_hurt));
+    if (hp != 0) {
+        tp_delta_part(hp, 'H');
+        s_line[s_n] = 'P';
+        s_n = (uint8_t)(s_n + 1);
+    }
+    steps = (int16_t)((int16_t)(opt1 ? e->opt1_delay : e->opt2_delay) -
+                      (int16_t)(opt1 ? e->opt1_save : e->opt2_save));
+    tp_delta_steps(steps);
+    days = (int16_t)(opt1 ? e->opt1_days : e->opt2_days);
+    tp_delta_days(days);
+    s_line[s_n] = '\0';
+    tp_text(2, 11, s_line, 20);
+}
+
+/* "> HELP IGNORE" / "  HELP>IGNORE" (choice options from the row). */
+static void tp_options(const TravelEvent *e)
+{
+    uint8_t i;
+    uint8_t k;
+    s_line[0] = (g_travel_choice == 0) ? '>' : ' ';
+    s_line[1] = ' ';
+    i = 0;
+    while (i < TRAVEL_OPT_LEN && e->opt1[i] != '\0') {
+        s_line[(uint8_t)(2 + i)] = e->opt1[i];
+        i = (uint8_t)(i + 1);
+    }
+    k = (uint8_t)(2 + i);
+    s_line[k] = (g_travel_choice == 0) ? ' ' : '>';
+    k = (uint8_t)(k + 1);
+    i = 0;
+    while (i < TRAVEL_OPT_LEN && e->opt2[i] != '\0') {
+        s_line[(uint8_t)(k + i)] = e->opt2[i];
+        i = (uint8_t)(i + 1);
+    }
+    s_line[(uint8_t)(k + i)] = '\0';
     tp_text(2, 11, s_line, 20);
 }
 
@@ -292,7 +404,7 @@ static void tp_loot(const TravelEvent *e)
 {
     uint8_t n;
     s_line[0] = '+';
-    n = tp_u16((uint16_t)e->reward_gold, &s_line[1]);
+    n = tp_u16((uint16_t)e->victory_gold, &s_line[1]);
     n = (uint8_t)(1 + n);
     s_line[n] = 'G';
     s_line[(uint8_t)(n + 1)] = ' ';
@@ -568,11 +680,7 @@ void travel_paint_banked(void)
         tp_text(2, 11, "[A] FIGHT", 20);
     } else if (view == TRAVEL_VIEW_HELP) {
         tp_text(2, 9, e->text, 20);
-        if (g_travel_choice == 0) {
-            tp_text(2, 11, "> HELP   IGNORE", 20);
-        } else {
-            tp_text(2, 11, "  HELP  >IGNORE", 20);
-        }
+        tp_options(e);
     } else if (view == TRAVEL_VIEW_RUINS) {
         tp_text(2, 9, e->text, 20);
         if (g_travel_choice == 0) {
@@ -583,9 +691,10 @@ void travel_paint_banked(void)
     } else {
         if (g_travel_msg == TRAVEL_MSG_HELPED) {
             tp_text(2, 9, e->text2, 20);
-            tp_reward(e);
+            tp_delta(e, 1);
         } else if (g_travel_msg == TRAVEL_MSG_IGNORED) {
             tp_text(2, 9, e->text3, 20);
+            tp_delta(e, 0);
         } else if (g_travel_msg == TRAVEL_MSG_WON) {
             tp_loot(e);
             tp_daycost(e);

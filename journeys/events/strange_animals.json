@@ -1,0 +1,14 @@
+{
+  "id": "strange_animals",
+  "kind": "choice",
+  "text": "ANIMALS ACT ODDLY.",
+  "opt1": "FOLLOW",
+  "opt1_effects": {
+    "text": "BERRY TRAIL.",
+    "food": 2
+  },
+  "opt2": "AVOID",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

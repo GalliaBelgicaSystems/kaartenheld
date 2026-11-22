@@ -6,7 +6,7 @@
 
 #include "travel.h"
 
-#pragma bank 12
+#pragma bank 14
 
 const TravelRoute g_travel_routes[] = {
     { /* field_to_village */
@@ -43,17 +43,17 @@ const TravelRoute g_travel_routes[] = {
                 0, /* steps (0 = instant) */
                 0, /* frequency */
                 0, /* pool_count */
-                { 0, 0, 0, 0 }, /* pool_event */
-                { 0, 0, 0, 0 }, /* pool_weight */
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
             { /* foot */
                 "ON FOOT", /* name */
                 0, /* cost_gold */
                 10, /* steps (0 = instant) */
-                35, /* frequency */
-                3, /* pool_count */
-                { 0, 2, 1, 0 }, /* pool_event */
-                { 50, 50, 50, 0 }, /* pool_weight */
+                255, /* frequency */
+                59, /* pool_count */
+                { 3, 50, 33, 35, 36, 54, 6, 0, 1, 2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 55, 56, 57, 58, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 6, 6, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
         },
     },
@@ -62,6 +62,78 @@ const TravelRoute g_travel_routes[] = {
 const uint8_t g_travel_route_count = 1;
 
 const TravelEvent g_travel_events[] = {
+    { /* abandoned_camp */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "EMPTY CAMP AHEAD.", /* text */
+        "LEFTOVERS FOUND.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "SEARCH", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        5, 0, /* opt gold */
+        2, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* abandoned_village */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "EMPTY VILLAGE LOOMS.", /* text */
+        "LEFT IN HASTE.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "SEARCH", /* opt1 label */
+        "PASS BY", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        6, 0, /* opt gold */
+        2, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        1, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* altered_roads */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "ROAD MARKS FRESH.", /* text */
+        "CLEARED PATH.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "FOLLOW", /* opt1 label */
+        "AVOID", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        1, 0, /* opt save */
+        0, 0, /* opt days */
+    },
     { /* ambush_slimes */
         TRAVEL_EVENT_BATTLE,
         1, /* battle (BATTLE_SLIME) */
@@ -70,40 +142,1336 @@ const TravelEvent g_travel_events[] = {
         8, /* victory_gold */
         1, /* victory_days */
         16, /* late_enemy_hp */
-        0, /* delay */
-        0, /* ignore_days (unused) */
         "AMBUSH! SLIME ATTACK", /* text */
-        "", /* text2 */
-        "", /* text3 */
+        "", /* text2 (unused) */
+        "", /* text3 (unused) */
+        "", /* opt1 (unused) */
+        "", /* opt2 (unused) */
+        255, 255, /* opt battles (none) */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* bandits */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "BANDITS BLOCK ROAD.", /* text */
+        "THEY LET YOU PASS.", /* opt1 result */
+        "DRAW WEAPONS!", /* opt2 result */
+        "PAY", /* opt1 label */
+        "FIGHT", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        6, /* opt2 battle event or 255 */
+        -6, 0, /* opt gold */
+        -4, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* battle_signs */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "SIGNS OF A BATTLE.", /* text */
+        "PICKED CLEAN-ISH.", /* opt1 result */
+        "NO DAWDLING.", /* opt2 result */
+        "SEARCH", /* opt1 label */
+        "HURRY ON", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        6, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 1, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* brigand_trio */
+        TRAVEL_EVENT_BATTLE,
+        3, /* battle (BATTLE_SLIME_TRIO) */
+        "BRIGANDS", /* enemy_name */
+        14, /* enemy_hp */
+        14, /* victory_gold */
+        1, /* victory_days */
+        20, /* late_enemy_hp */
+        "BRIGANDS ATTACK!", /* text */
+        "", /* text2 (unused) */
+        "", /* text3 (unused) */
+        "", /* opt1 (unused) */
+        "", /* opt2 (unused) */
+        255, 255, /* opt battles (none) */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* collapsed_bridge */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "BRIDGE IS DOWN.", /* text */
+        "SOAKED THROUGH.", /* opt1 result */
+        "LONG WAY ROUND.", /* opt2 result */
+        "FORD", /* opt1 label */
+        "DETOUR", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        3, 0, /* opt hurt */
+        0, 2, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* convergence_talk */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "TRAVELLER WARNS YOU.", /* text */
+        "ROADS WILL CLOSE.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "LISTEN", /* opt1 label */
+        "WALK ON", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        1, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* cook_meal */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "COOK OFFERS A MEAL.", /* text */
+        "HOT AND GOOD.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "EAT", /* opt1 label */
+        "DECLINE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        -5, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        6, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* dangerous_shortcut */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "DARK PATH BECKONS.", /* text */
+        "THORNS AND ALL.", /* opt1 result */
+        "SAFE AND SLOW.", /* opt2 result */
+        "TAKE", /* opt1 label */
+        "STAY", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        5, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        3, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* depot_parts */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "DEPOT FULL OF SCRAP.", /* text */
+        "HEAVY BUT RICH.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "SCRAP", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        9, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* distress_signal */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "SIGNAL FIRE BURNS.", /* text */
+        "GRATEFUL SOULS.", /* opt1 result */
+        "KEEP THE PACE.", /* opt2 result */
+        "ANSWER", /* opt1 label */
+        "IGNORE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        8, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        1, 0, /* opt delay */
+        0, 1, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* former_enemy */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "OLD FOE KNOWS YOU.", /* text */
+        "DEBTS REPAID.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "GREET", /* opt1 label */
+        "AVOID", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        8, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* heavy_rain */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "RAIN SLOWS ROAD.", /* text */
+        "RESTED AND DRY.", /* opt1 result */
+        "MISERABLE MILES.", /* opt2 result */
+        "WAIT OUT", /* opt1 label */
+        "PUSH ON", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        2, 0, /* opt heal */
+        0, 3, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        1, 0, /* opt days */
+    },
+    { /* help_settlement */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "VILLAGE NEEDS HANDS.", /* text */
+        "PAID IN KIND.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "HELP", /* opt1 label */
+        "PASS BY", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        10, 0, /* opt gold */
+        4, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        2, 0, /* opt days */
+    },
+    { /* join_journey */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "WALK TOGETHER?", /* text */
+        "SHARED MEAL.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "ACCEPT", /* opt1 label */
+        "DECLINE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        5, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        1, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* landslide */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "SLIDE BLOCKS ROUTE.", /* text */
+        "OVER THE TOP.", /* opt1 result */
+        "LONG WAY ROUND.", /* opt2 result */
+        "CLIMB", /* opt1 label */
+        "DETOUR", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        4, 0, /* opt hurt */
+        0, 2, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* lost_child */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "LOST CHILD ASKS WAY.", /* text */
+        "SAFE AT LAST.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "GUIDE", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        1, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* messenger */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "MESSENGER HAS NEWS.", /* text */
+        "WASHOUT AVOIDED.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "HEAR", /* opt1 label */
+        "HURRY ON", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        1, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* night_stalker */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "EYES IN THE DARK.", /* text */
+        "LONG NIGHT.", /* opt1 result */
+        "WOKE UP BITTEN.", /* opt2 result */
+        "WATCH", /* opt1 label */
+        "SLEEP", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 5, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        1, 0, /* opt days */
+    },
+    { /* occupied_camp */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "CAMP IS OCCUPIED.", /* text */
+        "DRAW WEAPONS!", /* opt1 result */
+        "SILENT STEPS.", /* opt2 result */
+        "FIGHT", /* opt1 label */
+        "SNEAK BY", /* opt2 label */
+        35, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 1, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* old_shrine */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "OLD SHRINE INVITES.", /* text */
+        "BLESSING REST.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "REST", /* opt1 label */
+        "PASS BY", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        6, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        1, 0, /* opt days */
+    },
+    { /* pack_breaks */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "YOUR PACK TEARS.", /* text */
+        "STITCHED UP.", /* opt1 result */
+        "LIGHTER LOAD.", /* opt2 result */
+        "MEND", /* opt1 label */
+        "DUMP", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, -2, /* opt food */
+        0, -2, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        1, 0, /* opt days */
+    },
+    { /* passage_guard */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "BEAST GUARDS PASS.", /* text */
+        "DRAW WEAPONS!", /* opt1 result */
+        "LONG WAY ROUND.", /* opt2 result */
+        "FIGHT", /* opt1 label */
+        "DETOUR", /* opt2 label */
+        36, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 2, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* pilgrims */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "PILGRIMS BLOCK ROAD.", /* text */
+        "THEY PASS ON.", /* opt1 result */
+        "SHOVING THROUGH.", /* opt2 result */
+        "WAIT", /* opt1 label */
+        "PUSH", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 3, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        1, 0, /* opt days */
+    },
+    { /* powerful_enemy */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "HUGE FOE LOOMS.", /* text */
+        "DRAW WEAPONS!", /* opt1 result */
+        "LIVE TO WALK.", /* opt2 result */
+        "FIGHT", /* opt1 label */
+        "FLEE", /* opt2 label */
+        6, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 2, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* protect_caravan */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "GUARDS WANTED.", /* text */
+        "DRAW WEAPONS!", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "GUARD", /* opt1 label */
+        "DECLINE", /* opt2 label */
+        6, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* repair_cart */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "CART BROKE DOWN.", /* text */
+        "FRIEND FOR LIFE.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "REPAIR", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        14, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        2, 0, /* opt days */
+    },
+    { /* risky_shortcut */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "CLIFF PATH BECKONS.", /* text */
+        "WORTH THE SWEAT.", /* opt1 result */
+        "STEADY GOING.", /* opt2 result */
+        "TAKE", /* opt1 label */
+        "LONG WAY", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        4, 0, /* opt hurt */
+        0, 2, /* opt delay */
+        3, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* river_crossing */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "RIVER RUNS FAST.", /* text */
+        "COLD AND FAST.", /* opt1 result */
+        "TOLL BRIDGE.", /* opt2 result */
+        "FORD", /* opt1 label */
+        "BRIDGE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, -4, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        3, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* route_info */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "TRAVELER HAS NEWS.", /* text */
+        "SHORTCUTS REVEALED.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "LISTEN", /* opt1 label */
+        "WALK ON", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        1, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* ruined_monument */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "OLD STONE RECORDS.", /* text */
+        "ANCIENT EVENT...", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "READ", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
     },
     { /* ruins_sight */
         TRAVEL_EVENT_RUINS,
         0, /* battle */
         "", /* enemy_name (unused) */
         0, /* enemy_hp */
-        0, /* reward_gold */
+        0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
         0, /* late_enemy_hp (unused) */
-        0, /* delay */
-        0, /* ignore_days */
         "YOU SPOT OLD RUINS.", /* text */
-        "YOU ENTER THE RUINS.", /* help result */
+        "YOU ENTER THE RUINS.", /* explore result */
         "YOU WALK ON.", /* ignore result */
+        "", /* opt1 (unused) */
+        "", /* opt2 (unused) */
+        255, 255, /* opt battles (none) */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* share_food */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "HUNGRY FAMILY BEGS.", /* text */
+        "BLESSINGS SHARED.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "SHARE", /* opt1 label */
+        "REFUSE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        6, 0, /* opt gold */
+        -4, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* skirmish_bats */
+        TRAVEL_EVENT_BATTLE,
+        2, /* battle (BATTLE_BAT) */
+        "BAT", /* enemy_name */
+        8, /* enemy_hp */
+        6, /* victory_gold */
+        1, /* victory_days */
+        12, /* late_enemy_hp */
+        "BAT ATTACKS!", /* text */
+        "", /* text2 (unused) */
+        "", /* text3 (unused) */
+        "", /* opt1 (unused) */
+        "", /* opt2 (unused) */
+        255, 255, /* opt battles (none) */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* skirmish_spiders */
+        TRAVEL_EVENT_BATTLE,
+        6, /* battle (BATTLE_SPIDER) */
+        "SPIDER", /* enemy_name */
+        12, /* enemy_hp */
+        9, /* victory_gold */
+        1, /* victory_days */
+        18, /* late_enemy_hp */
+        "SPIDER ATTACKS!", /* text */
+        "", /* text2 (unused) */
+        "", /* text3 (unused) */
+        "", /* opt1 (unused) */
+        "", /* opt2 (unused) */
+        255, 255, /* opt battles (none) */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* slime_letter */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "A DROPPED LETTER.", /* text */
+        "LORD OF SLIMES...", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "READ", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* slime_tree */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "SLIME COVERS A TREE.", /* text */
+        "VALUABLE GOO.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "SCRAPE", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        4, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* spoiled_food */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "FOOD HAS SPOILED.", /* text */
+        "CLEAN PACK.", /* opt1 result */
+        "BAD IDEA.", /* opt2 result */
+        "TOSS IT", /* opt1 label */
+        "RISK IT", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        -3, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 4, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* storm_shelter */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "STORM IS COMING.", /* text */
+        "WAIT IT OUT.", /* opt1 result */
+        "BATTERED ON.", /* opt2 result */
+        "SHELTER", /* opt1 label */
+        "PUSH ON", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 5, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        1, 0, /* opt days */
+    },
+    { /* stranded_merchant */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "MERCHANT NEEDS FOOD.", /* text */
+        "HE PAYS IN GOLD.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "SHARE", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        12, 0, /* opt gold */
+        -2, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* strange_animals */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "ANIMALS ACT ODDLY.", /* text */
+        "BERRY TRAIL.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "FOLLOW", /* opt1 label */
+        "AVOID", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        2, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* strange_fog */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "FOG CLOSES IN.", /* text */
+        "FOG LIFTS.", /* opt1 result */
+        "LOST TIME.", /* opt2 result */
+        "WAIT", /* opt1 label */
+        "PUSH ON", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 2, /* opt hurt */
+        0, 1, /* opt delay */
+        0, 0, /* opt save */
+        1, 0, /* opt days */
+    },
+    { /* strange_light */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "LIGHT ON HORIZON.", /* text */
+        "COLD FIRE CACHE.", /* opt1 result */
+        "EARLY REST.", /* opt2 result */
+        "LOOK", /* opt1 label */
+        "CAMP", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        5, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 3, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 1, /* opt days */
+    },
+    { /* strange_noises */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "NOISES IN THE DARK.", /* text */
+        "DRAW WEAPONS!", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "CHECK", /* opt1 label */
+        "IGNORE", /* opt2 label */
+        36, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* supply_cache */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "BURIED CACHE HERE.", /* text */
+        "JACKPOT.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "DIG", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        3, 0, /* opt food */
+        3, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        1, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* supply_merchant */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "MERCHANT HAS GOODS.", /* text */
+        "STOCKED UP.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "BUY", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        -6, 0, /* opt gold */
+        3, 0, /* opt food */
+        2, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* suspicious_shortcut */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "SHORTCUT ON OFFER.", /* text */
+        "ROUGH BUT QUICK.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "TAKE", /* opt1 label */
+        "DECLINE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        4, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        2, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* trade_food_parts */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "SWAP FOOD 4 SCRAP?", /* text */
+        "FAIR TRADE.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "TRADE", /* opt1 label */
+        "DECLINE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        8, 0, /* opt gold */
+        -3, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
     },
     { /* traveler_help */
         TRAVEL_EVENT_CHOICE,
         0, /* battle */
         "", /* enemy_name (unused) */
         0, /* enemy_hp */
-        15, /* reward_gold */
+        0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
         0, /* late_enemy_hp (unused) */
-        1, /* delay */
-        0, /* ignore_days */
         "TRAVELER NEEDS HELP.", /* text */
-        "YOU SHARE SUPPLIES.", /* help result */
-        "YOU WALK ON.", /* ignore result */
+        "YOU SHARE SUPPLIES.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "HELP", /* opt1 label */
+        "IGNORE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        15, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        1, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* watched */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "EYES ON THE RIDGE.", /* text */
+        "GONE LIKE SMOKE.", /* opt1 result */
+        "QUICKEN PACE.", /* opt2 result */
+        "CALL OUT", /* opt1 label */
+        "HURRY", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 1, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* water_source */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "CLEAR SPRING FOUND.", /* text */
+        "COOL AND DEEP.", /* opt1 result */
+        "SKINS BULGING.", /* opt2 result */
+        "DRINK", /* opt1 label */
+        "FILL UP", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        2, 6, /* opt water */
+        2, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* waystone */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "WAYSTONE FLICKERS.", /* text */
+        "WARMTH SPREADS.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "TOUCH", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        3, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* weak_beast */
+        TRAVEL_EVENT_BATTLE,
+        1, /* battle (BATTLE_SLIME) */
+        "WEAK SLIME", /* enemy_name */
+        6, /* enemy_hp */
+        6, /* victory_gold */
+        1, /* victory_days */
+        10, /* late_enemy_hp */
+        "WEAK BEAST!", /* text */
+        "", /* text2 (unused) */
+        "", /* text3 (unused) */
+        "", /* opt1 (unused) */
+        "", /* opt2 (unused) */
+        255, 255, /* opt battles (none) */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* wild_berries */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "BERRY BUSHES GROW.", /* text */
+        "SWEET HAUL.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "PICK", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        3, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* wounded_adventurer */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "HURT FIGHTER ASKS.", /* text */
+        "HE SHARES LOOT.", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "AID", /* opt1 label */
+        "LEAVE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        10, 0, /* opt gold */
+        -1, 0, /* opt food */
+        -1, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* wounded_monster */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "HURT BEAST SNARLS.", /* text */
+        "DRAW WEAPONS!", /* opt1 result */
+        "WIDE BERTH.", /* opt2 result */
+        "FINISH", /* opt1 label */
+        "AVOID", /* opt2 label */
+        54, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 1, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
+    { /* wrong_sign */
+        TRAVEL_EVENT_CHOICE,
+        0, /* battle */
+        "", /* enemy_name (unused) */
+        0, /* enemy_hp */
+        0, /* victory_gold (unused) */
+        0, /* victory_days (unused) */
+        0, /* late_enemy_hp (unused) */
+        "SIGN LOOKS WRONG.", /* text */
+        "WRONG WAY!", /* opt1 result */
+        "YOU WALK ON.", /* opt2 result */
+        "FOLLOW", /* opt1 label */
+        "IGNORE", /* opt2 label */
+        255, /* opt1 battle event or 255 */
+        255, /* opt2 battle event or 255 */
+        0, 0, /* opt gold */
+        0, 0, /* opt food */
+        0, 0, /* opt water */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        2, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
     },
 };
 
-const uint8_t g_travel_event_count = 3;
+const uint8_t g_travel_event_count = 59;

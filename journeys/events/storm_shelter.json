@@ -1,0 +1,15 @@
+{
+  "id": "storm_shelter",
+  "kind": "choice",
+  "text": "STORM IS COMING.",
+  "opt1": "SHELTER",
+  "opt1_effects": {
+    "text": "WAIT IT OUT.",
+    "days": 1
+  },
+  "opt2": "PUSH ON",
+  "opt2_effects": {
+    "text": "BATTERED ON.",
+    "hurt": 5
+  }
+}

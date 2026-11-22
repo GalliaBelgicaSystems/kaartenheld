@@ -1,0 +1,14 @@
+{
+  "id": "former_enemy",
+  "kind": "choice",
+  "text": "OLD FOE KNOWS YOU.",
+  "opt1": "GREET",
+  "opt1_effects": {
+    "text": "DEBTS REPAID.",
+    "gold": 8
+  },
+  "opt2": "AVOID",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

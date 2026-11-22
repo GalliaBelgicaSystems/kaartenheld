@@ -1,0 +1,15 @@
+{
+  "id": "night_stalker",
+  "kind": "choice",
+  "text": "EYES IN THE DARK.",
+  "opt1": "WATCH",
+  "opt1_effects": {
+    "text": "LONG NIGHT.",
+    "days": 1
+  },
+  "opt2": "SLEEP",
+  "opt2_effects": {
+    "text": "WOKE UP BITTEN.",
+    "hurt": 5
+  }
+}

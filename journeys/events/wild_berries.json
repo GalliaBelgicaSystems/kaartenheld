@@ -1,0 +1,14 @@
+{
+  "id": "wild_berries",
+  "kind": "choice",
+  "text": "BERRY BUSHES GROW.",
+  "opt1": "PICK",
+  "opt1_effects": {
+    "text": "SWEET HAUL.",
+    "food": 3
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

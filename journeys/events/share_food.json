@@ -1,0 +1,15 @@
+{
+  "id": "share_food",
+  "kind": "choice",
+  "text": "HUNGRY FAMILY BEGS.",
+  "opt1": "SHARE",
+  "opt1_effects": {
+    "text": "BLESSINGS SHARED.",
+    "gold": 6,
+    "food": -4
+  },
+  "opt2": "REFUSE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "stranded_merchant",
+  "kind": "choice",
+  "text": "MERCHANT NEEDS FOOD.",
+  "opt1": "SHARE",
+  "opt1_effects": {
+    "text": "HE PAYS IN GOLD.",
+    "gold": 12,
+    "food": -2
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

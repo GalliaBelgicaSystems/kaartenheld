@@ -1,0 +1,15 @@
+{
+  "id": "collapsed_bridge",
+  "kind": "choice",
+  "text": "BRIDGE IS DOWN.",
+  "opt1": "FORD",
+  "opt1_effects": {
+    "text": "SOAKED THROUGH.",
+    "hurt": 3
+  },
+  "opt2": "DETOUR",
+  "opt2_effects": {
+    "text": "LONG WAY ROUND.",
+    "delay": 2
+  }
+}

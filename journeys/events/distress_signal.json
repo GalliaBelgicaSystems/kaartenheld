@@ -1,0 +1,16 @@
+{
+  "id": "distress_signal",
+  "kind": "choice",
+  "text": "SIGNAL FIRE BURNS.",
+  "opt1": "ANSWER",
+  "opt1_effects": {
+    "text": "GRATEFUL SOULS.",
+    "gold": 8,
+    "delay": 1
+  },
+  "opt2": "IGNORE",
+  "opt2_effects": {
+    "text": "KEEP THE PACE.",
+    "save": 1
+  }
+}

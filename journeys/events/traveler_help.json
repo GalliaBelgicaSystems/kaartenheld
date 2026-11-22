@@ -2,9 +2,14 @@
   "id": "traveler_help",
   "kind": "choice",
   "text": "TRAVELER NEEDS HELP.",
-  "help_text": "YOU SHARE SUPPLIES.",
-  "help_reward_gold": 15,
-  "help_delay_steps": 1,
-  "ignore_text": "YOU WALK ON.",
-  "ignore_days": 0
+  "opt1": "HELP",
+  "opt1_effects": {
+    "text": "YOU SHARE SUPPLIES.",
+    "gold": 15,
+    "delay": 1
+  },
+  "opt2": "IGNORE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
 }

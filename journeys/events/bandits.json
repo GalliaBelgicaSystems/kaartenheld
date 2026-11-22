@@ -1,0 +1,16 @@
+{
+  "id": "bandits",
+  "kind": "choice",
+  "text": "BANDITS BLOCK ROAD.",
+  "opt1": "PAY",
+  "opt1_effects": {
+    "text": "THEY LET YOU PASS.",
+    "gold": -6,
+    "food": -4
+  },
+  "opt2": "FIGHT",
+  "opt2_effects": {
+    "text": "DRAW WEAPONS!",
+    "battle": "brigand_trio"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "strange_noises",
+  "kind": "choice",
+  "text": "NOISES IN THE DARK.",
+  "opt1": "CHECK",
+  "opt1_effects": {
+    "text": "DRAW WEAPONS!",
+    "battle": "skirmish_spiders"
+  },
+  "opt2": "IGNORE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

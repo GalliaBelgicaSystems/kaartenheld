@@ -1,0 +1,16 @@
+{
+  "id": "supply_merchant",
+  "kind": "choice",
+  "text": "MERCHANT HAS GOODS.",
+  "opt1": "BUY",
+  "opt1_effects": {
+    "text": "STOCKED UP.",
+    "gold": -6,
+    "food": 3,
+    "water": 2
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}

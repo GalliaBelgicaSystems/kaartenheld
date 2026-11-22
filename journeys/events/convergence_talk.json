@@ -1,0 +1,14 @@
+{
+  "id": "convergence_talk",
+  "kind": "choice",
+  "text": "TRAVELLER WARNS YOU.",
+  "opt1": "LISTEN",
+  "opt1_effects": {
+    "text": "ROADS WILL CLOSE.",
+    "save": 1
+  },
+  "opt2": "WALK ON",
+  "opt2_effects": {
+    "text": "YOU WALK ON."
+  }
+}
