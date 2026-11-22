@@ -94,6 +94,8 @@ typedef struct {
     uint8_t starve_water_every;
     uint8_t study_save_min; /* map-study shortcut range (steps saved) */
     uint8_t study_save_max;
+    uint8_t study_food;  /* extra rations a study day costs (on top) */
+    uint8_t study_water; /* extra water a study day costs (on top) */
     uint8_t method_count;
     TravelMethod methods[TRAVEL_METHODS_MAX];
 } TravelRoute;

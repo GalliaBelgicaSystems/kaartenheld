@@ -99,8 +99,9 @@ void battle_screen_update(Game *g)
                     return;
                 }
 #ifdef TRAVEL_DEMO
-                /* Road ambush lost: floor HP at 1, charge a recovery
-                 * step, resume the journey (never a game over). */
+                /* Road ambush lost: travel deaths are terminal -- the
+                 * hook abandons the journey and declines, so this
+                 * falls through to the normal cold game over below. */
                 if (game_travel_consume_defeat(g)) {
                     screen_change(g, SCREEN_JOURNEY);
                 } else {

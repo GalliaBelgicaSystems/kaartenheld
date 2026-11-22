@@ -9,7 +9,7 @@ inside `nix develop` for PyBoy)
   ambush:  route pool forced to [ambush_slimes] @100% (rebuild ROM first)
   help:    route pool forced to [traveler_help] @100% (rebuild ROM first)
   ignore:  same tuning; ignore keeps the schedule
-  defeat:  lose on purpose (HP floor 1, +1 step, resume)
+  defeat:  lose on purpose: cold game over (no floor, no resume)
   flee:    flee resumes the journey
   days:    day burn, zero crossing, late-buffed slime
   camp:    daily camp menu (shipped tuning): HUNT finds 1-5 food
@@ -380,8 +380,8 @@ def test_help(help_it):
 
 
 def test_defeat():
-    """Lose the ambush on purpose: empty turns until DEFEATED, then the
-    journey resumes with HP floored at 1 and a recovery step."""
+    """Lose the ambush on purpose: empty turns until DEFEATED, then a
+    cold hard game over (no floor, no resume)."""
     d = D()
     try:
         boot_to_journey(d)
@@ -399,7 +399,6 @@ def test_defeat():
                           ticks=600), "no battle"
         # stage nothing, execute empty turns until the slime wins
         # (~2 dmg/round vs 15 HP: needs ~8 rounds, ~6 loop iters each)
-        won = False
         for _ in range(80):
             if d.text_has("VICTORY") or d.text_has("DEFEATED"):
                 break
@@ -411,15 +410,15 @@ def test_defeat():
                 d.tick(30)
         assert d.text_has("DEFEATED"), "slime never won"
         d.press("a", settle=30)
-        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
-                          ticks=600), "no journey resume after defeat"
-        assert d.text_has("YOU WAKE UP HURT"), d.rows()
-        assert d.r.hero()["hp"] == 1, d.r.hero()
-        assert d.day() == 9, d.day()  # step day + recovery day burned
+        assert d.wait_for(lambda: d.screen() == 3,
+                          ticks=600), "no GAME OVER after defeat (screen=%d)" \
+            % d.screen()
+        assert d.wait_for(lambda: d.text_has("GAME OVER"), ticks=300), \
+            d.rows()
         assert d.gold() == gold0, "gold changed on defeat"
-        print("defeat OK: HP floored to 1, journey resumes, no gold")
-        d.press("a", settle=20)  # dismiss
-        assert d.text_has("STEP"), d.rows()
+        assert d.pb.memory[d.r.sym.wram("g_travel_active")] == 0, \
+            "journey not abandoned on game over"
+        print("defeat OK: cold game over, journey abandoned, no gold")
     finally:
         d.close()
 
@@ -859,7 +858,7 @@ def test_camp():
         assert d.water() == 0, d.water()
         for _ in range(3):
             d.press("down", settle=12)  # CONTINUE -> HUNT -> REST -> MAP
-        assert d.wait_for(lambda: d.text_has("> MAP"), ticks=200), d.rows()
+        assert d.wait_for(lambda: d.text_has("> STUDY MAP"), ticks=200), d.rows()
         d.press("a", settle=30)  # study 1: dry day 1, no damage
         assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300)
         assert d.r.hero()["hp"] == 15, d.r.hero()
@@ -885,17 +884,22 @@ def test_camp():
         assert d.total_steps() == tot0 + 1, d.total_steps()
         print("rest OK: HP 10 -> 15, +1 step, day -1")
         d.press("a", settle=20)
-        # STUDY: saves 0-2 steps for one day.
+        # STUDY: saves 0-2 steps for one day plus 2 food / 4 water
+        # of survey rations.
         left0 = d.pb.memory[d.r.sym.wram("g_travel_left")]
         day0 = d.day()
+        f0 = d.food()
+        w0 = d.water()
         d.press("down", settle=12)
         d.press("down", settle=12)
-        d.press("down", settle=12)  # -> MAP
-        assert d.wait_for(lambda: d.text_has("> MAP"), ticks=200), d.rows()
+        d.press("down", settle=12)  # -> STUDY MAP
+        assert d.wait_for(lambda: d.text_has("> STUDY MAP"), ticks=200), d.rows()
         d.press("a", settle=30)
         assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300), \
             d.rows()
         assert d.day() == day0 - 1, (d.day(), day0)
+        assert d.food() == (f0 - 3 if f0 >= 3 else 0), (f0, d.food())
+        assert d.water() == (w0 - 6 if w0 >= 6 else 0), (w0, d.water())
         left1 = d.pb.memory[d.r.sym.wram("g_travel_left")]
         # study may arrive (saved the last step): accept either.
         st = d.scene()
@@ -905,6 +909,33 @@ def test_camp():
             assert 0 <= left0 - left1 <= 2, (left0, left1)
             print("study OK: saved %d steps, day -1" % (left0 - left1))
             d.press("a", settle=20)
+        # STARVE TO DEATH: 4 HP and two more dry days is a cold
+        # game over, not a floor.
+        d.poke_php(4)
+        addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
+        raw = struct.pack("<h", 30)
+        d.pb.memory[addr] = raw[0]
+        d.pb.memory[addr + 1] = raw[1]
+        d.pb.memory[d.r.state + OFF_VARIABLES + 2 * (13 - 1)] = 0
+        d.pb.memory[d.r.state + OFF_VARIABLES + 2 * (13 - 1) + 1] = 0
+        d.tick(2)
+        assert d.food() == 30 and d.water() == 0, (d.food(), d.water())
+        for _ in range(3):
+            d.press("down", settle=12)  # -> STUDY MAP
+        d.press("a", settle=30)  # dry day 1: 4 HP left, no damage
+        assert d.wait_for(lambda: d.text_has("YOU STUDY MAP."), ticks=300)
+        assert d.r.hero()["hp"] == 4, d.r.hero()
+        d.press("a", settle=20)
+        for _ in range(3):
+            d.press("down", settle=12)
+        d.press("a", settle=30)  # dry day 2: -5 HP -> 0, game over
+        assert d.wait_for(lambda: d.screen() == 3, ticks=600), \
+            "no GAME OVER on starvation (screen=%d)" % d.screen()
+        assert d.wait_for(lambda: d.text_has("GAME OVER"), ticks=300), \
+            d.rows()
+        assert d.pb.memory[d.r.sym.wram("g_travel_active")] == 0, \
+            "journey not abandoned on game over"
+        print("starve-death OK: cold game over, journey abandoned")
     finally:
         d.close()
 

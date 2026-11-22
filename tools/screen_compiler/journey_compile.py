@@ -241,6 +241,10 @@ def load_routes(scenes, event_ids):
                 fail("%s: camp.study.%s must be 0..20" % (rid, key))
         if study["save_max"] < study["save_min"]:
             fail("%s: camp.study.save_max < save_min" % rid)
+        for key in ("food", "water"):
+            v = study.get(key)
+            if not isinstance(v, int) or not (0 <= v <= 30):
+                fail("%s: camp.study.%s must be 0..30" % (rid, key))
         methods = doc.get("methods")
         if not isinstance(methods, list) or \
                 not (1 <= len(methods) <= TRAVEL_METHODS_MAX):
@@ -331,6 +335,8 @@ def emit(routes, events, scenes, battle_ids):
         lines.append("        %d, /* starve_water_every */" % doc["camp"]["starve"]["water_every"])
         lines.append("        %d, /* study_save_min */" % doc["camp"]["study"]["save_min"])
         lines.append("        %d, /* study_save_max */" % doc["camp"]["study"]["save_max"])
+        lines.append("        %d, /* study_food */" % doc["camp"]["study"]["food"])
+        lines.append("        %d, /* study_water */" % doc["camp"]["study"]["water"])
         lines.append("        %d, /* method_count */" % len(doc["methods"]))
         lines.append("        {")
         for m in doc["methods"]:

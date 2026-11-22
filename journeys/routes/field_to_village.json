@@ -32,7 +32,9 @@
     },
     "study": {
       "save_min": 0,
-      "save_max": 2
+      "save_max": 2,
+      "food": 2,
+      "water": 4
     }
   },
   "methods": [

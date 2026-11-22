@@ -549,7 +549,7 @@ void travel_paint_banked(void)
         tp_camp(0, 9, "CONTINUE");
         tp_camp(1, 10, "HUNT");
         tp_camp(2, 11, "REST");
-        tp_camp(3, 12, "MAP");
+        tp_camp(3, 12, "STUDY MAP");
     } else if (view == TRAVEL_VIEW_SUPPLY) {
         tp_supply(0, 9, "FOOD");
         tp_supply(1, 11, "WATER");

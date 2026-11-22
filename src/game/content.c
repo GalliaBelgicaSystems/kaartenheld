@@ -187,9 +187,17 @@ ScreenId game_screen_after_victory(const Game *g)
 #ifdef TRAVEL_DEMO
     /* Road ambush won: pay the data-driven gold and resume the journey.
      * Ruins fights are ordinary world battles (the journey is only
-     * suspended), so they return to the overworld like any other. */
+     * suspended), so they return to the overworld like any other.
+     * A day's toll can still kill a 1-HP victor while starving --
+     * that is a cold game over, not a resume. */
     if (game_travel_active() && !game_travel_in_ruins()) {
         travel_on_victory();
+        if (travel_hero_dead(g)) {
+            travel_abandon((Game *)g);
+            ((Game *)g)->game_over_choice = 0;
+            audio_play_music(MUSIC_NONE);
+            return SCREEN_GAME_OVER;
+        }
         return SCREEN_JOURNEY;
     }
 #endif
