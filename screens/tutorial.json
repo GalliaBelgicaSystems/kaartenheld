@@ -4,8 +4,8 @@
       "lines": [
         "HOW TO FIGHT:",
         "Fights use cards.",
-        "L/R choose cards.",
-        "B cancels, A plays"
+        "{LR} choose cards.",
+        "{B} cancels, {A} plays"
       ]
     },
     {
@@ -20,8 +20,8 @@
       "lines": [
         "OFFENSE TURN:",
         "Choose cards, then",
-        "press SELECT. Each",
-        "card costs AP."
+        "press {SELECT},",
+        "each costs AP."
       ]
     },
     {
@@ -29,7 +29,7 @@
         "OFFENSE TURN:",
         "Choose Swords,",
         "Daggers or Bows,",
-        "SELECT to confirm."
+        "{UD} selects enemies."
       ]
     },
     {

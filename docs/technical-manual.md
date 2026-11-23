@@ -114,8 +114,8 @@ Battle and menus have their own controls, covered in §6 and §7.
 
 1. **HOW TO FIGHT** — fights use cards; L/R chooses, B cancels, A plays.
 2. **TURN BASED COMBAT** — two turns: attack and defend; foes only attack.
-3. **OFFENSE TURN** — choose cards, press SELECT; each card costs AP.
-4. **OFFENSE TURN** — swords, daggers or bows, SELECT to confirm.
+3. **OFFENSE TURN** — choose cards, press SELECT; each costs AP.
+4. **OFFENSE TURN** — swords, daggers or bows; U/D selects enemies.
 5. **DO POKER HANDS** — pairs and better multiply damage; kill foes faster.
 6. **DEFENSE TURN** — the foe shows its hit; shields block it.
 7. **DAGGERS HIT BACK** — daggers on defense hit back first, kill weak foes.

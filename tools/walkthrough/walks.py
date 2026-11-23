@@ -1855,8 +1855,8 @@ def walk_d(checks):
     s.shoot("16-tutorial-slide0", need="HOW TO FIGHT")
     for label, marker in (
             ("17-tutorial-slide1", "TURN BASED"),
-            ("18-tutorial-slide2", "card costs AP"),
-            ("19-tutorial-slide3", "SELECT to confirm"),
+            ("18-tutorial-slide2", "each costs AP"),
+            ("19-tutorial-slide3", "selects enemies"),
             ("20-tutorial-slide4", "POKER HANDS"),
             ("21-tutorial-slide5", "DEFENSE TURN"),
             ("22-tutorial-slide6", "DAGGERS HIT BACK")):

@@ -6,8 +6,8 @@
 static const char s_tut_0[4][20] = {
     "  HOW TO FIGHT:   ",
     "Fights use cards. ",
-    "L/R choose cards. ",
-    "B cancels, A plays"
+    " \205 choose cards.  ",
+    "\201 cancels, \200 plays"
 };
 
 static const char s_tut_1[4][20] = {
@@ -20,15 +20,15 @@ static const char s_tut_1[4][20] = {
 static const char s_tut_2[4][20] = {
     "  OFFENSE TURN:   ",
     "Choose cards, then",
-    "press SELECT. Each",
-    "  card costs AP.  "
+    "    press \202\203\204,    ",
+    "  each costs AP.  "
 };
 
 static const char s_tut_3[4][20] = {
     "  OFFENSE TURN:   ",
     "  Choose Swords,  ",
     " Daggers or Bows, ",
-    "SELECT to confirm."
+    "\206 selects enemies."
 };
 
 static const char s_tut_4[4][20] = {
