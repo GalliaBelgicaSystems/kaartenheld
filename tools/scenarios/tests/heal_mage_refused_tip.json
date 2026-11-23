@@ -33,17 +33,17 @@
   {
    "type": "screen_row",
    "row": 15,
-   "contains": "If you want to"
+   "contains": "or what?"
   },
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "heal during"
+   "contains": "If you want to"
   },
   {
    "type": "screen_row",
    "row": 17,
-   "contains": "combat, buy the"
+   "contains": "heal during"
   },
   {
    "type": "party_hp",

@@ -18,6 +18,20 @@
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
 
+/* Inline button-icon map for the {A} {B} {SELECT} {LR} {UD} control
+ * bytes (0x80..0x86) the compiler emits: same streamed
+ * UI_TILE_BUTTON_* tiles the footer stamps, so no VRAM/streaming
+ * change.  {SELECT} is three cells wide (SELECT_1/2/3, like START). */
+static const uint8_t s_tut_buttons[7] = {
+    UI_TILE_BUTTON_A,
+    UI_TILE_BUTTON_B,
+    UI_TILE_BUTTON_SELECT_1,
+    UI_TILE_BUTTON_SELECT_2,
+    UI_TILE_BUTTON_SELECT_3,
+    UI_TILE_BUTTON_DPAD_LR,
+    UI_TILE_BUTTON_DPAD_UD
+};
+
 static void tutorial_vram_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
     BANKED_VRAM_WRITE(dst, tile);
@@ -36,7 +50,10 @@ static void tutorial_stamp_button(uint8_t x, uint8_t y, uint8_t tile)
 static void tutorial_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
 {
     uint8_t i;
+    uint8_t raw;
+    uint8_t is_icon;
     char ch;
+    uint8_t tile;
     volatile uint8_t *dst;
     char *buf;
     uint8_t ended;
@@ -50,12 +67,26 @@ static void tutorial_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t m
     buf = &g_ui_screen_buf[y][x];
 
     for (i = 0; i < max_chars; i++) {
-        ch = text[i];
-        if (ch == '\0') ended = 1;
-        if (ended) ch = ' ';
-        if (*buf != ch) {
-            uint8_t tile = (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' '));
-            tutorial_vram_sync_write(dst, tile);
+        raw = (uint8_t)text[i];
+        if (raw == 0) ended = 1;
+        is_icon = (uint8_t)(!ended && raw >= 0x80u);
+        if (ended) {
+            ch = ' ';
+            tile = (uint8_t)(ui_font_tile_base + (uint8_t)(' ' - ' '));
+        } else if (is_icon) {
+            /* Icon cell: stamp the button tile.  The buffer keeps ' '
+             * (harness text asserts stay readable), but the write is
+             * unconditional -- a cleared ' ' buffer would otherwise
+             * skip it and leave blank VRAM (same reason the footer
+             * stamps buttons unconditionally). */
+            ch = ' ';
+            tile = s_tut_buttons[(uint8_t)(raw - 0x80u)];
+        } else {
+            ch = (char)raw;
+            tile = (uint8_t)(ui_font_tile_base + (uint8_t)(raw - (uint8_t)' '));
+        }
+        if (*buf != ch || is_icon) {
+            BANKED_VRAM_WRITE(dst, tile);
             *buf = ch;
         }
         dst++;
@@ -80,7 +111,7 @@ void tutorial_content_render(void)
     lines = s_tut_slides[slide];
 
     for (i = 0; i < count; i++) {
-        tutorial_draw_text(2, (uint8_t)(5 + i), lines[i], 18);
+        tutorial_draw_text(1, (uint8_t)(7 + i), lines[i], 18);
     }
     tutorial_stamp_button(2, 16, UI_TILE_BUTTON_DPAD_LR);
     tutorial_draw_text(3, 16, "NAV  ", 5);

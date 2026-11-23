@@ -36,7 +36,7 @@ typedef enum {
                         the scene track */
     MUSIC_ENDING,    /* end-credits theme (demo complete.uge, loops,
                         bank 7): starts when a final-boss victory exits
-                        to the ending screen (THE END) */
+                        to the ending screen (DEMO OVER) */
     MUSIC_CASINO,    /* chuck-a-luck table theme (casino.uge, loops,
                         bank 9 with its own driver copy): plays on
                         Nis's table; the gamble body restores the scene
@@ -47,12 +47,6 @@ typedef enum {
 } MusicTrack;
 
 #define MUSIC_DESOLATE_LANDSCAPE MUSIC_DESOLATE
-
-/* Master sound enable (title menu SOUND ON/OFF).  Gates both music and
- * SFX: audio_play_music() no-ops (leaving any currently playing track
- * ringing) and audio_play_sfx() drops the note.  When set back ON the next
- * audio_play_music() call restores the requested track. */
-extern uint8_t g_sound_enabled;
 
 void audio_init(void);
 void audio_play_music(MusicTrack track);

@@ -2,7 +2,7 @@
  "act": "always",
  "name": "tutorial_slide4",
  "test": true,
- "description": "RIGHT navigation reaches the DEFEND YOURSELF slide (slide 4) and its text teaches the defend phase: the foe shows its hit, shields block it, and lone daggers hit back.",
+ "description": "RIGHT navigation reaches the DO POKER HANDS slide (slide 4) and its text teaches the poker mechanic: pairs and better multiply damage so foes fall faster.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -21,14 +21,6 @@
   {
    "type": "wait",
    "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
   },
   {
    "type": "press",
@@ -94,13 +86,13 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "DEFEND YOURSELF"
+   "row": 7,
+   "contains": "DO POKER HANDS"
   },
   {
    "type": "screen_row",
-   "row": 7,
-   "contains": "Shields block"
+   "row": 8,
+   "contains": "Pairs and better"
   },
   {
    "type": "event_occurred",

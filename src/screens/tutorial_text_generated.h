@@ -4,62 +4,78 @@
 #define TUTORIAL_TEXT_GENERATED_H
 
 static const char s_tut_0[4][20] = {
-    "HOW TO FIGHT:",
-    "Fights use cards.",
-    "LEFT RIGHT flips.",
-    "B goes back."
+    "  HOW TO FIGHT:   ",
+    "Fights use cards. ",
+    " \205 choose cards.  ",
+    "\201 cancels, \200 plays"
 };
 
 static const char s_tut_1[4][20] = {
-    "KNOW YOUR CARDS:",
-    "SW BO DA damage.",
-    "SH blocks hits.",
-    "HE rings heal you."
+    "TURN BASED COMBAT:",
+    "You get two turns:",
+    "attack and defend.",
+    "Foes only attack. "
 };
 
 static const char s_tut_2[4][20] = {
-    "STRIKE FIRST:",
+    "  OFFENSE TURN:   ",
     "Choose cards, then",
-    "press SELECT. Each",
-    "card costs energy."
+    "    press \202\203\204,    ",
+    "  each costs AP.  "
 };
 
 static const char s_tut_3[4][20] = {
-    "POKER PAYS:",
-    "Pairs and better",
-    "multiply damage.",
-    "Kill foes faster."
+    "  OFFENSE TURN:   ",
+    "  Choose Swords,  ",
+    " Daggers or Bows, ",
+    "\206 selects enemies."
 };
 
 static const char s_tut_4[4][20] = {
-    "DEFEND YOURSELF:",
-    "Foe shows its hit.",
-    "Shields block it.",
-    "Lone DA hits back."
+    " DO POKER HANDS:  ",
+    " Pairs and better ",
+    " multiply damage. ",
+    " Kill foes faster."
 };
 
 static const char s_tut_5[4][20] = {
-    "BURN POISON ICE",
-    "Burn wounds you.",
-    "Poison confuses.",
-    "Ice halves damage."
+    "  DEFENSE TURN:   ",
+    "Foe shows its hit.",
+    "Shields block it. ",
+    "                  "
 };
 
 static const char s_tut_6[4][20] = {
-    "SPARE SHIELDS:",
-    "They deal 0 damage",
-    "but build combos.",
-    "Play your spares."
+    "DAGGERS HIT BACK: ",
+    "Daggers on defense",
+    " hit back first.  ",
+    " Kill weak foes.  "
 };
 
-static const char (* const s_tut_slides[7])[20] = {
+static const char s_tut_7[4][20] = {
+    " FIRE POISON ICE  ",
+    " Burn wounds you. ",
+    " Poison confuses. ",
+    "Ice halves damage."
+};
+
+static const char s_tut_8[4][20] = {
+    "  SPARE SHIELDS:  ",
+    "They deal 0 damage",
+    "but build combos. ",
+    "Play your spares. "
+};
+
+static const char (* const s_tut_slides[9])[20] = {
     s_tut_0,
     s_tut_1,
     s_tut_2,
     s_tut_3,
     s_tut_4,
     s_tut_5,
-    s_tut_6
+    s_tut_6,
+    s_tut_7,
+    s_tut_8
 };
 
 #endif /* TUTORIAL_TEXT_GENERATED_H */

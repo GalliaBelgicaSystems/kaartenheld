@@ -7,10 +7,6 @@
 #include "banked.h"
 
 MusicTrack g_audio_current_track;  /* BSS zero == MUSIC_NONE (52.27) */
-/* BSS (no _INITIALIZER cost): game_init() re-asserts the sound-on default
- * before any audio_play_music() call (the harness skips CRT0's .data copy,
- * so the initializer never reached it anyway). */
-uint8_t g_sound_enabled;
 
 /* ── SFX layer (transcribed tracker SFX) ────────────────────────────
  * Music runs through hUGEDriver.  Effect sounds use channels 2 and 4 so
@@ -64,7 +60,6 @@ void audio_play_sfx(uint8_t s)
 {
     uint8_t voices;
 
-    if (!g_sound_enabled) return;
     if (s > SFX_CASH) return;  /* SFX_CASH is the last id (audio.h) */
     /* Preemption policy: a new SFX interrupts only a same-or-lower-
      * priority one.  UI blips (CURSOR) can no longer cut a combat SFX
@@ -160,7 +155,6 @@ void audio_play_music(MusicTrack track)
      * Mage replays MUSIC_CHEST on every visit, even mid-jingle, and
      * music_play_banked resets that jingle's restore clock. */
     if (g_audio_current_track == track && track != MUSIC_CHEST && track != MUSIC_TITLE) return;
-    if (!g_sound_enabled) return;
     /* Track -> (song, bank) resolves in the bank-8 body (fixed bank is
      * full); the MBC select + driver call stay fixed (a banked body
      * must never switch away its own bank).  The body stops the old

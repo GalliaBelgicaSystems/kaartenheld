@@ -71,9 +71,9 @@ typedef struct Game {
                                     3 = overwrite confirm (mode 2),
                                     4 = game-over auto-continue */
     uint8_t title_menu_showing; /* 0 = PRESS START state, 1 = main menu */
-    uint8_t title_menu_index;  /* 0 = CONTINUE, 1 = NEW GAME, 2 = SOUND, 3 = TUTORIAL */
-    uint8_t intro_slide;       /* current ASCII intro slide (0-2) */
-    uint8_t tutorial_slide;    /* current tutorial slide (0-5) */
+    uint8_t title_menu_index;  /* 0 = CONTINUE, 1 = NEW GAME, 2 = TUTORIAL, 3 = CREDITS */
+    uint8_t intro_slide;       /* current ASCII intro slide */
+    uint8_t tutorial_slide;    /* current tutorial slide */
     RenderCache render_cache;
     uint8_t item_menu_side;      /* DECK two-column cursor side: 0 = owned
                                     pool (left), 1 = deck (right). TAIL FIELD:
