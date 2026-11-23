@@ -1,5 +1,7 @@
 # Kaartenheld
 
+> 🎴 **The battle demo is out now!** Download the ROM here: [Kaartenheld — Battle Demo](https://github.com/GalliaBelgicaSystems/kaartenheld/releases/tag/battle-demo).
+
 **Kaartenheld** (Luxembourgish for "Card Hero") is an upcoming top-down adventure game for the Nintendo Game Boy by **Gallia Belgica Systems**, a two-person indie team of inexperienced-but-relentless developers.
 
 This repository contains the playable **battle demo** for Kaartenheld: a top-down adventure with a deck-building card combat system in which you build **poker hands to trigger combos**, explore the world, and grow your deck — with **no XP or levels**. Your power comes from the cards you carry, the energy to play them (which grows via story milestones), and equipable gem passives.
