@@ -188,15 +188,13 @@ void dialogue_screen_update(Game *g)
             start_battle_from_world(g);
             return;
         }
-        /* Demo outro: the slime-lord wake dialogue ("Where am I?")
-         * routes to the ENDING screen (white document page;
-         * screen_change starts MUSIC_ENDING on entry) -- the run is
-         * over, win or lose.  Every other dialogue returns to the
-         * overworld (game-over quits show the try-again text).  The
-         * despair flag is cleared here; battle_start clears it for
-         * the next fight.  Single screen_change call (fixed-bank
-         * budget, AGENTS.md 52.18). */
-        screen_change(g, g_slime_despair ? (g_slime_despair = 0, SCREEN_ENDING) : SCREEN_OVERWORLD);
+        /* Act 2 opener: the slime-lord wake dialogue ("Where am I?")
+         * returns to the overworld -- the run continues in the new
+         * area.  The despair flag is cleared here; battle_start
+         * clears it for the next fight.  Single screen_change call
+         * (fixed-bank budget, AGENTS.md 52.18). */
+        g_slime_despair = 0;
+        screen_change(g, SCREEN_OVERWORLD);
     }
 }
 
@@ -253,7 +251,7 @@ void dialogue_screen_render(Game *g)
                 ui_sprite_commit();
             }
             ui_lcd_on();
-            /* Despair outro (demo finale): the defeat faded out to white
+            /* Despair outro (Act 2 opener): the defeat faded out to white
              * on the result screen -- fade the wake area back in over the
              * just-redrawn world.  The box body carries the fade (same
              * bank, no new dispatch): with the flag set this repaint runs

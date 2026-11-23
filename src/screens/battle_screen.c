@@ -92,8 +92,8 @@ void battle_screen_update(Game *g)
                 /* Slime-lord desperation outro (unwinnable final battle):
                  * game-owned flow in content.c (own function keeps this
                  * frame lean, AGENTS.md 52.18); the flag stays set for the
-                 * dialogue close (which routes to THANKS) and battle_start
-                 * clears it for the next fight. */
+                 * wake dialogue close (which returns to the overworld)
+                 * and battle_start clears it for the next fight. */
                 if (g_slime_despair != 0) {
                     game_slime_despair_outro();
                     return;

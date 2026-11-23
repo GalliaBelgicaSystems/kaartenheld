@@ -1,13 +1,13 @@
 {
-  "act": 1,
-  "id": "demo_end_wake_scene",
-  "name": "Demo End Wake Scene",
+  "act": 2,
+  "id": "act2_wake_start",
+  "name": "Act 2 — Wake Start",
   "map": {
     "width": 24,
     "height": 18,
     "tileset": "underground",
     "music": "MUSIC_UNDERGROUND",
-    "map_id": "MAP_DEMO_END_WAKE_SCENE"
+    "map_id": "MAP_ACT2_WAKE_START"
   },
   "default_walkable": "underground.underground_floor_with_debris_1",
   "layers": {
@@ -503,16 +503,16 @@
   "objects": [],
   "regions": [
     {
-      "id": "finale_hollow",
+      "id": "wake_start_hollow",
       "bounds": {
         "x": 1,
         "y": 1,
         "width": 22,
         "height": 16
       },
-      "description": "A vast empty underground hollow. The hero wakes here after the Lord of Slimes; reachable only through the despair outro, never by walking.",
+      "description": "A vast empty underground hollow. The hero wakes here after the Lord of Slimes teleports them; reachable only through the despair outro, never by walking. Act 2 starts here.",
       "gameplay": {
-        "purpose": "finale",
+        "purpose": "story",
         "difficulty": 1
       }
     }

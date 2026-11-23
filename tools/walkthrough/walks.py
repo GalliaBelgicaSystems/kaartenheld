@@ -1779,21 +1779,21 @@ def walk_sweep(planner, checks):
             want_music = -1
         s = Session(checks, "sweep")
         god_mode(s)
-        if name == "demo_end_wake_scene":
-            # Teleport-only finale (despair outro): no portal targets it
+        if name == "act2_wake_start":
+            # Teleport-only Act 2 opener (despair outro): no portal targets it
             # by design, so the sweep cannot walk there.  Recorded as an
             # explicit SKIP (not a pass, not silent): capture_walkthrough
             # tallies "SKIP" statuses separately from passes/failures.
             # The release scene_load path is exercised by hand, not here.
             checks.append(("sweep", "sweep %s reachable" % name, "SKIP",
-                           "isolated finale (no inbound portal by design)",
+                           "isolated opener (no inbound portal by design)",
                            "skipped: teleport-only"))
             s.close()
             continue
         if name in ("act2_field", "act2_town", "act2_ruins"):
             # Travel-demo maps (journeys/ + travel ROM only): no portal
             # targets them by design, so the sweep cannot walk there.
-            # Same explicit-SKIP contract as the finale above; the
+            # Same explicit-SKIP contract as the opener above; the
             # travel-demo driver (tools/verify_travel_demo.py) covers
             # their boot/merchant/signpost paths instead (ruins entry,
             # chest and exit ride the travel events, not portals).

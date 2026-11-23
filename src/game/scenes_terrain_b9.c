@@ -1141,7 +1141,7 @@ const SceneTerrainBlock s_grassy_forest_terrain[] = {
     { 0, 0, 0, 0, 0 }
 };
 
-const SceneTerrainBlock s_demo_end_wake_scene_terrain[] = {
+const SceneTerrainBlock s_act2_wake_start_terrain[] = {
     { 0, 0, 24, 4, TILE_UNDERGROUND_29 },
     { 0, 4, 6, 14, TILE_UNDERGROUND_29 },
     { 6, 4, 1, 1, TILE_UNDERGROUND_00 },
