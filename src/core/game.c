@@ -103,9 +103,11 @@ void game_init(Game *g)
     g->title_menu_index = 0;
     g->intro_slide = 0;
     game_prepare_new_game(g);
-    /* Boot stays silent (MUSIC_NONE from audio_init) through SPLASH and
-     * NOTICE; notice_screen starts MUSIC_TITLE when Kaartenheld appears
-     * on SCREEN_TITLE. */
+    /* Boot stays silent through SPLASH and NOTICE: the world load above
+     * starts the scene track as a side effect, so stop it here; the
+     * notice screen starts MUSIC_TITLE when Kaartenheld appears on
+     * SCREEN_TITLE. */
+    audio_play_music(MUSIC_NONE);
     game_render(g);
 
 #ifdef DEBUG_BUILD
