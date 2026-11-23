@@ -4,29 +4,37 @@
       "lines": [
         "HOW TO FIGHT:",
         "Fights use cards.",
-        "LEFT RIGHT flips.",
-        "B goes back."
+        "L/R choose cards.",
+        "B cancels A confirms."
       ]
     },
     {
       "lines": [
-        "KNOW YOUR CARDS:",
-        "SW BO DA damage.",
-        "SH blocks hits.",
-        "HE rings heal you."
+        "TURN BASED COMBAT:",
+        "You have an offense",
+        "and defense turn.",
+        "Enemies only offense."
       ]
     },
     {
       "lines": [
-        "STRIKE FIRST:",
+        "OFFENSE TURN:",
         "Choose cards, then",
         "press SELECT. Each",
-        "card costs energy."
+        "card costs Action Points."
       ]
     },
     {
       "lines": [
-        "POKER PAYS:",
+        "OFFENSE TURN:",
+        "Choose Swords, Daggers",
+        "or Bows and validate with SELECT.",
+        "Each card costs Action Points."
+      ]
+    },
+    {
+      "lines": [
+        "DO POKER HANDS:",
         "Pairs and better",
         "multiply damage.",
         "Kill foes faster."
@@ -34,16 +42,18 @@
     },
     {
       "lines": [
-        "DEFEND YOURSELF:",
+        "DEFENSE TURN:",
         "Foe shows its hit.",
-        "Shields block it.",
-        "Lone DA hits back."
+        "Shield defend, Daggers",
+        "counterattack.",
+        "Daggers can kill",
+        "if enemy is low on HP."
       ]
     },
     {
       "lines": [
-        "BURN POISON ICE",
-        "Burn wounds you.",
+        "FIRE POISON ICE",
+        "Burn wounds each turn.",
         "Poison confuses.",
         "Ice halves damage."
       ]
