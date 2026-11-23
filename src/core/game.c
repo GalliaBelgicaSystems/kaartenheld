@@ -161,13 +161,13 @@ void game_update(Game *g)
         g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&game_frame_tick_banked;
         banked_call_run();
-        /* Carl's leave-the-field offer (bank 10: bank 8 sits hard
-         * against 16 KB, so the tick cannot host it).  Own dispatch:
-         * a banked body can never nest another trampoline call
-         * (AGENTS.md 52.11.1).  Stages only g_bk_dlg_id, consumed
+        /* Carl's leave-the-field offer (bank 5: banks 8 and 10 both
+         * sit hard against 16 KB, so the tick cannot host it).  Own
+         * dispatch: a banked body can never nest another trampoline
+         * call (AGENTS.md 52.11.1).  Stages only g_bk_dlg_id, consumed
          * below with the other post-tick requests. */
         if (g->screen == SCREEN_OVERWORLD) {
-            g_bk_call_bank = 10;
+            g_bk_call_bank = 5;
             g_bk_call_target = (uint16_t)&carl_skip_offer_banked;
             banked_call_run();
         }

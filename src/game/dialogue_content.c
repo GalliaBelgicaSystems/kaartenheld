@@ -25,6 +25,14 @@
 
 const DialogueDefinition g_dialogues[] = {
     {
+        DIALOGUE_ID_ACT2_WAKE_CHEST,
+        "CHEST:",
+        4,
+        {"AP up! Power", "surges through you", "Your energy pool", "grows by one."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_CARL_MAILBOX,
         "",
         3,

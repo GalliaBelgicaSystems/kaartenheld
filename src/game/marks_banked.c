@@ -164,9 +164,9 @@ static uint8_t marks_carl_defeated(void)
 }
 
 /* ── Carl's "leaving without the lesson" offer ─────────────────────
- * Lives in src/game/carl_offer_banked.c (ROM bank 10: bank 8 sits hard
- * against 16 KB).  Dispatched from the per-frame tick below through the
- * WRAM trampoline; see that file for the contract. */
+ * Lives in src/game/carl_offer_banked.c (ROM bank 5: banks 8 and 10
+ * both sit hard against 16 KB).  Dispatched from the per-frame tick
+ * below through the WRAM trampoline; see that file for the contract. */
 
 /* Stream the overworld HUD mark glyphs (!/?) to OAM 126-127 on the first
  * tick (the OAM passes need them resident before any marker draws; LCD

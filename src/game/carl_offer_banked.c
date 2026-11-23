@@ -1,4 +1,4 @@
-#pragma bank 10
+#pragma bank 5
 #pragma disable_warning 110
 
 #include <stdint.h>
@@ -9,21 +9,22 @@
 #include "actor.h"
 #include "rpg/state.h"
 
-/* ── Carl's "leaving without the lesson" offer (ROM bank 10) ─────────
+/* ── Carl's "leaving without the lesson" offer (ROM bank 5) ──────────
  * The field is where Carl teaches.  Walking out of it -- a gate/edge
  * step that would cross the map boundary -- before winning the spar and
  * before taking the AP skip stops the step (the position has not
  * committed yet) and stages Carl's offer through the generic post-tick
  * dialogue request ("HEY! WANNA LEARN HOW FIGHT?" with a STAY / LEAVE
- * option row); the bank-10 choice body resolves the answer: LEAVE grants
+ * option row); the bank-5 choice body resolves the answer: LEAVE grants
  * the spar's +1 AP once and sets STORY_FLAG_ID_TUTORIAL_SKIPPED (so the
  * offer never repeats and the tutorial victory grants no second point),
  * STAY just closes so the hero can walk back to Carl -- and the next
  * attempt to leave asks again (the offer deliberately does NOT disarm
  * the departure tile: STAY must keep blocking the exit, not open it).
  *
- * Lives here (not bank 8 with the rest of the per-frame tick) because
- * bank 8 sits hard against 16 KB (AGENTS.md 52.18/55.5): the tick
+ * Lives here (not bank 8 with the rest of the per-frame tick, which
+ * sits hard against 16 KB, and not bank 10 with the event/dialogue
+ * tables, which overflowed it: AGENTS.md 52.18/55.5): the tick
  * dispatches it through the WRAM trampoline like every other banked
  * body.  Self-contained (AGENTS.md 52.11.1): WRAM game state + same-bank
  * code only, no fixed-bank calls (flag math and the Carl scan are

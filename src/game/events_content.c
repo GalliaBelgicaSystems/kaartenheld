@@ -120,6 +120,26 @@ const EventDefinition g_events[] = {
     },
 #endif
     {
+        /* Act-2 wake-cache AP chest (map-scoped, first-match: precedes the
+         * generic CHEST_LOCKED / FIELD_CHEST fallbacks below).  One +1 AP
+         * pool grant (uniform ADD 1, like the tutorial/chest/Monster Hunt
+         * milestones), announced by its own dialogue.  One-shot via
+         * STORY_FLAG_ID_WAKE_CHEST; repeats fall through to no
+         * interaction.  The chest is an OAM sprite: setting the flag
+         * flips it to the open frame (and it stays open), no floor-paint
+         * stamp. */
+        EVENT_ID_WAKE_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, MAP_ACT2_WAKE_CACHE,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_WAKE_CHEST, 0, false, false }},
+        4,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_ACT2_WAKE_CHEST, 0, 0 },
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_WAKE_CHEST, 0, 0 },
+            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
+        }
+    },
+    {
         EVENT_ID_TOWN_ARRIVAL, EVENT_TRIGGER_MAP_ENTER, ENTITY_ID_NONE, MAP_TOWN,
         1,
         {{ EVENT_COND_FLAG, STORY_FLAG_ID_ARRIVED_TOWN, 0, false, false }},

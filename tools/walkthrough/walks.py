@@ -1779,12 +1779,13 @@ def walk_sweep(planner, checks):
             want_music = -1
         s = Session(checks, "sweep")
         god_mode(s)
-        if name == "act2_wake_start":
-            # Teleport-only Act 2 opener (despair outro): no portal targets it
-            # by design, so the sweep cannot walk there.  Recorded as an
-            # explicit SKIP (not a pass, not silent): capture_walkthrough
-            # tallies "SKIP" statuses separately from passes/failures.
-            # The release scene_load path is exercised by hand, not here.
+        if name in ("act2_wake_start", "act2_wake_hall", "act2_wake_cache"):
+            # Teleport-only Act 2 opener network (despair outro): no portal
+            # targets these rooms by design, so the sweep cannot walk there.
+            # Recorded as an explicit SKIP (not a pass, not silent):
+            # capture_walkthrough tallies "SKIP" statuses separately from
+            # passes/failures.  The release scene_load path is exercised by
+            # hand, not here.
             checks.append(("sweep", "sweep %s reachable" % name, "SKIP",
                            "isolated opener (no inbound portal by design)",
                            "skipped: teleport-only"))

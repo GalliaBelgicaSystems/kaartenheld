@@ -79,6 +79,9 @@
 #define EVENT_ID_RUINS_CHEST_EMPTY (EVENT_ID_FIRST_GAME + 33)
 #define EVENT_ID_TRAVEL_DEMO_ACT1 (EVENT_ID_FIRST_GAME + 34)
 #define EVENT_ID_TRAVEL_RETURN  (EVENT_ID_FIRST_GAME + 35)
+#define EVENT_ID_WAKE_CHEST     (EVENT_ID_FIRST_GAME + 36)
+#else
+#define EVENT_ID_WAKE_CHEST     (EVENT_ID_FIRST_GAME + 29)
 #endif
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
@@ -131,11 +134,13 @@ typedef enum {
                                        * first-victory bronze shield */
     STORY_FLAG_ID_SLIME_LORD_INTRO = 13, /* Lord of Slimes throne-room intro
                                           * dialogue played (advancing 5 rows) */
+    STORY_FLAG_ID_WAKE_CHEST = 14, /* act-2 wake-cache AP chest opened
+                                    * (one-shot loot state, like FIELD_CHEST) */
 #ifdef TRAVEL_DEMO
-    STORY_FLAG_ID_RUINS_CHEST = 14, /* sunken-ruins AP chest (demo only) */
-    STORY_FLAG_ID_COUNT        = 15
+    STORY_FLAG_ID_RUINS_CHEST = 15, /* sunken-ruins AP chest (demo only) */
+    STORY_FLAG_ID_COUNT        = 16
 #else
-    STORY_FLAG_ID_COUNT        = 14
+    STORY_FLAG_ID_COUNT        = 15
 #endif
 } StoryFlagId;
 
@@ -207,9 +212,9 @@ typedef enum {
  * build) is full.  Keep in sync with events_content.c's `#pragma bank`. */
 #define GAME_EVENT_BANK  10
 #ifdef TRAVEL_DEMO
-#define GAME_EVENT_COUNT 36
+#define GAME_EVENT_COUNT 37
 #else
-#define GAME_EVENT_COUNT 29
+#define GAME_EVENT_COUNT 30
 #endif
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
