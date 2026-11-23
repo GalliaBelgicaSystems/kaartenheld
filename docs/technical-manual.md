@@ -19,23 +19,43 @@ it live with the deterministic harness (`make test-harness`,
 
 ### 1.1 Premise
 
-Three slides play over the intro (`src/screens/title_content.c`,
-`intro_screen.c`):
+Five slides play over the intro (`screens/intro.json`, rendered by
+`src/screens/title_content.c`, `intro_screen.c`):
 
-> A troubled land
-> calls out for a
-> hero of a new
-> kind.
+> The Lord of Slimes
+> has seized control
+> of Ofgeleeen.
+> His conquest has
+> stopped there.
 >
-> Your strength is
-> not in steel,
-> but in the cards
-> you carry.
+> The duchy is his.
+> Yet the realm's
+> other states
+> turn a blind eye,
+> unmoved by its
+> fate.
 >
-> Only the Lord of
-> Slimes stands
-> between all that
-> lives and the end.
+> Deep in the
+> castle lies the
+> Shaft of Minett,
+> holding power
+> for 180 days.
+>
+> A Card Wielder
+> has risen to free
+> Ofgeleeen, for
+> only he knows
+> the danger the
+> Lord of Slimes
+> poses to the
+> rest of the world.
+>
+> The clock is
+> ticking. Our hero
+> must make haste
+> and stop the Lord
+> before it's
+> too late!
 
 The land calls for a hero — but not one of sword and steel alone.  Your
 strength is in the **cards** you carry.  Monsters have begun to menace the
@@ -54,7 +74,7 @@ The **Castle** holds a bat, a spider and a solo **Mimic**; beyond it, the
 always present and reachable, so the final fight is open from the start.
 When entering the Throne Room and advancing five rows towards the boss,
 the Lord of Slimes addresses the hero in a standard dialogue box:
-*"Card wielder, you dare challenge me! You cannot stop what is coming. Slimes will rule this planet soon!"*
+*"Card Wielder, you dare challenge me! You cannot stop what is coming. Slimes will rule this planet soon!"*
 
 ---
 

@@ -7,12 +7,10 @@
 #include "rpg/save.h"
 
 /* ASCII intro sequence shown when starting a NEW GAME from the title
- * screen.  Four scripted slides (mankind fallen, the Slime Lord, a
- * hero rising, the magic cards); A/START advances, the final slide drops
- * into a fresh overworld playthrough.  Rendering lives in the bank-9
- * intro_content body (title_content.c) to keep the fixed bank small. */
-
-#define INTRO_SLIDE_COUNT 4
+ * screen.  Data-driven slides (screens/intro.json); A/START advances,
+ * the final slide drops into a fresh overworld playthrough.  Rendering
+ * lives in the bank-9 intro_content body (title_content.c) to keep the
+ * fixed bank small. */
 
 /* Shared slide-show renderer used by the intro, tutorial and splash
  * screens: a full clear, a banked content-body call staged on the address

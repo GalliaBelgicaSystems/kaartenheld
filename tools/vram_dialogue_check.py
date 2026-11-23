@@ -218,8 +218,12 @@ def main():
     # Wait for intro screen (SCREEN_INTRO = 10)
     wait_for_screen(10, 60)
 
-    # Advance through intro slides (3 slides, need A or START each time)
-    for _ in range(3):
+    # Advance through the intro slides (A on each slide; A on the last
+    # slide starts the run) until game_restart drops into OVERWORLD.
+    # Capped well above the slide count; breaks early on arrival.
+    for _ in range(8):
+        if pb.memory[game_addr] == 0:
+            break
         wait_for_screen(10, 60)  # SCREEN_INTRO = 10
         pb.button_press("a")
         for _ in range(4):

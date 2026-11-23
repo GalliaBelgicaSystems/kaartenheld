@@ -90,6 +90,13 @@ void credits_screen_render(Game *g);
  * tutorial_content.c (static data must not duplicate per TU). */
 #include "tutorial_count_generated.h"
 
+/* Shared by intro_screen.c (slide advance + wrap) and title_content.c
+ * (slide table end).  Generated from screens/intro.json — single
+ * source, the two cannot drift.  Count-only header: the slide arrays
+ * live in intro_text_generated.h, included once by title_content.c
+ * (static data must not duplicate per TU). */
+#include "intro_count_generated.h"
+
 /* Shared slide-show renderer (intro + tutorial + splash screens).
  * `bank` is the content body's ROM bank (4 = ASCII slides, 7 = splash). */
 void slide_screen_render(Game *g, ScreenId scr, uint16_t content_target, uint8_t slide, uint8_t bank);

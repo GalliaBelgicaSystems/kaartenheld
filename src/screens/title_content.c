@@ -303,49 +303,32 @@ void title_menu_step_banked(void)
     g->title_menu_index = new_index;
 }
 
-/* ── Intro: four scripted ASCII slides ─────────────────────────────
- * Shown from columns 3 to 18 inclusive (16 wide; longest line is 14).
- * A/START advances; the final slide drops into a fresh playthrough. */
-
-static const char s_intro_0[4][20] = {
-    "Mankind has",
-    "fallen from",
-    "grace and now",
-    "fades away...",
-};
-static const char s_intro_1[4][20] = {
-    "The Lord of",
-    "Slimes rules",
-    "lands once",
-    "peaceful...",
-};
-static const char s_intro_2[4][20] = {
-    "But from the",
-    "ashes, a Card",
-    "Wielder rises",
-    "with ancient",
-};
-static const char s_intro_3[4][20] = {
-    "magic cards...",
-    "The last hope",
-    "of a dying",
-    "world.",
-};
+/* ── Intro: data-driven ASCII slides ───────────────────────────────
+ * Slides live in screens/intro.json (compiled to
+ * intro_text_generated.h, included once below); each is centered by
+ * the compiler in an 18-wide field (cols 1..18) and drawn here
+ * vertically centered in rows 2..14.  A/START advances; the final
+ * slide drops into a fresh playthrough. */
+#include "intro_text_generated.h"
 
 void intro_content_render(void)
 {
     uint8_t slide = g_bk_byte_a;
     const char (*lines)[20];
-    uint8_t count = 4;
+    uint8_t count;
+    uint8_t start;
     uint8_t i;
 
-    if (slide == 0) lines = s_intro_0;
-    else if (slide == 1) lines = s_intro_1;
-    else if (slide == 2) lines = s_intro_2;
-    else lines = s_intro_3;
+    if (slide >= INTRO_SLIDE_COUNT) slide = 0;
+    lines = s_intro_slides[slide];
+    count = s_intro_counts[slide];
+
+    /* Vertically center the slide in rows 2..14 (13 rows): the A NEXT
+     * footer stays at row 16.  /2 is a shift (no SDCC div library). */
+    start = (uint8_t)(2u + (uint8_t)((uint8_t)(13u - count) >> 1));
 
     for (i = 0; i < count; i++) {
-        title_draw_text(3, (uint8_t)(6 + i), lines[i], 16);
+        title_draw_text(1, (uint8_t)(start + i), lines[i], 18);
     }
     title_stamp_button(5, 16, UI_TILE_BUTTON_A);
     title_draw_text(6, 16, "NEXT", 10);

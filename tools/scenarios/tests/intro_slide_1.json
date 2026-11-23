@@ -2,7 +2,7 @@
  "act": "always",
  "name": "intro_slide_1",
  "test": true,
- "description": "NEW GAME intro slide 1: slot picker A, then advancing once from slide 0 shows The Lord of.../peaceful....",
+ "description": "NEW GAME intro slide 1: slot picker A, then advancing once from slide 0 shows The duchy is his./fate.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -62,13 +62,13 @@
   },
   {
    "type": "screen_row",
-   "row": 6,
-   "contains": "The Lord of"
+   "row": 5,
+   "contains": "The duchy is his."
   },
   {
    "type": "screen_row",
-   "row": 9,
-   "contains": "peaceful..."
+   "row": 10,
+   "contains": "fate."
   }
  ]
 }

@@ -419,12 +419,14 @@ screens:
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
-	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,enemy_ow_count,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h"
+	@python3 tools/screen_compiler/intro_compile.py --all -o src/screens/
+	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,enemy_ow_count,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h + src/screens/intro_*_generated.h"
 
 screens-check:
 	@python3 tools/screen_compiler/title_compile.py --check
 	@python3 tools/screen_compiler/battle_compile.py --all --check
 	@python3 tools/screen_compiler/tutorial_compile.py --all --check
+	@python3 tools/screen_compiler/intro_compile.py --all --check
 
 # Dialogue content: screens/dialogue/*.json is the source of truth for the
 # NPC dialogue table (ids assign by sorted filename) and
@@ -473,6 +475,9 @@ registry-check:
 
 src/screens/tutorial_text_generated.h src/screens/tutorial_count_generated.h &: screens/tutorial.json
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
+
+src/screens/intro_text_generated.h src/screens/intro_count_generated.h &: screens/intro.json
+	@python3 tools/screen_compiler/intro_compile.py --all -o src/screens/
 
 src/game/dialogue_content.c src/game/dialogue_ids_generated.h &: $(wildcard screens/dialogue/*.json)
 	@python3 tools/screen_compiler/dialogue_compile.py --all -o src/game/
