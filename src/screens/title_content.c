@@ -321,8 +321,8 @@ static const char s_intro_1[4][20] = {
 };
 static const char s_intro_2[4][20] = {
     "But from the",
-    "ashes, a hero",
-    "rises, armed",
+    "ashes, a Card",
+    "Wielder rises",
     "with ancient",
 };
 static const char s_intro_3[4][20] = {

@@ -864,7 +864,7 @@ Upon closing this dialogue, the screen fades to white, and the hero awakens in t
 final wake scene before advancing to the **ENDING** screen:
 
 ```
-      THE END
+     DEMO OVER
 --------------------
 The Hero cleared
 the land of slimes!

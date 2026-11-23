@@ -69,7 +69,7 @@ void ending_content_render(void)
 {
     uint8_t i;
     static const char * const s_lines[8] = {
-        "      THE END",
+        "     DEMO OVER",
         "--------------------",
         "Congratulations on",
         "beating the battle",
@@ -79,19 +79,20 @@ void ending_content_render(void)
         "on X for updates!"
     };
     static const uint8_t s_rows[8] = { 1, 2, 4, 5, 6, 8, 9, 10 };
-    /* Ending page: pure white background, black text.  Program every BG
-     * slot to the document ramp (both light shades read white, both dark
-     * read black) so the whole screen is one sheet whatever attribute a
-     * cell carries -- no attribute rewrite needed.  The cleared tiles are
-     * shade-0 paper and the font ink is shade 3, so on DMG (BGP 0xE4 from
-     * boot, the only value the ROM ever programs) this is black on white
-     * with no CRAM write at all. */
+    /* Ending page: white background, bronze-tan ink like the dialogue
+     * boxes.  Program every BG slot to the paper ramp (both light
+     * shades read white; shade 2 stays black, shade 3 is the bronze
+     * dialogue ink) so the whole screen is one sheet whatever attribute
+     * a cell carries -- no attribute rewrite needed.  The cleared tiles
+     * are shade-0 paper and the font ink is shade 3, so on DMG (BGP 0xE4
+     * from boot, the only value the ROM ever programs) this is black on
+     * white with no CRAM write at all; on CGB the text reads bronze. */
     if (g_is_cgb) {
         static const uint8_t s_paper[8] = {
             0xFF, 0x7F,   /* RGB8(255,255,255) */
             0xFF, 0x7F,   /* light pair reads white: one sheet */
             0x00, 0x00,   /* RGB8(0,0,0) */
-            0x00, 0x00    /* dark pair reads black: one ink */
+            0x6E, 0x19    /* RGB8(117,89,48) bronze ink, like dialogue text */
         };
         uint8_t p;
         for (p = 0; p < 8; p++) {

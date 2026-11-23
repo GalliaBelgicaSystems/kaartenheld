@@ -832,7 +832,7 @@ $(GENERATED_MUSIC_DIR)/game_over.c: assets/music/game\ over.uge tools/compile_mu
 	python3 tools/compile_music.py "$<" 7 song_game_over "$@"
 
 # End-credits theme (assets/music/demo complete.uge, loops).  Played when
-# the final-boss victory exits to the ending screen (THE END).  Bank 7
+# the final-boss victory exits to the ending screen (DEMO OVER).  Bank 7
 # like the other late songs.
 $(GENERATED_MUSIC_DIR)/demo_complete.c: assets/music/demo\ complete.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_demo_complete "$@"
