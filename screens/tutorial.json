@@ -5,15 +5,15 @@
         "HOW TO FIGHT:",
         "Fights use cards.",
         "L/R choose cards.",
-        "B cancels A confirms."
+        "B cancels, A plays"
       ]
     },
     {
       "lines": [
         "TURN BASED COMBAT:",
-        "You have an offense",
-        "and defense turn.",
-        "Enemies only offense."
+        "You get two turns:",
+        "attack and defend.",
+        "Foes only attack."
       ]
     },
     {
@@ -21,15 +21,15 @@
         "OFFENSE TURN:",
         "Choose cards, then",
         "press SELECT. Each",
-        "card costs Action Points."
+        "card costs AP."
       ]
     },
     {
       "lines": [
         "OFFENSE TURN:",
-        "Choose Swords, Daggers",
-        "or Bows and validate with SELECT.",
-        "Each card costs Action Points."
+        "Choose Swords,",
+        "Daggers or Bows,",
+        "SELECT to confirm."
       ]
     },
     {
@@ -44,18 +44,23 @@
       "lines": [
         "DEFENSE TURN:",
         "Foe shows its hit.",
-        "Shield defend, Daggers",
-        "counterattack.",
-        "Daggers can kill",
-        "if enemy is low on HP."
+        "Shields block it."
+      ]
+    },
+    {
+      "lines": [
+        "DAGGERS HIT BACK:",
+        "Daggers on defense",
+        "hit back first.",
+        "Kill weak foes."
       ]
     },
     {
       "lines": [
         "FIRE POISON ICE",
-        "Burn wounds each turn.",
+        "Burn wounds you.",
         "Poison confuses.",
-        "Ice halves damage."
+        "Ice halves damage"
       ]
     },
     {

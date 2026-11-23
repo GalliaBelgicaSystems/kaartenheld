@@ -801,7 +801,7 @@ def walk_a(planner, checks, sram_out=None):
             bump_actor(s, planner, "village_area", (10, 4), "down",
                        "You found them!"),
             expected="You found them!", actual="none")
-    close_dialogue(s, "You found them!")
+    close_box(s)  # thanks is two pages ("My shop is open now." tails page 1)
     s.check_eq("shop keys quest complete",
                s.reader.variable(VARIABLE_ID_MERCHANT_QUEST), 2)
     # Transit fights (god-mode) add loot gold, so assert at least the
@@ -1854,16 +1854,20 @@ def walk_d(checks):
         expected="HOW TO FIGHT", actual="none")
     s.shoot("16-tutorial-slide0", need="HOW TO FIGHT")
     for label, marker in (
-            ("17-tutorial-slide1", "SW BO DA"),
-            ("18-tutorial-slide2", "STRIKE FIRST"),
-            ("19-tutorial-slide3", "POKER PAYS"),
-            ("20-tutorial-slide4", "DEFEND YOURSELF"),
-            ("21-tutorial-slide5", "BURN POISON ICE"),
-            ("22-tutorial-slide6", "SPARE SHIELDS")):
+            ("17-tutorial-slide1", "TURN BASED"),
+            ("18-tutorial-slide2", "card costs AP"),
+            ("19-tutorial-slide3", "SELECT to confirm"),
+            ("20-tutorial-slide4", "POKER HANDS"),
+            ("21-tutorial-slide5", "DEFENSE TURN"),
+            ("22-tutorial-slide6", "DAGGERS HIT BACK")):
         s.check(label, s.press_until(
             "right", lambda m=marker: s.text_has(m), label=label),
             expected=marker, actual="none")
         s.shoot(label, need=marker)
+    for marker in ("FIRE POISON ICE", "SPARE SHIELDS"):
+        s.check("tutorial-%s" % marker, s.press_until(
+            "right", lambda m=marker: s.text_has(m), label=marker),
+            expected=marker, actual="none")
     s.close()
 
 

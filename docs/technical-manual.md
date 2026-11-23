@@ -109,18 +109,18 @@ Battle and menus have their own controls, covered in §6 and §7.
 
 ### 2.4 Tutorial
 
-`TUTORIAL` on the title menu plays seven slides (`tutorial_content.c`).
+`TUTORIAL` on the title menu plays nine slides (`tutorial_content.c`).
 `LEFT`/`RIGHT` navigates, `B` exits.  The slides cover:
 
-1. **HOW TO FIGHT** — fights use cards; LEFT/RIGHT flips slides, B exits.
-2. **KNOW YOUR CARDS** — SW/BO/DA damage, SH blocks hits, HE rings heal.
-3. **STRIKE FIRST** — choose cards, press SELECT; each card costs energy.
-4. **POKER PAYS** — pairs and better multiply damage; kill foes faster.
-5. **DEFEND YOURSELF** — the foe shows its hit; shields block, lone
-   daggers hit back.
-6. **BURN POISON ICE** — burn wounds, poison confuses; ice locks
-   your cards.
-7. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
+1. **HOW TO FIGHT** — fights use cards; L/R chooses, B cancels, A plays.
+2. **TURN BASED COMBAT** — two turns: attack and defend; foes only attack.
+3. **OFFENSE TURN** — choose cards, press SELECT; each card costs AP.
+4. **OFFENSE TURN** — swords, daggers or bows, SELECT to confirm.
+5. **DO POKER HANDS** — pairs and better multiply damage; kill foes faster.
+6. **DEFENSE TURN** — the foe shows its hit; shields block it.
+7. **DAGGERS HIT BACK** — daggers on defense hit back first, kill weak foes.
+8. **FIRE POISON ICE** — burn wounds, poison confuses, ice halves damage.
+9. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
 
 ---
 

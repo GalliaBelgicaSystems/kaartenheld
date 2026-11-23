@@ -155,10 +155,6 @@ shows:
 | **Shield** `SH` | 0 damage, but counts for combos | **Blocks** |
 | **Ring** `RG` | Converts the hand to healing | 0 block, but wildcard |
 
-> The in-game tutorial calls the ring `HE` for **heal**.
-> It is the same card: `RG` on the card itself, `HE` in
-> the lesson.
-
 **Swords, bows and daggers are your attack.** A shield
 deals no damage on your turn — but it still counts as a
 card when you build a poker hand, which is often worth
@@ -297,7 +293,7 @@ cards.
 The **COMBO** row above your hand previews the tier and
 the damage as you pick, before you commit. Trust it.
 
-![Poker hands are the whole trick](../screenshots/19-tutorial-slide3.png)
+![Poker hands are the whole trick](../screenshots/20-tutorial-slide4.png)
 
 **Example:** `SW2 + SW2` is a suited pair. Base 4,
 times 150%, hits for **6**. Add a third `SW2` and it is

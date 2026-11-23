@@ -3478,7 +3478,7 @@ the commit/PR without booting anything.
   planner routes through the expanded castle chain and all corridor
   columns avoid patrol boxes), so persistent state never bleeds
   between milestones.  Walk D stops at the boot title screen (START → menu,
-  DOWN to the TUTORIAL entry, A, then RIGHT through the seven slides); it never
+  DOWN to the TUTORIAL entry, A, then RIGHT through the nine slides); it never
   enters the game.
 * Determinism is verified: the walk's position/caret/text checks make the
   29 frames byte-identical across repeated runs.

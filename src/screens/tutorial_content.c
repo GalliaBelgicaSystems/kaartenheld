@@ -80,7 +80,7 @@ void tutorial_content_render(void)
     lines = s_tut_slides[slide];
 
     for (i = 0; i < count; i++) {
-        tutorial_draw_text(2, (uint8_t)(5 + i), lines[i], 18);
+        tutorial_draw_text(1, (uint8_t)(7 + i), lines[i], 18);
     }
     tutorial_stamp_button(2, 16, UI_TILE_BUTTON_DPAD_LR);
     tutorial_draw_text(3, 16, "NAV  ", 5);

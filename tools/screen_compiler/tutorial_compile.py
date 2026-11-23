@@ -9,8 +9,10 @@ the generated header: generated initializers must keep the exact
 static-const-array shape SDCC compiles correctly (see the
 s_card_desc_blob precedent — flat multi-literal initializers miscompile).
 
-Slide geometry is fixed: 4 rows at (2, 5+i), 18 chars wide, plus the
-[LR] NAV [B] EXIT footer at row 16.  Short slides pad with "".
+Slide geometry: at most 4 rows per slide, each centered by the
+compiler in an 18-wide field (cols 1..18, col 0/19 whitespace) and
+drawn at rows 7..10 by the banked renderer (region rows 2..15, the
+[LR] NAV [B] EXIT footer stays at row 16).  Short slides pad with "".
 
 Usage:
     python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
@@ -77,6 +79,15 @@ def c_escape(s):
     return s.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def center_pad(line):
+    """Center `line` in the 18-wide text field (cols 1..18): pad both
+    sides with spaces so col 0 and col 19 stay blank.  Lines over 18
+    chars are rejected by load_tutorial, so this only ever pads."""
+    pad = RENDER_WIDTH - len(line)
+    left = pad // 2
+    return " " * left + line + " " * (pad - left)
+
+
 def build_text_output(rows):
     """Generate src/screens/tutorial_text_generated.h: slide arrays +
     pointer table.  Array shapes mirror the legacy hand-written
@@ -93,7 +104,7 @@ def build_text_output(rows):
         lines.append(f"static const char s_tut_{i}[{MAX_ROWS}][{STAGE_COLS}] = {{")
         for j, line in enumerate(slide):
             comma = "," if j < len(slide) - 1 else ""
-            lines.append(f'    "{c_escape(line)}"{comma}')
+            lines.append(f'    "{c_escape(center_pad(line))}"{comma}')
         lines.append("};")
         lines.append("")
     lines.append(f"static const char (* const s_tut_slides[{len(rows)}])[{STAGE_COLS}] = {{")

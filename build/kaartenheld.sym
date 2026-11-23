@@ -32,9 +32,9 @@
 00:F4000 00003418
 00:34000 0000367A
 00:54000 00003CB0
-00:44000 00003D5D
 00:A4000 00003D62
 00:94000 00003D6B
+00:44000 00003E01
 00:24000 00003E0A
 00:74000 00003E56
 00:64000 00003FE7
@@ -254,9 +254,9 @@
 00:6071 _actor_fi
 00:6071 _actor_find_at
 00:5FB2 _actor_find_hostile_slot
-00:4799E _actor_lo
+00:47A42 _actor_lo
 00:60D6 _actor_load_scene
-00:4799E _actor_load_scene_banked
+00:47A42 _actor_load_scene_banked
 00:5FA6 _actor_re
 00:5FA6 _actor_register_tables
 00:024F _add_VBL
@@ -1211,8 +1211,8 @@
 00:46883 _tutorial_content_render
 00:4B40 _tutorial_screen_render
 00:4B55 _tutorial_screen_update
-00:46E28 _ui_actor
-00:46E28 _ui_actors_sprites_banked
+00:46ECC _ui_actor
+00:46ECC _ui_actors_sprites_banked
 00:5BCE _ui_calc_
 00:5BCE _ui_calc_timer_bar
 00:579F2 _ui_card_
@@ -1310,9 +1310,9 @@
 00:6071 actor_fi
 00:6071 actor_find_at
 00:5FB2 actor_find_hostile_slot
-00:4799E actor_lo
+00:47A42 actor_lo
 00:60D6 actor_load_scene
-00:4799E actor_load_scene_banked
+00:47A42 actor_load_scene_banked
 00:5FA6 actor_re
 00:5FA6 actor_register_tables
 00:024F add_VBL
@@ -1958,7 +1958,7 @@
 00:3418 l__CODE_15
 00:3E0A l__CODE_2
 00:367A l__CODE_3
-00:3D5D l__CODE_4
+00:3E01 l__CODE_4
 00:3CB0 l__CODE_5
 00:3FE7 l__CODE_6
 00:3E56 l__CODE_7
@@ -2332,8 +2332,8 @@
 00:46883 tutorial_content_render
 00:4B40 tutorial_screen_render
 00:4B55 tutorial_screen_update
-00:46E28 ui_actor
-00:46E28 ui_actors_sprites_banked
+00:46ECC ui_actor
+00:46ECC ui_actors_sprites_banked
 00:5BCE ui_calc_
 00:5BCE ui_calc_timer_bar
 00:579F2 ui_card_
