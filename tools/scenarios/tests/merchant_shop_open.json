@@ -21,6 +21,14 @@
    "frames": 10
   },
   {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 10
+  },
+  {
    "type": "interact",
    "actor": "MERCHANT"
   },
