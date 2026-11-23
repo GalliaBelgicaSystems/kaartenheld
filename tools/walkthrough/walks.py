@@ -1298,6 +1298,12 @@ def walk_b(planner, checks):
     # jeer.  Close it, defend through the round, and the spar is back
     # to a plain SELECT with strictly less enemy HP.  Capped like the
     # others: the lesson needs a landed hit, never max damage.
+    # Poke a known attack hand first: the icon shots above replaced
+    # most of the hand with shields, so the refill draw is shuffle
+    # luck -- a swordless draw stages nothing and the auto-played
+    # shield swings for 0 (flee lesson fires, damage check fails).
+    _poke_hand(s, [(0, 2), (0, 2), (1, 3), (1, 3), (1, 3)])
+    s.tick(10)
     _select_cards(s, ATTACK_TYPES, max_cards=2)
     for _ in range(4):
         s.press("select", settle=40)     # execute attack
@@ -1332,7 +1338,10 @@ def walk_b(planner, checks):
     # One more attack: now that the lesson is over, it earns a looping
     # jeer.  Capped at 2 like round 1: uncapped staging one-shot Carl
     # on some shuffles (VICTORY instead of the jeer), and the walk only
-    # needs a landed hit, never max damage.
+    # needs a landed hit, never max damage.  Same known-hand poke as
+    # round 3: the live hand is shuffle luck after the icon-shot pokes.
+    _poke_hand(s, [(0, 2), (0, 2), (1, 3), (1, 3), (1, 3)])
+    s.tick(10)
     _carl_topup(s)
     _select_cards(s, ATTACK_TYPES, max_cards=2)
     for _ in range(4):
@@ -1690,6 +1699,15 @@ def walk_e(planner, checks):
             s.press_until("a", lambda: not s.battle_hud_up(),
                           tries=4, label="battle exit"),
             expected="closed", actual="open")
+    # The scripted trio victory can leave the knight's split briefing
+    # open here (the same aftermath box the transit path drains with
+    # drain_postvictory_dialogue): close it before asserting, or every
+    # later input dies in the modal box.  A genuine refire would still
+    # fail loudly -- the harness trio_spawn scenario asserts OVERWORLD
+    # after the trio victory and never tolerates a second box.
+    s.check("trio aftermath drained",
+            close_dialogue(s, "KNIGHT:"),
+            expected="closed", actual="stuck open")
     s.check("no briefing repeat", not s.text_has("KNIGHT:"),
             expected="no KNIGHT: box", actual=s.bg_text()[0].strip())
     _walk_path(s, planner.path("castle", s.pos(), adj[0],

@@ -2,7 +2,7 @@
  "act": "always",
  "name": "credits_menu",
  "test": true,
- "description": "Boot into the title screen, open the menu (START), move down to the CREDITS entry (index 4, row 17), and press A to enter the credit screen. B returns to the title menu.",
+ "description": "Boot into the title screen, open the menu (START), move down to the CREDITS entry (index 3, row 15), and press A to enter the credit screen. B returns to the title menu.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -21,14 +21,6 @@
   {
    "type": "wait",
    "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
   },
   {
    "type": "press",
@@ -115,7 +107,7 @@
   },
   {
    "type": "sfx_count",
-   "expected": 5
+   "expected": 4
   },
   {
    "type": "sfx_last",

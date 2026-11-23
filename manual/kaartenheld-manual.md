@@ -47,7 +47,6 @@ Switch on your Game Boy. After the title screen, press
 |---|---|
 | **NEW GAME** | Begin a brand-new adventure. |
 | **CONTINUE** | Load a game you saved earlier. |
-| **SOUND: ON/OFF** | Turn the music on or off. |
 | **TUTORIAL** | A short how-to-play lesson. |
 | **CREDITS** | The people who made this. |
 

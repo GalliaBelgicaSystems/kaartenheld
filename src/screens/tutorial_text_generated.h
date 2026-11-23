@@ -35,7 +35,7 @@ static const char s_tut_4[4][20] = {
     " DO POKER HANDS:  ",
     " Pairs and better ",
     " multiply damage. ",
-    "Kill foes faster. "
+    " Kill foes faster."
 };
 
 static const char s_tut_5[4][20] = {
@@ -56,7 +56,7 @@ static const char s_tut_7[4][20] = {
     " FIRE POISON ICE  ",
     " Burn wounds you. ",
     " Poison confuses. ",
-    "Ice halves damage "
+    "Ice halves damage."
 };
 
 static const char s_tut_8[4][20] = {

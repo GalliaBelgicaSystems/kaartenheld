@@ -2,7 +2,7 @@
  "act": "always",
  "name": "tutorial_navigate",
  "test": true,
- "description": "From the tutorial, RIGHT advances to slide 1 (CARD TYPES), then B exits back to the title screen.",
+ "description": "From the tutorial, RIGHT advances to slide 1 (TURN BASED COMBAT), then B exits back to the title screen.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -21,14 +21,6 @@
   {
    "type": "wait",
    "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
   },
   {
    "type": "press",

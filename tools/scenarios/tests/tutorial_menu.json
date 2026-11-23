@@ -2,7 +2,7 @@
  "act": "always",
  "name": "tutorial_menu",
  "test": true,
- "description": "Boot into the title screen, open the menu (START), move down to the TUTORIAL entry (index 3), and press A to enter the first tutorial slide.",
+ "description": "Boot into the title screen, open the menu (START), move down to the TUTORIAL entry (index 2), and press A to enter the first tutorial slide.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -40,14 +40,6 @@
   },
   {
    "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
-  },
-  {
-   "type": "press",
    "button": "A"
   },
   {
@@ -66,7 +58,7 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
+   "row": 7,
    "contains": "HOW TO FIGHT"
   },
   {

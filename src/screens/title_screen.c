@@ -10,9 +10,8 @@
  * area is at its size limit (see make memmap), so this file only runs a
  * thin input/transition wrapper around title_content_render().
  *
- * Flow: PRESS START -> CONTINUE / NEW GAME / SOUND.  SOUND toggles
- * g_sound_enabled (ON/OFF).  CONTINUE -> SAVE_LOAD (load mode).
- * NEW GAME -> slot picker -> intro. */
+ * Flow: PRESS START -> CONTINUE / NEW GAME / TUTORIAL / CREDITS.
+ * CONTINUE -> SAVE_LOAD (load mode).  NEW GAME -> slot picker -> intro. */
 
 void title_screen_render(Game *g)
 {
@@ -114,13 +113,7 @@ void title_screen_update(Game *g)
             g->save_slot_index = 0;
             screen_change(g, SCREEN_SAVE_LOAD);
             break;
-        case 2: /* SOUND */
-            g_sound_enabled = ~g_sound_enabled & 1;
-            audio_play_sfx(SFX_CURSOR);
-            telemetry_emit(EVENT_SOUND_TOGGLED, g_sound_enabled, 0, 0, 0);
-            g->render_cache.valid = false;
-            break;
-        case 3: /* TUTORIAL */
+        case 2: /* TUTORIAL */
             g->tutorial_slide = 0;
             screen_change(g, SCREEN_TUTORIAL);
             break;

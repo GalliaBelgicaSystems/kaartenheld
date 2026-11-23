@@ -103,13 +103,12 @@ Pressing START opens a menu with four entries (`title_screen.c`,
 |---|---|
 | `CONTINUE` | Opens the **LOAD GAME** screen (saves, see §10). |
 | `NEW GAME` | Starts a fresh game: intro slides → overworld. |
-| `SOUND: ON/OFF` | Toggles the soundtrack. |
-| `TUTORIAL` | Plays the 7-slide tutorial (see §2.4). |
+| `TUTORIAL` | Plays the 9-slide tutorial (see §2.4). |
 
 ### 2.2 Intro
 
-`NEW GAME` shows the three story slides above.  `A` or `START` advances;
-after the third slide the game drops into a fresh overworld.
+`NEW GAME` shows the five story slides above.  `A` or `START` advances;
+after the fifth slide the game drops into a fresh overworld.
 
 ### 2.3 Controls
 
@@ -905,7 +904,6 @@ fanfare), title, town, dungeon (castle), boss, mimic.  The boss theme plays only
 for the Lord of Slimes.  Mimic combat plays the short `Mimic_intro.uge`
 sting first (~0.9 s), then the looping `Mimic.uge` battle theme (timed swap in
 `audio_update()`; the tracker driver loops whole songs).  UI SFX: a short cursor blip and a confirm tone.
-`SOUND: ON/OFF` on the title menu toggles the soundtrack.
 
 Music runs on the hardware **timer interrupt** at a fixed 256 Hz, so
 tempos are stable across menus, dialogue and map transitions (AGENTS.md

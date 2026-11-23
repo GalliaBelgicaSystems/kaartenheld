@@ -18,12 +18,11 @@
  *
  * Staged inputs (set by the fixed wrapper in title_screen.c):
  *   g_bk_byte_a = title_menu_showing (0 = PRESS START, 1 = menu)
- *   g_bk_byte_b = title_menu_index  (0 = CONTINUE, 1 = NEW GAME, 2 = SOUND)
- */
+ *   g_bk_byte_b = title_menu_index  (0 = CONTINUE, 1 = NEW GAME, 2 = TUTORIAL,
+ *   3 = CREDITS) */
 
 extern char g_ui_screen_buf[18][21];
 extern uint8_t ui_font_tile_base;
-extern uint8_t g_sound_enabled;
 
 /* Generated title screen data (bank 9, read directly by the renderer) */
 extern const char g_title_logo[][21];
@@ -39,7 +38,7 @@ extern const char g_title_prompt_text[21];
 extern uint8_t g_title_prompt_x, g_title_prompt_y;
 extern const char g_title_credits_text[21];
 extern uint8_t const g_title_credits_x, g_title_credits_y, g_title_credits_enabled;
-extern const char g_title_menu_options[5][21];
+extern const char g_title_menu_options[4][21];
 extern uint8_t g_title_menu_x, g_title_menu_caret_x, g_title_menu_first_row, g_title_menu_row_step, g_title_menu_count;
 
 /* CGB calibration index (ui.c): palette programming is skipped on DMG. */
@@ -192,13 +191,8 @@ static void title_draw_menu(uint8_t index)
 {
     title_draw_text(3, 9, index == 0 ? "> CONTINUE" : "  CONTINUE", 11);
     title_draw_text(3, 11, index == 1 ? "> NEW GAME" : "  NEW GAME", 11);
-    if (g_sound_enabled) {
-        title_draw_text(3, 13, index == 2 ? "> SOUND: ON " : "  SOUND: ON ", 13);
-    } else {
-        title_draw_text(3, 13, index == 2 ? "> SOUND: OFF" : "  SOUND: OFF", 13);
-    }
-    title_draw_text(3, 15, index == 3 ? "> TUTORIAL" : "  TUTORIAL", 10);
-    title_draw_text(3, 17, index == 4 ? "> CREDITS" : "  CREDITS", 10);
+    title_draw_text(3, 13, index == 2 ? "> TUTORIAL" : "  TUTORIAL", 10);
+    title_draw_text(3, 15, index == 3 ? "> CREDITS" : "  CREDITS", 10);
 }
 
 /* Menu cursor glyphs (assets/menu_cursor.png via make gfx: cell 0 = the
@@ -275,7 +269,7 @@ void title_content_render(void)
  * current index, writes it back through the staged Game* (WRAM always
  * mapped), and repaints only the two '>' cells -- mirroring
  * g_ui_screen_buf so the render cache stays valid and no full redraw
- * flickers on navigation.  Rows are 9, 11, 13, 15, 17 for indices 0..4. */
+ * flickers on navigation.  Rows are 9, 11, 13, 15 for indices 0..3. */
 void title_menu_step_banked(void)
 {
     Game *g = (Game *)g_bk_ptr_a;
@@ -283,7 +277,7 @@ void title_menu_step_banked(void)
     uint8_t new_index;
     uint8_t old_row;
     uint8_t new_row;
-    uint8_t max_idx = 4;
+    uint8_t max_idx = 3;
 
     if (!g) return;
     index = g->title_menu_index;
