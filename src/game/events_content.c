@@ -471,9 +471,12 @@ const EventDefinition g_events[] = {
     /* ── Village Heal Mage (one free heal, YES/NO ask) ───────────────
      * The mage asks once ("do you want me to heal your wounds?") with a
      * YES/NO choice prompt (DIALOGUE_CHOICE_YES_NO, last line "> YES   NO").
-     * The dialogue screen dispatches the game-owned bank-5 body
-     * (src/game/heal_mage_banked.c), which owns what the answer means:
-     * YES heals the whole party, stages the jingle + telemetry the
+     * The dialogue screen dispatches the game-owned bank-10 body
+     * (src/game/choice_nav_banked.c), which owns what the answer means:
+     * YES heals the whole party, unless the hero is at 10+ HP -- then a
+     * second YES/NO confirm opens first ("he can only heal once"); its
+     * NO returns to the ask and its YES heals.  At 9 or less YES heals
+     * at once.  The heal stages the jingle + telemetry the
      * fixed wrapper owes, and sets HEAL_MAGE_USED; NO stages the
      * "come back when you're hurt" follow-up and sets nothing, so the
      * mage asks again next time.  Once used, talks match REFUSED first
