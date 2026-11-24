@@ -17,7 +17,7 @@
     "wake_grove": 19,
     "underground_tunnel": 20,
     "underground_tunnel_south": 21,
-    "demo_end_wake_scene": 23
+    "end_wake_scene": 23
   },
   "_retired": {
     "forest2": 6,

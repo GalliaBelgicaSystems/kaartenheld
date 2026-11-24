@@ -179,7 +179,7 @@ void dialogue_screen_update(Game *g)
             start_battle_from_world(g);
             return;
         }
-        /* Demo outro: the slime-lord wake dialogue ("Where am I?")
+        /* Outro: the slime-lord wake dialogue ("Where am I?")
          * routes to the ENDING screen (white document page;
          * screen_change starts MUSIC_ENDING on entry) -- the run is
          * over, win or lose.  Every other dialogue returns to the
@@ -244,7 +244,7 @@ void dialogue_screen_render(Game *g)
                 ui_sprite_commit();
             }
             ui_lcd_on();
-            /* Despair outro (demo finale): the defeat faded out to white
+            /* Despair outro (finale): the defeat faded out to white
              * on the result screen -- fade the wake area back in over the
              * just-redrawn world.  The box body carries the fade (same
              * bank, no new dispatch): with the flag set this repaint runs

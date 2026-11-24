@@ -2,7 +2,7 @@
 
 > Looking for the friendly player's guide instead? See [`manual.md`](manual.md).
 
-A complete, machine-checked reference to **KAARTENHELD — BATTLE DEMO**, the
+A complete, machine-checked reference to **KAARTENHELD**, the
 Game Boy card-combat RPG.
 
 This manual describes the game exactly as implemented.  Where a design
@@ -86,14 +86,13 @@ Boot lands on the **studio splash** — the GALLIA BELGICA SYSTEMS bitmap
 logo (`assets/gallia_belgica_systems.png`, red/blue bracket) — which
 auto-advances to the title screen after ~2.5 seconds or is skipped
 immediately with `A`/`START`.  The title screen then shows the
-**KAARTENHELD** logo (a red bitmap logo, `assets/title-red.png`), its
-**BATTLE DEMO** subtitle, and `PRESS START`.
+**KAARTENHELD** logo (a red bitmap logo, `assets/title-red.png`) and `PRESS START`.
 
 The on-screen title block is:
 
 ```
     [  KAARTENHELD  ]     (red bitmap logo, assets/title-red.png)
-    BATTLE DEMO           (text)
+    (no subtitle)         (blank row 5)
 ```
 
 Pressing START opens a menu with four entries (`title_screen.c`,
@@ -883,12 +882,14 @@ Upon closing this dialogue, the screen fades to white, and the hero awakens in t
 final wake scene before advancing to the **ENDING** screen:
 
 ```
-     DEMO OVER
+       THE END
 --------------------
-The Hero cleared
-the land of slimes!
-Peace has returned!
+Congratulations on
+beating Kaartenheld!
 Thanks for playing!
+Follow
+@GBelgicaSystems
+on X for updates!
 [A] RESTART
 ```
 
@@ -925,7 +926,7 @@ above is observable through a deterministic, machine-readable harness:
 | `make verify-walkthrough` | Drive the release ROM (real `levels/` content) and assert canonical state. |
 | `make verify-scroll` / `verify-music` / `verify-patrol` / `verify-endurance` | Extra PyBoy regression checks. |
 | `make screenshots` | Deterministic headless walkthrough producing `screenshots/*.png`. |
-| `make gifs` | Regenerate the README demo GIFs (`screenshots/*.gif`). |
+| `make gifs` | Regenerate the README preview GIFs (`screenshots/*.gif`). |
 | `make memmap` | Memory-budget reporter (fails on fixed-bank overflow). |
 | `make lint` | `-Wf-Wall` compile-to-asm lint (no warnings allowed). |
 

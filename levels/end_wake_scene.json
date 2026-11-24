@@ -1,13 +1,13 @@
 {
   "act": 1,
-  "id": "demo_end_wake_scene",
-  "name": "Demo End Wake Scene",
+  "id": "end_wake_scene",
+  "name": "End Wake Scene",
   "map": {
     "width": 24,
     "height": 18,
     "tileset": "underground",
     "music": "MUSIC_UNDERGROUND",
-    "map_id": "MAP_DEMO_END_WAKE_SCENE"
+    "map_id": "MAP_END_WAKE_SCENE"
   },
   "default_walkable": "underground.underground_floor_with_debris_1",
   "layers": {

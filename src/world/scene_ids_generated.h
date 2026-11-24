@@ -21,7 +21,7 @@
 #define MAP_WAKE_GROVE 19
 #define MAP_UNDERGROUND_TUNNEL 20
 #define MAP_UNDERGROUND_TUNNEL_SOUTH 21
-#define MAP_DEMO_END_WAKE_SCENE 23
+#define MAP_END_WAKE_SCENE 23
 
 /* No neighbor on an edge (SceneDefinition neighbor_n/s/e/w). */
 #define MAP_NONE 0xFF
@@ -49,7 +49,7 @@
 #define SCENE_WAKE_GROVE 19
 #define SCENE_UNDERGROUND_TUNNEL 20
 #define SCENE_UNDERGROUND_TUNNEL_SOUTH 21
-#define SCENE_DEMO_END_WAKE_SCENE 23
+#define SCENE_END_WAKE_SCENE 23
 
 /* Frozen harness-test fixtures (debug build only). Fixed block,
  * never moves: real ids grow upward from 0 and can never reach it. */

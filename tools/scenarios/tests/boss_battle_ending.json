@@ -2,7 +2,7 @@
  "act": 1,
  "name": "boss_battle_ending",
  "test": true,
- "description": "The Lord of Slimes is unwinnable: pinned to 1 HP (any hit would kill him), the first attack clamps him to 1 and opens the concentrating telegraph (flashing art, rows 9+10 message, waits for A). A fires the fixed 99-damage reprisal (DEFEAT, no victory) with the explosion SFX and no game-over music; the next A exits the battle into the Lord of Slimes defeat taunt (throne room, two pages), and closing it whites out into the wake dialogue (Where am I?), and closing that routes to the ENDING screen (white page, DEMO OVER) -- the demo's finale.",
+ "description": "The Lord of Slimes is unwinnable: pinned to 1 HP (any hit would kill him), the first attack clamps him to 1 and opens the concentrating telegraph (flashing art, rows 9+10 message, waits for A). A fires the fixed 99-damage reprisal (DEFEAT, no victory) with the explosion SFX and no game-over music; the next A exits the battle into the Lord of Slimes defeat taunt (throne room, two pages), and closing it whites out into the wake dialogue (Where am I?), and closing that routes to the ENDING screen (white page, THE END) -- the finale.",
  "actions": [
   {
    "type": "wait",
@@ -120,12 +120,12 @@
   {
    "type": "screen_row",
    "row": 1,
-   "contains": "DEMO OVER"
+   "contains": "THE END"
   },
   {
    "type": "screen_row",
    "row": 5,
-   "contains": "beating the battle"
+   "contains": "beating Kaartenheld!"
   },
   {
    "type": "battle_player_hp",

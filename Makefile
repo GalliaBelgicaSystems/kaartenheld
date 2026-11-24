@@ -60,7 +60,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_emit_banked.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c $(SRC_DIR)/battle/battle_ff_defeat_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening_more.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c $(GENERATED_MUSIC_DIR)/underground.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening_more.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/ending.c $(GENERATED_MUSIC_DIR)/casino.c $(GENERATED_MUSIC_DIR)/underground.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
@@ -836,11 +836,11 @@ $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/co
 $(GENERATED_MUSIC_DIR)/game_over.c: assets/music/game\ over.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_game_over "$@"
 
-# End-credits theme (assets/music/demo complete.uge, loops).  Played when
-# the final-boss victory exits to the ending screen (DEMO OVER).  Bank 7
+# End-credits theme (assets/music/ending.uge, loops).  Played when
+# the final-boss victory exits to the ending screen (THE END).  Bank 7
 # like the other late songs.
-$(GENERATED_MUSIC_DIR)/demo_complete.c: assets/music/demo\ complete.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
-	python3 tools/compile_music.py "$<" 7 song_demo_complete "$@"
+$(GENERATED_MUSIC_DIR)/ending.c: assets/music/ending.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_ending "$@"
 
 # Chuck-a-luck table theme (assets/music/casino.uge, loops) for Nis's
 # table.  Bank 7 has ~640 B free (release) and this track is ~3.3 KB, so it lives
@@ -869,7 +869,7 @@ $(GENERATED_MUSIC_DIR)/underground.c: assets/music/underground\ pass.uge tools/c
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening_more.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/demo_complete.wav $(MUSIC_PREVIEW_DIR)/underground.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening_more.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/ending.wav $(MUSIC_PREVIEW_DIR)/underground.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"

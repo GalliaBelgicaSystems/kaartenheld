@@ -32,7 +32,6 @@ TITLE_LINES = (
     "A GAME BY",
     "GALLIA BELGICA",
     "KAARTENHELD",
-    "BATTLE DEMO",
     "NEW GAME",
     "CONTINUE",
     "SOUND",

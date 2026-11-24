@@ -1488,9 +1488,9 @@ Finally introduce the Baten Kaitos-inspired card mechanics on top of the stable 
 
 **Guiding principle for the whole roadmap:** build only the abstractions that the current RPG actually proves it needs, while making every important state deterministic, observable, and testable by an LLM.
 
-## 11. Content expansion (14-level demo)
+## 11. Content expansion (14-level first act)
 
-The demo grew from 6 to 14 connected rooms on the current branch: the
+The first act grew from 6 to 14 connected rooms on the current branch: the
 forest branch (`forest_glade` → `forest_deep` → `forest_grove`,
 `forest_shrine`), a desolate spur (`south_ridge`), and the castle chain
 (`castle_entry` → `castle_hall` → `castle` → `throne_room`, with the

@@ -7,7 +7,7 @@
 #include "actor.h"
 
 /* ── Unwinnable-boss desperation, game-owned data + check (ROM bank 8) ──
- * THIS game ("Kaartenheld") ends its demo with an unwinnable Lord of
+ * THIS game ("Kaartenheld") ends its first act with an unwinnable Lord of
  * Slimes: once the boss drops to its threshold HP it survives (clamped
  * to 1), flashes, announces its focus, and answers the hero's A press
  * with a scripted lethal reprisal into the wake-grove outro.  The
@@ -16,7 +16,7 @@
  * mechanism -- a cached unkillable slot, the DESPAIR hold phase, the
  * blink, the two-line message layout, WRAM-staged text -- and never
  * names a battle id, a threshold, or an English string (AGENTS.md
- * §55.1).  Everything game-specific lives here.  Because the demo has a
+ * §55.1).  Everything game-specific lives here.  Because the game has a
  * single unwinnable boss (BATTLE_NONE, slot 0, threshold 20 HP), the
  * parameters are inlined directly to save bank-8 ROM; reintroduce a
  * per-boss table here if additional despair bosses are added in the future.

@@ -2,7 +2,7 @@
  "act": "always",
  "name": "thanks_restart",
  "test": true,
- "description": "The battle-demo Thanks screen holds ~5 s (300 frames) then auto-restarts into a fresh overworld.",
+ "description": "The Thanks screen holds ~5 s (300 frames) then auto-restarts into a fresh overworld.",
  "actions": [
   {
    "type": "wait",

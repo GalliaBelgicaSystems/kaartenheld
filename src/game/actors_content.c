@@ -547,7 +547,7 @@ const WorldActorTable g_actor_tables[] = {
         0, 1 },
     { MAP_UNDERGROUND_TUNNEL_SOUTH, g_underground_tunnel_south_actors,
         (uint8_t)(sizeof(g_underground_tunnel_south_actors) / sizeof(g_underground_tunnel_south_actors[0])), 1 },
-    { MAP_DEMO_END_WAKE_SCENE, 0,
+    { MAP_END_WAKE_SCENE,  0,
         0, 1 },
 };
 

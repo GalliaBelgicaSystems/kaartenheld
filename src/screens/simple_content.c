@@ -69,11 +69,11 @@ void ending_content_render(void)
 {
     uint8_t i;
     static const char * const s_lines[8] = {
-        "     DEMO OVER",
+        "       THE END",
         "--------------------",
         "Congratulations on",
-        "beating the battle",
-        "demo of Kaartenheld!",
+        "beating Kaartenheld!",
+        "Thanks for playing!",
         "Follow",
         "@GBelgicaSystems",
         "on X for updates!"

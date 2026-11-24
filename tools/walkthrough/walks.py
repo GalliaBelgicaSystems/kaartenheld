@@ -1800,7 +1800,7 @@ def walk_sweep(planner, checks):
             want_music = -1
         s = Session(checks, "sweep")
         god_mode(s)
-        if name == "demo_end_wake_scene":
+        if name == "end_wake_scene":
             # Teleport-only finale (despair outro): no portal targets it
             # by design, so the sweep cannot walk there.  Recorded as an
             # explicit SKIP (not a pass, not silent): capture_walkthrough

@@ -466,7 +466,7 @@ OVERFLOW_TERRAIN_BANK = {
     "south_ridge": 9,
     # Finale backdrop (teleport-only, never walked): its 24x18 scattered
     # floor is ~930 B of terrain blocks, which bank 5 cannot hold.
-    "demo_end_wake_scene": 9,
+    "end_wake_scene": 9,
 }
 
 

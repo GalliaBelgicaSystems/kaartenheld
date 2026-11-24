@@ -4,10 +4,10 @@ subtitle: Player's Guide
 tagline: A card-duelling adventure
 ---
 
-> **This game is an early demo.** The rules in this book —
+> **This game is growing.** The rules in this book —
 > cards, battles, quests, gems — are real. The specific
-> people, places and numbers are examples from the demo
-> and will grow and change as the land fills in.
+> people, places and numbers are examples from the current
+> release and will grow and change as the land fills in.
 
 # The Story
 
@@ -26,14 +26,14 @@ card duel, and a well-played hand beats a sharp sword
 any day of the week.
 
 The folk of the **human settlement** to the east will
-ask for your help — in this demo, a merchant wants
+ask for your help — a merchant wants
 his family heirloom back, and the Mayor wants monsters
 dealt with. And far to the north, behind the old castle
 walls, something is waiting in the throne room that has
 been waiting a very long time.
 
 Its name is the **Lord of Slimes**. That is where the
-demo's road ends — for now. More of the land, and more
+road ends — for now. More of the land, and more
 of its stories, is still to come.
 
 ![The throne room at the end of the road](../screenshots/sweep-throne_room.png)
@@ -111,8 +111,8 @@ more often than you think you need to.
 ## Your quests
 
 The **QUEST** tab lists every promise you have made.
-Quests are how the land asks for help, and the demo
-holds the first few examples:
+Quests are how the land asks for help, and this
+release holds the first few examples:
 
 ![The QUEST tab tracks everything you promised](../screenshots/08-quests-tab.png)
 
@@ -124,8 +124,8 @@ holds the first few examples:
   Bring it home and his shop opens — an early example
   of a fetch quest with a real reward.
 - **The castle.** Something in the throne room has
-  been waiting a very long time. That is the demo's
-  last promise, and its biggest one. The full game
+  been waiting a very long time. That is the
+  last promise, and its biggest one. The game
   will hold many more.
 
 # Your Cards
@@ -232,7 +232,7 @@ You draw **five cards**. Energy (AP) is what you spend
 to play them: **1 AP** at first, refreshed for the
 attack *and* again for the defence every single round.
 
-You can raise your AP for good. The demo hides
+You can raise your AP for good. The land hides
 several upgrades — a practice spar, a treasure chest,
 a finished quest, a castle fight — each worth +1 AP
 a round, up to **5 AP** in total. Find them all and
@@ -353,14 +353,14 @@ The monster still attacks, so keep a shield spare.
 
 # Gold, Shops and Loot
 
-Battles pay in **gold** — in the demo, a slime is
+Battles pay in **gold** — a slime is
 worth 5, a bat or a kobold 8, a spider 15. Exact
 rewards will vary as the game grows, but the rule
 holds: fighting pays, and the purse fills.
 
 Shops open as you help people. For example, the
 **Merchant** opens his shop once you bring back his
-stolen heirloom from the north. In the demo he sells
+stolen heirloom from the north. He sells
 two things worth having:
 
 - an **Iron Ring** for 20 gold — your first reliable heal,
@@ -403,7 +403,7 @@ gem you own but have not equipped is just a souvenir.
 
 ## An example: the Straight Gem
 
-The first gem in the demo is the **STRAIGHT
+The first gem is the **STRAIGHT
 GEM**. Its skill is **SHORT STRAIGHT**.
 
 ![The chuck-a-luck table](../screenshots/review/gamble-table.png)
@@ -418,13 +418,13 @@ GEM**. Its skill is **SHORT STRAIGHT**.
 - With the gem off, the tier does not exist at all: a
   pair stays a pair and a high card stays a high card.
 
-## How to win a gem (in the demo)
+## How to win a gem
 
 You win it from **Nis**, a friendly kobold who runs a
 **chuck-a-luck** table in the village. Leave the table
 **20 gold or more up in one sitting** and he hands it
 over — once, and only once. Minigames like this are
-one more way the land rewards a hero; the full game
+one more way the land rewards a hero; the game
 will hold more of them.
 
 ## Playing chuck-a-luck
@@ -469,12 +469,12 @@ To load, press **SELECT** while walking around, or pick
 overwrites what was there before — pick a different
 slot if you want to keep an old adventure.
 
-# Winning the Demo
+# Winning the Game
 
 Defeat the **Lord of Slimes** in the castle's throne
-room and the demo is complete. You will see the ending,
+room to see the ending,
 and everyone you met will have something to say about
-it. The full game will carry the road further.
+it. The road will carry further from here.
 
 ![Not every chest in the castle is a chest](../screenshots/23-mimic-battle.png)
 
@@ -496,7 +496,7 @@ If your hero falls, the **GAME OVER** screen asks:
   play attacks or heals.
 - **Watch your AP.** A bigger hand is not always a
   better hand when the extras score nothing.
-- **Raise your AP early.** The demo hides several
+- **Raise your AP early.** The land hides several
   upgrades — spar, chest, quest, castle fight.
 - **Visit the Heal Mage.** Free healing, no questions.
 - **Sell cards you cannot use** and buy a good heal.
@@ -518,7 +518,7 @@ If your hero falls, the **GAME OVER** screen asks:
 | Decision timer | 20 seconds |
 | Gems equipped | 3 at most |
 | Save slots | 3 |
-| Demo goal | Help the settlement, then head north |
+| Goal | Help the settlement, then head north |
 
 Now go, hero — the cards are in your hands.
 

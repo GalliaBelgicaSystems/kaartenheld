@@ -34,9 +34,9 @@ typedef enum {
                         (battle_set_result DEFEAT) and plays over the
                         game-over choice menu until a map load restores
                         the scene track */
-    MUSIC_ENDING,    /* end-credits theme (demo complete.uge, loops,
+    MUSIC_ENDING,    /* end-credits theme (ending.uge, loops,
                         bank 7): starts when a final-boss victory exits
-                        to the ending screen (DEMO OVER) */
+                        to the ending screen (THE END) */
     MUSIC_CASINO,    /* chuck-a-luck table theme (casino.uge, loops,
                         bank 9 with its own driver copy): plays on
                         Nis's table; the gamble body restores the scene
