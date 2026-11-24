@@ -14,12 +14,12 @@ Route schema:
     id, name (<=20 chars), start (scene in levels/registry.json),
     destination (scene), dest_x/dest_y (inside the level bounds),
     act (1..9: the act this road belongs to),
-    supply (food/water prices + food_per_day/water_per_day burn),
-    camp (hunt food/water min..max + delay_min..max,
-    rest heal + delay, starve food/water hp + every,
-    study save/lost min..max + food/water),
+    supply (provisions_price + provisions_per_day burn),
+    camp (hunt provisions min..max + delay_min..max,
+    rest heal + delay, starve provisions hp + every,
+    study save/lost min..max + provisions),
     weather (optional per-weather weight 0..255 + days_min/max
-    1..10 + extra food/water -10..10 per day; each road tunes its
+    1..10 + extra provisions -10..10 per day; each road tunes its
     own climate, weights sum <= 255),
     methods (1..2 entries: paid instant or foot slog with its own
     event pool; every pool event must list the road act in its
@@ -32,12 +32,12 @@ Event schemas (kind):
             risk (ALWAYS 50: every scenario shares the same
             success/failure odds), optional battle (battle event id:
             that option fights), or numeric effects (gold
-            -30000..30000, food/water -30..30, heal/hurt 0..30,
+            -30000..30000, provisions -30..30, heal/hurt 0..30,
             delay/save/days 0..10), plus a fail object with text
             (<=20 fail line), optional fail battle, and fail_*
             numeric overrides (absent key = 0).  Optional wx object
             per option maps a weather name to hurt/delay/save/days/
-            food/water deltas (-10..10) applied when that weather is
+            provisions deltas (-10..10) applied when that weather is
             active (e.g. rain makes a ford hurt more, fog eats a
             shortcut's save); battle options only support hurt.
             Optional acts (default: every act 1..9).
@@ -77,7 +77,7 @@ WEATHER_NAMES = ["clear", "rain", "storm", "heat",
                  "cold", "wind", "snow", "fog"]
 WEATHER_ID = {n: i for i, n in enumerate(WEATHER_NAMES)}
 
-WX_MOD_KEYS = ("hurt", "delay", "save", "days", "food", "water")
+WX_MOD_KEYS = ("hurt", "delay", "save", "days", "provisions")
 
 
 def fail(msg):
@@ -199,7 +199,7 @@ def load_events(battle_ids):
                     # A fight may only combine with ambush hurt (struck
                     # on the way in); everything else belongs to the
                     # non-fight path.
-                    for key in ("gold", "food", "water", "heal",
+                    for key in ("gold", "provisions", "heal",
                                 "delay", "save", "days"):
                         if key in opt_doc:
                             fail("%s: %s_effects mixes battle with '%s'"
@@ -209,8 +209,7 @@ def load_events(battle_ids):
                         fail("%s: %s_effects.hurt must be 0..30" % (eid, opt))
                 else:
                     for key, lo, hi in (("gold", -30000, 30000),
-                                        ("food", -30, 30),
-                                        ("water", -30, 30),
+                                        ("provisions", -30, 30),
                                         ("heal", 0, 30),
                                         ("hurt", 0, 30),
                                         ("delay", 0, 10),
@@ -251,7 +250,7 @@ def load_events(battle_ids):
                 check_text(opt + "_fail_text", fail_doc.get("text"), eid)
                 fbattle = fail_doc.get("battle", None)
                 if fbattle is not None:
-                    for key in ("gold", "food", "water", "heal",
+                    for key in ("gold", "provisions", "heal",
                                 "hurt", "delay", "save", "days"):
                         if key in fail_doc and key != "hurt":
                             fail("%s: %s_effects.fail mixes battle with "
@@ -262,8 +261,7 @@ def load_events(battle_ids):
                              % (eid, opt))
                 else:
                     for key, lo, hi in (("gold", -30000, 30000),
-                                        ("food", -30, 30),
-                                        ("water", -30, 30),
+                                        ("provisions", -30, 30),
                                         ("heal", 0, 30),
                                         ("hurt", 0, 30),
                                         ("delay", 0, 10),
@@ -316,10 +314,9 @@ def load_routes(scenes, event_ids, event_acts):
                  % (rid, doc["dest_x"], doc["dest_y"], w, h))
         supply = doc.get("supply")
         if not isinstance(supply, dict):
-            fail("%s: supply must be an object with food_price/water_price"
+            fail("%s: supply must be an object with provisions_price"
                  % rid)
-        for key in ("food_price", "water_price", "food_per_day",
-                    "water_per_day"):
+        for key in ("provisions_price", "provisions_per_day"):
             v = supply.get(key)
             if not isinstance(v, int) or not (0 <= v <= 255):
                 fail("%s: supply.%s must be 0..255" % (rid, key))
@@ -329,16 +326,13 @@ def load_routes(scenes, event_ids, event_acts):
         hunt = camp.get("hunt")
         if not isinstance(hunt, dict):
             fail("%s: camp.hunt must be an object" % rid)
-        for key, lo, hi in (("food_min", 0, 30), ("food_max", 0, 30),
-                             ("water_min", 0, 30), ("water_max", 0, 30),
+        for key, lo, hi in (("provisions_min", 0, 30), ("provisions_max", 0, 30),
                              ("delay_min", 0, 10), ("delay_max", 0, 10)):
             v = hunt.get(key)
             if not isinstance(v, int) or not (lo <= v <= hi):
                 fail("%s: camp.hunt.%s must be %d..%d" % (rid, key, lo, hi))
-        if hunt["food_max"] < hunt["food_min"]:
-            fail("%s: camp.hunt.food_max < food_min" % rid)
-        if hunt["water_max"] < hunt["water_min"]:
-            fail("%s: camp.hunt.water_max < water_min" % rid)
+        if hunt["provisions_max"] < hunt["provisions_min"]:
+            fail("%s: camp.hunt.provisions_max < provisions_min" % rid)
         if hunt["delay_max"] < hunt["delay_min"]:
             fail("%s: camp.hunt.delay_max < delay_min" % rid)
         rest = camp.get("rest")
@@ -351,8 +345,7 @@ def load_routes(scenes, event_ids, event_acts):
         starve = camp.get("starve")
         if not isinstance(starve, dict):
             fail("%s: camp.starve must be an object" % rid)
-        for key, lo, hi in (("food_hp", 0, 30), ("food_every", 1, 10),
-                             ("water_hp", 0, 30), ("water_every", 1, 10)):
+        for key, lo, hi in (("provisions_hp", 0, 30), ("provisions_every", 1, 10)):
             v = starve.get(key)
             if not isinstance(v, int) or not (lo <= v <= hi):
                 fail("%s: camp.starve.%s must be %d..%d"
@@ -372,7 +365,7 @@ def load_routes(scenes, event_ids, event_acts):
                 fail("%s: camp.study.%s must be 0..10" % (rid, key))
         if study["lost_max"] < study["lost_min"]:
             fail("%s: camp.study.lost_max < lost_min" % rid)
-        for key in ("food", "water"):
+        for key in ("provisions",):
             v = study.get(key)
             if not isinstance(v, int) or not (0 <= v <= 30):
                 fail("%s: camp.study.%s must be 0..30" % (rid, key))
@@ -385,7 +378,7 @@ def load_routes(scenes, event_ids, event_acts):
         wxrow = {}
         if wx is None:
             wxrow = {n: {"weight": 0, "days_min": 1, "days_max": 1,
-                         "food": 0, "water": 0} for n in WEATHER_NAMES}
+                         "provisions": 0} for n in WEATHER_NAMES}
         else:
             if not isinstance(wx, dict):
                 fail("%s: weather must be an object keyed by weather "
@@ -408,7 +401,7 @@ def load_routes(scenes, event_ids, event_acts):
                              % (rid, n, key))
                 if entry.get("days_max", 1) < entry.get("days_min", 1):
                     fail("%s: weather.%s.days_max < days_min" % (rid, n))
-                for key in ("food", "water"):
+                for key in ("provisions",):
                     v = entry.get(key, 0)
                     if not isinstance(v, int) or not (-10 <= v <= 10):
                         fail("%s: weather.%s.%s must be -10..10"
@@ -416,8 +409,7 @@ def load_routes(scenes, event_ids, event_acts):
                 wxrow[n] = {"weight": wgt,
                             "days_min": entry.get("days_min", 1),
                             "days_max": entry.get("days_max", 1),
-                            "food": entry.get("food", 0),
-                            "water": entry.get("water", 0)}
+                            "provisions": entry.get("provisions", 0)}
             wsum = sum(wxrow[n]["weight"] for n in WEATHER_NAMES)
             if wsum > 255:
                 fail("%s: weather weights sum to %d (max 255, fixed-bank "
@@ -505,28 +497,21 @@ def emit(routes, events, scenes, battle_ids):
         lines.append("        %d, /* act (road act) */" % doc["act"])
         lines.append("        %d, %d, /* dest_x, dest_y */"
                      % (doc["dest_x"], doc["dest_y"]))
-        lines.append("        %d, /* food_price */" % doc["supply"]["food_price"])
-        lines.append("        %d, /* water_price */" % doc["supply"]["water_price"])
-        lines.append("        %d, /* food_per_day */" % doc["supply"]["food_per_day"])
-        lines.append("        %d, /* water_per_day */" % doc["supply"]["water_per_day"])
-        lines.append("        %d, /* hunt_food_min */" % doc["camp"]["hunt"]["food_min"])
-        lines.append("        %d, /* hunt_food_max */" % doc["camp"]["hunt"]["food_max"])
-        lines.append("        %d, /* hunt_water_min */" % doc["camp"]["hunt"]["water_min"])
-        lines.append("        %d, /* hunt_water_max */" % doc["camp"]["hunt"]["water_max"])
+        lines.append("        %d, /* provisions_price */" % doc["supply"]["provisions_price"])
+        lines.append("        %d, /* provisions_per_day */" % doc["supply"]["provisions_per_day"])
+        lines.append("        %d, /* hunt_prov_min */" % doc["camp"]["hunt"]["provisions_min"])
+        lines.append("        %d, /* hunt_prov_max */" % doc["camp"]["hunt"]["provisions_max"])
+        lines.append("        %d, /* starve_prov_hp */" % doc["camp"]["starve"]["provisions_hp"])
+        lines.append("        %d, /* starve_prov_every */" % doc["camp"]["starve"]["provisions_every"])
         lines.append("        %d, /* hunt_delay_min */" % doc["camp"]["hunt"]["delay_min"])
         lines.append("        %d, /* hunt_delay_max */" % doc["camp"]["hunt"]["delay_max"])
         lines.append("        %d, /* rest_heal */" % doc["camp"]["rest"]["heal"])
         lines.append("        %d, /* rest_delay */" % doc["camp"]["rest"]["delay"])
-        lines.append("        %d, /* starve_food_hp */" % doc["camp"]["starve"]["food_hp"])
-        lines.append("        %d, /* starve_food_every */" % doc["camp"]["starve"]["food_every"])
-        lines.append("        %d, /* starve_water_hp */" % doc["camp"]["starve"]["water_hp"])
-        lines.append("        %d, /* starve_water_every */" % doc["camp"]["starve"]["water_every"])
         lines.append("        %d, /* study_save_min */" % doc["camp"]["study"]["save_min"])
         lines.append("        %d, /* study_save_max */" % doc["camp"]["study"]["save_max"])
         lines.append("        %d, /* study_lost_min */" % doc["camp"]["study"]["lost_min"])
         lines.append("        %d, /* study_lost_max */" % doc["camp"]["study"]["lost_max"])
-        lines.append("        %d, /* study_food */" % doc["camp"]["study"]["food"])
-        lines.append("        %d, /* study_water */" % doc["camp"]["study"]["water"])
+        lines.append("        %d, /* study_prov */" % doc["camp"]["study"]["provisions"])
         wr = doc["weather_row"]
         lines.append("        { %s }, /* weather_weight (clear..fog) */"
                      % ", ".join(str(wr[n]["weight"]) for n in WEATHER_NAMES))
@@ -534,10 +519,8 @@ def emit(routes, events, scenes, battle_ids):
                      % ", ".join(str(wr[n]["days_min"]) for n in WEATHER_NAMES))
         lines.append("        { %s }, /* weather_days_max */"
                      % ", ".join(str(wr[n]["days_max"]) for n in WEATHER_NAMES))
-        lines.append("        { %s }, /* weather_food (extra/day) */"
-                     % ", ".join(str(wr[n]["food"]) for n in WEATHER_NAMES))
-        lines.append("        { %s }, /* weather_water (extra/day) */"
-                     % ", ".join(str(wr[n]["water"]) for n in WEATHER_NAMES))
+        lines.append("        { %s }, /* weather_prov (extra/day) */"
+                     % ", ".join(str(wr[n]["provisions"]) for n in WEATHER_NAMES))
         lines.append("        %d, /* method_count */" % len(doc["methods"]))
         lines.append("        {")
         for m in doc["methods"]:
@@ -590,8 +573,7 @@ def emit(routes, events, scenes, battle_ids):
             lines.append("        255, 255, /* opt battles (none) */")
             lines.append("        0, 0, /* opt risk (unused) */")
             lines.append("        0, 0, /* opt gold */")
-            lines.append("        0, 0, /* opt food */")
-            lines.append("        0, 0, /* opt water */")
+            lines.append("        0, 0, /* opt prov */")
             lines.append("        0, 0, /* opt heal */")
             lines.append("        0, 0, /* opt hurt */")
             lines.append("        0, 0, /* opt delay */")
@@ -613,8 +595,7 @@ def emit(routes, events, scenes, battle_ids):
             lines.append("        255, 255, /* opt battles (none) */")
             lines.append("        0, 0, /* opt risk (unused) */")
             lines.append("        0, 0, /* opt gold */")
-            lines.append("        0, 0, /* opt food */")
-            lines.append("        0, 0, /* opt water */")
+            lines.append("        0, 0, /* opt prov */")
             lines.append("        0, 0, /* opt heal */")
             lines.append("        0, 0, /* opt hurt */")
             lines.append("        0, 0, /* opt delay */")
@@ -645,7 +626,7 @@ def emit(routes, events, scenes, battle_ids):
                     for opt in ("opt1", "opt2")]
             lines.append("        %d, %d, /* opt risk (50/50 pre-scaled) */"
                          % (vals[0], vals[1]))
-            for key in ("gold", "food", "water", "heal", "hurt",
+            for key in ("gold", "provisions", "heal", "hurt",
                         "delay", "save", "days"):
                 vals = [doc[opt + "_effects"].get(key, 0)
                         for opt in ("opt1", "opt2")]
@@ -685,14 +666,12 @@ void travel_wx_apply_banked(void)
     int8_t *delay;
     int8_t *save;
     int8_t *days;
-    int8_t *food;
-    int8_t *water;
+    int8_t *prov;
     int8_t *fhurt;
     int8_t *fdelay;
     int8_t *fsave;
     int8_t *fdays;
-    int8_t *ffood;
-    int8_t *fwater;
+    int8_t *fprov;
     const TravelWxMod *m;
     if (g_travel_weather == TRAVEL_WEATHER_NONE) return;
     if (s_event.kind != TRAVEL_EVENT_CHOICE) return;
@@ -705,30 +684,26 @@ void travel_wx_apply_banked(void)
             delay = &s_event.opt1_delay;
             save = &s_event.opt1_save;
             days = &s_event.opt1_days;
-            food = &s_event.opt1_food;
-            water = &s_event.opt1_water;
+            prov = &s_event.opt1_prov;
             battle = s_event.opt1_battle;
             fhurt = &s_event_fail.opt1.hurt;
             fdelay = &s_event_fail.opt1.delay;
             fsave = &s_event_fail.opt1.save;
             fdays = &s_event_fail.opt1.days;
-            ffood = &s_event_fail.opt1.food;
-            fwater = &s_event_fail.opt1.water;
+            fprov = &s_event_fail.opt1.prov;
             fbattle = s_event_fail.opt1.battle;
         } else if (m->option == 1) {
             hurt = &s_event.opt2_hurt;
             delay = &s_event.opt2_delay;
             save = &s_event.opt2_save;
             days = &s_event.opt2_days;
-            food = &s_event.opt2_food;
-            water = &s_event.opt2_water;
+            prov = &s_event.opt2_prov;
             battle = s_event.opt2_battle;
             fhurt = &s_event_fail.opt2.hurt;
             fdelay = &s_event_fail.opt2.delay;
             fsave = &s_event_fail.opt2.save;
             fdays = &s_event_fail.opt2.days;
-            ffood = &s_event_fail.opt2.food;
-            fwater = &s_event_fail.opt2.water;
+            fprov = &s_event_fail.opt2.prov;
             fbattle = s_event_fail.opt2.battle;
         } else {
             continue;
@@ -739,15 +714,13 @@ void travel_wx_apply_banked(void)
             *delay = wx_clamp((int16_t)(*delay + m->delay), 0, 10);
             *save = wx_clamp((int16_t)(*save + m->save), 0, 10);
             *days = wx_clamp((int16_t)(*days + m->days), 0, 10);
-            *food = wx_clamp((int16_t)(*food + m->food), -30, 30);
-            *water = wx_clamp((int16_t)(*water + m->water), -30, 30);
+            *prov = wx_clamp((int16_t)(*prov + m->prov), -30, 30);
         }
         if (fbattle == 0xFF) {
             *fdelay = wx_clamp((int16_t)(*fdelay + m->delay), 0, 10);
             *fsave = wx_clamp((int16_t)(*fsave + m->save), 0, 10);
             *fdays = wx_clamp((int16_t)(*fdays + m->days), 0, 10);
-            *ffood = wx_clamp((int16_t)(*ffood + m->food), -30, 30);
-            *fwater = wx_clamp((int16_t)(*fwater + m->water), -30, 30);
+            *fprov = wx_clamp((int16_t)(*fprov + m->prov), -30, 30);
         }
     }
 }
@@ -771,14 +744,14 @@ def emit_fail_body(events, event_index):
                 lines.append("            %d, /* fail battle or 255 */" % idx)
                 lines.append("            %d, /* fail gold */"
                              % f.get("gold", 0))
-                for key in ("food", "water", "heal", "hurt",
+                for key in ("provisions", "heal", "hurt",
                             "delay", "save", "days"):
                     lines.append("            %d, /* fail %s */"
                                  % (f.get(key, 0), key))
                 lines.append("        },")
         else:
             for opt in ("opt1", "opt2"):
-                lines.append('        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },')
+                lines.append('        { "", 255, 0, 0, 0, 0, 0, 0, 0 },')
         lines.append("    },")
     lines.append("};")
     lines.append("")
@@ -814,7 +787,7 @@ def emit_wxmod_body(events, event_index):
         lines.append("        %d, /* event */" % eidx)
         lines.append("        %d, /* option (0 = opt1) */" % opt_i)
         lines.append("        %d, /* weather (%s) */" % (wid, wname))
-        for key in ("hurt", "delay", "save", "days", "food", "water"):
+        for key in ("hurt", "delay", "save", "days", "provisions"):
             lines.append("        %d, /* %s delta */"
                          % (mod.get(key, 0), key))
         lines.append("    },")

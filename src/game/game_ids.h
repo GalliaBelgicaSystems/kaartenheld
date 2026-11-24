@@ -157,8 +157,9 @@ typedef enum {
     VARIABLE_ID_DOG_QUEST          = 9,   /* 0 = not started, 1 = ACTIVE (heard the hint), 2 = complete (key traded) */
     VARIABLE_ID_DAY                = 10,  /* Convergence countdown (days left, starts at CONVERGENCE_DAYS) */
     VARIABLE_ID_LORD_POWER         = 11,  /* Lord of Slimes strength (0 = normal, 1 = converged/supreme) */
-    VARIABLE_ID_FOOD               = 12,  /* journey rations (1 burned per travel day) */
-    VARIABLE_ID_WATER              = 13   /* journey water (2 burned per travel day) */
+    VARIABLE_ID_PROVISIONS        = 12,  /* journey provisions (3 burned per travel day) */
+    VARIABLE_ID_WATER_RETIRED      = 13   /* retired: water folded into provisions (never reuse
+                                        * without a save-format audit; gameplay must not read it) */
 } VariableIdNamed;
 
 /* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[].

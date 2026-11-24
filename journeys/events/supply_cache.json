@@ -6,13 +6,12 @@
   "opt1_effects": {
     "text": "JACKPOT.",
     "risk": 50,
-    "food": 3,
-    "water": 3,
     "delay": 1,
     "fail": {
       "text": "EMPTY HOLE.",
       "delay": 1
-    }
+    },
+    "provisions": 6
   },
   "opt2": "LEAVE",
   "opt2_effects": {

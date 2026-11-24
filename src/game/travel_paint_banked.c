@@ -170,34 +170,17 @@ static void tp_days(void)
 
 static void tp_supplies(void)
 {
-    int16_t food;
-    int16_t water;
-    food = g_game.state.variables.values[VARIABLE_ID_FOOD - 1];
-    water = g_game.state.variables.values[VARIABLE_ID_WATER - 1];
-    if (food < 0) food = 0;
-    if (water < 0) water = 0;
-    s_line[0] = 'F';
-    s_line[1] = 'O';
+    int16_t prov;
+    prov = g_game.state.variables.values[VARIABLE_ID_PROVISIONS - 1];
+    if (prov < 0) prov = 0;
+    s_line[0] = 'P';
+    s_line[1] = 'R';
     s_line[2] = 'O';
-    s_line[3] = 'D';
+    s_line[3] = 'V';
     s_line[4] = ' ';
-    s_n = tp_u16((uint16_t)food, &s_line[5]);
+    s_n = tp_u16((uint16_t)prov, &s_line[5]);
     s_n = (uint8_t)(5 + s_n);
-    if (food == 0) {
-        s_line[s_n] = '!';
-        s_n++;
-    }
-    s_line[s_n] = ' ';
-    s_n++;
-    s_line[s_n] = 'W';
-    s_line[(uint8_t)(s_n + 1)] = 'A';
-    s_line[(uint8_t)(s_n + 2)] = 'T';
-    s_line[(uint8_t)(s_n + 3)] = 'E';
-    s_line[(uint8_t)(s_n + 4)] = 'R';
-    s_line[(uint8_t)(s_n + 5)] = ' ';
-    s_n = (uint8_t)(s_n + 6);
-    s_n = (uint8_t)(s_n + tp_u16((uint16_t)water, &s_line[s_n]));
-    if (water == 0) {
+    if (prov == 0) {
         s_line[s_n] = '!';
         s_n++;
     }
@@ -391,16 +374,15 @@ static void tp_delta_days(int16_t net)
     }
 }
 
-/* Generic choice-outcome line (gold, food, water, HP, net steps,
+/* Generic choice-outcome line (gold, provisions, HP, net steps,
  * net days; zero parts skipped, capped at the 18-col row by the
  * diff-skipping writer). */
-static void tp_delta_core(int16_t gold, int8_t food, int8_t water,
+static void tp_delta_core(int16_t gold, int8_t prov,
                           int16_t hp, int16_t steps, int8_t days)
 {
     s_n = 0;
     tp_delta_part(gold, 'G');
-    tp_delta_part(food, 'F');
-    tp_delta_part(water, 'W');
+    tp_delta_part(prov, 'P');
     if (hp != 0) {
         tp_delta_part(hp, 'H');
         s_line[s_n] = 'P';
@@ -421,8 +403,7 @@ static void tp_delta(const TravelEvent *e, uint8_t opt1)
     steps = (int16_t)((int16_t)(opt1 ? e->opt1_delay : e->opt2_delay) -
                       (int16_t)(opt1 ? e->opt1_save : e->opt2_save));
     tp_delta_core(opt1 ? e->opt1_gold : e->opt2_gold,
-                  opt1 ? e->opt1_food : e->opt2_food,
-                  opt1 ? e->opt1_water : e->opt2_water,
+                  opt1 ? e->opt1_prov : e->opt2_prov,
                   hp, steps,
                   (int8_t)(opt1 ? e->opt1_days : e->opt2_days));
 }
@@ -435,7 +416,7 @@ static void tp_fail_delta(uint8_t opt1)
     f = opt1 ? &s_event_fail.opt1 : &s_event_fail.opt2;
     hp = (int16_t)((int16_t)f->heal - (int16_t)f->hurt);
     steps = (int16_t)((int16_t)f->delay - (int16_t)f->save);
-    tp_delta_core(f->gold, f->food, f->water, hp, steps, f->days);
+    tp_delta_core(f->gold, f->prov, hp, steps, f->days);
 }
 
 /* "> HELP IGNORE" / "  HELP>IGNORE" (choice options from the row). */
@@ -515,7 +496,7 @@ static void tp_camp(uint8_t idx, uint8_t y, const char *label)
     tp_text(2, y, s_line, 20);
 }
 
-/* "+N FOOD" (hunt yield, staged in g_travel_amount). */
+/* "+N PROV" (hunt yield, staged in g_travel_amount). */
 static void tp_found(void)
 {
     uint8_t n;
@@ -523,29 +504,12 @@ static void tp_found(void)
     n = tp_u16(g_travel_amount, &s_line[1]);
     n = (uint8_t)(1 + n);
     s_line[n] = ' ';
-    s_line[(uint8_t)(n + 1)] = 'F';
-    s_line[(uint8_t)(n + 2)] = 'O';
+    s_line[(uint8_t)(n + 1)] = 'P';
+    s_line[(uint8_t)(n + 2)] = 'R';
     s_line[(uint8_t)(n + 3)] = 'O';
-    s_line[(uint8_t)(n + 4)] = 'D';
+    s_line[(uint8_t)(n + 4)] = 'V';
     s_line[(uint8_t)(n + 5)] = '\0';
     tp_text(2, 11, s_line, 20);
-}
-
-/* "+N WATER" (hunt yield, staged in g_travel_water). */
-static void tp_drunk(void)
-{
-    uint8_t n;
-    s_line[0] = '+';
-    n = tp_u16(g_travel_water, &s_line[1]);
-    n = (uint8_t)(1 + n);
-    s_line[n] = ' ';
-    s_line[(uint8_t)(n + 1)] = 'W';
-    s_line[(uint8_t)(n + 2)] = 'A';
-    s_line[(uint8_t)(n + 3)] = 'T';
-    s_line[(uint8_t)(n + 4)] = 'E';
-    s_line[(uint8_t)(n + 5)] = 'R';
-    s_line[(uint8_t)(n + 6)] = '\0';
-    tp_text(2, 10, s_line, 20);
 }
 
 /* "+N STEPS" (hunt/rest detour, staged in g_travel_extra). */
@@ -630,7 +594,7 @@ static void tp_method(uint8_t idx, uint8_t y)
     tp_text(2, y, s_line, 20);
 }
 
-/* One supply row: "> FOOD 6 2G". */
+/* One supply row: "> PROV 6 2G". */
 static void tp_supply(uint8_t idx, uint8_t y, const char *label)
 {
     int16_t count;
@@ -640,9 +604,9 @@ static void tp_supply(uint8_t idx, uint8_t y, const char *label)
     const TravelRoute *r;
     r = &s_route;
     if (!label) return;
-    count = g_game.state.variables.values[idx == 0 ? VARIABLE_ID_FOOD - 1
-                                                   : VARIABLE_ID_WATER - 1];
-    price = (idx == 0) ? r->food_price : r->water_price;
+    (void)idx;
+    count = g_game.state.variables.values[VARIABLE_ID_PROVISIONS - 1];
+    price = r->provisions_price;
     if (count < 0) count = 0;
     s_line[0] = (idx == g_travel_choice) ? '>' : ' ';
     s_line[1] = ' ';
@@ -723,9 +687,8 @@ void travel_paint_banked(void)
         tp_camp(2, 11, "REST");
         tp_camp(3, 12, "STUDY MAP");
     } else if (view == TRAVEL_VIEW_SUPPLY) {
-        tp_supply(0, 9, "FOOD");
-        tp_supply(1, 11, "WATER");
-        if (g_travel_choice == 2) {
+        tp_supply(0, 9, "PROV");
+        if (g_travel_choice == 1) {
             tp_text(2, 13, "> LEAVE", 20);
         } else {
             tp_text(2, 13, "  LEAVE", 20);
@@ -773,7 +736,6 @@ void travel_paint_banked(void)
             tp_cost();
         } else if (g_travel_msg == TRAVEL_MSG_HUNTED) {
             tp_text(2, 9, "YOU FORAGE.", 20);
-            tp_drunk();
             tp_found();
             tp_detour();
         } else if (g_travel_msg == TRAVEL_MSG_RESTED) {

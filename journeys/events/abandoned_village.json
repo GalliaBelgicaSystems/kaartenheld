@@ -7,15 +7,15 @@
     "text": "LEFT IN HASTE.",
     "risk": 50,
     "gold": 6,
-    "food": 2,
     "delay": 1,
     "fail": {
       "text": "CAVED-IN CELLAR.",
       "gold": 2,
-      "food": 1,
       "hurt": 1,
-      "delay": 1
-    }
+      "delay": 1,
+      "provisions": 1
+    },
+    "provisions": 2
   },
   "opt2": "PASS BY",
   "opt2_effects": {

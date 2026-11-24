@@ -79,9 +79,9 @@ static void tb_add_steps(uint8_t delay)
     }
 }
 
-static void tb_starve(uint8_t nofood, uint8_t nowater);
+static void tb_starve(uint8_t noprov);
 
-static void tb_starve(uint8_t nofood, uint8_t nowater)
+static void tb_starve(uint8_t noprov)
 {
     uint8_t hp;
     hp = g_game.state.party.members[0].hp;
@@ -89,31 +89,18 @@ static void tb_starve(uint8_t nofood, uint8_t nowater)
      * bodies share the fixed-bank budget rules): count up, pay out
      * on reaching the beat.  No floor: hunger can kill outright (a
      * travel death is a cold hard game over, routed by the callers). */
-    if (nofood) {
-        g_travel_nofood++;
-        if (g_travel_nofood >= s_route.starve_food_every) {
-            g_travel_nofood = 0;
-            if (hp > s_route.starve_food_hp) {
-                hp = (uint8_t)(hp - s_route.starve_food_hp);
+    if (noprov) {
+        g_travel_noprov++;
+        if (g_travel_noprov >= s_route.starve_prov_every) {
+            g_travel_noprov = 0;
+            if (hp > s_route.starve_prov_hp) {
+                hp = (uint8_t)(hp - s_route.starve_prov_hp);
             } else {
                 hp = 0;
             }
         }
     } else {
-        g_travel_nofood = 0;
-    }
-    if (nowater) {
-        g_travel_nowater++;
-        if (g_travel_nowater >= s_route.starve_water_every) {
-            g_travel_nowater = 0;
-            if (hp > s_route.starve_water_hp) {
-                hp = (uint8_t)(hp - s_route.starve_water_hp);
-            } else {
-                hp = 0;
-            }
-        }
-    } else {
-        g_travel_nowater = 0;
+        g_travel_noprov = 0;
     }
     g_game.state.party.members[0].hp = hp;
     g_game.world.player.hp = hp;
@@ -121,7 +108,7 @@ static void tb_starve(uint8_t nofood, uint8_t nowater)
 
 /* Banked camp-action body (bank 11).  Action id arrives in
  * g_bk_byte_a (0 hunt, 1 rest, 2 study); results go straight to
- * WRAM (g_travel_amount/extra/water/msg, counters, GameState) with
+ * WRAM (g_travel_amount/extra/msg, counters, GameState) with
  * the arrive flag in g_bk_byte_b and the sfx id in g_bk_byte_c.
  * Same discipline as travel_burn_banked below: WRAM + same-bank
  * route rows only, inline xorshift on the travel stream (seeded by
@@ -132,7 +119,6 @@ void travel_camp_banked(void)
 {
     uint8_t action;
     uint8_t found;
-    uint8_t drunk;
     uint8_t delay;
     uint8_t saved;
     uint8_t lost;
@@ -143,22 +129,18 @@ void travel_camp_banked(void)
     g_bk_byte_b = 0;
     g_bk_byte_c = SFX_CONFIRM;
     if (action == 0) {
-        /* Hunt/forage: always finds food plus some water, may add a
+        /* Hunt/forage: finds provisions, may add a
          * detour; the day is spent off the trail (no road event). */
-        found = tb_roll(s_route.hunt_food_min, s_route.hunt_food_max);
-        drunk = tb_roll(s_route.hunt_water_min, s_route.hunt_water_max);
+        found = tb_roll(s_route.hunt_prov_min, s_route.hunt_prov_max);
         delay = tb_roll(s_route.hunt_delay_min, s_route.hunt_delay_max);
         g_bk_byte_a = 1;
         travel_burn_banked();
         if (g_game.state.party.members[0].hp == 0) return;
-        v = tb_get(VARIABLE_ID_FOOD);
-        tb_set(VARIABLE_ID_FOOD, (int16_t)(v + (int16_t)found));
-        v = tb_get(VARIABLE_ID_WATER);
-        tb_set(VARIABLE_ID_WATER, (int16_t)(v + (int16_t)drunk));
+        v = tb_get(VARIABLE_ID_PROVISIONS);
+        tb_set(VARIABLE_ID_PROVISIONS, (int16_t)(v + (int16_t)found));
         tb_add_steps(delay);
         g_travel_amount = found;
         g_travel_extra = delay;
-        g_travel_water = drunk;
         g_travel_msg = TRAVEL_MSG_HUNTED;
         g_bk_byte_c = SFX_CASH;
         return;
@@ -189,17 +171,11 @@ void travel_camp_banked(void)
     g_bk_byte_a = 1;
     travel_burn_banked();
     if (g_game.state.party.members[0].hp == 0) return;
-    v = tb_get(VARIABLE_ID_FOOD);
-    if (v > (int16_t)s_route.study_food) {
-        tb_set(VARIABLE_ID_FOOD, (int16_t)(v - (int16_t)s_route.study_food));
+    v = tb_get(VARIABLE_ID_PROVISIONS);
+    if (v > (int16_t)s_route.study_prov) {
+        tb_set(VARIABLE_ID_PROVISIONS, (int16_t)(v - (int16_t)s_route.study_prov));
     } else if (v > 0) {
-        tb_set(VARIABLE_ID_FOOD, 0);
-    }
-    v = tb_get(VARIABLE_ID_WATER);
-    if (v > (int16_t)s_route.study_water) {
-        tb_set(VARIABLE_ID_WATER, (int16_t)(v - (int16_t)s_route.study_water));
-    } else if (v > 0) {
-        tb_set(VARIABLE_ID_WATER, 0);
+        tb_set(VARIABLE_ID_PROVISIONS, 0);
     }
     if (net > 0) {
         g_travel_amount = (uint8_t)net;
@@ -274,8 +250,7 @@ void travel_burn_banked(void)
     uint8_t n;
     uint8_t i;
     int16_t day;
-    int16_t food;
-    int16_t water;
+    int16_t prov;
     int16_t rate;
     uint8_t w;
     n = g_bk_byte_a;
@@ -286,30 +261,18 @@ void travel_burn_banked(void)
         if (day > 0) {
             tb_set(VARIABLE_ID_DAY, (int16_t)(day - 1));
         }
-        food = tb_get(VARIABLE_ID_FOOD);
-        rate = (int16_t)s_route.food_per_day;
+        prov = tb_get(VARIABLE_ID_PROVISIONS);
+        rate = (int16_t)s_route.provisions_per_day;
         if (w != TRAVEL_WEATHER_NONE) {
-            rate = (int16_t)(rate + (int16_t)s_route.weather_food[w]);
+            rate = (int16_t)(rate + (int16_t)s_route.weather_prov[w]);
             if (rate < 0) rate = 0;
         }
-        if (food > rate) {
-            tb_set(VARIABLE_ID_FOOD, (int16_t)(food - rate));
-        } else if (food > 0) {
-            tb_set(VARIABLE_ID_FOOD, 0);
+        if (prov > rate) {
+            tb_set(VARIABLE_ID_PROVISIONS, (int16_t)(prov - rate));
+        } else if (prov > 0) {
+            tb_set(VARIABLE_ID_PROVISIONS, 0);
         }
-        water = tb_get(VARIABLE_ID_WATER);
-        rate = (int16_t)s_route.water_per_day;
-        if (w != TRAVEL_WEATHER_NONE) {
-            rate = (int16_t)(rate + (int16_t)s_route.weather_water[w]);
-            if (rate < 0) rate = 0;
-        }
-        if (water > rate) {
-            tb_set(VARIABLE_ID_WATER, (int16_t)(water - rate));
-        } else if (water > 0) {
-            tb_set(VARIABLE_ID_WATER, 0);
-        }
-        tb_starve((uint8_t)(tb_get(VARIABLE_ID_FOOD) <= 0),
-                  (uint8_t)(tb_get(VARIABLE_ID_WATER) <= 0));
+        tb_starve((uint8_t)(tb_get(VARIABLE_ID_PROVISIONS) <= 0));
         if (w != TRAVEL_WEATHER_NONE && g_travel_weather_left > 0) {
             g_travel_weather_left--;
         }

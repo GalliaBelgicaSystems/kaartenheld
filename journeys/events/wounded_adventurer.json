@@ -7,13 +7,11 @@
     "text": "HE SHARES LOOT.",
     "risk": 50,
     "gold": 10,
-    "food": -1,
-    "water": -1,
     "fail": {
       "text": "HE DIES SMILING.",
-      "food": -1,
-      "water": -1
-    }
+      "provisions": -2
+    },
+    "provisions": -2
   },
   "opt2": "LEAVE",
   "opt2_effects": {

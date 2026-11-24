@@ -7,14 +7,14 @@
     "text": "PAID IN KIND.",
     "risk": 50,
     "gold": 10,
-    "food": 4,
     "days": 2,
     "fail": {
       "text": "POOR HARVEST.",
       "gold": 4,
-      "food": 2,
-      "days": 2
-    }
+      "days": 2,
+      "provisions": 2
+    },
+    "provisions": 4
   },
   "opt2": "PASS BY",
   "opt2_effects": {

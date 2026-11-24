@@ -88,7 +88,7 @@ typedef enum {
     EVENT_ACTION_JOURNEY_START = 12,
 #ifdef TRAVEL_DEMO
     /* Open the route's supply merchant (travel-demo ROM): arg0 = route
-     * index whose supply table prices the food/water.  Game layer. */
+     * index whose supply table prices provisions.  Game layer. */
     EVENT_ACTION_TRAVEL_SUPPLY = 13
 #endif
 #endif

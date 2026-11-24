@@ -1,16 +1,16 @@
 {
   "id": "spoiled_food",
   "kind": "choice",
-  "text": "FOOD HAS SPOILED.",
+  "text": "PROVISIONS SPOILED.",
   "opt1": "TOSS IT",
   "opt1_effects": {
     "text": "CLEAN PACK.",
     "risk": 50,
-    "food": -3,
     "fail": {
       "text": "SPOILED THE REST.",
-      "food": -5
-    }
+      "provisions": -5
+    },
+    "provisions": -3
   },
   "opt2": "RISK IT",
   "opt2_effects": {

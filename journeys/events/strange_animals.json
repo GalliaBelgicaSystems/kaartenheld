@@ -6,11 +6,11 @@
   "opt1_effects": {
     "text": "BERRY TRAIL.",
     "risk": 50,
-    "food": 2,
     "fail": {
       "text": "INTO A BOG.",
       "hurt": 2
-    }
+    },
+    "provisions": 2
   },
   "opt2": "AVOID",
   "opt2_effects": {

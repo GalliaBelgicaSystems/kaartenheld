@@ -1,17 +1,17 @@
 {
   "id": "stranded_merchant",
   "kind": "choice",
-  "text": "MERCHANT NEEDS FOOD.",
+  "text": "MERCHANT NEEDS PROV.",
   "opt1": "SHARE",
   "opt1_effects": {
     "text": "HE PAYS IN GOLD.",
     "risk": 50,
     "gold": 12,
-    "food": -2,
     "fail": {
       "text": "EMPTY PURSE.",
-      "food": -2
-    }
+      "provisions": -2
+    },
+    "provisions": -2
   },
   "opt2": "LEAVE",
   "opt2_effects": {

@@ -7,13 +7,12 @@
     "text": "STOCKED UP.",
     "risk": 50,
     "gold": -6,
-    "food": 3,
-    "water": 2,
     "fail": {
       "text": "SHORT WEIGHT.",
       "gold": -6,
-      "food": 1
-    }
+      "provisions": 1
+    },
+    "provisions": 5
   },
   "opt2": "LEAVE",
   "opt2_effects": {

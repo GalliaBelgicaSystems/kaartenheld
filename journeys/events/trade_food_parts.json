@@ -1,18 +1,18 @@
 {
   "id": "trade_food_parts",
   "kind": "choice",
-  "text": "SWAP FOOD 4 SCRAP?",
+  "text": "SWAP PROV 4 SCRAP?",
   "opt1": "TRADE",
   "opt1_effects": {
     "text": "FAIR TRADE.",
     "risk": 50,
     "gold": 8,
-    "food": -3,
     "fail": {
       "text": "BAD DEAL.",
       "gold": 4,
-      "food": -3
-    }
+      "provisions": -3
+    },
+    "provisions": -3
   },
   "opt2": "DECLINE",
   "opt2_effects": {

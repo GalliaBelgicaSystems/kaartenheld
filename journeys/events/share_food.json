@@ -7,11 +7,11 @@
     "text": "BLESSINGS SHARED.",
     "risk": 50,
     "gold": 6,
-    "food": -4,
     "fail": {
       "text": "NOTHING TO GIVE.",
-      "food": -4
-    }
+      "provisions": -4
+    },
+    "provisions": -4
   },
   "opt2": "REFUSE",
   "opt2_effects": {

@@ -92,33 +92,25 @@ typedef struct {
     uint8_t act;         /* road act (pools admit only matching events) */
     uint8_t dest_x;
     uint8_t dest_y;
-    uint8_t food_price;  /* gold per ration (supply merchant) */
-    uint8_t water_price; /* gold per water (supply merchant) */
-    uint8_t food_per_day;   /* rations burned per travel day */
-    uint8_t water_per_day;  /* water burned per travel day */
-    uint8_t hunt_food_min;  /* forage yield range (food found) */
-    uint8_t hunt_food_max;
-    uint8_t hunt_water_min; /* forage yield range (water found) */
-    uint8_t hunt_water_max;
+    uint8_t provisions_price;  /* gold per provision (supply merchant) */
+    uint8_t provisions_per_day;   /* provisions burned per travel day */
+    uint8_t hunt_prov_min;  /* forage yield range (provisions found) */
+    uint8_t hunt_prov_max;
+    uint8_t starve_prov_hp;    /* HP lost without provisions ... */
+    uint8_t starve_prov_every; /* ... every N starving days */
     uint8_t hunt_delay_min; /* forage detour range (extra steps) */
     uint8_t hunt_delay_max;
     uint8_t rest_heal;   /* HP restored by resting */
     uint8_t rest_delay;  /* extra steps a rest day adds */
-    uint8_t starve_food_hp;    /* HP lost without food ... */
-    uint8_t starve_food_every; /* ... every N starving days */
-    uint8_t starve_water_hp;   /* HP lost without water ... */
-    uint8_t starve_water_every;
     uint8_t study_save_min; /* map-study shortcut range (steps saved) */
     uint8_t study_save_max;
     uint8_t study_lost_min; /* map-study getting-lost range (extra steps) */
     uint8_t study_lost_max;
-    uint8_t study_food;  /* extra rations a study day costs (on top) */
-    uint8_t study_water; /* extra water a study day costs (on top) */
+    uint8_t study_prov;  /* extra provisions a study day costs (on top) */
     uint8_t weather_weight[TRAVEL_WEATHER_COUNT]; /* roll weights (0 = off) */
     uint8_t weather_days_min[TRAVEL_WEATHER_COUNT]; /* duration range */
     uint8_t weather_days_max[TRAVEL_WEATHER_COUNT];
-    int8_t weather_food[TRAVEL_WEATHER_COUNT];  /* extra rations/day */
-    int8_t weather_water[TRAVEL_WEATHER_COUNT]; /* extra water/day */
+    int8_t weather_prov[TRAVEL_WEATHER_COUNT];  /* extra provisions/day */
     uint8_t method_count;
     TravelMethod methods[TRAVEL_METHODS_MAX];
 } TravelRoute;
@@ -142,10 +134,8 @@ typedef struct {
     uint8_t opt2_risk;
     int16_t opt1_gold;   /* choice effects, applied on confirm */
     int16_t opt2_gold;
-    int8_t opt1_food;    /* +/- rations (floored at zero) */
-    int8_t opt2_food;
-    int8_t opt1_water;   /* +/- water (floored at zero) */
-    int8_t opt2_water;
+    int8_t opt1_prov;    /* +/- provisions (floored at zero) */
+    int8_t opt2_prov;
     int8_t opt1_heal;    /* HP restored (capped at max) */
     int8_t opt2_heal;
     int8_t opt1_hurt;    /* HP damage (can kill: cold game over) */
@@ -163,8 +153,7 @@ typedef struct {
     char text[TRAVEL_TEXT_LEN + 1];
     uint8_t battle;
     int16_t gold;
-    int8_t food;
-    int8_t water;
+    int8_t prov;
     int8_t heal;
     int8_t hurt;
     int8_t delay;
@@ -188,8 +177,7 @@ typedef struct {
     int8_t delay;
     int8_t save;
     int8_t days;
-    int8_t food;
-    int8_t water;
+    int8_t prov;
 } TravelWxMod;
 
 extern const TravelRoute g_travel_routes[];
@@ -217,11 +205,9 @@ extern uint8_t g_travel_choice;
 extern uint8_t g_travel_msg;
 extern uint8_t g_travel_seen;    /* an event rolled this journey (guarantee) */
 extern uint8_t g_travel_in_ruins; /* suspended in the ruins map */
-extern uint8_t g_travel_amount;  /* camp result size (food/heal/steps saved) */
+extern uint8_t g_travel_amount;  /* camp result size (provisions/heal/steps saved) */
 extern uint8_t g_travel_extra;   /* camp detour size (extra steps added) */
-extern uint8_t g_travel_water;   /* camp water found (hunt result) */
-extern uint8_t g_travel_nofood;  /* consecutive starving days (no food) */
-extern uint8_t g_travel_nowater; /* consecutive starving days (no water) */
+extern uint8_t g_travel_noprov;  /* consecutive starving days (no provisions) */
 extern uint16_t g_travel_rng;    /* camp-action RNG stream (banked bodies) */
 extern uint8_t g_travel_failed;  /* last choice failed its risk roll */
 /* Active ambient weather (TRAVEL_WEATHER_* or NONE) + days left.

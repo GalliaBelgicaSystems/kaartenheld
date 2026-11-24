@@ -4,7 +4,7 @@ Usage: python3 tools/verify_travel_demo.py [MODE] (from repo root,
 inside `nix develop` for PyBoy)
   premium: carriage instant travel (-50G, no days, no events)
   nogold:  refused carriage (gold/days untouched)
-  supply:  field merchant food/water shop + leave
+  supply:  field merchant provisions shop + leave
   starve:  empty belly forces ambush even at frequency 0
   ambush:  route pool forced to [ambush_slimes] @100% (rebuild ROM first)
   help:    route pool forced to [traveler_help] @100% (rebuild ROM first)
@@ -16,9 +16,9 @@ inside `nix develop` for PyBoy)
   events:  route pools forced to single events + clear weather
            (rebuild ROM first):
            SHARE path on the act-1 road, FIGHT path on act 2.
-  camp:    daily camp menu (shipped tuning): HUNT finds 1-5 food
-           and 0-2 water with a 0-2 step detour, REST heals 5 for
-           +1 step, STUDY costs 2 food / 4 water and saves 0-2
+  camp:    daily camp menu (shipped tuning): HUNT finds 1-7 prov
+           with a 0-2 step detour, REST heals 5 for
+           +1 step, STUDY costs 6 prov and saves 0-2
            steps (or wanders lost +0-2), 2 dry days cost 5 HP.
   acts:    per-road per-act tables (shipped tuning): chapter 1
            walks the 8-step act-1 road, the town signpost walks
@@ -116,11 +116,8 @@ class D:
     def lord(self):
         return self.r.variable(11)
 
-    def food(self):
+    def prov(self):
         return self.r.variable(12)
-
-    def water(self):
-        return self.r.variable(13)
 
     def weather(self):
         return self.pb.memory[self.r.sym.wram("g_travel_weather")]
@@ -576,7 +573,7 @@ def test_nogold():
 
 
 def test_supply():
-    """Field merchant: walk over, open the supply shop, buy food+water
+    """Field merchant: walk over, open the supply shop, buy provisions
     with gold, leave back to the field unmoved."""
     d = D()
     try:
@@ -590,17 +587,12 @@ def test_supply():
         d.press("down", settle=12)  # bump the merchant: talk = supply opens
         assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
                           ticks=300), d.screen()
-        assert d.wait_for(lambda: d.text_has("FOOD"), ticks=300), d.rows()
-        assert d.text_has("WATER"), d.rows()
+        assert d.wait_for(lambda: d.text_has("PROV"), ticks=300), d.rows()
         assert d.text_has("LEAVE"), d.rows()
-        assert d.food() == 12 and d.water() == 24, (d.food(), d.water())
-        d.press("a", settle=20)  # buy FOOD (2G)
+        assert d.prov() == 36, d.prov()
+        d.press("a", settle=20)  # buy PROV (2G)
         assert d.gold() == 18, d.gold()
-        assert d.food() == 13, d.food()
-        d.press("down", settle=12)  # select WATER
-        d.press("a", settle=20)  # buy WATER (1G)
-        assert d.gold() == 17, d.gold()
-        assert d.water() == 25, d.water()
+        assert d.prov() == 37, d.prov()
         d.press("down", settle=12)  # select LEAVE
         assert d.wait_for(lambda: d.text_has("> LEAVE"), ticks=200), d.rows()
         d.press("a", settle=20)  # leave
@@ -608,27 +600,27 @@ def test_supply():
                           ticks=300), d.screen()
         st = d.scene()
         assert (st["player_x"], st["player_y"]) == (7, 8), st
-        print("supply OK: bought food+water, left unmoved")
+        print("supply OK: bought provisions, left unmoved")
     finally:
         d.close()
 
 
 def test_starve():
-    """Starving (no food) forces an ambush even at frequency 0."""
+    """Starving (no provisions) forces an ambush even at frequency 0."""
     d = D()
     try:
         boot_to_journey(d)
         select_foot(d)
         assert d.day() == 180, d.day()
         d.poke_day(170)
-        # drain food through the state address (variable 12)
+        # drain provisions through the state address (variable 12)
         import struct
         addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
         raw = struct.pack("<h", 0)
         d.pb.memory[addr] = raw[0]
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
-        assert d.food() == 0, d.food()
+        assert d.prov() == 0, d.prov()
         d.press("a", settle=20)  # advance: quiet roll is 0, hunger forces it
         assert d.wait_for(lambda: d.text_has("AMBUSH!"), ticks=300), d.rows()
         print("starve OK: 100% ambush with empty belly")
@@ -782,7 +774,7 @@ def test_risk():
                 d.press("a", settle=20)
                 continue
             gold0 = d.gold()
-            food0 = d.food()
+            food0 = d.prov()
             d.press("a", settle=20)  # SHARE
             if d.wait_for(lambda: d.text_has("HE PAYS IN GOLD."),
                           ticks=120):
@@ -796,7 +788,7 @@ def test_risk():
             else:
                 assert False, d.rows()
             d.press("a", settle=20)  # dismiss
-            assert d.food() == max(0, food0 - 2), (food0, d.food())
+            assert d.prov() == max(0, food0 - 2), (food0, d.prov())
         st = d.scene()
         assert st["scene_id"] == SCENE_ACT2_TOWN, st
         assert seen_success >= 1, "never rolled success"
@@ -884,7 +876,7 @@ def test_ruins_ignore():
 def test_camp():
     """Daily camp menu (shipped tuning, no forced pool needed: camp
     actions roll no road events, so the deterministic stream cannot
-    interfere).  HUNT nets found-1 food with a 0-2 detour, REST heals
+    interfere).  HUNT nets found-3 provisions with a 0-2 detour, REST heals
     5 for +1 step, STUDY saves 0-2 steps, and two consecutive dry
     days cost 5 HP (route starve tuning)."""
     d = D()
@@ -892,11 +884,9 @@ def test_camp():
         boot_to_journey(d)
         select_foot(d)
         assert d.ap() == 5, d.ap()
-        # HUNT: +1..5 found (-1 eaten), +0..2 steps, -1 day.
-        # HUNT: +1..5 food and +0..2 water found (-1/-2 eaten),
+        # HUNT: +1..7 provisions found (-3 eaten),
         # +0..2 steps, -1 day.
-        f0 = d.food()
-        w0 = d.water()
+        f0 = d.prov()
         day0 = d.day()
         tot0 = d.total_steps()
         d.press("down", settle=12)  # CONTINUE -> HUNT
@@ -904,27 +894,25 @@ def test_camp():
         d.press("a", settle=30)
         assert d.wait_for(lambda: d.text_has("YOU FORAGE."), ticks=300), \
             d.rows()
-        assert d.wait_for(lambda: d.text_has("FOOD"), ticks=120), d.rows()
-        net = d.food() - f0
-        assert 0 <= net <= 4, (f0, d.food())
-        wnet = d.water() - w0
-        assert -2 <= wnet <= 0, (w0, d.water())
+        assert d.wait_for(lambda: d.text_has("PROV"), ticks=120), d.rows()
+        net = d.prov() - f0
+        assert -2 <= net <= 4, (f0, d.prov())
         assert d.day() == day0 - 1, (d.day(), day0)
         detour = d.total_steps() - tot0
         assert 0 <= detour <= 2, detour
-        print("hunt OK: net +%d food %+d water, detour +%d, day -1"
-              % (net, wnet, detour))
+        print("hunt OK: net %+d provisions, detour +%d, day -1"
+              % (net, detour))
         d.press("a", settle=20)  # dismiss
-        # STARVE (water): two dry study days cost 5 HP on the
+        # STARVE (provisions): two dry study days cost 5 HP on the
         # second one (study burns days without foraging, so the
         # tally is exact and no road event can interfere).
         import struct
-        addr = d.r.state + OFF_VARIABLES + 2 * (13 - 1)
+        addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
         raw = struct.pack("<h", 0)
         d.pb.memory[addr] = raw[0]
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
-        assert d.water() == 0, d.water()
+        assert d.prov() == 0, d.prov()
         for _ in range(3):
             d.press("down", settle=12)  # CONTINUE -> HUNT -> REST -> MAP
         assert d.wait_for(lambda: d.text_has("> STUDY MAP"), ticks=200), d.rows()
@@ -955,12 +943,11 @@ def test_camp():
         assert d.total_steps() == tot0 + 1, d.total_steps()
         print("rest OK: HP 10 -> 15, +1 step, day -1")
         d.press("a", settle=20)
-        # STUDY: saves 0-2 steps for one day plus 2 food / 4 water
+        # STUDY: saves 0-2 steps for one day plus 6 provisions
         # of survey rations.
         left0 = d.pb.memory[d.r.sym.wram("g_travel_left")]
         day0 = d.day()
-        f0 = d.food()
-        w0 = d.water()
+        f0 = d.prov()
         d.press("down", settle=12)
         d.press("down", settle=12)
         d.press("down", settle=12)  # -> STUDY MAP
@@ -970,8 +957,7 @@ def test_camp():
                           or d.text_has("YOU GET LOST."), ticks=300), \
             d.rows()
         assert d.day() == day0 - 1, (d.day(), day0)
-        assert d.food() == (f0 - 3 if f0 >= 3 else 0), (f0, d.food())
-        assert d.water() == (w0 - 6 if w0 >= 6 else 0), (w0, d.water())
+        assert d.prov() == (f0 - 9 if f0 >= 9 else 0), (f0, d.prov())
         left1 = d.pb.memory[d.r.sym.wram("g_travel_left")]
         # study may arrive (net saved the last step): accept either.
         st = d.scene()
@@ -989,13 +975,11 @@ def test_camp():
         # game over, not a floor.
         d.poke_php(4)
         addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
-        raw = struct.pack("<h", 30)
+        raw = struct.pack("<h", 0)
         d.pb.memory[addr] = raw[0]
         d.pb.memory[addr + 1] = raw[1]
-        d.pb.memory[d.r.state + OFF_VARIABLES + 2 * (13 - 1)] = 0
-        d.pb.memory[d.r.state + OFF_VARIABLES + 2 * (13 - 1) + 1] = 0
         d.tick(2)
-        assert d.food() == 30 and d.water() == 0, (d.food(), d.water())
+        assert d.prov() == 0, d.prov()
         for _ in range(3):
             d.press("down", settle=12)  # -> STUDY MAP
         d.press("a", settle=30)  # dry day 1: 4 HP left, no damage
@@ -1021,7 +1005,7 @@ def test_events():
     """Representative new choice mechanics (route pools forced to
     single events and weather forced clear, rebuild ROM first): on
     the act-1 road the
-    stranded merchant's SHARE path applies food/gold effects with a
+    stranded merchant's SHARE path applies prov/gold effects with a
     delta line; on the act-2 road (chapter 2) the bandits' FIGHT
     path dispatches the staged battle event and pays victory gold."""
     d = D()
@@ -1029,7 +1013,7 @@ def test_events():
         # SHARE path (act-1 road).
         boot_to_journey(d)
         select_foot(d)
-        f0 = d.food()
+        f0 = d.prov()
         gold0 = d.gold()
         day0 = d.day()
         for _ in range(6):
@@ -1042,11 +1026,11 @@ def test_events():
         assert d.wait_for(lambda: d.text_has("HE PAYS IN GOLD."),
                           ticks=300), d.rows()
         assert d.text_has("+12G"), d.rows()
-        assert d.text_has("-2F"), d.rows()
-        assert d.food() == f0 - 3, (f0, d.food())  # step + share
+        assert d.text_has("-2P"), d.rows()
+        assert d.prov() == f0 - 5, (f0, d.prov())  # step (3) + share (2)
         assert d.gold() == gold0 + 12, (gold0, d.gold())
         assert d.day() == day0 - 1, (day0, d.day())  # step only
-        print("events SHARE OK: -2 food, +12 gold, delta line")
+        print("events SHARE OK: -2 prov, +12 gold, delta line")
         d.press("a", settle=20)
         d.close()
         d = None
@@ -1122,15 +1106,11 @@ def test_acts():
         import struct
         d.poke_php(15)
         addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
-        raw = struct.pack("<h", 15)
-        d.pb.memory[addr] = raw[0]
-        d.pb.memory[addr + 1] = raw[1]
-        addr = d.r.state + OFF_VARIABLES + 2 * (13 - 1)
-        raw = struct.pack("<h", 30)
+        raw = struct.pack("<h", 45)
         d.pb.memory[addr] = raw[0]
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
-        assert d.food() == 15 and d.water() == 30, (d.food(), d.water())
+        assert d.prov() == 45, d.prov()
         for _ in range(80):
             st = d.scene()
             if st["scene_id"] == SCENE_ACT2_FIELD:
@@ -1233,7 +1213,7 @@ def test_full():
 def test_weather():
     """Ambient weather (shipped act-2 tuning): the first travelled
     step rolls a condition on the travel stream, the route line shows
-    it, and the day's burn follows it (rain eases water, heat drinks
+    it, and the day's burn follows it (rain eases hunger, heat eats
     more, snow burns a second day)."""
     WX = ["CLEAR", "RAIN", "STORM", "HEAT", "COLD", "WIND", "SNOW", "FOG"]
     d = D()
@@ -1241,8 +1221,7 @@ def test_weather():
         boot_to_journey(d)
         select_foot(d)
         assert d.weather() == 0xFF, d.weather()
-        f0 = d.food()
-        w0 = d.water()
+        f0 = d.prov()
         day0 = d.day()
         d.press("a", settle=20)  # CONTINUE: first step, weather rolls
         w = d.weather()
@@ -1252,12 +1231,10 @@ def test_weather():
         assert dd in (1, 2), (day0, d.day(), WX[w])
         if WX[w] == "SNOW":
             assert dd == 2, (day0, d.day())
-        df = f0 - d.food()
-        dw = w0 - d.water()
-        assert 0 <= df <= 2, (f0, d.food(), WX[w])
-        assert 0 <= dw <= 3, (w0, d.water(), WX[w])
-        print("weather OK: %s, day -%d, food -%d, water -%d"
-              % (WX[w], dd, df, dw))
+        df = f0 - d.prov()
+        assert 1 <= df <= 5, (f0, d.prov(), WX[w])
+        print("weather OK: %s, day -%d, prov -%d"
+              % (WX[w], dd, df))
     finally:
         d.close()
 

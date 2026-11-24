@@ -14,33 +14,25 @@ const TravelRoute g_travel_routes[] = {
         25, /* dest_scene (act2_town) */
         2, /* act (road act) */
         2, 7, /* dest_x, dest_y */
-        2, /* food_price */
-        1, /* water_price */
-        1, /* food_per_day */
-        2, /* water_per_day */
-        1, /* hunt_food_min */
-        5, /* hunt_food_max */
-        0, /* hunt_water_min */
-        2, /* hunt_water_max */
+        2, /* provisions_price */
+        3, /* provisions_per_day */
+        1, /* hunt_prov_min */
+        7, /* hunt_prov_max */
+        5, /* starve_prov_hp */
+        2, /* starve_prov_every */
         0, /* hunt_delay_min */
         2, /* hunt_delay_max */
         5, /* rest_heal */
         1, /* rest_delay */
-        3, /* starve_food_hp */
-        2, /* starve_food_every */
-        5, /* starve_water_hp */
-        2, /* starve_water_every */
         0, /* study_save_min */
         2, /* study_save_max */
         0, /* study_lost_min */
         2, /* study_lost_max */
-        2, /* study_food */
-        4, /* study_water */
+        6, /* study_prov */
         { 90, 35, 20, 30, 20, 25, 15, 20 }, /* weather_weight (clear..fog) */
         { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
         { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
-        { 0, 0, 1, 0, 1, 1, 1, 0 }, /* weather_food (extra/day) */
-        { 0, -1, 0, 1, 0, 0, 1, 0 }, /* weather_water (extra/day) */
+        { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
         2, /* method_count */
         {
             { /* carriage */
@@ -68,33 +60,25 @@ const TravelRoute g_travel_routes[] = {
         25, /* dest_scene (act2_town) */
         1, /* act (road act) */
         2, 7, /* dest_x, dest_y */
-        2, /* food_price */
-        1, /* water_price */
-        1, /* food_per_day */
-        2, /* water_per_day */
-        1, /* hunt_food_min */
-        5, /* hunt_food_max */
-        0, /* hunt_water_min */
-        2, /* hunt_water_max */
+        2, /* provisions_price */
+        3, /* provisions_per_day */
+        1, /* hunt_prov_min */
+        7, /* hunt_prov_max */
+        5, /* starve_prov_hp */
+        2, /* starve_prov_every */
         0, /* hunt_delay_min */
         2, /* hunt_delay_max */
         5, /* rest_heal */
         1, /* rest_delay */
-        3, /* starve_food_hp */
-        2, /* starve_food_every */
-        5, /* starve_water_hp */
-        2, /* starve_water_every */
         0, /* study_save_min */
         2, /* study_save_max */
         0, /* study_lost_min */
         2, /* study_lost_max */
-        2, /* study_food */
-        4, /* study_water */
+        6, /* study_prov */
         { 130, 30, 5, 15, 10, 20, 0, 25 }, /* weather_weight (clear..fog) */
         { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
         { 2, 2, 1, 2, 2, 1, 1, 1 }, /* weather_days_max */
-        { 0, 0, 1, 0, 1, 1, 1, 0 }, /* weather_food (extra/day) */
-        { 0, -1, 0, 1, 0, 0, 1, 0 }, /* weather_water (extra/day) */
+        { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
         2, /* method_count */
         {
             { /* carriage */
@@ -122,33 +106,25 @@ const TravelRoute g_travel_routes[] = {
         24, /* dest_scene (act2_field) */
         2, /* act (road act) */
         5, 7, /* dest_x, dest_y */
-        2, /* food_price */
-        1, /* water_price */
-        1, /* food_per_day */
-        2, /* water_per_day */
-        1, /* hunt_food_min */
-        5, /* hunt_food_max */
-        0, /* hunt_water_min */
-        2, /* hunt_water_max */
+        2, /* provisions_price */
+        3, /* provisions_per_day */
+        1, /* hunt_prov_min */
+        7, /* hunt_prov_max */
+        5, /* starve_prov_hp */
+        2, /* starve_prov_every */
         0, /* hunt_delay_min */
         2, /* hunt_delay_max */
         5, /* rest_heal */
         1, /* rest_delay */
-        3, /* starve_food_hp */
-        2, /* starve_food_every */
-        5, /* starve_water_hp */
-        2, /* starve_water_every */
         0, /* study_save_min */
         2, /* study_save_max */
         0, /* study_lost_min */
         2, /* study_lost_max */
-        2, /* study_food */
-        4, /* study_water */
+        6, /* study_prov */
         { 85, 30, 25, 15, 30, 30, 20, 20 }, /* weather_weight (clear..fog) */
         { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
         { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
-        { 0, 0, 1, 0, 1, 1, 1, 0 }, /* weather_food (extra/day) */
-        { 0, -1, 0, 1, 0, 0, 1, 0 }, /* weather_water (extra/day) */
+        { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
         2, /* method_count */
         {
             { /* carriage */
@@ -193,8 +169,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         5, 0, /* opt gold */
-        2, 0, /* opt food */
-        0, 0, /* opt water */
+        2, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -218,8 +193,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         6, 0, /* opt gold */
-        2, 0, /* opt food */
-        0, 0, /* opt water */
+        2, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         1, 0, /* opt delay */
@@ -242,8 +216,7 @@ const TravelEvent g_travel_events[] = {
         255, 255, /* opt battles (none) */
         0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt prov */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -267,8 +240,7 @@ const TravelEvent g_travel_events[] = {
         5, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         -6, 0, /* opt gold */
-        -4, 0, /* opt food */
-        0, 0, /* opt water */
+        -4, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -292,8 +264,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         6, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -316,8 +287,7 @@ const TravelEvent g_travel_events[] = {
         255, 255, /* opt battles (none) */
         0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt prov */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -341,8 +311,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -366,8 +335,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         -5, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         6, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -391,8 +359,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         5, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -416,8 +383,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         9, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -441,8 +407,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         8, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         1, 0, /* opt delay */
@@ -466,8 +431,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         8, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -491,8 +455,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         10, 0, /* opt gold */
-        4, 0, /* opt food */
-        0, 0, /* opt water */
+        4, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -516,8 +479,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         5, 0, /* opt heal */
         0, 0, /* opt hurt */
         1, 0, /* opt delay */
@@ -541,8 +503,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         4, 0, /* opt hurt */
         0, 2, /* opt delay */
@@ -566,8 +527,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         1, 0, /* opt delay */
@@ -591,8 +551,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 5, /* opt hurt */
         0, 0, /* opt delay */
@@ -616,8 +575,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -641,8 +599,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         6, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -666,8 +623,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, -2, /* opt food */
-        0, -2, /* opt water */
+        0, -4, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -691,8 +647,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 2, /* opt delay */
@@ -716,8 +671,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 3, /* opt hurt */
         0, 0, /* opt delay */
@@ -741,8 +695,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 2, /* opt delay */
@@ -766,8 +719,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -791,8 +743,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         14, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -816,8 +767,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, -4, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         3, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -841,8 +791,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -866,8 +815,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -890,8 +838,7 @@ const TravelEvent g_travel_events[] = {
         255, 255, /* opt battles (none) */
         0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt prov */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -915,8 +862,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         6, 0, /* opt gold */
-        -4, 0, /* opt food */
-        0, 0, /* opt water */
+        -4, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -939,8 +885,7 @@ const TravelEvent g_travel_events[] = {
         255, 255, /* opt battles (none) */
         0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt prov */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -963,8 +908,7 @@ const TravelEvent g_travel_events[] = {
         255, 255, /* opt battles (none) */
         0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt prov */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -988,8 +932,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1013,8 +956,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         4, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1029,7 +971,7 @@ const TravelEvent g_travel_events[] = {
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
         0, /* late_enemy_hp (unused) */
-        "FOOD HAS SPOILED.", /* text */
+        "PROVISIONS SPOILED.", /* text */
         "CLEAN PACK.", /* opt1 result */
         "BAD IDEA.", /* opt2 result */
         "TOSS IT", /* opt1 label */
@@ -1038,8 +980,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        -3, 0, /* opt food */
-        0, 0, /* opt water */
+        -3, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 4, /* opt hurt */
         0, 0, /* opt delay */
@@ -1063,8 +1004,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 5, /* opt hurt */
         0, 0, /* opt delay */
@@ -1079,7 +1019,7 @@ const TravelEvent g_travel_events[] = {
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
         0, /* late_enemy_hp (unused) */
-        "MERCHANT NEEDS FOOD.", /* text */
+        "MERCHANT NEEDS PROV.", /* text */
         "HE PAYS IN GOLD.", /* opt1 result */
         "YOU WALK ON.", /* opt2 result */
         "SHARE", /* opt1 label */
@@ -1088,8 +1028,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         12, 0, /* opt gold */
-        -2, 0, /* opt food */
-        0, 0, /* opt water */
+        -2, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1113,8 +1052,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        2, 0, /* opt food */
-        0, 0, /* opt water */
+        2, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1138,8 +1076,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 2, /* opt hurt */
         0, 1, /* opt delay */
@@ -1163,8 +1100,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         5, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 3, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1188,8 +1124,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1213,8 +1148,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        3, 0, /* opt food */
-        3, 0, /* opt water */
+        6, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         1, 0, /* opt delay */
@@ -1238,8 +1172,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         -6, 0, /* opt gold */
-        3, 0, /* opt food */
-        2, 0, /* opt water */
+        5, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1254,7 +1187,7 @@ const TravelEvent g_travel_events[] = {
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
         0, /* late_enemy_hp (unused) */
-        "SWAP FOOD 4 SCRAP?", /* text */
+        "SWAP PROV 4 SCRAP?", /* text */
         "FAIR TRADE.", /* opt1 result */
         "YOU WALK ON.", /* opt2 result */
         "TRADE", /* opt1 label */
@@ -1263,8 +1196,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         8, 0, /* opt gold */
-        -3, 0, /* opt food */
-        0, 0, /* opt water */
+        -3, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1288,8 +1220,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         15, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         1, 0, /* opt delay */
@@ -1313,8 +1244,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1329,17 +1259,16 @@ const TravelEvent g_travel_events[] = {
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
         0, /* late_enemy_hp (unused) */
-        "CLEAR SPRING FOUND.", /* text */
-        "COOL AND DEEP.", /* opt1 result */
+        "PROVISIONS FOUND.", /* text */
+        "PACKED AWAY.", /* opt1 result */
         "SKINS BULGING.", /* opt2 result */
-        "DRINK", /* opt1 label */
+        "TAKE", /* opt1 label */
         "FILL UP", /* opt2 label */
         255, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        2, 6, /* opt water */
+        2, 6, /* opt provisions */
         2, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1363,8 +1292,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         3, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1387,8 +1315,7 @@ const TravelEvent g_travel_events[] = {
         255, 255, /* opt battles (none) */
         0, 0, /* opt risk (unused) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt prov */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1412,8 +1339,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        3, 0, /* opt food */
-        0, 0, /* opt water */
+        3, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1437,8 +1363,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         10, 0, /* opt gold */
-        -1, 0, /* opt food */
-        -1, 0, /* opt water */
+        -2, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
@@ -1462,8 +1387,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         0, 1, /* opt delay */
@@ -1487,8 +1411,7 @@ const TravelEvent g_travel_events[] = {
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
-        0, 0, /* opt food */
-        0, 0, /* opt water */
+        0, 0, /* opt provisions */
         0, 0, /* opt heal */
         0, 0, /* opt hurt */
         2, 0, /* opt delay */
@@ -1506,8 +1429,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "PICKED CLEAN.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            1, /* fail food */
-            0, /* fail water */
+            1, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1518,8 +1440,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1532,8 +1453,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "CAVED-IN CELLAR.", /* text */
             255, /* fail battle or 255 */
             2, /* fail gold */
-            1, /* fail food */
-            0, /* fail water */
+            1, /* fail provisions */
             0, /* fail heal */
             1, /* fail hurt */
             1, /* fail delay */
@@ -1544,8 +1464,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1554,16 +1473,15 @@ const TravelEventFail g_travel_event_fails[] = {
         },
     },
     { /* ambush_slimes */
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
     },
     { /* bandits */
         { /* opt1 fail */
             "OUTNUMBERED.", /* text */
             255, /* fail battle or 255 */
             -9, /* fail gold */
-            -6, /* fail food */
-            0, /* fail water */
+            -6, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1574,8 +1492,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "SURROUNDED!", /* text */
             5, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             4, /* fail hurt */
             0, /* fail delay */
@@ -1588,8 +1505,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "FALSE BOTTOM.", /* text */
             255, /* fail battle or 255 */
             2, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1600,8 +1516,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "TWISTED ANKLE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             2, /* fail hurt */
             0, /* fail delay */
@@ -1610,16 +1525,15 @@ const TravelEventFail g_travel_event_fails[] = {
         },
     },
     { /* brigand_trio */
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
     },
     { /* convergence_talk */
         { /* opt1 fail */
             "TALL TALES.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             1, /* fail delay */
@@ -1630,8 +1544,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1644,8 +1557,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "GRISTLY STEW.", /* text */
             255, /* fail battle or 255 */
             -5, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             2, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1656,8 +1568,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1670,8 +1581,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "THORN HELL.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             8, /* fail hurt */
             0, /* fail delay */
@@ -1682,8 +1592,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "SAFE AND SLOW.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1696,8 +1605,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "RUSTED JUNK.", /* text */
             255, /* fail battle or 255 */
             3, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1708,8 +1616,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1722,8 +1629,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "FALSE ALARM.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             1, /* fail delay */
@@ -1734,8 +1640,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU HESITATE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1748,8 +1653,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "OLD GRUDGES.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             3, /* fail hurt */
             0, /* fail delay */
@@ -1760,8 +1664,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1774,8 +1677,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "POOR HARVEST.", /* text */
             255, /* fail battle or 255 */
             4, /* fail gold */
-            2, /* fail food */
-            0, /* fail water */
+            2, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1786,8 +1688,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1800,8 +1701,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "HE SNORES.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             2, /* fail heal */
             0, /* fail hurt */
             1, /* fail delay */
@@ -1812,8 +1712,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1826,8 +1725,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "FALLING ROCKS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             7, /* fail hurt */
             0, /* fail delay */
@@ -1838,8 +1736,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "LONG WAY.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             3, /* fail delay */
@@ -1852,8 +1749,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "WRONG TURNS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             2, /* fail delay */
@@ -1864,8 +1760,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1878,8 +1773,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "NO SLEEP.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             2, /* fail hurt */
             0, /* fail delay */
@@ -1890,8 +1784,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "NEST OF TICKS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             8, /* fail hurt */
             0, /* fail delay */
@@ -1904,8 +1797,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "THEY WERE READY.", /* text */
             30, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             2, /* fail hurt */
             0, /* fail delay */
@@ -1916,8 +1808,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "TWIG SNAPS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1930,8 +1821,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "RESTLESS DREAMS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             2, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1942,8 +1832,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1956,8 +1845,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "STILL LEAKS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            -1, /* fail food */
-            0, /* fail water */
+            -1, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1968,8 +1856,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "LOST MORE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            -3, /* fail food */
-            -3, /* fail water */
+            -6, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -1982,8 +1869,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "FROM BEHIND!", /* text */
             31, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             3, /* fail hurt */
             0, /* fail delay */
@@ -1994,8 +1880,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "RAVINE MAZE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             3, /* fail delay */
@@ -2008,8 +1893,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "LONG PRAYERS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2020,8 +1904,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "TRAMPLED.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             5, /* fail hurt */
             0, /* fail delay */
@@ -2034,8 +1917,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "THEIR CHAMPION.", /* text */
             5, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             5, /* fail hurt */
             0, /* fail delay */
@@ -2046,8 +1928,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "CUT OFF.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             2, /* fail hurt */
             3, /* fail delay */
@@ -2060,8 +1941,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "AMBUSH ON ROAD.", /* text */
             5, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             3, /* fail hurt */
             0, /* fail delay */
@@ -2072,8 +1952,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2086,8 +1965,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "AXLE CRACKS.", /* text */
             255, /* fail battle or 255 */
             7, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2098,8 +1976,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2112,8 +1989,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "SWEPT DOWNSTREAM.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             5, /* fail hurt */
             1, /* fail delay */
@@ -2124,8 +2000,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "TOLL DOUBLED.", /* text */
             255, /* fail battle or 255 */
             -8, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2138,8 +2013,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "BAD RUMORS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             1, /* fail delay */
@@ -2150,8 +2024,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2164,8 +2037,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "ERODED SCRIPT.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2176,8 +2048,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2186,16 +2057,15 @@ const TravelEventFail g_travel_event_fails[] = {
         },
     },
     { /* ruins_sight */
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
     },
     { /* share_food */
         { /* opt1 fail */
             "NOTHING TO GIVE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            -4, /* fail food */
-            0, /* fail water */
+            -4, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2206,8 +2076,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2216,20 +2085,19 @@ const TravelEventFail g_travel_event_fails[] = {
         },
     },
     { /* skirmish_bats */
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
     },
     { /* skirmish_spiders */
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
     },
     { /* slime_letter */
         { /* opt1 fail */
             "INK BLURRED.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2240,8 +2108,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2254,8 +2121,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "STICKY MESS.", /* text */
             255, /* fail battle or 255 */
             1, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2266,8 +2132,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2280,8 +2145,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "SPOILED THE REST.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            -5, /* fail food */
-            0, /* fail water */
+            -5, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2292,8 +2156,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "VIOLENTLY ILL.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             7, /* fail hurt */
             0, /* fail delay */
@@ -2306,8 +2169,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "LEAKY CAVE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             2, /* fail hurt */
             0, /* fail delay */
@@ -2318,8 +2180,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "STRUCK BY HAIL.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             8, /* fail hurt */
             0, /* fail delay */
@@ -2332,8 +2193,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "EMPTY PURSE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            -2, /* fail food */
-            0, /* fail water */
+            -2, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2344,8 +2204,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2358,8 +2217,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "INTO A BOG.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             2, /* fail hurt */
             0, /* fail delay */
@@ -2370,8 +2228,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2384,8 +2241,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "FOG LINGERS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2396,8 +2252,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "CLIFF EDGE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             4, /* fail hurt */
             2, /* fail delay */
@@ -2410,8 +2265,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "WILL-O-WISP.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             3, /* fail hurt */
             0, /* fail delay */
@@ -2422,8 +2276,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "RESTLESS NIGHT.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             1, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2436,8 +2289,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "THEY HEARD YOU.", /* text */
             31, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             2, /* fail hurt */
             0, /* fail delay */
@@ -2448,8 +2300,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2462,8 +2313,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "EMPTY HOLE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             1, /* fail delay */
@@ -2474,8 +2324,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2488,8 +2337,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "SHORT WEIGHT.", /* text */
             255, /* fail battle or 255 */
             -6, /* fail gold */
-            1, /* fail food */
-            0, /* fail water */
+            1, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2500,8 +2348,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2514,8 +2361,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "BAD DEAL.", /* text */
             255, /* fail battle or 255 */
             4, /* fail gold */
-            -3, /* fail food */
-            0, /* fail water */
+            -3, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2526,8 +2372,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2540,8 +2385,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "EMPTY PURSE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             1, /* fail delay */
@@ -2552,8 +2396,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2566,8 +2409,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "IT WAVES BACK.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2578,8 +2420,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "DEAD END.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             1, /* fail delay */
@@ -2589,11 +2430,10 @@ const TravelEventFail g_travel_event_fails[] = {
     },
     { /* water_source */
         { /* opt1 fail */
-            "BITTER WATER.", /* text */
+            "STALE PACK.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            2, /* fail water */
+            2, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2604,8 +2444,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "LEAKY SKIN.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            3, /* fail water */
+            3, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2618,8 +2457,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "COLD STONE.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2630,8 +2468,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2640,16 +2477,15 @@ const TravelEventFail g_travel_event_fails[] = {
         },
     },
     { /* weak_beast */
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { "", 255, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
     },
     { /* wild_berries */
         { /* opt1 fail */
             "SOUR BATCH.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            1, /* fail food */
-            0, /* fail water */
+            1, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2660,8 +2496,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2674,8 +2509,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "HE DIES SMILING.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            -1, /* fail food */
-            -1, /* fail water */
+            -2, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2686,8 +2520,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2700,8 +2533,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "IT LASHES OUT.", /* text */
             48, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             2, /* fail hurt */
             0, /* fail delay */
@@ -2712,8 +2544,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "IT FOLLOWS.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             2, /* fail delay */
@@ -2726,8 +2557,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "REALLY WRONG.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             4, /* fail delay */
@@ -2738,8 +2568,7 @@ const TravelEventFail g_travel_event_fails[] = {
             "YOU WALK ON.", /* text */
             255, /* fail battle or 255 */
             0, /* fail gold */
-            0, /* fail food */
-            0, /* fail water */
+            0, /* fail provisions */
             0, /* fail heal */
             0, /* fail hurt */
             0, /* fail delay */
@@ -2761,8 +2590,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* delay delta */
         -2, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
     { /* dangerous_shortcut opt1 in rain */
         8, /* event */
@@ -2772,8 +2600,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* delay delta */
         0, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
     { /* landslide opt1 in rain */
         14, /* event */
@@ -2783,8 +2610,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* delay delta */
         0, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
     { /* landslide opt1 in storm */
         14, /* event */
@@ -2794,8 +2620,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* delay delta */
         0, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
     { /* river_crossing opt1 in rain */
         25, /* event */
@@ -2805,8 +2630,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* delay delta */
         0, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
     { /* river_crossing opt1 in storm */
         25, /* event */
@@ -2816,8 +2640,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* delay delta */
         0, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
     { /* storm_shelter opt2 in storm */
         35, /* event */
@@ -2827,8 +2650,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* delay delta */
         0, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
     { /* storm_shelter opt2 in rain */
         35, /* event */
@@ -2838,8 +2660,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* delay delta */
         0, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
     { /* wrong_sign opt1 in fog */
         52, /* event */
@@ -2849,8 +2670,7 @@ const TravelWxMod g_travel_wxmods[] = {
         2, /* delay delta */
         0, /* save delta */
         0, /* days delta */
-        0, /* food delta */
-        0, /* water delta */
+        0, /* provisions delta */
     },
 };
 
@@ -2874,14 +2694,12 @@ void travel_wx_apply_banked(void)
     int8_t *delay;
     int8_t *save;
     int8_t *days;
-    int8_t *food;
-    int8_t *water;
+    int8_t *prov;
     int8_t *fhurt;
     int8_t *fdelay;
     int8_t *fsave;
     int8_t *fdays;
-    int8_t *ffood;
-    int8_t *fwater;
+    int8_t *fprov;
     const TravelWxMod *m;
     if (g_travel_weather == TRAVEL_WEATHER_NONE) return;
     if (s_event.kind != TRAVEL_EVENT_CHOICE) return;
@@ -2894,30 +2712,26 @@ void travel_wx_apply_banked(void)
             delay = &s_event.opt1_delay;
             save = &s_event.opt1_save;
             days = &s_event.opt1_days;
-            food = &s_event.opt1_food;
-            water = &s_event.opt1_water;
+            prov = &s_event.opt1_prov;
             battle = s_event.opt1_battle;
             fhurt = &s_event_fail.opt1.hurt;
             fdelay = &s_event_fail.opt1.delay;
             fsave = &s_event_fail.opt1.save;
             fdays = &s_event_fail.opt1.days;
-            ffood = &s_event_fail.opt1.food;
-            fwater = &s_event_fail.opt1.water;
+            fprov = &s_event_fail.opt1.prov;
             fbattle = s_event_fail.opt1.battle;
         } else if (m->option == 1) {
             hurt = &s_event.opt2_hurt;
             delay = &s_event.opt2_delay;
             save = &s_event.opt2_save;
             days = &s_event.opt2_days;
-            food = &s_event.opt2_food;
-            water = &s_event.opt2_water;
+            prov = &s_event.opt2_prov;
             battle = s_event.opt2_battle;
             fhurt = &s_event_fail.opt2.hurt;
             fdelay = &s_event_fail.opt2.delay;
             fsave = &s_event_fail.opt2.save;
             fdays = &s_event_fail.opt2.days;
-            ffood = &s_event_fail.opt2.food;
-            fwater = &s_event_fail.opt2.water;
+            fprov = &s_event_fail.opt2.prov;
             fbattle = s_event_fail.opt2.battle;
         } else {
             continue;
@@ -2928,15 +2742,13 @@ void travel_wx_apply_banked(void)
             *delay = wx_clamp((int16_t)(*delay + m->delay), 0, 10);
             *save = wx_clamp((int16_t)(*save + m->save), 0, 10);
             *days = wx_clamp((int16_t)(*days + m->days), 0, 10);
-            *food = wx_clamp((int16_t)(*food + m->food), -30, 30);
-            *water = wx_clamp((int16_t)(*water + m->water), -30, 30);
+            *prov = wx_clamp((int16_t)(*prov + m->prov), -30, 30);
         }
         if (fbattle == 0xFF) {
             *fdelay = wx_clamp((int16_t)(*fdelay + m->delay), 0, 10);
             *fsave = wx_clamp((int16_t)(*fsave + m->save), 0, 10);
             *fdays = wx_clamp((int16_t)(*fdays + m->days), 0, 10);
-            *ffood = wx_clamp((int16_t)(*ffood + m->food), -30, 30);
-            *fwater = wx_clamp((int16_t)(*fwater + m->water), -30, 30);
+            *fprov = wx_clamp((int16_t)(*fprov + m->prov), -30, 30);
         }
     }
 }

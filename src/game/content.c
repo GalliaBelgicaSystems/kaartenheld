@@ -104,11 +104,10 @@ void game_new_game(GameState *state)
      * behavior unchanged (slots stay zero there). */
     state->variables.values[VARIABLE_ID_DAY - 1] = CONVERGENCE_DAYS;
     state->variables.values[VARIABLE_ID_LORD_POWER - 1] = 0;
-    /* Road rations for the travel demo (supplied by the field merchant).
-     * 10 steps + detours + a possible ruins day: 12 food / 24 water
+    /* Road provisions for the travel demo (supplied by the field merchant).
+     * 10 steps + detours + a possible ruins day: 36 provisions
      * covers the trip without starving a clean run. */
-    state->variables.values[VARIABLE_ID_FOOD - 1] = 12;
-    state->variables.values[VARIABLE_ID_WATER - 1] = 24;
+    state->variables.values[VARIABLE_ID_PROVISIONS - 1] = 36;
 #endif
     /* Neutral market at boot (game_state_zero leaves 0, which is outside
      * the valid 24-48 band; readers treat out-of-band as neutral, but a

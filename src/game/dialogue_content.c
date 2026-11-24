@@ -99,8 +99,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_FIELD_MERCHANT,
         "MERCHANT",
-        5,
-        {"SUPPLIES! FOOD AND", "WATER FOR THE ROAD.", "EAT AND DRINK OR", "THE WILD WILL", "FIND YOU HUNGRY."},
+        4,
+        {"SUPPLIES! PROV FOR", "THE ROAD. EAT OR", "THE WILD WILL FIND", "YOU HUNGRY."},
         0,
         0
     },

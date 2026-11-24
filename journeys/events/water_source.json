@@ -1,26 +1,26 @@
 {
   "id": "water_source",
   "kind": "choice",
-  "text": "CLEAR SPRING FOUND.",
-  "opt1": "DRINK",
+  "text": "PROVISIONS FOUND.",
+  "opt1": "TAKE",
   "opt1_effects": {
-    "text": "COOL AND DEEP.",
+    "text": "PACKED AWAY.",
     "risk": 50,
-    "water": 2,
     "heal": 2,
     "fail": {
-      "text": "BITTER WATER.",
-      "water": 2
-    }
+      "text": "STALE PACK.",
+      "provisions": 2
+    },
+    "provisions": 2
   },
   "opt2": "FILL UP",
   "opt2_effects": {
     "text": "SKINS BULGING.",
     "risk": 50,
-    "water": 6,
     "fail": {
       "text": "LEAKY SKIN.",
-      "water": 3
-    }
+      "provisions": 3
+    },
+    "provisions": 6
   }
 }

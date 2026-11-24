@@ -29,9 +29,7 @@ uint8_t g_travel_seen;
 uint8_t g_travel_in_ruins;
 uint8_t g_travel_amount;
 uint8_t g_travel_extra;
-uint8_t g_travel_water;
-uint8_t g_travel_nofood;
-uint8_t g_travel_nowater;
+uint8_t g_travel_noprov;
 uint16_t g_travel_rng;
 uint8_t g_travel_failed;
 uint8_t g_travel_weather;
@@ -149,9 +147,9 @@ bool game_travel_active(void)
 }
 
 /* Burn n days off the Convergence clock (floor at zero, never
- * negative) plus the route's road rations (food/water per day from
- * the route table, floored -- a desert route drinks more).  Days
- * spent with no food or no water count up their own starvation
+ * negative) plus the route's road provisions (provisions per day from
+ * the route table, floored -- a desert route eats more).  Days
+ * spent with no provisions count up a starvation
  * tally; every Nth such day costs HP outright (a travel death is a
  * cold hard game over, routed by the callers).  A day with supplies
  * resets that tally.  Crossing zero flips the Lord supreme (one-way):
@@ -240,14 +238,13 @@ static void travel_close_supply(Game *g)
     screen_change(g, SCREEN_OVERWORLD);
 }
 
-/* Buy one unit of the picked supply (0 = food, 1 = water) if affordable. */
+/* Buy one unit of provisions if affordable. */
 static void travel_buy_supply(Game *g)
 {
     int16_t price;
     int16_t gold;
     if (!g) return;
-    price = (g_travel_choice == 0) ? (int16_t)s_route.food_price
-                                  : (int16_t)s_route.water_price;
+    price = (int16_t)s_route.provisions_price;
     gold = currency_get(&g->state, CURRENCY_ID_GOLD);
     if (gold < price) {
         audio_play_sfx(SFX_BACK);
@@ -256,11 +253,7 @@ static void travel_buy_supply(Game *g)
     if (price > 0) {
         currency_add(&g->state, CURRENCY_ID_GOLD, (int16_t)(0 - price));
     }
-    if (g_travel_choice == 0) {
-        game_variable_add(&g->state, VARIABLE_ID_FOOD, 1);
-    } else {
-        game_variable_add(&g->state, VARIABLE_ID_WATER, 1);
-    }
+    game_variable_add(&g->state, VARIABLE_ID_PROVISIONS, 1);
     audio_play_sfx(SFX_CASH);
     game_render_reset(g);
 }
@@ -269,11 +262,11 @@ static void travel_update_supply(Game *g)
 {
     if (!g) return;
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_LEFT)) {
-        travel_cycle_choice(g, 2, 0);
+        travel_cycle_choice(g, 1, 0);
         return;
     }
     if (input_pressed(INPUT_DOWN) || input_pressed(INPUT_RIGHT)) {
-        travel_cycle_choice(g, 2, 1);
+        travel_cycle_choice(g, 1, 1);
         return;
     }
     if (input_pressed(INPUT_B)) {
@@ -281,7 +274,7 @@ static void travel_update_supply(Game *g)
         return;
     }
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
-        if (g_travel_choice >= 2) {
+        if (g_travel_choice >= 1) {
             travel_close_supply(g);
         } else {
             travel_buy_supply(g);
@@ -326,10 +319,9 @@ void travel_abandon(Game *g)
     g_travel_in_ruins = 0;
     g_travel_amount = 0;
     g_travel_extra = 0;
-    g_travel_water = 0;
+    g_travel_noprov = 0;
     g_travel_failed = 0;
-    g_travel_nofood = 0;
-    g_travel_nowater = 0;
+    g_travel_noprov = 0;
     g_travel_weather = TRAVEL_WEATHER_NONE;
     g_travel_weather_left = 0;
 }
@@ -390,8 +382,7 @@ static void travel_resolve_help(Game *g)
     uint8_t failed;
     uint8_t battle;
     int16_t gold;
-    int8_t food;
-    int8_t water;
+    int8_t prov;
     int8_t heal;
     int8_t hurt;
     int8_t delay;
@@ -408,9 +399,7 @@ static void travel_resolve_help(Game *g)
         battle = is_opt1 ? s_event_fail.opt1.battle
                          : s_event_fail.opt2.battle;
         gold = is_opt1 ? s_event_fail.opt1.gold : s_event_fail.opt2.gold;
-        food = is_opt1 ? s_event_fail.opt1.food : s_event_fail.opt2.food;
-        water = is_opt1 ? s_event_fail.opt1.water
-                        : s_event_fail.opt2.water;
+        prov = is_opt1 ? s_event_fail.opt1.prov : s_event_fail.opt2.prov;
         heal = is_opt1 ? s_event_fail.opt1.heal : s_event_fail.opt2.heal;
         hurt = is_opt1 ? s_event_fail.opt1.hurt : s_event_fail.opt2.hurt;
         delay = is_opt1 ? s_event_fail.opt1.delay
@@ -420,8 +409,7 @@ static void travel_resolve_help(Game *g)
     } else {
         battle = is_opt1 ? s_event.opt1_battle : s_event.opt2_battle;
         gold = is_opt1 ? s_event.opt1_gold : s_event.opt2_gold;
-        food = is_opt1 ? s_event.opt1_food : s_event.opt2_food;
-        water = is_opt1 ? s_event.opt1_water : s_event.opt2_water;
+        prov = is_opt1 ? s_event.opt1_prov : s_event.opt2_prov;
         heal = is_opt1 ? s_event.opt1_heal : s_event.opt2_heal;
         hurt = is_opt1 ? s_event.opt1_hurt : s_event.opt2_hurt;
         delay = is_opt1 ? s_event.opt1_delay : s_event.opt2_delay;
@@ -463,14 +451,10 @@ static void travel_resolve_help(Game *g)
     } else {
         currency_add(&g->state, CURRENCY_ID_GOLD, gold);
     }
-    v = game_variable_get(&g->state, VARIABLE_ID_FOOD);
-    v = (int16_t)(v + (int16_t)food);
+    v = game_variable_get(&g->state, VARIABLE_ID_PROVISIONS);
+    v = (int16_t)(v + (int16_t)prov);
     if (v < 0) v = 0;
-    game_variable_set(&g->state, VARIABLE_ID_FOOD, v);
-    v = game_variable_get(&g->state, VARIABLE_ID_WATER);
-    v = (int16_t)(v + (int16_t)water);
-    if (v < 0) v = 0;
-    game_variable_set(&g->state, VARIABLE_ID_WATER, v);
+    game_variable_set(&g->state, VARIABLE_ID_PROVISIONS, v);
     healed = (int16_t)g->state.party.members[0].hp;
     healed = (int16_t)(healed + (int16_t)heal);
     if (healed > (int16_t)g->state.party.members[0].max_hp) {
@@ -531,10 +515,9 @@ static void travel_clear_state(void)
     g_travel_in_ruins = 0;
     g_travel_amount = 0;
     g_travel_extra = 0;
-    g_travel_water = 0;
+    g_travel_noprov = 0;
     g_travel_failed = 0;
-    g_travel_nofood = 0;
-    g_travel_nowater = 0;
+    g_travel_noprov = 0;
     g_travel_weather = TRAVEL_WEATHER_NONE;
     g_travel_weather_left = 0;
 }
@@ -679,11 +662,10 @@ static void travel_advance(Game *g)
         return;
     }
     roll = rng_next();
-    /* Starving parties draw trouble: with no food or no water the next
+    /* Starving parties draw trouble: with no provisions the next
      * step is always an ambush (first battle event in the pool).  A pool
      * with no battle falls back to the normal roll below. */
-    if (game_variable_get(&g->state, VARIABLE_ID_FOOD) <= 0 ||
-        game_variable_get(&g->state, VARIABLE_ID_WATER) <= 0) {
+    if (game_variable_get(&g->state, VARIABLE_ID_PROVISIONS) <= 0) {
         for (i = 0; i < s_method.pool_count; i++) {
             travel_load_event(s_method.pool_event[i]);
             if (s_event.kind == TRAVEL_EVENT_BATTLE) {

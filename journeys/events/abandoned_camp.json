@@ -7,11 +7,11 @@
     "text": "LEFTOVERS FOUND.",
     "risk": 50,
     "gold": 5,
-    "food": 2,
     "fail": {
       "text": "PICKED CLEAN.",
-      "food": 1
-    }
+      "provisions": 1
+    },
+    "provisions": 2
   },
   "opt2": "LEAVE",
   "opt2_effects": {
