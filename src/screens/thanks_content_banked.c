@@ -37,8 +37,8 @@ void thanks_content_render(void)
 {
     if (g_game_completed != 0) {
         thanks_draw_line(1, 3, "Congratulations for", 19);
-        thanks_draw_line(1, 5, "beating Kaartenheld!", 18);
-        thanks_draw_line(1, 7, "Thanks for playing!", 18);
+        thanks_draw_line(0, 5, "beating Kaartenheld!", 20);
+        thanks_draw_line(1, 7, "Thanks for playing!", 19);
     } else {
         thanks_draw_line(1, 5, "Try to beat the", 15);
         thanks_draw_line(1, 7, "Lord of Slimes!", 15);

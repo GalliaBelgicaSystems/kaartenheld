@@ -118,10 +118,10 @@ void thanks_content_render(void);
 void ending_content_render(void);
 void game_over_content_render(void);
 
-/* Outro flag (simple_screens.c, WRAM): set when the slime-lord wake
- * dialogue routes to THANKS, cleared when THANKS restarts.  Lets the
- * banked thanks body show congratulations after the outro but a
- * "try to beat the Lord of Slimes" note after an ordinary game-over. */
+/* Outro flag (simple_screens.c, WRAM): checked by thanks_content_render()
+ * to show congratulations instead of the "try to beat the Lord of Slimes"
+ * note.  Currently stays 0 because the slime-lord wake dialogue routes to
+ * SCREEN_ENDING instead of SCREEN_THANKS; cleared when THANKS restarts. */
 extern uint8_t g_game_completed;
 
 #endif /* SCREEN_H */

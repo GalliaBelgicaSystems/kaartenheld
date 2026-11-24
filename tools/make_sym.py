@@ -10,20 +10,26 @@ import re
 
 def convert_symbols(noi_path, map_path, sym_path):
     symbols = {}
+    exact_symbols = set()
     collisions = []
     alias_seen = {}
 
+    def _add_exact(key, addr):
+        exact_symbols.add(key)
+        symbols[key] = addr
+
     def _alias(key, addr, source):
-        # Truncation aliases fill ONLY gaps: an exact entry (from .noi
-        # or .map) always wins, so an 8-char-truncated map form can never
+        # Truncation aliases fill ONLY gaps: an exact entry (from .noi)
+        # always wins, so an 8/9-char-truncated map form can never
         # clobber a short exact name (e.g. _g_game_c, the truncated form
         # of _g_game_completed, once overwrote g_game, sending every host
         # tool reading g_game to the flag byte -- AGENTS.md 52.30; the
         # same latent off-by-one hit g_scen_load via _g_scen_l).
-        # The alias_seen check comes first: a previous ALIAS must not
-        # mask a conflicting one (only an EXACT entry wins silently).
-        # Two different addresses aliasing one key with no exact entry
-        # is ambiguous: fail loudly.
+        # The exact_symbols check comes first so an exact .noi entry
+        # always wins silently; otherwise two different addresses
+        # aliasing one key is ambiguous and fails loudly.
+        if key in exact_symbols:
+            return
         if key in alias_seen:
             if alias_seen[key] != addr:
                 collisions.append(
@@ -47,9 +53,9 @@ def convert_symbols(noi_path, map_path, sym_path):
                         name = parts[1]
                         try:
                             addr = int(parts[2], 16)
-                            symbols[name] = addr
+                            _add_exact(name, addr)
                             if name.startswith("_"):
-                                symbols[name[1:]] = addr
+                                _add_exact(name[1:], addr)
                         except ValueError:
                             pass
 
@@ -62,14 +68,24 @@ def convert_symbols(noi_path, map_path, sym_path):
                     try:
                         addr = int(addr_str, 16)
                         if addr > 0:
-                            symbols[name] = addr
+                            # Never overwrite an exact .noi symbol (or an
+                            # earlier .map entry) with a truncated .map name
+                            # (e.g. _g_gamble_sfx truncates to _g_gamble).
+                            if name not in exact_symbols and name not in symbols:
+                                symbols[name] = addr
                             if name.startswith("_"):
-                                symbols[name[1:]] = addr
+                                stripped = name[1:]
+                                if stripped not in exact_symbols and stripped not in symbols:
+                                    symbols[stripped] = addr
                             
                             # Map unique truncated 8-character GBDK symbol names
                             # through _alias (clash-guarded: a truncated form
                             # of a longer full name must never steal a short
                             # exact name's address).
+                            # NOTE: no g_game prefix rule: the 8-char-truncated
+                            # map form of _g_game_completed is _g_game_c, which
+                            # a prefix rule would mistake for g_game and clobber
+                            # its address.  Exact _g_game lives in .noi/.map.
                             if name.startswith("_g_snap_b") or name.startswith("g_snap_b"):
                                 _alias("g_snap_buf", addr, name)
                                 _alias("_g_snap_buf", addr, name)
@@ -79,16 +95,6 @@ def convert_symbols(noi_path, map_path, sym_path):
                             elif name.startswith("_g_inp_m") or name.startswith("g_inp_m"):
                                 _alias("g_inp_mask", addr, name)
                                 _alias("_g_inp_mask", addr, name)
-                            # NOTE: exact match only (no startswith): the
-                            # 8-char-truncated map form of _g_game_completed
-                            # is _g_game_c, which a prefix rule would mistake
-                            # for g_game and clobber its address (every host
-                            # tool reading g_game would land on the flag
-                            # byte instead). The exact _g_game entry exists
-                            # in both .noi and .map, so nothing is lost.
-                            elif name == "_g_game" or name == "g_game":
-                                _alias("g_game", addr, name)
-                                _alias("_g_game", addr, name)
                             elif name.startswith("_g_ui_sc") or name.startswith("g_ui_sc"):
                                 _alias("g_ui_screen_buf", addr, name)
                                 _alias("_g_ui_screen_buf", addr, name)
