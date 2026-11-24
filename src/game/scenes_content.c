@@ -764,6 +764,7 @@ extern const SceneTerrainBlock s_castle_entry_terrain[];
 extern const SceneTerrainBlock s_castle_hall_terrain[];
 extern const SceneTerrainBlock s_throne_room_terrain[];
 extern const SceneTerrainBlock s_act2_field_terrain[];
+extern const SceneTerrainBlock s_act2_desolate_field_terrain[];
 const SceneDefinition g_scenes[] = {
     { MAP_FIELD,           MUSIC_OVERWORLD,   24, 18, &g_all_exits[0],     1, WORLD_TILESET_FOREST,    s_field_terrain,     17, 7, DIRECTION_LEFT,  TILE_FOREST_62, MAP_NONE,            MAP_NONE,            MAP_TOWN,            MAP_WAKE_GROVE, 9, 0, 0, 0xFF, 0, 0, 0xFF, 22, 8, DIRECTION_LEFT, 1, 8, DIRECTION_RIGHT },
     { MAP_TOWN,            MUSIC_TOWN,        20, 18, 0,                   0, WORLD_TILESET_VILLAGE,   s_town_terrain,      2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_FOREST,          MAP_NONE,            MAP_VILLAGE_AREA,    MAP_FIELD, 5, 9, 1, DIRECTION_DOWN, 0, 0, 0xFF, 18, 7, DIRECTION_LEFT, 1, 9, DIRECTION_RIGHT },
@@ -793,5 +794,6 @@ const SceneDefinition g_scenes[] = {
     { MAP_ACT2_TOWN,       MUSIC_TOWN,        20, 18, 0,                   0, WORLD_TILESET_VILLAGE,   s_act2_town_terrain, 2, 7, DIRECTION_RIGHT, TILE_VILLAGE_06, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 11, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_ACT2_RUINS,      MUSIC_DUNGEON,     20, 14, 0,                   0, WORLD_TILESET_CASTLE,    s_act2_ruins_terrain, 2, 2, DIRECTION_DOWN,  TILE_CASTLE_37, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_ACT2_WAKE_HALL,  MUSIC_UNDERGROUND, 20, 14, &g_all_exits[9],     3, WORLD_TILESET_UNDERGROUND, s_act2_wake_hall_terrain, 9, 7, DIRECTION_UP,    TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 9, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
-    { MAP_ACT2_WAKE_CACHE, MUSIC_UNDERGROUND, 14, 14, &g_all_exits[12],    1, WORLD_TILESET_UNDERGROUND, s_act2_wake_cache_terrain, 6, 8, DIRECTION_UP,    TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 9, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }
+    { MAP_ACT2_WAKE_CACHE, MUSIC_UNDERGROUND, 14, 14, &g_all_exits[12],    1, WORLD_TILESET_UNDERGROUND, s_act2_wake_cache_terrain, 6, 8, DIRECTION_UP,    TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 9, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
+    { MAP_ACT2_DESOLATE_FIELD, MUSIC_DESOLATE,    26, 20, 0,                   0, WORLD_TILESET_DESOLATE,  s_act2_desolate_field_terrain, 5, 17, DIRECTION_UP,    TILE_DESOLATE_LANDSCAPE_39, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 12, 0, 0, 0xFF, 5, 18, DIRECTION_UP, 24, 7, DIRECTION_LEFT, 0, 0, 0xFF }
 };

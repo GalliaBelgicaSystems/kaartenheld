@@ -478,6 +478,11 @@ OVERFLOW_TERRAIN_BANK = {
     # Travel-demo town copy (same 20x18 footprint as town, ~950 B):
     # alongside village_area in bank 11 for the same reason.
     "act2_town": 11,
+    # Travel-demo desolate copy (same 26x20 footprint as desolate_field,
+    # ~690 B): bank 6 (with desolate_field) overflowed, so it rides the
+    # bank-12 release spill bank, whose stamp body already exists (no
+    # scene.c dispatch change needed).
+    "act2_desolate_field": 12,
 }
 
 

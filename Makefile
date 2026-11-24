@@ -640,7 +640,7 @@ PROJECT_HEADERS = $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/*/*.h) \
 # here -- their rule depends on the phony `manifest`, so they remake (new
 # mtime) on every make run and would force a full rebuild every time.
 # Their consumers are wired explicitly above.
-$(OBJS) $(OBJS_DEBUG): $(PROJECT_HEADERS)
+$(OBJS) $(OBJS_DEBUG) $(OBJS_TRAVEL): $(PROJECT_HEADERS)
 
 # Toolchain self-check: every required native binary must not only resolve
 # but EXECUTE (a broken file shadowing the real one fails at exec time with

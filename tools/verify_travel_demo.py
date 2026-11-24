@@ -22,7 +22,8 @@ inside `nix develop` for PyBoy)
            steps (or wanders lost +0-2), 2 dry days cost 5 HP.
   acts:    per-road per-act tables (shipped tuning): chapter 1
            walks the 8-step act-1 road, the town signpost walks
-           the 10-step act-2 return road, chapter 2 walks the
+           the 16-step road to the desolate field, whose signpost
+           loops back to the field (10 steps); chapter 2 walks the
            10-step act-2 road.
   ruins:   route pool forced to [ruins_sight] @100% (rebuild ROM
            first): EXPLORE enters the 3-room map with no day burn,
@@ -52,6 +53,7 @@ SCENE_FIELD = 0
 SCENE_ACT2_FIELD = 24
 SCENE_ACT2_TOWN = 25
 SCENE_ACT2_RUINS = 26
+SCENE_ACT2_DESOLATE = 29
 
 
 class D:
@@ -787,6 +789,41 @@ def _finish_trip(d):
     assert st["scene_id"] == SCENE_ACT2_TOWN, st
 
 
+def _walk_until_scene(d, scene_id, label):
+    """Walk a journey leg to arrival, fighting ambushes and ignoring
+    everything else (no detours): shared by the loop legs."""
+    for _ in range(120):
+        st = d.scene()
+        if st["scene_id"] == scene_id:
+            return st
+        if d.screen() == SCREEN_BATTLE:
+            assert win_fight(d), "%s: fight lost?" % label
+            d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
+            d.press("a", settle=20)
+        elif d.screen() == SCREEN_JOURNEY:
+            if d.text_has("AMBUSH!"):
+                d.press("a", settle=30)
+            elif d.text_has("TRAVELER NEEDS"):
+                d.press("down", settle=12)
+                d.press("a", settle=20)
+                d.wait_for(lambda: d.text_has("YOU WALK ON."),
+                           ticks=300)
+                d.press("a", settle=20)
+            elif d.text_has("YOU SPOT OLD RUINS"):
+                d.press("down", settle=12)
+                d.press("a", settle=20)
+                d.wait_for(lambda: d.text_has("YOU WALK ON."),
+                           ticks=300)
+                d.press("a", settle=20)
+            else:
+                d.press("a", settle=20)
+        else:
+            d.tick(30)
+    st = d.scene()
+    assert st["scene_id"] == scene_id, (label, st)
+    return st
+
+
 def test_risk():
     """Every scenario shares 50/50 success/failure odds (route pool
     forced to [stranded_merchant] @100% and weather forced clear,
@@ -1110,8 +1147,9 @@ def test_events():
 def test_acts():
     """Per-road, per-act journey tables (shipped tuning): chapter 1
     walks the act-1 road (8 steps), the town signpost walks the
-    act-2 return road back to the field (10 steps), and chapter 2
-    walks the act-2 road (10 steps)."""
+    16-step road to the desolate field, whose signpost loops back
+    to the field (10 steps), and chapter 2 walks the act-2 road
+    (10 steps)."""
     d = None
     try:
         # Act-1 road on chapter 1: 8 steps to town.
@@ -1125,9 +1163,36 @@ def test_acts():
         st = d.scene()
         assert st["scene_id"] == SCENE_ACT2_TOWN, st
         assert (st["player_x"], st["player_y"]) == (2, 7), st
-        # Return leg from the town signpost: 10 steps to the field.
+        # Outward leg from the town signpost: 16 steps to the
+        # desolate field (the loop's middle leg).
         for _ in range(5):
             d.press("right", settle=14)
+            if d.screen() == SCREEN_JOURNEY:
+                break
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=300), d.screen()
+        assert d.wait_for(lambda: d.text_has("DESOLATE ROAD"), ticks=300)
+        d.press("a", settle=20)  # foot
+        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
+        assert d.total_steps() == 16, d.total_steps()
+        print("outward road OK: 16 steps")
+        # Provision for the loop (the demo boots light and the
+        # outward leg eats the rations; like the other poke setups):
+        # 16 + 10 steps at 3/day, plus detour margin.
+        import struct
+        d.poke_php(15)
+        addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
+        raw = struct.pack("<h", 100)
+        d.pb.memory[addr] = raw[0]
+        d.pb.memory[addr + 1] = raw[1]
+        d.tick(2)
+        assert d.prov() == 100, d.prov()
+        st = _walk_until_scene(d, SCENE_ACT2_DESOLATE, "town->desolate")
+        assert (st["player_x"], st["player_y"]) == (5, 17), st
+        print("desolate trip OK: arrived at the desolate field")
+        # Loop closer from the desolate signpost: 10 steps to the field.
+        for _ in range(4):
+            d.press("up", settle=14)
             if d.screen() == SCREEN_JOURNEY:
                 break
         assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
@@ -1136,51 +1201,16 @@ def test_acts():
         d.press("a", settle=20)  # foot
         assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
         assert d.total_steps() == 10, d.total_steps()
-        print("return road OK: 10 steps")
-        # Provision for the road home (the demo boots light and the
-        # outward leg eats the rations; like the other poke setups).
-        import struct
-        d.poke_php(15)
-        addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
-        raw = struct.pack("<h", 45)
-        d.pb.memory[addr] = raw[0]
-        d.pb.memory[addr + 1] = raw[1]
-        d.tick(2)
-        assert d.prov() == 45, d.prov()
-        for _ in range(80):
-            st = d.scene()
-            if st["scene_id"] == SCENE_ACT2_FIELD:
-                break
-            if d.screen() == SCREEN_BATTLE:
-                assert win_fight(d)
-                d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
-                d.press("a", settle=20)
-            elif d.screen() == SCREEN_JOURNEY:
-                if d.text_has("AMBUSH!"):
-                    d.press("a", settle=30)
-                elif d.text_has("TRAVELER NEEDS"):
-                    d.press("down", settle=12)
-                    d.press("a", settle=20)
-                    d.wait_for(lambda: d.text_has("YOU WALK ON."),
-                               ticks=300)
-                    d.press("a", settle=20)
-                elif d.text_has("YOU SPOT OLD RUINS"):
-                    d.press("down", settle=12)
-                    d.press("a", settle=20)
-                    d.wait_for(lambda: d.text_has("YOU WALK ON."),
-                               ticks=300)
-                    d.press("a", settle=20)
-                else:
-                    d.press("a", settle=20)
-            else:
-                d.tick(30)
-        st = d.scene()
-        assert st["scene_id"] == SCENE_ACT2_FIELD, st
-        print("return trip OK: arrived back on the field")
+        print("loop road OK: 10 steps")
+        st = _walk_until_scene(d, SCENE_ACT2_FIELD, "desolate->field")
+        assert (st["player_x"], st["player_y"]) == (5, 7), st
+        print("return trip OK: loop closed back on the field")
         d.close()
         d = None
         # Same road, different act: chapter 2 walks the act-2 table.
+        # (Poke after boot: NEW GAME resets the chapter to 1.)
         d = D()
+        boot_to_overworld(d)
         import struct
         addr = d.r.state + OFF_VARIABLES + 2 * (1 - 1)
         raw = struct.pack("<h", 2)
@@ -1188,7 +1218,13 @@ def test_acts():
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
         assert d.r.variable(1) == 2, d.r.variable(1)
-        boot_to_journey(d)
+        st = d.scene()
+        d.press("down")
+        st = d.scene()
+        assert (st["player_x"], st["player_y"]) == (5, 8), st
+        d.press("a", settle=30)
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=300), d.screen()
         select_foot(d)
         assert d.total_steps() == 10, d.total_steps()
         print("act-2 road OK: 10 steps")

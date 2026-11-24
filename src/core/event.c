@@ -129,13 +129,18 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
             (void)ok;
 #endif
         } else if (t == EVENT_ACTION_SPAWN_SLIME_TRIO) {
-            /* Slime-knight armor split (game content, bank 10): the
+            /* Slime-knight armor split (game content): the
              * felled knight's runtime slot becomes a slime-trio
              * encounter in place.  Thin dispatch only -- the body
              * lives in the event-table bank so its row scan is an
-             * in-bank read.  Keeps engine files free of game ids
+             * in-bank read (bank 12 in the travel build, 10
+             * elsewhere).  Keeps engine files free of game ids
              * (AGENTS.md §55.1). */
+#ifdef TRAVEL_DEMO
+            g_bk_call_bank = 12;
+#else
             g_bk_call_bank = 10;
+#endif
             g_bk_call_target = (uint16_t)&game_slime_trio_spawn_banked;
             banked_call_run();
         } else if (t == EVENT_ACTION_AUTOSAVE) {

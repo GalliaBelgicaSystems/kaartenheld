@@ -1,0 +1,253 @@
+{
+  "id": "desolate_to_field",
+  "name": "FIELD ROAD",
+  "start": "act2_desolate_field",
+  "destination": "act2_field",
+  "dest_x": 5,
+  "dest_y": 7,
+  "supply": {
+    "provisions_price": 2,
+    "provisions_per_day": 3
+  },
+  "camp": {
+    "hunt": {
+      "delay_min": 0,
+      "delay_max": 2,
+      "provisions_min": 1,
+      "provisions_max": 7
+    },
+    "rest": {
+      "heal": 5,
+      "delay": 1
+    },
+    "starve": {
+      "provisions_hp": 5,
+      "provisions_every": 2
+    },
+    "study": {
+      "save_min": 0,
+      "save_max": 2,
+      "lost_min": 0,
+      "lost_max": 2,
+      "provisions": 6
+    }
+  },
+  "weather": {
+    "clear": {
+      "weight": 90,
+      "days_min": 1,
+      "days_max": 2,
+      "provisions": 0
+    },
+    "rain": {
+      "weight": 35,
+      "days_min": 1,
+      "days_max": 2,
+      "provisions": -1
+    },
+    "storm": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 2,
+      "provisions": 1
+    },
+    "heat": {
+      "weight": 30,
+      "days_min": 1,
+      "days_max": 3,
+      "provisions": 1
+    },
+    "cold": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 2,
+      "provisions": 1
+    },
+    "wind": {
+      "weight": 25,
+      "days_min": 1,
+      "days_max": 1,
+      "provisions": 1
+    },
+    "snow": {
+      "weight": 15,
+      "days_min": 1,
+      "days_max": 2,
+      "provisions": 2
+    },
+    "fog": {
+      "weight": 20,
+      "days_min": 1,
+      "days_max": 1,
+      "provisions": 0
+    }
+  },
+  "methods": [
+    {
+      "id": "carriage",
+      "name": "CARRIAGE",
+      "cost_gold": 50,
+      "steps": 0,
+      "frequency": 0,
+      "pool": []
+    },
+    {
+      "id": "foot",
+      "name": "ON FOOT",
+      "cost_gold": 0,
+      "steps": 10,
+      "frequency": 35,
+      "pool": [
+        {
+          "event": "abandoned_camp",
+          "weight": 3
+        },
+        {
+          "event": "ambush_slimes",
+          "weight": 6
+        },
+        {
+          "event": "bandits",
+          "weight": 3
+        },
+        {
+          "event": "battle_signs",
+          "weight": 3
+        },
+        {
+          "event": "brigand_trio",
+          "weight": 4
+        },
+        {
+          "event": "convergence_talk",
+          "weight": 3
+        },
+        {
+          "event": "dangerous_shortcut",
+          "weight": 3
+        },
+        {
+          "event": "landslide",
+          "weight": 3
+        },
+        {
+          "event": "night_stalker",
+          "weight": 3
+        },
+        {
+          "event": "occupied_camp",
+          "weight": 3
+        },
+        {
+          "event": "old_shrine",
+          "weight": 3
+        },
+        {
+          "event": "pack_breaks",
+          "weight": 3
+        },
+        {
+          "event": "passage_guard",
+          "weight": 3
+        },
+        {
+          "event": "powerful_enemy",
+          "weight": 3
+        },
+        {
+          "event": "protect_caravan",
+          "weight": 3
+        },
+        {
+          "event": "river_crossing",
+          "weight": 3
+        },
+        {
+          "event": "ruined_monument",
+          "weight": 3
+        },
+        {
+          "event": "ruins_sight",
+          "weight": 4
+        },
+        {
+          "event": "skirmish_bats",
+          "weight": 4
+        },
+        {
+          "event": "skirmish_spiders",
+          "weight": 4
+        },
+        {
+          "event": "slime_letter",
+          "weight": 3
+        },
+        {
+          "event": "slime_tree",
+          "weight": 3
+        },
+        {
+          "event": "spoiled_food",
+          "weight": 3
+        },
+        {
+          "event": "storm_shelter",
+          "weight": 3
+        },
+        {
+          "event": "strange_animals",
+          "weight": 3
+        },
+        {
+          "event": "strange_fog",
+          "weight": 3
+        },
+        {
+          "event": "strange_light",
+          "weight": 3
+        },
+        {
+          "event": "strange_noises",
+          "weight": 3
+        },
+        {
+          "event": "supply_cache",
+          "weight": 3
+        },
+        {
+          "event": "traveler_help",
+          "weight": 6
+        },
+        {
+          "event": "watched",
+          "weight": 3
+        },
+        {
+          "event": "water_source",
+          "weight": 3
+        },
+        {
+          "event": "waystone",
+          "weight": 3
+        },
+        {
+          "event": "weak_beast",
+          "weight": 4
+        },
+        {
+          "event": "wild_berries",
+          "weight": 3
+        },
+        {
+          "event": "wounded_monster",
+          "weight": 3
+        },
+        {
+          "event": "wrong_sign",
+          "weight": 3
+        }
+      ]
+    }
+  ],
+  "act": 2
+}

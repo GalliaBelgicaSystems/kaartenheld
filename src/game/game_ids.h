@@ -79,6 +79,7 @@
 #define EVENT_ID_RUINS_CHEST_EMPTY (EVENT_ID_FIRST_GAME + 33)
 #define EVENT_ID_TRAVEL_DEMO_ACT1 (EVENT_ID_FIRST_GAME + 34)
 #define EVENT_ID_TRAVEL_RETURN  (EVENT_ID_FIRST_GAME + 35)
+#define EVENT_ID_TRAVEL_DESOLATE_RETURN (EVENT_ID_FIRST_GAME + 37)
 #define EVENT_ID_WAKE_CHEST     (EVENT_ID_FIRST_GAME + 36)
 #else
 #define EVENT_ID_WAKE_CHEST     (EVENT_ID_FIRST_GAME + 29)
@@ -211,9 +212,17 @@ typedef enum {
  * reads rows through banked_copy(), so the table is free to live in any
  * bank: bank 10 hosts it because bank 2 (cards catalog + the DECK view
  * build) is full.  Keep in sync with events_content.c's `#pragma bank`. */
-#define GAME_EVENT_BANK  10
+/* The travel-demo event table (loop legs) outgrew bank 10, so the
+ * travel build keeps the table in the bank-12 spill bank instead.
+ * Main ROMs keep bank 10 (byte-identical objects).  The slime-trio
+ * spawn body moves with it (it scans the table in-bank). */
 #ifdef TRAVEL_DEMO
-#define GAME_EVENT_COUNT 37
+#define GAME_EVENT_BANK  12
+#else
+#define GAME_EVENT_BANK  10
+#endif
+#ifdef TRAVEL_DEMO
+#define GAME_EVENT_COUNT 38
 #else
 #define GAME_EVENT_COUNT 30
 #endif

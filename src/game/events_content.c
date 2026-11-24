@@ -36,51 +36,69 @@
  *                    MONSTERS_DEFEATED counter (no quest gating), so kills
  *                    before the quest starts still count.
  */
+#ifdef TRAVEL_DEMO
+#pragma bank 12
+#else
 #pragma bank 10
+#endif
 
 const EventDefinition g_events[] = {
 #ifdef TRAVEL_DEMO
     {
-        /* Travel-demo supply merchant: the field MERCHANT opens the
-         * route's food/water shop instead of talking.  First-match
-         * wins, so this precedes the dialogue fallthrough (which the
+        /* Travel-demo supply merchants: ANY merchant on ANY map opens
+         * the provisions shop instead of talking.  One ANY-map row
+         * serves the field, town and desolate merchants because every
+         * route prices supplies identically (2G, 3/day); a per-route
+         * price split would need per-map rows again (and the bank-10
+         * budget for them, AGENTS.md 52.18).  First-match wins, so
+         * this precedes the dialogue fallthrough (which the
          * consume-guard also skips after a screen change). */
-        EVENT_ID_TRAVEL_SUPPLY, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, MAP_ACT2_FIELD,
+        EVENT_ID_TRAVEL_SUPPLY, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
-        {{ EVENT_ACTION_TRAVEL_SUPPLY, 0, 0, 0 }}
+        {{ EVENT_ACTION_TRAVEL_SUPPLY, 1, 0, 0 }}
     },
     {
         /* Same road, younger days: while the Convergence countdown is
          * still chapter 1 the field signpost walks the act-1 road
-         * table (route 1) instead of the act-2 one.  First-match wins,
+         * table (route 2) instead of the act-2 one.  First-match wins,
          * so this precedes the act-2 fallthrough below. */
         EVENT_ID_TRAVEL_DEMO_ACT1, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_FIELD,
         1,
         {{ EVENT_COND_VARIABLE, VARIABLE_ID_CHAPTER, 1, false, false }},
         1,
-        {{ EVENT_ACTION_JOURNEY_START, 1, 0, 0 }}
+        {{ EVENT_ACTION_JOURNEY_START, 2, 0, 0 }}
     },
     {
         /* Travel-demo prototype: the field signpost starts the
-         * field-to-village journey (route 0) instead of teleporting.
+         * field-to-village journey (route 1) instead of teleporting.
          * First-match wins, so this precedes the signpost dialogue
          * fallthrough (which the travel consume-guard also skips). */
         EVENT_ID_TRAVEL_DEMO, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_FIELD,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
-        {{ EVENT_ACTION_JOURNEY_START, 0, 0, 0 }}
+        {{ EVENT_ACTION_JOURNEY_START, 1, 0, 0 }}
     },
     {
-        /* Return leg: the village signpost walks the act-2 road back
-         * to the field (route 2, its own pool) instead of talking. */
+        /* Outward leg: the town signpost walks the 16-step road to
+         * the desolate field (route 3, its own pool) instead of
+         * talking. */
         EVENT_ID_TRAVEL_RETURN, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_TOWN,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
-        {{ EVENT_ACTION_JOURNEY_START, 2, 0, 0 }}
+        {{ EVENT_ACTION_JOURNEY_START, 3, 0, 0 }}
+    },
+    {
+        /* Loop closer: the desolate signpost walks the road back to
+         * the field (route 0, its own pool) instead of talking. */
+        EVENT_ID_TRAVEL_DESOLATE_RETURN, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_DESOLATE_FIELD,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_JOURNEY_START, 0, 0, 0 }}
     },
     {
         /* Sunken-ruins AP chest (travel demo, one-shot via its own

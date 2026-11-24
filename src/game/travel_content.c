@@ -9,6 +9,52 @@
 #pragma bank 14
 
 const TravelRoute g_travel_routes[] = {
+    { /* desolate_to_field */
+        "FIELD ROAD", /* name */
+        24, /* dest_scene (act2_field) */
+        2, /* act (road act) */
+        5, 7, /* dest_x, dest_y */
+        2, /* provisions_price */
+        3, /* provisions_per_day */
+        1, /* hunt_prov_min */
+        7, /* hunt_prov_max */
+        5, /* starve_prov_hp */
+        2, /* starve_prov_every */
+        0, /* hunt_delay_min */
+        2, /* hunt_delay_max */
+        5, /* rest_heal */
+        1, /* rest_delay */
+        0, /* study_save_min */
+        2, /* study_save_max */
+        0, /* study_lost_min */
+        2, /* study_lost_max */
+        6, /* study_prov */
+        { 90, 35, 20, 30, 20, 25, 15, 20 }, /* weather_weight (clear..fog) */
+        { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
+        { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
+        { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
+        2, /* method_count */
+        {
+            { /* carriage */
+                "CARRIAGE", /* name */
+                50, /* cost_gold */
+                0, /* steps (0 = instant) */
+                0, /* frequency */
+                0, /* pool_count */
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+            },
+            { /* foot */
+                "ON FOOT", /* name */
+                0, /* cost_gold */
+                10, /* steps (0 = instant) */
+                35, /* frequency */
+                37, /* pool_count */
+                { 0, 2, 3, 4, 5, 6, 8, 14, 16, 17, 18, 19, 20, 22, 23, 25, 27, 28, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 51, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 3, 6, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+            },
+        },
+    },
     { /* field_to_village */
         "FIELD ROAD", /* name */
         25, /* dest_scene (act2_town) */
@@ -101,11 +147,11 @@ const TravelRoute g_travel_routes[] = {
             },
         },
     },
-    { /* village_to_field */
-        "FIELD ROAD", /* name */
-        24, /* dest_scene (act2_field) */
+    { /* town_to_desolate */
+        "DESOLATE ROAD", /* name */
+        29, /* dest_scene (act2_desolate_field) */
         2, /* act (road act) */
-        5, 7, /* dest_x, dest_y */
+        5, 17, /* dest_x, dest_y */
         2, /* provisions_price */
         3, /* provisions_per_day */
         1, /* hunt_prov_min */
@@ -121,7 +167,7 @@ const TravelRoute g_travel_routes[] = {
         0, /* study_lost_min */
         2, /* study_lost_max */
         6, /* study_prov */
-        { 85, 30, 25, 15, 30, 30, 20, 20 }, /* weather_weight (clear..fog) */
+        { 90, 35, 20, 30, 20, 25, 15, 20 }, /* weather_weight (clear..fog) */
         { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
         { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
         { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
@@ -139,17 +185,17 @@ const TravelRoute g_travel_routes[] = {
             { /* foot */
                 "ON FOOT", /* name */
                 0, /* cost_gold */
-                10, /* steps (0 = instant) */
+                16, /* steps (0 = instant) */
                 35, /* frequency */
-                24, /* pool_count */
-                { 2, 30, 31, 48, 5, 3, 20, 17, 51, 22, 40, 23, 14, 25, 35, 38, 34, 46, 19, 4, 45, 33, 47, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
-                { 6, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+                37, /* pool_count */
+                { 0, 2, 3, 4, 5, 6, 8, 14, 16, 17, 18, 19, 20, 22, 23, 25, 27, 28, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 51, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 3, 6, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
         },
     },
 };
 
-const uint8_t g_travel_route_count = 3;
+const uint8_t g_travel_route_count = 4;
 
 const TravelEvent g_travel_events[] = {
     { /* abandoned_camp */

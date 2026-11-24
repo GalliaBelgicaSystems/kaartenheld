@@ -1791,7 +1791,8 @@ def walk_sweep(planner, checks):
                            "skipped: teleport-only"))
             s.close()
             continue
-        if name in ("act2_field", "act2_town", "act2_ruins"):
+        if name in ("act2_field", "act2_town", "act2_ruins",
+                      "act2_desolate_field"):
             # Travel-demo maps (journeys/ + travel ROM only): no portal
             # targets them by design, so the sweep cannot walk there.
             # Same explicit-SKIP contract as the opener above; the

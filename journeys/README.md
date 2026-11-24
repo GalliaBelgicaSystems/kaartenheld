@@ -8,6 +8,14 @@ Never hand-edit the generated C — edit the JSON here instead.
 
 ## Routes (`routes/*.json`)
 
+The demo loop is field → town → desolate field → field, all act 2:
+`field_to_village` (10 steps), `town_to_desolate` (16 steps),
+`desolate_to_field` (10 steps), plus the act-1 variant
+`field_to_village_act1` (8 steps, walked while chapter 1).
+Town and desolate signposts start their legs; each map also has a
+supply merchant (one ANY-map event row covers all three, since every
+route prices supplies identically).
+
 A route is one road the signposts can start: `id`, display `name`,
 `start` and `destination` scenes (keys of `levels/registry.json`),
 `dest_x`/`dest_y` arrival tile, and `act` (1–9, the act the road

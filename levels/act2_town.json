@@ -1,7 +1,7 @@
 {
   "act": 2,
   "id": "act2_town",
-  "name": "Act 2 \u2014 Oakhaven Town",
+  "name": "Act 2 — Oakhaven Town",
   "map": {
     "width": 20,
     "height": 18,
@@ -433,176 +433,6 @@
   },
   "objects": [
     {
-      "id": "town_mayor",
-      "type": "npc",
-      "position": {
-        "x": 10,
-        "y": 5
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_MAYOR",
-        "display_name": "MAYOR",
-        "dialogue": "DIALOGUE_ID_MAYOR_GREETING",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "M",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE",
-        "enemy_type": "npc_mayor"
-      }
-    },
-    {
-      "id": "town_guard",
-      "type": "npc",
-      "position": {
-        "x": 10,
-        "y": 8
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_TOWN_GUARD",
-        "display_name": "GUARD",
-        "dialogue": "DIALOGUE_ID_GUARD_DAGGER_LESSON",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "G",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE",
-        "enemy_type": "npc_guard"
-      }
-    },
-    {
-      "id": "town_wizard",
-      "type": "npc",
-      "position": {
-        "x": 6,
-        "y": 10
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_WIZARD",
-        "display_name": "WIZARD",
-        "dialogue": "DIALOGUE_ID_WIZARD_AUTOSAVE",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "W",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE",
-        "enemy_type": "npc_wizard"
-      }
-    },
-    {
-      "id": "town_heal_mage",
-      "type": "npc",
-      "position": {
-        "x": 12,
-        "y": 10
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_HEAL_MAGE",
-        "display_name": "HEAL MAGE",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "W",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE",
-        "enemy_type": "npc_heal_mage"
-      }
-    },
-    {
-      "id": "village_dog",
-      "type": "npc",
-      "position": {
-        "x": 8,
-        "y": 14
-      },
-      "properties": {
-        "display_name": "",
-        "dialogue": "DIALOGUE_ID_DOG_HINT",
-        "overworld_sprite": "actors.actors_dog_frame_1",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_VILLAGE_DOG",
-        "enemy_type": "dog",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ]
-      },
-      "animation_frames": [
-        "actors.actors_dog_frame_1",
-        "actors.actors_dog_frame_2"
-      ],
-      "overworld_sprite": "actors.actors_dog_frame_1"
-    },
-    {
-      "id": "village_dog_copy",
-      "type": "npc",
-      "position": {
-        "x": 11,
-        "y": 8
-      },
-      "properties": {
-        "display_name": "",
-        "dialogue": "",
-        "overworld_sprite": "actors.actors_dog_frame_1",
-        "battle_sprite": "",
-        "battle_name": "VILLAGER",
-        "entity_id": "ENTITY_ID_DOG"
-      },
-      "animation_frames": [
-        "actors.actors_dog_frame_1",
-        "actors.actors_dog_frame_2"
-      ],
-      "overworld_sprite": "actors.actors_dog_frame_1"
-    },
-    {
-      "id": "town_house_door",
-      "type": "signpost",
-      "position": {
-        "x": 15,
-        "y": 5
-      },
-      "properties": {
-        "entity_id": "ENTITY_ID_SIGNPOST",
-        "display_name": "HOUSE",
-        "dialogue": "DIALOGUE_ID_HOUSE_DOOR",
-        "actor_id": 0,
-        "facing": "DOWN",
-        "flags": [
-          "BLOCKING",
-          "INTERACTABLE"
-        ],
-        "visual": "#",
-        "hp": 0,
-        "max_hp": 0,
-        "gold_reward": 0,
-        "ai": "AI_NONE"
-      }
-    },
-    {
       "id": "town_signpost",
       "type": "signpost",
       "position": {
@@ -624,6 +454,31 @@
         "max_hp": 0,
         "gold_reward": 0,
         "ai": "AI_NONE"
+      }
+    },
+    {
+      "id": "act2_town_supplier",
+      "type": "npc",
+      "position": {
+        "x": 7,
+        "y": 8
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_MERCHANT",
+        "display_name": "MERCHANT",
+        "dialogue": "DIALOGUE_ID_FIELD_MERCHANT",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "C",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "enemy_type": "npc_merchant"
       }
     }
   ],
