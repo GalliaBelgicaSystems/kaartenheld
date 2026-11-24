@@ -199,7 +199,7 @@ Hostiles patrol the whole width: a slime (14,8), a spider (23,9), a bat
 | Guard | (10,8) | Flavour dialogue; greets you warmly after you meet the Mayor. |
 | Lost Merchant | (11,3) | Runs the Lost Shop Keys quest, then the shop (§4.3, §9). |
 | Wizard | (6,10) | Lets you save the game to one of three slots (§10). |
-| Heal Mage | (12,10) | Red robe, wizard sprite. Restores the whole party to full HP and plays the chest-loot jingle; briefs you on ring healing. If the hero is at 10+ HP, saying YES first opens a second YES/NO confirm (he can only heal once) — its NO returns to the ask, its YES heals. |
+| Heal Mage | (12,10) | Red robe, wizard sprite. Restores the whole party to full HP and plays the chest-loot jingle; briefs you on ring healing. If the party is at 2/3+ max HP (10+ at base 15 HP), saying YES first opens a second YES/NO confirm (he can only heal once) — its NO declines cleanly ("Come back when you're hurt."), its YES heals. |
 
 Three fire braziers (4,5), (4,12), (14,5) and two dogs (8,14), (11,8) are
 placed as blocking scenery.

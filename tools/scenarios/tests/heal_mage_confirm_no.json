@@ -2,7 +2,7 @@
  "act": 1,
  "name": "heal_mage_confirm_no",
  "test": true,
- "description": "Heal Mage second chance at high HP, NO path: with the hero at 12/15 HP, confirming the heal ASK opens the mage's second YES/NO confirm; toggling to NO and confirming returns to the heal ASK with nothing healed, nothing set, and the mage still offering (USED clear, no HEALED event).",
+ "description": "Heal Mage second chance at 2/3+ HP boundary, NO path: with the hero at 10/15 HP, confirming the heal ASK opens the mage's second YES/NO confirm (HEAL_MAGE_CONFIRM); toggling to NO and confirming opens HEAL_MAGE_DECLINED cleanly (no double-NO loop) with nothing healed, nothing set, and the mage still offering (USED clear, no HEALED event).",
  "initial_state": {
   "scene": "TEST_TOWN",
   "player": {
@@ -12,7 +12,7 @@
   },
   "party": {
    "HERO": {
-    "hp": 12,
+    "hp": 10,
     "max_hp": 15
    }
   },
@@ -78,11 +78,28 @@
   },
   {
    "type": "dialogue_id",
-   "expected": "HEAL_MAGE_ASK"
+   "expected": "HEAL_MAGE_DECLINED"
+  },
+  {
+   "type": "screen_row",
+   "row": 15,
+   "contains": "Come back when"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "HEAL_MAGE_CONFIRM"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_CHOICE",
+   "index": 0,
+   "value": "HEAL_MAGE_CONFIRM"
   },
   {
    "type": "party_hp",
-   "expected": 12
+   "expected": 10
   },
   {
    "type": "flag",

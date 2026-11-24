@@ -498,7 +498,7 @@ If your hero falls, the **GAME OVER** screen asks:
   better hand when the extras score nothing.
 - **Raise your AP early.** The land hides several
   upgrades — spar, chest, quest, castle fight.
-- **Visit the Heal Mage.** Free healing, no questions.
+- **Save the Heal Mage.** He only heals you once — save it for when you are really hurt.
 - **Sell cards you cannot use** and buy a good heal.
 - **Save often.** You never know what is around the next
   corner, and now you can check.

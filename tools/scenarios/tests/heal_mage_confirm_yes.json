@@ -87,6 +87,18 @@
    "count": 2
   },
   {
+   "type": "event_arg",
+   "event": "DIALOGUE_STARTED",
+   "index": 0,
+   "value": "HEAL_MAGE_CONFIRM"
+  },
+  {
+   "type": "event_arg",
+   "event": "DIALOGUE_CHOICE",
+   "index": 0,
+   "value": "HEAL_MAGE_CONFIRM"
+  },
+  {
    "type": "flag",
    "flag": "HEAL_MAGE_USED",
    "expected": true
