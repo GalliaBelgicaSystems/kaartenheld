@@ -98,11 +98,6 @@ void game_init(Game *g)
     g->title_menu_index = 0;
     g->intro_slide = 0;
     game_prepare_new_game(g);
-#ifdef TRAVEL_DEMO
-    /* Travel-demo ROM: boot straight into the field, no splash/title. */
-    g->screen = SCREEN_OVERWORLD;
-    g->prev_screen = SCREEN_OVERWORLD;
-#endif
     /* On real hardware the `uint8_t g_sound_enabled = 1` default is applied
      * by CRT0's .data copy; the debug harness skips CRT0 and jumps straight
      * to main(), so re-assert the sound-on default here (matches the

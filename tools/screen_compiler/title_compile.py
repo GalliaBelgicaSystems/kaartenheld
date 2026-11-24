@@ -333,9 +333,21 @@ def build_title_c_output(data: dict) -> str:
     lines.append("uint8_t const g_title_logo_image_palette = %d;" % logo_image_palette)
     lines.append("")
     # --- Subtitle ---
+    # The travel-demo ROM boots the same splash/title as the main ROM
+    # but brands it TRAVEL DEMO (the old battle-demo pattern).  The
+    # #else branch emits exactly the JSON subtitle, so the main ROM
+    # object is byte-identical with or without this override.
+    demo_text = "TRAVEL DEMO" + " " * (20 - len("TRAVEL DEMO"))
+    demo_x = (20 - len("TRAVEL DEMO")) // 2
+    lines.append("#ifdef TRAVEL_DEMO")
+    lines.append("const char g_title_subtitle_text[21] = \"%s\";" % demo_text)
+    lines.append("uint8_t const g_title_subtitle_x = %d;" % demo_x)
+    lines.append("uint8_t const g_title_subtitle_y = %d;" % subtitle_y)
+    lines.append("#else")
     lines.append("const char g_title_subtitle_text[21] = \"%s\";" % escaped_subtitle)
     lines.append("uint8_t const g_title_subtitle_x = %d;" % subtitle_x)
     lines.append("uint8_t const g_title_subtitle_y = %d;" % subtitle_y)
+    lines.append("#endif")
     lines.append("")
     # --- Graphic / Multi-tile Image ---
     lines.append("const char g_title_graphic[%d][%d+1] = {" % (n_graphic, grid_w))

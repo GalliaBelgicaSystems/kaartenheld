@@ -251,11 +251,48 @@ def win_fight(d):
     return False
 
 
-def boot_to_journey(d):
+SCREEN_TITLE = 9
+SCREEN_INTRO = 10
+SCREEN_SAVE_LOAD = 8
+
+
+def boot_to_overworld(d):
+    """Press through the main-ROM boot (splash -> notice -> title with
+    the TRAVEL DEMO subtitle -> NEW GAME -> slot -> intro) to the field.
+    Fresh PyBoy SRAM means empty slots, so one confirm takes the slot."""
+    assert d.wait_for(lambda: d.screen() == SCREEN_TITLE, ticks=1200), \
+        "no TITLE after boot (screen=%d)" % d.screen()
+    assert d.wait_for(lambda: d.text_has("TRAVEL DEMO"), ticks=300), d.rows()
+    assert not d.text_has("BATTLE DEMO"), d.rows()
+    assert d.text_has("PRESS START"), d.rows()
+    print("boot splash/title OK (TRAVEL DEMO subtitle)")
+    d.press("start", settle=30)  # PRESS START -> menu
+    assert d.wait_for(lambda: d.text_has("NEW GAME"), ticks=300), d.rows()
+    assert d.text_has("> CONTINUE"), d.rows()
+    d.press("down", settle=12)  # CONTINUE -> NEW GAME
+    assert d.wait_for(lambda: d.text_has("> NEW GAME"), ticks=200), d.rows()
+    d.press("a", settle=30)  # NEW GAME -> slot pick
+    assert d.wait_for(lambda: d.screen() == SCREEN_SAVE_LOAD,
+                      ticks=300), "no slot pick (screen=%d)" % d.screen()
+    assert d.text_has("SLOT 1:"), d.rows()
+    d.press("a", settle=30)  # empty slot -> intro
+    assert d.wait_for(lambda: d.screen() == SCREEN_INTRO,
+                      ticks=300), "no INTRO (screen=%d)" % d.screen()
+    for _ in range(6):
+        if d.screen() == SCREEN_OVERWORLD:
+            break
+        d.press("a", settle=30)  # 4 slides, last drops to the field
+    assert d.wait_for(lambda: d.screen() == SCREEN_OVERWORLD,
+                      ticks=300), "no field after intro (screen=%d)" % d.screen()
     st = d.scene()
-    assert d.screen() == SCREEN_OVERWORLD, "boot screen %d" % d.screen()
     assert st["scene_id"] == SCENE_ACT2_FIELD, st
     assert (st["player_x"], st["player_y"]) == (5, 7), st
+    print("boot->overworld OK (title -> new game -> intro -> field)")
+
+
+def boot_to_journey(d):
+    boot_to_overworld(d)
+    st = d.scene()
     d.press("down")
     st = d.scene()
     assert (st["player_x"], st["player_y"]) == (5, 8), st
@@ -577,9 +614,8 @@ def test_supply():
     with gold, leave back to the field unmoved."""
     d = D()
     try:
+        boot_to_overworld(d)
         st = d.scene()
-        assert d.screen() == SCREEN_OVERWORLD, d.screen()
-        assert (st["player_x"], st["player_y"]) == (5, 7), st
         for b in ("down", "right", "right"):
             d.press(b, settle=20)
         st = d.scene()
