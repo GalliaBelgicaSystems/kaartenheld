@@ -2,7 +2,7 @@
  "act": "always",
  "name": "card_ap_loot_gate_mythril_rider",
  "test": true,
- "description": "Mythril rider gate end-to-end (docs/card-ap-cost-formula.md \u00a76.1/\u00a79, docs/enemies_ranking.md \u00a74.3/\u00a74.8): no mythril hold-back exists anymore -- seed 609 on the TEST_CASTLE bat rolls a MYTHRIL FIRE BOW (id 0xF2 = 242, formula cost 6) and the reveal names the rider. The card cannot be decked until the pool reaches 6 (deck_equip_locked_loot covers the refusal); the locked card is the motivation to raise AP. (The old stage was the R5 mimic with a fire sword; swords never ride now, and rider bows are bat-only in the demo.)",
+ "description": "Mythril rider gate end-to-end (docs/card-ap-cost-formula.md \u00a76.1/\u00a79, docs/enemies_ranking.md \u00a74.3/\u00a74.8): no mythril hold-back exists anymore -- seed 609 on the TEST_CASTLE bat rolls a MYTHRIL FIRE BOW (id 0xF2 = 242, formula cost 6) and the reveal names the rider. The card cannot be decked until the pool reaches 6 (deck_equip_locked_loot covers the refusal); the locked card is the motivation to raise AP. (The old stage was the R5 mimic with a fire sword; swords never ride now. Rider bows drop from bats.)",
  "initial_state": {
   "scene": "TEST_CASTLE",
   "player": {

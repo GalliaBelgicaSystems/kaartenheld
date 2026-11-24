@@ -464,7 +464,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         });
       }
 
-      // 4. Subtitle (e.g. BATTLE DEMO), centered by align like the compiler.
+      // 4. Subtitle, centered by align like the compiler.
       if (subtitle && subtitle.text) {
         const len = subtitle.text.length;
         const sx =
@@ -712,7 +712,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       // 7. Rows 10–13: 5 Framed Hand Cards -- rendered from the LIVE skin
       // (screens/cards_skin.json), the same data battle_compile.py emits
       // into the ROM.  Weapon icon per card type; box tint = type color,
-      // element color when the demo card carries a status (the ROM shows
+      // element color when the preview card carries a status (the ROM shows
       // element status purely as the box tint -- battle_card_box_color();
       // the old floating fire/ice rider icons were removed).
       const skinFallback: CardSkin = {
@@ -731,7 +731,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         },
       };
       const skin = cardSkin || skinFallback;
-      const demoHand: Array<{ type: keyof CardSkin['types']; value: number; elem: keyof CardSkin['elements'] | null }> = [
+      const previewHand: Array<{ type: keyof CardSkin['types']; value: number; elem: keyof CardSkin['elements'] | null }> = [
         { type: 'sword', value: 3, elem: null },
         { type: 'bow', value: 2, elem: 'poison' },
         { type: 'shield', value: 2, elem: null },
@@ -745,7 +745,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       const cardCols = [1, 5, 9, 13, 17];
 
       cardCols.forEach((cx, idx) => {
-        const card = demoHand[idx];
+        const card = previewHand[idx];
         const typeSkin = skin.types[card.type];
         const tintHex = CARD_COLOR_HEX[
           (card.elem ? skin.elements[card.elem].color : typeSkin.color)

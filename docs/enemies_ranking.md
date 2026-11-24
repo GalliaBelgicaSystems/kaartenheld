@@ -332,7 +332,7 @@ always gets the bow.
 
 ### 3.1 `I F BO` (the bat iron fire bow) — the worked example
 
-Rider bows drop from bats (the only bow source in the demo), so the
+Rider bows drop from bats (the only bow source in act 1), so the
 worked example is a bat roll at R2.  The probability chain for one
 specific card:
 
@@ -345,7 +345,7 @@ P(I F BO) = P(bow | bat) × P(iron | R2) × P(rider | R2) × P(fire | rider)
 P(iron | R2) is the R2 cut row (57/256); the rider gate at R2 is 80/256;
 fire/ice split the rider roll half each.  Non-bat encounters never roll
 bows, and swords never roll riders, so this is the only fire card in
-the demo drop pool.
+the act-1 drop pool.
 
 ### 3.2 Related cards, same AP rows
 
@@ -569,7 +569,7 @@ Every rank now has one fixed distribution, so the comparison is against today's
 * **Nothing else about the ladder changes**: same weapon mix, same rider
   legality, same material band → power / sell / uses mapping.
 
-### 4.5 Rider bows under ranks (demo: bats only)
+### 4.5 Rider bows under ranks (act 1: bats only)
 
 Fire/ice bows roll only on bat encounters (R2, 100% bow), so there is
 one rank row instead of a per-rank table.  At the R2 gate (80/256)

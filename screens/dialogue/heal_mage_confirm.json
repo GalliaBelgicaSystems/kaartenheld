@@ -1,0 +1,15 @@
+{
+  "id": "heal_mage_confirm",
+  "speaker": "HEAL MAGE:",
+  "lines": [
+    "Are you sure you",
+    "want me to heal",
+    "you? You're still",
+    "in fairly good",
+    "shape. I'm so old",
+    "I can only heal",
+    "you once!",
+    "> YES   NO"
+  ],
+  "choice": "yes_no"
+}

@@ -137,6 +137,14 @@ const DialogueDefinition g_dialogues[] = {
         1
     },
     {
+        DIALOGUE_ID_HEAL_MAGE_CONFIRM,
+        "HEAL MAGE:",
+        8,
+        {"Are you sure you", "want me to heal", "you? You're still", "in fairly good", "shape. I'm so old", "I can only heal", "you once!", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_HEAL_MAGE_DECLINED,
         "HEAL MAGE:",
         2,

@@ -118,7 +118,7 @@ void ui_dialogue_box_banked(void)
     }
 }
 
-/* Despair white fade-out (demo finale): cuts the current palettes to
+/* Despair white fade-out (finale): cuts the current palettes to
  * white and holds the white beat.  Dispatched from
  * game_slime_despair_wake() right before scene-loading the wake area (the fade-in
  * twin lives below, next to its call site).  Same self-containment

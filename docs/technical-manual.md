@@ -2,7 +2,7 @@
 
 > Looking for the friendly player's guide instead? See [`manual.md`](manual.md).
 
-A complete, machine-checked reference to **KAARTENHELD — BATTLE DEMO**, the
+A complete, machine-checked reference to **KAARTENHELD**, the
 Game Boy card-combat RPG.
 
 This manual describes the game exactly as implemented.  Where a design
@@ -86,14 +86,13 @@ Boot lands on the **studio splash** — the GALLIA BELGICA SYSTEMS bitmap
 logo (`assets/gallia_belgica_systems.png`, red/blue bracket) — which
 auto-advances to the title screen after ~2.5 seconds or is skipped
 immediately with `A`/`START`.  The title screen then shows the
-**KAARTENHELD** logo (a red bitmap logo, `assets/title-red.png`), its
-**BATTLE DEMO** subtitle, and `PRESS START`.
+**KAARTENHELD** logo (a red bitmap logo, `assets/title-red.png`) and `PRESS START`.
 
 The on-screen title block is:
 
 ```
     [  KAARTENHELD  ]     (red bitmap logo, assets/title-red.png)
-    BATTLE DEMO           (text)
+    (no subtitle)         (blank row 5)
 ```
 
 Pressing START opens a menu with four entries (`title_screen.c`,
@@ -200,7 +199,7 @@ Hostiles patrol the whole width: a slime (14,8), a spider (23,9), a bat
 | Guard | (10,8) | Flavour dialogue; greets you warmly after you meet the Mayor. |
 | Lost Merchant | (11,3) | Runs the Lost Shop Keys quest, then the shop (§4.3, §9). |
 | Wizard | (6,10) | Lets you save the game to one of three slots (§10). |
-| Heal Mage | (12,10) | Red robe, wizard sprite. Restores the whole party to full HP and plays the chest-loot jingle; briefs you on ring healing. |
+| Heal Mage | (12,10) | Red robe, wizard sprite. Restores the whole party to full HP and plays the chest-loot jingle; briefs you on ring healing. If the party is at 2/3+ max HP (10+ at base 15 HP), saying YES first opens a second YES/NO confirm (he can only heal once) — its NO declines cleanly ("Come back when you're hurt."), its YES heals. |
 
 Three fire braziers (4,5), (4,12), (14,5) and two dogs (8,14), (11,8) are
 placed as blocking scenery.
@@ -883,12 +882,14 @@ Upon closing this dialogue, the screen fades to white, and the hero awakens in t
 final wake scene before advancing to the **ENDING** screen:
 
 ```
-     DEMO OVER
+       THE END
 --------------------
-The Hero cleared
-the land of slimes!
-Peace has returned!
+Congratulations on
+beating Kaartenheld!
 Thanks for playing!
+Follow
+@GBelgicaSystems
+on X for updates!
 [A] RESTART
 ```
 
@@ -925,7 +926,7 @@ above is observable through a deterministic, machine-readable harness:
 | `make verify-walkthrough` | Drive the release ROM (real `levels/` content) and assert canonical state. |
 | `make verify-scroll` / `verify-music` / `verify-patrol` / `verify-endurance` | Extra PyBoy regression checks. |
 | `make screenshots` | Deterministic headless walkthrough producing `screenshots/*.png`. |
-| `make gifs` | Regenerate the README demo GIFs (`screenshots/*.gif`). |
+| `make gifs` | Regenerate the README preview GIFs (`screenshots/*.gif`). |
 | `make memmap` | Memory-budget reporter (fails on fixed-bank overflow). |
 | `make lint` | `-Wf-Wall` compile-to-asm lint (no warnings allowed). |
 

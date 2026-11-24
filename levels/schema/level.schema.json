@@ -9,7 +9,7 @@
       "type": "integer",
       "minimum": 1,
       "maximum": 255,
-      "description": "Story act this level belongs to (1 = demo, 2+ = future acts; see AGENTS.md 42.4). Required: an act-less level silently joins zone 1's id namespace. Emitted as an unsigned byte."
+      "description": "Story act this level belongs to (1 = act 1, 2+ = future acts; see AGENTS.md 42.4). Required: an act-less level silently joins zone 1's id namespace. Emitted as an unsigned byte."
     },
     "id": {
       "type": "string",

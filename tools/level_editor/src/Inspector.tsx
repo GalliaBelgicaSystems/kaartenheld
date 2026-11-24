@@ -573,8 +573,8 @@ export const Inspector: React.FC<InspectorProps> = ({
               <label style={{ fontWeight: 600 }}>📝 Subtitle</label>
               <input
                 type="text"
-                placeholder="BATTLE DEMO"
-                value={level.titleLayout?.subtitle?.text ?? 'BATTLE DEMO'}
+                placeholder=""
+                value={level.titleLayout?.subtitle?.text ?? ''}
                 onChange={(e) =>
                   onUpdateLevelMeta({
                     titleLayout: {
@@ -600,7 +600,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         titleLayout: {
                           ...(level.titleLayout || {}),
                           subtitle: {
-                            ...(level.titleLayout?.subtitle || { text: 'BATTLE DEMO', align: 'center' }),
+                            ...(level.titleLayout?.subtitle || { text: '', align: 'center' }),
                             y: parseInt(e.target.value) || 0,
                           },
                         },
@@ -617,7 +617,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         titleLayout: {
                           ...(level.titleLayout || {}),
                           subtitle: {
-                            ...(level.titleLayout?.subtitle || { text: 'BATTLE DEMO', y: 5 }),
+                            ...(level.titleLayout?.subtitle || { text: '', y: 5 }),
                             align: e.target.value as 'left' | 'center' | 'right',
                           },
                         },

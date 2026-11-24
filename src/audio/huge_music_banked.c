@@ -114,7 +114,7 @@ void music_play_banked(void)
         song = &song_game_over;
         bank = HUGE_MUSIC_BANK_B7;
     } else if (track == MUSIC_ENDING) {
-        song = &song_demo_complete;
+        song = &song_ending;
         bank = HUGE_MUSIC_BANK_B7;
     } else if (track == MUSIC_CASINO) {
         song = &song_casino;

@@ -722,7 +722,7 @@ extern const SceneTerrainBlock s_forest_terrain[];
 extern const SceneTerrainBlock s_mountain_pass_terrain[];
 extern const SceneTerrainBlock s_south_ridge_terrain[];
 extern const SceneTerrainBlock s_grassy_forest_terrain[];
-extern const SceneTerrainBlock s_demo_end_wake_scene_terrain[];
+extern const SceneTerrainBlock s_end_wake_scene_terrain[];
 extern const SceneTerrainBlock s_village_area_terrain[];
 extern const SceneTerrainBlock s_castle_terrain[];
 extern const SceneTerrainBlock s_castle_entry_terrain[];
@@ -752,5 +752,5 @@ const SceneDefinition g_scenes[] = {
     { MAP_UNDERGROUND_TUNNEL, MUSIC_UNDERGROUND, 20, 18, &g_all_exits[4],     2, WORLD_TILESET_UNDERGROUND, s_underground_tunnel_terrain, 8, 13, DIRECTION_RIGHT, TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
     { MAP_UNDERGROUND_TUNNEL_SOUTH, MUSIC_UNDERGROUND, 20, 18, &g_all_exits[6],     2, WORLD_TILESET_UNDERGROUND, s_underground_tunnel_south_terrain, 7, 6, DIRECTION_RIGHT, TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 5, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
     { 0, MUSIC_NONE,  0,  0, 0, 0, WORLD_TILESET_FOREST, 0,  0,  0, DIRECTION_DOWN, TILE_FLOOR, MAP_NONE, MAP_NONE, MAP_NONE, MAP_NONE, 0, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF },
-    { MAP_DEMO_END_WAKE_SCENE, MUSIC_UNDERGROUND, 24, 18, 0,                   0, WORLD_TILESET_UNDERGROUND, s_demo_end_wake_scene_terrain, 12, 10, DIRECTION_UP,    TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 9, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }
+    { MAP_END_WAKE_SCENE,  MUSIC_UNDERGROUND, 24, 18, 0,                   0, WORLD_TILESET_UNDERGROUND, s_end_wake_scene_terrain, 12, 10, DIRECTION_UP,    TILE_UNDERGROUND_20, MAP_NONE,            MAP_NONE,            MAP_NONE,            MAP_NONE, 9, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF, 0, 0, 0xFF }
 };

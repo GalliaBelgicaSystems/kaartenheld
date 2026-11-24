@@ -37,7 +37,7 @@ Battery-backed SRAM persistence of the canonical `GameState`
   `CARD_FIRE_SWORD` -> plain `CARD_BRONZE_SWORD` rename on id 0x43, so a
   v5 fire sword would silently load as plain; v4 predates the appended
   EconomyState; v3 and below held the 12-row collection, so the grown
-  struct fails their checksum); the demo ships no
+  struct fails their checksum); there is no
   migration while the loot CardId space is still changing.
 * v6 is the rename bump (same id, new meaning -- rejection, not migration).
 * v8 is the zone-bitmask bump (WorldState 49 B -> 17 B: zone + 128

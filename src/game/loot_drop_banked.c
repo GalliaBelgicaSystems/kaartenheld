@@ -78,7 +78,7 @@ void game_loot_drop_banked(void)
 
     /* Archetype weapon from the enemy family's profile bias (§17).
      * Bats lean ranged; everything else drops the melee set.  Rider bows
-     * are bat-only in the demo (bats are rank 2, so rider bows top out
+     * are bat-only (bats are rank 2, so rider bows top out
      * around iron); higher-rank bow enemies will extend the roll later. */
     if (battle_type == BATTLE_BAT) {
         weapon = WPN_BOW;
