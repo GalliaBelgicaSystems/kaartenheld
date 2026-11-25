@@ -27,7 +27,8 @@ behave differently per act, and different roads draw different events:
   `provisions_per_day` (provisions burned per travel day —
   a desert route just eats more).
 - `camp`: the daily camp menu tuning — `hunt` (provisions yield
-  range plus detour range), `rest` (heal plus schedule delay),
+  range plus detour range, plus a rare `jackpot` haul that can
+  rescue a starving party), `rest` (heal plus schedule delay),
   `starve` (HP lost and every-N-days cadence without provisions),
   `study` (steps-saved / getting-lost ranges plus extra provisions).
 - `methods`: carriage (instant, paid) and/or on-foot (fixed `steps`,

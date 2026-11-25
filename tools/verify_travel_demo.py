@@ -17,9 +17,10 @@ inside `nix develop` for PyBoy)
            (rebuild ROM first):
            SHARE path on the act-1 road, slime-pack FIGHT on act 2.
   camp:    daily camp menu (shipped tuning): B walks on, HUNT
-           finds 2-8 prov with a 0-1 step detour, REST heals 5 for
-           +1 step, STUDY costs 6 prov and saves 0-2
-           steps (or wanders lost +0-2), 2 dry days cost 5 HP.
+           finds 2-8 prov (30% jackpot haul of 20-30) with
+           a 0-1 step detour, REST heals 5 for +1 step, STUDY
+           costs 6 prov and saves 0-2 steps (or wanders lost
+           +0-2), 2 dry days cost 5 HP.
   acts:    per-road per-act tables (shipped tuning): chapter 1
            walks the 8-step act-1 road, the town signpost walks
            the 16-step road to the desolate field, whose signpost
@@ -1080,8 +1081,9 @@ def test_ruins_ignore():
 def test_camp():
     """Daily camp menu (shipped tuning, no forced pool needed: camp
     actions roll no road events, so the deterministic stream cannot
-    interfere).  HUNT nets found-3 provisions with a 0-1 detour, REST heals
-    5 for +1 step, STUDY saves 0-2 steps, and two consecutive dry
+    interfere).  HUNT nets found-3 provisions with a 0-1 detour (plus
+    a 30% jackpot haul of 20-30: the starvation-spiral escape), REST
+    heals 5 for +1 step, STUDY saves 0-2 steps, and two consecutive dry
     days cost 5 HP (route starve tuning)."""
     d = D()
     try:
@@ -1107,6 +1109,25 @@ def test_camp():
         print("hunt OK: net %+d provisions, detour +%d, day -1"
               % (net, detour))
         d.press("a", settle=20)  # dismiss
+        # JACKPOT: the spiral escape. Hunt up to 10 days; at least one
+        # haul must pay 20+ (jackpot range 20-30 at 30%). Provisions
+        # are topped up so the probe never starves mid-loop.
+        import struct
+        addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
+        saw_jackpot = False
+        for _ in range(10):
+            raw = struct.pack("<h", 100)
+            d.pb.memory[addr] = raw[0]
+            d.pb.memory[addr + 1] = raw[1]
+            d.tick(2)
+            d.press("a", settle=30)  # HUNT (default cursor)
+            assert d.wait_for(lambda: d.text_has("YOU FORAGE."),
+                              ticks=300), d.rows()
+            if d.pb.memory[d.r.sym.wram("g_travel_amount")] >= 20:
+                saw_jackpot = True
+            d.press("a", settle=20)  # dismiss
+        assert saw_jackpot, "no jackpot haul in 10 hunts"
+        print("jackpot OK: 20+ haul observed, spiral has an escape")
         # STARVE (provisions): two dry study days cost 5 HP on the
         # second one (study burns days without foraging, so the
         # tally is exact and no road event can interfere).
@@ -1491,13 +1512,14 @@ def test_fixes():
             "exact rations counted as starving day!"
         d.press("a", settle=20)
         # 2. Snow Day-1 vs expired snow: force route weather weights in WRAM
-        # s_route offset: name[21]+dest_scene+act+x+y+price+per_day+hunt*4+starve*2+rest*2+study*5 = 40
+        # s_route offset: name[21]+dest_scene+act+x+y+price+per_day+hunt*7+starve*2+rest*2+study*5 = 43
+        # (hunt is prov*2 + jackpot*3 + delay*2; bump this if TravelRoute grows)
         s_route = d.r.sym.wram("s_route")
         # Clear all weather weights, set CLEAR=0, SNOW=100, days 1..1
         for i in range(8):
-            d.pb.memory[s_route + 40 + i] = 100 if i == 6 else 0
-            d.pb.memory[s_route + 48 + i] = 1
-            d.pb.memory[s_route + 56 + i] = 1
+            d.pb.memory[s_route + 43 + i] = 100 if i == 6 else 0
+            d.pb.memory[s_route + 51 + i] = 1
+            d.pb.memory[s_route + 59 + i] = 1
         d.pb.memory[d.r.sym.wram("g_travel_weather")] = 0xFF
         d.pb.memory[d.r.sym.wram("g_travel_weather_left")] = 0
         raw = struct.pack("<h", 30)
@@ -1523,7 +1545,7 @@ def test_fixes():
                 d.press("a", settle=20)
         # Now switch weights to CLEAR=100, SNOW=0; expired snow must burn 1 day!
         for i in range(8):
-            d.pb.memory[s_route + 40 + i] = 100 if i == 0 else 0
+            d.pb.memory[s_route + 43 + i] = 100 if i == 0 else 0
         day1 = d.day()
         d.press("b", settle=20)
         assert d.weather() == 0, d.weather()

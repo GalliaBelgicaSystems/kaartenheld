@@ -15,9 +15,9 @@ Route schema:
     destination (scene), dest_x/dest_y (inside the level bounds),
     act (1..9: the act this road belongs to),
     supply (provisions_price + provisions_per_day burn),
-    camp (hunt provisions min..max + delay_min..max,
-    rest heal + delay, starve provisions hp + every,
-    study save/lost min..max + provisions),
+    camp (hunt provisions min..max + delay_min..max + jackpot
+    min..max at jackpot_chance %, rest heal + delay, starve
+    provisions hp + every, study save/lost min..max + provisions),
     weather (optional per-weather weight 0..255 + days_min/max
     1..10 + extra provisions -10..10 per day; each road tunes its
     own climate, weights sum <= 255),
@@ -331,12 +331,16 @@ def load_routes(scenes, event_ids, event_acts):
         if not isinstance(hunt, dict):
             fail("%s: camp.hunt must be an object" % rid)
         for key, lo, hi in (("provisions_min", 0, 30), ("provisions_max", 0, 30),
-                             ("delay_min", 0, 10), ("delay_max", 0, 10)):
+                             ("delay_min", 0, 10), ("delay_max", 0, 10),
+                             ("jackpot_min", 0, 60), ("jackpot_max", 0, 60),
+                             ("jackpot_chance", 0, 100)):
             v = hunt.get(key)
             if not isinstance(v, int) or not (lo <= v <= hi):
                 fail("%s: camp.hunt.%s must be %d..%d" % (rid, key, lo, hi))
         if hunt["provisions_max"] < hunt["provisions_min"]:
             fail("%s: camp.hunt.provisions_max < provisions_min" % rid)
+        if hunt["jackpot_max"] < hunt["jackpot_min"]:
+            fail("%s: camp.hunt.jackpot_max < jackpot_min" % rid)
         if hunt["delay_max"] < hunt["delay_min"]:
             fail("%s: camp.hunt.delay_max < delay_min" % rid)
         rest = camp.get("rest")
@@ -508,6 +512,9 @@ def emit(routes, events, scenes, battle_ids):
         lines.append("        %d, /* provisions_per_day */" % doc["supply"]["provisions_per_day"])
         lines.append("        %d, /* hunt_prov_min */" % doc["camp"]["hunt"]["provisions_min"])
         lines.append("        %d, /* hunt_prov_max */" % doc["camp"]["hunt"]["provisions_max"])
+        lines.append("        %d, /* hunt_jackpot_min */" % doc["camp"]["hunt"]["jackpot_min"])
+        lines.append("        %d, /* hunt_jackpot_max */" % doc["camp"]["hunt"]["jackpot_max"])
+        lines.append("        %d, /* hunt_jackpot_chance */" % doc["camp"]["hunt"]["jackpot_chance"])
         lines.append("        %d, /* starve_prov_hp */" % doc["camp"]["starve"]["provisions_hp"])
         lines.append("        %d, /* starve_prov_every */" % doc["camp"]["starve"]["provisions_every"])
         lines.append("        %d, /* hunt_delay_min */" % doc["camp"]["hunt"]["delay_min"])

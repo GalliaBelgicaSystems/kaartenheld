@@ -133,8 +133,16 @@ void travel_camp_banked(void)
     if (action == 0) {
         /* Hunt/forage: finds provisions before the day's burn so a
          * starving hero can eat what they just found; may add a
-         * detour (no road event). */
-        found = tb_roll(s_route.hunt_prov_min, s_route.hunt_prov_max);
+         * detour (no road event).  A jackpot roll (jackpot_chance %)
+         * pays the big haul instead of the base yield: the rare
+         * windfall that can pull a starving party out of the
+         * hunt-every-two-steps spiral. */
+        if (tb_roll(1, 100) <= s_route.hunt_jackpot_chance) {
+            found = tb_roll(s_route.hunt_jackpot_min,
+                            s_route.hunt_jackpot_max);
+        } else {
+            found = tb_roll(s_route.hunt_prov_min, s_route.hunt_prov_max);
+        }
         delay = tb_roll(s_route.hunt_delay_min, s_route.hunt_delay_max);
         v = tb_get(VARIABLE_ID_PROVISIONS);
         tb_set(VARIABLE_ID_PROVISIONS, (int16_t)(v + (int16_t)found));

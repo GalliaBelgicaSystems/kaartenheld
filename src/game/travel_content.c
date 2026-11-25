@@ -19,6 +19,9 @@ const TravelRoute g_travel_routes[] = {
         2, /* provisions_per_day */
         2, /* hunt_prov_min */
         8, /* hunt_prov_max */
+        20, /* hunt_jackpot_min */
+        30, /* hunt_jackpot_max */
+        30, /* hunt_jackpot_chance */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
@@ -65,6 +68,9 @@ const TravelRoute g_travel_routes[] = {
         3, /* provisions_per_day */
         2, /* hunt_prov_min */
         8, /* hunt_prov_max */
+        20, /* hunt_jackpot_min */
+        30, /* hunt_jackpot_max */
+        30, /* hunt_jackpot_chance */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
@@ -111,6 +117,9 @@ const TravelRoute g_travel_routes[] = {
         3, /* provisions_per_day */
         2, /* hunt_prov_min */
         8, /* hunt_prov_max */
+        20, /* hunt_jackpot_min */
+        30, /* hunt_jackpot_max */
+        30, /* hunt_jackpot_chance */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
@@ -157,6 +166,9 @@ const TravelRoute g_travel_routes[] = {
         2, /* provisions_per_day */
         2, /* hunt_prov_min */
         8, /* hunt_prov_max */
+        20, /* hunt_jackpot_min */
+        30, /* hunt_jackpot_max */
+        30, /* hunt_jackpot_chance */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */

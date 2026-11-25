@@ -14,7 +14,10 @@
       "delay_min": 0,
       "delay_max": 1,
       "provisions_min": 2,
-      "provisions_max": 8
+      "provisions_max": 8,
+      "jackpot_min": 20,
+      "jackpot_max": 30,
+      "jackpot_chance": 30
     },
     "rest": {
       "heal": 5,

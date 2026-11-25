@@ -97,6 +97,9 @@ typedef struct {
     uint8_t provisions_per_day;   /* provisions burned per travel day */
     uint8_t hunt_prov_min;  /* forage yield range (provisions found) */
     uint8_t hunt_prov_max;
+    uint8_t hunt_jackpot_min; /* jackpot haul range (big forage payoff) */
+    uint8_t hunt_jackpot_max;
+    uint8_t hunt_jackpot_chance; /* % chance a hunt pays the jackpot */
     uint8_t starve_prov_hp;    /* HP lost without provisions ... */
     uint8_t starve_prov_every; /* ... every N starving days */
     uint8_t hunt_delay_min; /* forage detour range (extra steps) */
