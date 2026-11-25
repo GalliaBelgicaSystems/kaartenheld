@@ -65,7 +65,7 @@ wood_dog: #8d754a
 slime_light: #77e331
 slime_dark: #5c903a
 character_main_outline_bat: #000000
-enemy: #673c3c
+enemy: #a44b4d
 npc: #3f3017
 npc_beard: #b6b6b6
 white: #ffffff
@@ -74,7 +74,7 @@ mage_cloth: #475ca8
 chest_outline: #6f5a34
 chest_lock: #ac9d23
 spider_boss_light: #565656
-boss_eyes_scepter: #8b1b1b
+boss_eyes_scepter: #c34e1b
 merchant_coin: #8f591f
 poison_icon: #7136c1
 ice_icon: #7ae3f3
@@ -85,7 +85,7 @@ numbers_icons: #755930
 card_background: #dfbd8d
 card_gold: #e3ae63
 card_outline: #b09266
-heart_fire_enemy_eyes: #8b1b1b
+heart_fire_enemy_eyes: #c34e1b
 slime_combat: #89cc5e
 slime_outline_combat: #5c903a
 slime_outline_combat_dark: #3c5e26
@@ -96,10 +96,10 @@ spider_combat_knife_blade_light: #8f8f8f
 mimic_combat_body_light: #8d754a
 mimic_combat_body_dark: #6f5a34
 mimic_combat_mouth: #3f3017
-goblin_combat_skin: #844f4f
+goblin_combat_skin: #a44b4d
 goblin_combat_skin_dark_outlines: #4a2727
 bat_combat_inner_wings: #3d3044
-eyes_glow: #f57137
+eyes_glow: #ff976a
 ice_icon: #7ae3f3
 poison_icon: #7136c1
 bronze_dark: #967139

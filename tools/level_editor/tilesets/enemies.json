@@ -8,7 +8,7 @@
       "label": "Dog frame 0",
       "gb_constant": "TILE_ENEMIES_DOG_F0",
       "walkable": false,
-      "color": "#8c7147",
+      "color": "#8f7347",
       "ascii": "D",
       "image_url": "/tiles/enemies/dog_f0.png",
       "category": "npc"
@@ -18,7 +18,7 @@
       "label": "Dog frame 1",
       "gb_constant": "TILE_ENEMIES_DOG_F1",
       "walkable": false,
-      "color": "#8c6d46",
+      "color": "#917146",
       "ascii": "D",
       "image_url": "/tiles/enemies/dog_f1.png",
       "category": "npc"
@@ -68,7 +68,7 @@
       "label": "Boss overworld top-left",
       "gb_constant": "TILE_ENEMIES_BOSS_OW_TL",
       "walkable": false,
-      "color": "#110b0b",
+      "color": "#140e0b",
       "ascii": "B",
       "image_url": "/tiles/enemies/boss_ow_tl.png",
       "category": "enemy"
@@ -78,7 +78,7 @@
       "label": "Boss overworld top-right",
       "gb_constant": "TILE_ENEMIES_BOSS_OW_TR",
       "walkable": false,
-      "color": "#1e0a0a",
+      "color": "#27130a",
       "ascii": "B",
       "image_url": "/tiles/enemies/boss_ow_tr.png",
       "category": "enemy"
@@ -108,7 +108,7 @@
       "label": "Kobold frame 0",
       "gb_constant": "TILE_ENEMIES_KOBOLD_F0",
       "walkable": false,
-      "color": "#8a6d3b",
+      "color": "#a44b4d",
       "ascii": "K",
       "image_url": "/tiles/enemies/kobold_f0.png",
       "category": "enemy"
@@ -118,7 +118,7 @@
       "label": "Kobold frame 1",
       "gb_constant": "TILE_ENEMIES_KOBOLD_F1",
       "walkable": false,
-      "color": "#8a6d3b",
+      "color": "#a44b4d",
       "ascii": "K",
       "image_url": "/tiles/enemies/kobold_f1.png",
       "category": "enemy"
@@ -128,7 +128,7 @@
       "label": "Kobold idle",
       "gb_constant": "TILE_ENEMIES_KOBOLD_IDLE",
       "walkable": false,
-      "color": "#8a6d3b",
+      "color": "#a44b4d",
       "ascii": "K",
       "image_url": "/tiles/enemies/kobold_idle.png",
       "category": "enemy"

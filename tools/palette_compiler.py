@@ -344,7 +344,7 @@ def write_obj_map_overrides(ramps):
 
 def main():
     import PIL.Image  # noqa: F401 (clear error if Pillow is missing)
-    _, ramps = parse_palette()
+    palette_colors, ramps = parse_palette()
     slotmap = load_slotmap()
     aliases = load_aliases(slotmap)
 
@@ -458,8 +458,10 @@ def main():
     # equal its unlit cell with red recoloured to orange ONLY (the
     # overlay assumes shape identity across the blink).
     from PIL import Image as _GlowImage
-    _GLOW_RED = (139, 27, 27)      # COMBAT/heart_fire_enemy_eyes
-    _GLOW_ORANGE = (245, 113, 55)  # COMBAT/eyes_glow
+    # Palette-derived (never hardcoded): the artist may repaint either red;
+    # the overlay assumes shape identity across the blink, not fixed hues.
+    _GLOW_RED = tuple(palette_colors["COMBAT"]["heart_fire_enemy_eyes"])
+    _GLOW_ORANGE = tuple(palette_colors["COMBAT"]["eyes_glow"])
     _GLOW_PUB = REPO_ROOT / "tools" / "level_editor" / "public" / "tiles" / "combat"
     for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
         data = json.loads(path.read_text())
