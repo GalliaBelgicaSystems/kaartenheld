@@ -119,7 +119,7 @@ OBJS_TRAVEL = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/travel/%.o,$(RELEASE_SRCS))
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug travel-demo run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check journeys journeys-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
+.PHONY: all release debug travel-demo run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint lint-travel memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check journeys journeys-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
 
 all: $(TARGET)
 
@@ -167,6 +167,32 @@ lint: gfx tiles sfx $(SRCS)
 		fi; \
 	done; \
 	if [ "$$ok" = "1" ]; then echo "lint: no warnings"; else exit 1; fi
+
+# Travel-demo lint pass: compile-to-assembly -Wf-Wall, banked-ABI,
+# banked-di/ei, and LCD-off checks over TRAVEL_SRCS + -DTRAVEL_DEMO
+# branches so travel-demo code never skips lint.
+lint-travel: gfx tiles sfx journeys
+	@ok=1; \
+	for f in $(TRAVEL_SRCS) $(SRC_DIR)/game/events_content.c $(SRC_DIR)/game/slime_trio_spawn_banked.c $(SRC_DIR)/game/content.c $(SRC_DIR)/game/choice_nav_banked.c $(SRC_DIR)/core/event.c $(SRC_DIR)/core/game.c $(SRC_DIR)/screens/battle_screen.c $(SRC_DIR)/screens/dialogue_screen.c $(SRC_DIR)/screens/screen.c $(SRC_DIR)/screens/save_load_screen.c $(SRC_DIR)/world/interaction.c; do \
+		out=$$($(CC) -S -DTRAVEL_DEMO -Wf-Wall $(INCLUDES) -o /dev/null "$$f" 2>&1 || true); \
+		if echo "$$out" | grep -q "warning"; then \
+			echo "=== $$f (TRAVEL_DEMO) ==="; echo "$$out" | grep "warning"; ok=0; \
+		fi; \
+	done; \
+	CC="$(CC)" INCLUDES="$(INCLUDES)" CHECK_TRAVEL=1 sh tools/check_banked_copies.sh || ok=0; \
+	for f in $(TRAVEL_SRCS); do \
+		if grep -q "#pragma bank" "$$f"; then \
+			hits=$$(sed -e 's|//.*$$||' -e 's|/\*.*\*/||g' "$$f" | grep -nE '^[[:space:]]*(di|ei)[[:space:]]*$$|__asm[[:space:]]+(di|ei)[[:space:]]+__endasm|__critical|\<CRITICAL\>|enable_interrupts|disable_interrupts|set_interrupts' | grep -vE '^[0-9]+:[[:space:]]*\*'); \
+			if [ -n "$$hits" ]; then \
+				echo "$$hits" | sed "s|^|$$f:|"; \
+				echo "BANKED-DI-EI: $$f has $$(echo "$$hits" | wc -l) forbidden interrupt op(s) in a banked body (AGENTS.md 52.11.3)"; ok=0; \
+			fi; \
+		fi; \
+		if sed -e 's|//.*$$||' "$$f" | grep -nE "ui_lcd_off[[:space:]]*\(" | grep -vqE '^[0-9]+:[[:space:]]*\*'; then \
+			echo "$$f: ui_lcd_off outside the render allowlist"; ok=0; \
+		fi; \
+	done; \
+	if [ "$$ok" = "1" ]; then echo "lint-travel: no warnings"; else exit 1; fi
 
 # Regenerate GB tile data headers from PNG assets (docs/graphics.md pipeline).
 # Deterministic: rerunning produces byte-identical output.  Requires Pillow,
@@ -669,11 +695,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c $(INCLUDES) -o $@ $<
 
-# Order the generated table before its object: with -j the object recipe
-# would otherwise compile the stale committed copy while the compiler
-# rewrites it (same hazard as the parallel gfx/content rules avoid by
-# listing generated outputs as explicit prerequisites).
-$(BUILD_DIR)/travel/game/travel_content.o: journeys
+# File-timestamp rule for journey tables so travel_content.o only
+# recompiles when journey JSONs change (not on every make invocation).
+src/game/travel_content.c src/game/travel_routes_generated.h &: $(wildcard journeys/routes/*.json) $(wildcard journeys/events/*.json) tools/screen_compiler/journey_compile.py
+	@python3 tools/screen_compiler/journey_compile.py --all -o src/game/travel_content.c
+
+$(BUILD_DIR)/travel/game/travel_content.o: src/game/travel_content.c src/game/travel_routes_generated.h
+$(BUILD_DIR)/travel/game/events_content.o: src/game/travel_routes_generated.h
 $(BUILD_DIR)/travel/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c -DTRAVEL_DEMO $(INCLUDES) -o $@ $<
@@ -691,10 +719,10 @@ build/travel/world/actor_load_banked.o: src/world/actor_load_banked.c | $(BUILD_
 	$(CC) -c -DTRAVEL_DEMO -Wf--max-allocs-per-node500 $(INCLUDES) -o $@ $<
 
 # Ensure UI modules rebuild when generated sprite headers change
-$(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
-$(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
-$(BUILD_DIR)/game/marks_banked.o $(BUILD_DIR)/debug/game/marks_banked.o: $(GFX_OUT_DIR)/rider_tiles.h $(GFX_OUT_DIR)/ap_tiles.h
-$(BUILD_DIR)/screens/menu_chrome_banked.o $(BUILD_DIR)/debug/screens/menu_chrome_banked.o: $(GFX_OUT_DIR)/menus_tile_tiles.h
+$(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o $(BUILD_DIR)/travel/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
+$(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o $(BUILD_DIR)/travel/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
+$(BUILD_DIR)/game/marks_banked.o $(BUILD_DIR)/debug/game/marks_banked.o $(BUILD_DIR)/travel/game/marks_banked.o: $(GFX_OUT_DIR)/rider_tiles.h $(GFX_OUT_DIR)/ap_tiles.h
+$(BUILD_DIR)/screens/menu_chrome_banked.o $(BUILD_DIR)/debug/screens/menu_chrome_banked.o $(BUILD_DIR)/travel/screens/menu_chrome_banked.o: $(GFX_OUT_DIR)/menus_tile_tiles.h
 
 # Per-file alloc caps (see docs/roadmap.md post-mortem): the bank-3 patrol
 # path needs a hard-capped budget in these units to keep its commit-path
@@ -1073,7 +1101,7 @@ $(TARGET_DEBUG): gfx tiles levels levels-test screens dialogues shops entities m
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld_debug.noi $(BUILD_DIR)/kaartenheld_debug.sym
 	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
 
-$(TARGET_TRAVEL): gfx tiles levels screens dialogues shops journeys entities music $(OBJS_TRAVEL) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
+$(TARGET_TRAVEL): gfx tiles levels screens dialogues shops src/game/travel_content.c entities music $(OBJS_TRAVEL) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
 	@$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo16 $(LDFLAGS) -Wl-m -Wl-j -o $@ build/crt0.o $(OBJS_TRAVEL) $(GB_LITE) $(SM83_LITE) > $(BUILD_DIR)/link-travel.log 2>&1; rc=$$?; cat $(BUILD_DIR)/link-travel.log; test $$rc -eq 0
 	@if grep -Eq "Possible overflow|spans into the next" $(BUILD_DIR)/link-travel.log; then echo "link: BANK OVERFLOW detected (see $(BUILD_DIR)/link-travel.log)" >&2; exit 1; fi
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld-travel-demo.noi $(BUILD_DIR)/kaartenheld-travel-demo.sym
@@ -1295,7 +1323,9 @@ clean:
 	@# dirty with deletions.
 	find $(BUILD_DIR) -mindepth 1 \
 		! -name 'kaartenheld.gb' ! -name 'kaartenheld_debug.gb' \
+		! -name 'kaartenheld-travel-demo.gb' \
 		! -name 'kaartenheld.sym' ! -name 'kaartenheld_debug.sym' \
+		! -name 'kaartenheld-travel-demo.sym' \
 		! -name 'kaartenheld_manual.pdf' \
 		-exec rm -rf {} + 2>/dev/null || true
 	rm -rf $(GENERATED_MUSIC_DIR)

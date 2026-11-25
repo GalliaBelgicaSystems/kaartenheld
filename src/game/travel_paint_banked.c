@@ -6,29 +6,26 @@
 #include "rpg/state.h"
 #include "game_ids.h"
 
-/* ── Travel-demo journey paint (travel-demo ROM only, bank 9) ──────
- * The fixed bank cannot host the travel screens (AGENTS.md 52.18: the
- * travel slice overflows _CODE into bank 2).  This banked body owns the
- * whole journey paint behind one thin fixed-bank wrapper
- * (travel_screen_render stages nothing -- the body reads its inputs
- * straight from WRAM + same-bank ROM, then the wrapper validates the
- * render cache).
+/* ── Travel-demo journey paint (travel-demo ROM only, bank 11) ─────
+ * The fixed bank cannot host the travel screens (AGENTS.md 52.18).
+ * This banked body owns the whole journey paint behind the thin
+ * wrapper in travel_screen.c.
  *
  * Bank discipline (AGENTS.md 52.11.1/52.11.3): self-contained -- WRAM
- * reads (g_game state, travel staging bytes, ROM tables in THIS bank),
- * raw VRAM writes only.  Never calls a fixed-bank function (ui_*,
- * menu_*, currency_*, game_* are all fixed): text goes out through a
- * local diff-skip writer plus BANKED_VRAM_WRITE (bounded Mode wait +
- * per-access di, LCD-off fast path), mirroring screen_content.c.
+ * reads (g_game state, travel staging bytes, s_route/s_event/s_event_fail),
+ * raw VRAM writes via BANKED_VRAM_WRITE.  No fixed-bank calls, no di/ei.
+ * First entry (same_screen == 0, LCD off) clears VRAM + g_ui_screen_buf;
+ * same-screen updates (same_screen == 1, LCD on) diff-skip against
+ * g_ui_screen_buf so cursor moves and view switches have zero flash.
  */
 
 #pragma bank 11
 
 /* File-static scratch (WRAM, never stack: AGENTS.md 52.14). */
 static char s_line[21];
+static uint8_t s_row_used[18];
 static uint8_t s_i;
 static uint8_t s_n;
-static uint8_t s_k;
 static volatile uint8_t *s_dst;
 static char *s_buf;
 
@@ -58,6 +55,31 @@ static uint8_t tp_u16(uint16_t v, char *dst)
     return n;
 }
 
+static void tp_putc(char ch)
+{
+    if (s_n < 20) {
+        s_line[s_n] = ch;
+        s_n++;
+    }
+}
+
+static void tp_puts(const char *s)
+{
+    if (!s) return;
+    while (*s != '\0' && s_n < 20) {
+        s_line[s_n] = *s;
+        s_n++;
+        s++;
+    }
+}
+
+static void tp_put_u16(uint16_t v)
+{
+    char num[6];
+    tp_u16(v, num);
+    tp_puts(num);
+}
+
 static void tp_sync_write(volatile uint8_t *dst, uint8_t tile)
 {
     BANKED_VRAM_WRITE(dst, tile);
@@ -69,6 +91,7 @@ static void tp_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
     char ch;
     uint8_t ended;
     if (y >= 18 || x >= 20) return;
+    s_row_used[y] = 1;
     if ((uint8_t)(x + max_chars) > 20) max_chars = (uint8_t)(20 - x);
     VBK_REG = 0;
     ended = (text == NULL);
@@ -93,11 +116,18 @@ static void tp_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
     }
 }
 
+static void tp_line_done(uint8_t y)
+{
+    s_line[s_n] = '\0';
+    tp_text(0, y, s_line, 20);
+}
+
 static void tp_hline(uint8_t y, char ch)
 {
     uint8_t x;
     volatile uint8_t *vram;
     if (y >= 18) return;
+    s_row_used[y] = 1;
     vram = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5));
     VBK_REG = 0;
     for (x = 0; x < 20; x++) {
@@ -109,8 +139,8 @@ static void tp_hline(uint8_t y, char ch)
     }
 }
 
-/* Full clear + centered title + separator (menu_draw_frame shape). */
-static void tp_frame(const char *title)
+/* First-entry full clear + centered title + separator (LCD off). */
+static void tp_frame_init(const char *title)
 {
     uint8_t x;
     uint8_t y;
@@ -136,36 +166,27 @@ static void tp_frame(const char *title)
 static void tp_gold(void)
 {
     int16_t gold;
-    uint8_t n;
     gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
-    s_line[0] = 'G';
-    s_line[1] = 'O';
-    s_line[2] = 'L';
-    s_line[3] = 'D';
-    s_line[4] = ' ';
     if (gold < 0) gold = 0;
-    n = tp_u16((uint16_t)gold, &s_line[5]);
-    (void)n;
-    tp_text(2, 6, s_line, 20);
+    s_n = 0;
+    tp_puts("GOLD ");
+    tp_put_u16((uint16_t)gold);
+    tp_line_done(6);
 }
 
 static void tp_days(void)
 {
     int16_t day;
     day = g_game.state.variables.values[VARIABLE_ID_DAY - 1];
-    s_line[0] = 'D';
-    s_line[1] = 'A';
-    s_line[2] = 'Y';
-    s_line[3] = 'S';
-    s_line[4] = ' ';
     if (day < 0) day = 0;
-    tp_u16((uint16_t)day, &s_line[5]);
+    s_n = 0;
+    tp_puts("DAYS ");
+    tp_put_u16((uint16_t)day);
     if (day == 0) {
-        tp_text(2, 7, s_line, 9);
-        tp_text(11, 7, "LATE!", 20);
-    } else {
-        tp_text(2, 7, s_line, 20);
+        while (s_n < 9) tp_putc(' ');
+        tp_puts("LATE!");
     }
+    tp_line_done(7);
 }
 
 static void tp_supplies(void)
@@ -173,59 +194,36 @@ static void tp_supplies(void)
     int16_t prov;
     prov = g_game.state.variables.values[VARIABLE_ID_PROVISIONS - 1];
     if (prov < 0) prov = 0;
-    s_line[0] = 'P';
-    s_line[1] = 'R';
-    s_line[2] = 'O';
-    s_line[3] = 'V';
-    s_line[4] = ' ';
-    s_n = tp_u16((uint16_t)prov, &s_line[5]);
-    s_n = (uint8_t)(5 + s_n);
+    s_n = 0;
+    tp_puts("PROV ");
+    tp_put_u16((uint16_t)prov);
     if (prov == 0) {
-        s_line[s_n] = '!';
-        s_n++;
+        tp_putc('!');
     }
-    s_line[s_n] = '\0';
-    tp_text(2, 8, s_line, 20);
+    tp_line_done(8);
 }
 
 /* "HP 15/15" (hero pool, so the REST heal is visible). */
 static void tp_hp(void)
 {
-    uint8_t hp;
-    uint8_t max_hp;
-    uint8_t n;
-    hp = g_game.state.party.members[0].hp;
-    max_hp = g_game.state.party.members[0].max_hp;
-    s_line[0] = 'H';
-    s_line[1] = 'P';
-    s_line[2] = ' ';
-    n = tp_u16(hp, &s_line[3]);
-    n = (uint8_t)(3 + n);
-    s_line[n] = '/';
-    n++;
-    n = (uint8_t)(n + tp_u16(max_hp, &s_line[n]));
-    s_line[n] = '\0';
-    tp_text(2, 4, s_line, 20);
+    s_n = 0;
+    tp_puts("HP ");
+    tp_put_u16(g_game.state.party.members[0].hp);
+    tp_putc('/');
+    tp_put_u16(g_game.state.party.members[0].max_hp);
+    tp_line_done(4);
 }
 
 static void tp_step(void)
 {
-    uint8_t n;
-    uint8_t m;
-    uint8_t done;    done = (uint8_t)(g_travel_total - g_travel_left);
-    s_line[0] = 'S';
-    s_line[1] = 'T';
-    s_line[2] = 'E';
-    s_line[3] = 'P';
-    s_line[4] = ' ';
-    n = tp_u16(done, &s_line[5]);
-    m = (uint8_t)(5 + n);
-    s_line[m] = ' ';
-    s_line[(uint8_t)(m + 1)] = 'O';
-    s_line[(uint8_t)(m + 2)] = 'F';
-    s_line[(uint8_t)(m + 3)] = ' ';
-    tp_u16(g_travel_total, &s_line[(uint8_t)(m + 4)]);
-    tp_text(2, 5, s_line, 20);
+    uint8_t done;
+    done = (uint8_t)(g_travel_total - g_travel_left);
+    s_n = 0;
+    tp_puts("STEP ");
+    tp_put_u16(done);
+    tp_puts(" OF ");
+    tp_put_u16(g_travel_total);
+    tp_line_done(5);
 }
 
 /* Ambient weather name (same vocabulary as travel.h; literals live in
@@ -243,33 +241,16 @@ static const char *tp_wx_name(uint8_t w)
     return "";
 }
 
-/* Route line with the active weather appended ("FIELD ROAD STORM").
- * Truncated at the 20-col row; clear days show the road alone. */
+/* Route line with the active weather appended ("FIELD ROAD CLEAR"). */
 static void tp_route(void)
 {
-    uint8_t n;
-    uint8_t k;
-    const char *wx;
-    n = 0;
-    while (n < 20 && s_route.name[n] != '\0') {
-        s_line[n] = s_route.name[n];
-        n++;
-    }
+    s_n = 0;
+    tp_puts(s_route.name);
     if (g_travel_weather != TRAVEL_WEATHER_NONE) {
-        wx = tp_wx_name(g_travel_weather);
-        if (n < 19) {
-            s_line[n] = ' ';
-            n++;
-        }
-        k = 0;
-        while (n < 20 && wx[k] != '\0') {
-            s_line[n] = wx[k];
-            n++;
-            k++;
-        }
+        tp_putc(' ');
+        tp_puts(tp_wx_name(g_travel_weather));
     }
-    s_line[n] = '\0';
-    tp_text(2, 3, s_line, 20);
+    tp_line_done(3);
 }
 
 static void tp_method_duration(void)
@@ -277,42 +258,30 @@ static void tp_method_duration(void)
     uint8_t steps;
     steps = s_route.methods[g_travel_choice].steps;
     if (steps == 0) {
-        tp_text(2, 5, "INSTANT", 20);
+        tp_text(0, 5, "INSTANT", 20);
     } else {
-        tp_u16(steps, s_line);
         s_n = 0;
-        while (s_line[s_n] != '\0') s_n++;
-        s_line[s_n] = ' ';
-        s_line[(uint8_t)(s_n + 1)] = 'S';
-        s_line[(uint8_t)(s_n + 2)] = 'T';
-        s_line[(uint8_t)(s_n + 3)] = 'E';
-        s_line[(uint8_t)(s_n + 4)] = 'P';
-        s_line[(uint8_t)(s_n + 5)] = 'S';
-        s_line[(uint8_t)(s_n + 6)] = '\0';
-        tp_text(2, 5, s_line, 20);
+        tp_put_u16(steps);
+        tp_puts(" STEPS");
+        tp_line_done(5);
     }
 }
 
-/* Append one signed delta ("+15G", "-2F") with a unit char. */
+/* Append one signed delta ("+15G", "-2P") with a unit char. */
 static void tp_delta_part(int16_t v, char unit)
 {
     uint16_t mag;
     if (v == 0) return;
-    if (s_n != 0) {
-        s_line[s_n] = ' ';
-        s_n = (uint8_t)(s_n + 1);
-    }
+    if (s_n != 0) tp_putc(' ');
     if (v < 0) {
-        s_line[s_n] = '-';
+        tp_putc('-');
         mag = (uint16_t)(0 - v);
     } else {
-        s_line[s_n] = '+';
+        tp_putc('+');
         mag = (uint16_t)v;
     }
-    s_n = (uint8_t)(s_n + 1);
-    s_n = (uint8_t)(s_n + tp_u16(mag, &s_line[s_n]));
-    s_line[s_n] = unit;
-    s_n = (uint8_t)(s_n + 1);
+    tp_put_u16(mag);
+    tp_putc(unit);
 }
 
 /* Append net steps ("+1 STEP", "-2 STEPS"). */
@@ -320,29 +289,17 @@ static void tp_delta_steps(int16_t net)
 {
     uint16_t mag;
     if (net == 0) return;
-    if (s_n != 0) {
-        s_line[s_n] = ' ';
-        s_n = (uint8_t)(s_n + 1);
-    }
+    if (s_n != 0) tp_putc(' ');
     if (net < 0) {
-        s_line[s_n] = '-';
+        tp_putc('-');
         mag = (uint16_t)(0 - net);
     } else {
-        s_line[s_n] = '+';
+        tp_putc('+');
         mag = (uint16_t)net;
     }
-    s_n = (uint8_t)(s_n + 1);
-    s_n = (uint8_t)(s_n + tp_u16(mag, &s_line[s_n]));
-    s_line[s_n] = ' ';
-    s_line[(uint8_t)(s_n + 1)] = 'S';
-    s_line[(uint8_t)(s_n + 2)] = 'T';
-    s_line[(uint8_t)(s_n + 3)] = 'E';
-    s_line[(uint8_t)(s_n + 4)] = 'P';
-    s_n = (uint8_t)(s_n + 5);
-    if (mag != 1) {
-        s_line[s_n] = 'S';
-        s_n = (uint8_t)(s_n + 1);
-    }
+    tp_put_u16(mag);
+    tp_puts(" STEP");
+    if (mag != 1) tp_putc('S');
 }
 
 /* Append net days ("+1 DAY", "-2 DAYS"). */
@@ -350,33 +307,21 @@ static void tp_delta_days(int16_t net)
 {
     uint16_t mag;
     if (net == 0) return;
-    if (s_n != 0) {
-        s_line[s_n] = ' ';
-        s_n = (uint8_t)(s_n + 1);
-    }
+    if (s_n != 0) tp_putc(' ');
     if (net < 0) {
-        s_line[s_n] = '-';
+        tp_putc('-');
         mag = (uint16_t)(0 - net);
     } else {
-        s_line[s_n] = '+';
+        tp_putc('+');
         mag = (uint16_t)net;
     }
-    s_n = (uint8_t)(s_n + 1);
-    s_n = (uint8_t)(s_n + tp_u16(mag, &s_line[s_n]));
-    s_line[s_n] = ' ';
-    s_line[(uint8_t)(s_n + 1)] = 'D';
-    s_line[(uint8_t)(s_n + 2)] = 'A';
-    s_line[(uint8_t)(s_n + 3)] = 'Y';
-    s_n = (uint8_t)(s_n + 4);
-    if (mag != 1) {
-        s_line[s_n] = 'S';
-        s_n = (uint8_t)(s_n + 1);
-    }
+    tp_put_u16(mag);
+    tp_puts(" DAY");
+    if (mag != 1) tp_putc('S');
 }
 
 /* Generic choice-outcome line (gold, provisions, HP, net steps,
- * net days; zero parts skipped, capped at the 18-col row by the
- * diff-skipping writer). */
+ * net days; zero parts skipped, clamped safely at 20 cols). */
 static void tp_delta_core(int16_t gold, int8_t prov,
                           int16_t hp, int16_t steps, int8_t days)
 {
@@ -385,13 +330,11 @@ static void tp_delta_core(int16_t gold, int8_t prov,
     tp_delta_part(prov, 'P');
     if (hp != 0) {
         tp_delta_part(hp, 'H');
-        s_line[s_n] = 'P';
-        s_n = (uint8_t)(s_n + 1);
+        tp_putc('P');
     }
     tp_delta_steps(steps);
     tp_delta_days(days);
-    s_line[s_n] = '\0';
-    tp_text(2, 11, s_line, 20);
+    tp_line_done(11);
 }
 
 static void tp_delta(const TravelEvent *e, uint8_t opt1)
@@ -422,239 +365,152 @@ static void tp_fail_delta(uint8_t opt1)
 /* "> HELP IGNORE" / "  HELP>IGNORE" (choice options from the row). */
 static void tp_options(const TravelEvent *e)
 {
-    uint8_t i;
-    uint8_t k;
-    s_line[0] = (g_travel_choice == 0) ? '>' : ' ';
-    s_line[1] = ' ';
-    i = 0;
-    while (i < TRAVEL_OPT_LEN && e->opt1[i] != '\0') {
-        s_line[(uint8_t)(2 + i)] = e->opt1[i];
-        i = (uint8_t)(i + 1);
-    }
-    k = (uint8_t)(2 + i);
-    s_line[k] = (g_travel_choice == 0) ? ' ' : '>';
-    k = (uint8_t)(k + 1);
-    i = 0;
-    while (i < TRAVEL_OPT_LEN && e->opt2[i] != '\0') {
-        s_line[(uint8_t)(k + i)] = e->opt2[i];
-        i = (uint8_t)(i + 1);
-    }
-    s_line[(uint8_t)(k + i)] = '\0';
-    tp_text(2, 11, s_line, 20);
+    s_n = 0;
+    tp_putc((g_travel_choice == 0) ? '>' : ' ');
+    tp_putc(' ');
+    tp_puts(e->opt1);
+    tp_putc((g_travel_choice == 0) ? ' ' : '>');
+    tp_puts(e->opt2);
+    tp_line_done(11);
 }
 
 /* "+8G LOOT!" (ambush victory line). */
 static void tp_loot(const TravelEvent *e)
 {
-    uint8_t n;
-    s_line[0] = '+';
-    n = tp_u16((uint16_t)e->victory_gold, &s_line[1]);
-    n = (uint8_t)(1 + n);
-    s_line[n] = 'G';
-    s_line[(uint8_t)(n + 1)] = ' ';
-    s_line[(uint8_t)(n + 2)] = 'L';
-    s_line[(uint8_t)(n + 3)] = 'O';
-    s_line[(uint8_t)(n + 4)] = 'O';
-    s_line[(uint8_t)(n + 5)] = 'T';
-    s_line[(uint8_t)(n + 6)] = '!';
-    s_line[(uint8_t)(n + 7)] = '\0';
-    tp_text(2, 9, s_line, 20);
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16((uint16_t)e->victory_gold);
+    tp_puts("G LOOT!");
+    tp_line_done(9);
 }
 
 /* "+1 DAY" (ambush time-cost line). */
 static void tp_daycost(const TravelEvent *e)
 {
-    uint8_t n;
-    s_line[0] = '+';
-    n = tp_u16(e->victory_days, &s_line[1]);
-    n = (uint8_t)(1 + n);
-    s_line[n] = ' ';
-    s_line[(uint8_t)(n + 1)] = 'D';
-    s_line[(uint8_t)(n + 2)] = 'A';
-    s_line[(uint8_t)(n + 3)] = 'Y';
-    if (e->victory_days == 1) {
-        s_line[(uint8_t)(n + 4)] = '\0';
-    } else {
-        s_line[(uint8_t)(n + 4)] = 'S';
-        s_line[(uint8_t)(n + 5)] = '\0';
-    }
-    tp_text(2, 11, s_line, 20);
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16(e->victory_days);
+    tp_puts(" DAY");
+    if (e->victory_days != 1) tp_putc('S');
+    tp_line_done(11);
 }
 
 /* One camp menu row: "> CONTINUE", "  HUNT", ... (IDLE options). */
 static void tp_camp(uint8_t idx, uint8_t y, const char *label)
 {
-    uint8_t i;
-    s_line[0] = (idx == g_travel_choice) ? '>' : ' ';
-    s_line[1] = ' ';
-    i = 0;
-    while (label[i] != '\0' && i < 16) {
-        s_line[(uint8_t)(2 + i)] = label[i];
-        i++;
-    }
-    s_line[(uint8_t)(2 + i)] = '\0';
-    tp_text(2, y, s_line, 20);
+    s_n = 0;
+    tp_putc((idx == g_travel_choice) ? '>' : ' ');
+    tp_putc(' ');
+    tp_puts(label);
+    tp_line_done(y);
 }
 
 /* "+N PROV" (hunt yield, staged in g_travel_amount). */
 static void tp_found(void)
 {
-    uint8_t n;
-    s_line[0] = '+';
-    n = tp_u16(g_travel_amount, &s_line[1]);
-    n = (uint8_t)(1 + n);
-    s_line[n] = ' ';
-    s_line[(uint8_t)(n + 1)] = 'P';
-    s_line[(uint8_t)(n + 2)] = 'R';
-    s_line[(uint8_t)(n + 3)] = 'O';
-    s_line[(uint8_t)(n + 4)] = 'V';
-    s_line[(uint8_t)(n + 5)] = '\0';
-    tp_text(2, 11, s_line, 20);
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16(g_travel_amount);
+    tp_puts(" PROV");
+    tp_line_done(11);
 }
 
-/* "+N STEPS" (hunt/rest detour, staged in g_travel_extra). */
-static void tp_detour(void)
+/* "+N STEPS" (hunt/rest/lost detour, staged in g_travel_extra). */
+static void tp_detour(uint8_t y)
 {
-    uint8_t n;
-    s_line[0] = '+';
-    n = tp_u16(g_travel_extra, &s_line[1]);
-    n = (uint8_t)(1 + n);
-    s_line[n] = ' ';
-    s_line[(uint8_t)(n + 1)] = 'S';
-    s_line[(uint8_t)(n + 2)] = 'T';
-    s_line[(uint8_t)(n + 3)] = 'E';
-    s_line[(uint8_t)(n + 4)] = 'P';
-    if (g_travel_extra == 1) {
-        s_line[(uint8_t)(n + 5)] = '\0';
-    } else {
-        s_line[(uint8_t)(n + 5)] = 'S';
-        s_line[(uint8_t)(n + 6)] = '\0';
-    }
-    tp_text(2, 12, s_line, 20);
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16(g_travel_extra);
+    tp_puts(" STEP");
+    if (g_travel_extra != 1) tp_putc('S');
+    tp_line_done(y);
 }
 
 /* "+N HP" (rest heal, staged in g_travel_amount). */
 static void tp_healed(void)
 {
-    uint8_t n;
-    s_line[0] = '+';
-    n = tp_u16(g_travel_amount, &s_line[1]);
-    n = (uint8_t)(1 + n);
-    s_line[n] = ' ';
-    s_line[(uint8_t)(n + 1)] = 'H';
-    s_line[(uint8_t)(n + 2)] = 'P';
-    s_line[(uint8_t)(n + 3)] = '\0';
-    tp_text(2, 11, s_line, 20);
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16(g_travel_amount);
+    tp_puts(" HP");
+    tp_line_done(11);
 }
 
 /* "-N STEPS" (study shortcut, staged in g_travel_amount). */
 static void tp_shortcut(void)
 {
-    uint8_t n;
-    s_line[0] = '-';
-    n = tp_u16(g_travel_amount, &s_line[1]);
-    n = (uint8_t)(1 + n);
-    s_line[n] = ' ';
-    s_line[(uint8_t)(n + 1)] = 'S';
-    s_line[(uint8_t)(n + 2)] = 'T';
-    s_line[(uint8_t)(n + 3)] = 'E';
-    s_line[(uint8_t)(n + 4)] = 'P';
-    if (g_travel_amount == 1) {
-        s_line[(uint8_t)(n + 5)] = '\0';
-    } else {
-        s_line[(uint8_t)(n + 5)] = 'S';
-        s_line[(uint8_t)(n + 6)] = '\0';
-    }
-    tp_text(2, 11, s_line, 20);
+    s_n = 0;
+    tp_putc('-');
+    tp_put_u16(g_travel_amount);
+    tp_puts(" STEP");
+    if (g_travel_amount != 1) tp_putc('S');
+    tp_line_done(11);
 }
 
 /* One method row: "> CARRIAGE 50G" or "  ON FOOT". */
 static void tp_method(uint8_t idx, uint8_t y)
 {
     const TravelMethod *m;
-    uint8_t k;
-    uint8_t i;
     m = &s_route.methods[idx];
-    s_line[0] = (idx == g_travel_choice) ? '>' : ' ';
-    s_line[1] = ' ';
-    i = 0;
-    while (i < TRAVEL_NAME_LEN && m->name[i] != '\0') {
-        s_line[(uint8_t)(2 + i)] = m->name[i];
-        i++;
-    }
-    k = (uint8_t)(2 + i);
+    s_n = 0;
+    tp_putc((idx == g_travel_choice) ? '>' : ' ');
+    tp_putc(' ');
+    tp_puts(m->name);
     if (m->cost_gold > 0) {
-        s_line[k] = ' ';
-        k = (uint8_t)(k + 1);
-        k = (uint8_t)(k + tp_u16((uint16_t)m->cost_gold, &s_line[k]));
-        s_line[k] = 'G';
-        k = (uint8_t)(k + 1);
+        tp_putc(' ');
+        tp_put_u16((uint16_t)m->cost_gold);
+        tp_putc('G');
     }
-    s_line[k] = '\0';
-    tp_text(2, y, s_line, 20);
+    tp_line_done(y);
 }
 
 /* One supply row: "> PROV 6 2G". */
 static void tp_supply(uint8_t idx, uint8_t y, const char *label)
 {
     int16_t count;
-    uint8_t price;
-    uint8_t k;
-    uint8_t i;
-    const TravelRoute *r;
-    r = &s_route;
     if (!label) return;
-    (void)idx;
     count = g_game.state.variables.values[VARIABLE_ID_PROVISIONS - 1];
-    price = r->provisions_price;
     if (count < 0) count = 0;
-    s_line[0] = (idx == g_travel_choice) ? '>' : ' ';
-    s_line[1] = ' ';
-    i = 0;
-    while (i < TRAVEL_NAME_LEN && label[i] != '\0') {
-        s_line[(uint8_t)(2 + i)] = label[i];
-        i++;
-    }
-    k = (uint8_t)(2 + i);
-    s_line[k] = ' ';
-    k = (uint8_t)(k + 1);
-    k = (uint8_t)(k + tp_u16((uint16_t)count, &s_line[k]));
-    s_line[k] = ' ';
-    k = (uint8_t)(k + 1);
-    k = (uint8_t)(k + tp_u16(price, &s_line[k]));
-    s_line[k] = 'G';
-    s_line[(uint8_t)(k + 1)] = '\0';
-    tp_text(2, y, s_line, 20);
+    s_n = 0;
+    tp_putc((idx == g_travel_choice) ? '>' : ' ');
+    tp_putc(' ');
+    tp_puts(label);
+    tp_putc(' ');
+    tp_put_u16((uint16_t)count);
+    tp_putc(' ');
+    tp_put_u16(s_route.provisions_price);
+    tp_putc('G');
+    tp_line_done(y);
 }
 
 /* "NEED 50G!" (premium refusal line, cost from the staged method). */
 static void tp_cost(void)
 {
     const TravelMethod *m;
-    uint8_t n;
     m = &s_route.methods[g_travel_choice];
-    s_line[0] = 'N';
-    s_line[1] = 'E';
-    s_line[2] = 'E';
-    s_line[3] = 'D';
-    s_line[4] = ' ';
-    n = tp_u16((uint16_t)m->cost_gold, &s_line[5]);
-    s_line[(uint8_t)(5 + n)] = 'G';
-    s_line[(uint8_t)(6 + n)] = '!';
-    s_line[(uint8_t)(7 + n)] = '\0';
-    tp_text(2, 11, s_line, 20);
+    s_n = 0;
+    tp_puts("NEED ");
+    tp_put_u16((uint16_t)m->cost_gold);
+    tp_puts("G!");
+    tp_line_done(11);
 }
 
-/* No-arg dispatch body: reads view + staged state straight from WRAM
- * (route/event/fail rows are staged by the fixed loader, so this body
- * runs from any bank).  The fixed wrapper validates the render cache. */
+/* No-arg dispatch body: reads same_screen in g_bk_byte_a and staged
+ * travel state straight from WRAM.  First entry clears VRAM + buffer;
+ * same-screen updates diff-skip and blank unused rows without flashing. */
 void travel_paint_banked(void)
 {
     const TravelRoute *r;
     const TravelEvent *e;
+    uint8_t same_screen;
     uint8_t view;
+    uint8_t y;
+    same_screen = g_bk_byte_a;
     r = &s_route;
     e = &s_event;
+    for (y = 0; y < 18; y++) {
+        s_row_used[y] = 0;
+    }
     if (g_travel_supply) {
         view = TRAVEL_VIEW_SUPPLY;
     } else if (g_travel_msg != TRAVEL_MSG_NONE) {
@@ -670,7 +526,12 @@ void travel_paint_banked(void)
     } else {
         view = TRAVEL_VIEW_HELP;
     }
-    tp_frame("TRAVEL");
+    if (!same_screen) {
+        tp_frame_init("TRAVEL");
+    } else {
+        s_row_used[0] = 1;
+        s_row_used[1] = 1;
+    }
     tp_route();
     if (view == TRAVEL_VIEW_METHOD) {
         tp_method_duration();
@@ -688,74 +549,76 @@ void travel_paint_banked(void)
         tp_camp(3, 12, "STUDY MAP");
     } else if (view == TRAVEL_VIEW_SUPPLY) {
         tp_supply(0, 9, "PROV");
-        if (g_travel_choice == 1) {
-            tp_text(2, 13, "> LEAVE", 20);
-        } else {
-            tp_text(2, 13, "  LEAVE", 20);
-        }
+        tp_text(0, 13, (g_travel_choice == 1) ? "> LEAVE" : "  LEAVE", 20);
     } else if (view == TRAVEL_VIEW_METHOD) {
         tp_method(0, 9);
         if (r->method_count > 1) {
             tp_method(1, 11);
         }
     } else if (view == TRAVEL_VIEW_AMBUSH) {
-        tp_text(2, 9, e->text, 20);
-        tp_text(2, 11, "[A] FIGHT", 20);
+        tp_text(0, 9, e->text, 20);
+        tp_text(0, 11, "[A] FIGHT", 20);
     } else if (view == TRAVEL_VIEW_HELP) {
-        tp_text(2, 9, e->text, 20);
+        tp_text(0, 9, e->text, 20);
         tp_options(e);
     } else if (view == TRAVEL_VIEW_RUINS) {
-        tp_text(2, 9, e->text, 20);
-        if (g_travel_choice == 0) {
-            tp_text(2, 11, ">EXPLORE IGNORE", 20);
-        } else {
-            tp_text(2, 11, " EXPLORE>IGNORE", 20);
-        }
+        tp_text(0, 9, e->text, 20);
+        tp_text(0, 11, (g_travel_choice == 0) ? ">EXPLORE IGNORE" : " EXPLORE>IGNORE", 20);
     } else {
         if (g_travel_msg == TRAVEL_MSG_HELPED) {
             if (g_travel_failed) {
-                tp_text(2, 9, s_event_fail.opt1.text, 20);
+                tp_text(0, 9, s_event_fail.opt1.text, 20);
                 tp_fail_delta(1);
             } else {
-                tp_text(2, 9, e->text2, 20);
+                tp_text(0, 9, e->text2, 20);
                 tp_delta(e, 1);
             }
         } else if (g_travel_msg == TRAVEL_MSG_IGNORED) {
             if (g_travel_failed) {
-                tp_text(2, 9, s_event_fail.opt2.text, 20);
+                tp_text(0, 9, s_event_fail.opt2.text, 20);
                 tp_fail_delta(0);
             } else {
-                tp_text(2, 9, e->text3, 20);
+                tp_text(0, 9, e->text3, 20);
                 tp_delta(e, 0);
             }
         } else if (g_travel_msg == TRAVEL_MSG_WON) {
             tp_loot(e);
-            tp_daycost(e);
+            if (e->victory_days > 0) {
+                tp_daycost(e);
+            }
         } else if (g_travel_msg == TRAVEL_MSG_NOGOLD) {
-            tp_text(2, 9, "NOT ENOUGH GOLD.", 20);
+            tp_text(0, 9, "NOT ENOUGH GOLD.", 20);
             tp_cost();
         } else if (g_travel_msg == TRAVEL_MSG_HUNTED) {
-            tp_text(2, 9, "YOU FORAGE.", 20);
+            tp_text(0, 9, "YOU FORAGE.", 20);
             tp_found();
-            tp_detour();
+            if (g_travel_extra > 0) tp_detour(12);
         } else if (g_travel_msg == TRAVEL_MSG_RESTED) {
-            tp_text(2, 9, "YOU REST.", 20);
-            tp_healed();
-            tp_detour();
+            tp_text(0, 9, "YOU REST.", 20);
+            if (g_travel_amount > 0) {
+                tp_healed();
+            } else {
+                tp_text(0, 11, "FULL HP.", 20);
+            }
+            if (g_travel_extra > 0) tp_detour(12);
         } else if (g_travel_msg == TRAVEL_MSG_STUDIED) {
-            tp_text(2, 9, "YOU STUDY MAP.", 20);
+            tp_text(0, 9, "YOU STUDY MAP.", 20);
             if (g_travel_amount == 0) {
-                tp_text(2, 11, "NO SHORTCUT.", 20);
+                tp_text(0, 11, "NO SHORTCUT.", 20);
             } else {
                 tp_shortcut();
             }
         } else if (g_travel_msg == TRAVEL_MSG_LOST) {
-            tp_text(2, 9, "YOU GET LOST.", 20);
-            tp_detour();
-        } else {
-            tp_text(2, 9, "YOU WAKE UP HURT.", 20);
-            tp_text(2, 10, "+1 STEP RECOVERY", 20);
+            tp_text(0, 9, "YOU GET LOST.", 20);
+            if (g_travel_extra > 0) tp_detour(12);
         }
-        tp_text(2, 13, "[A] CONTINUE", 20);
+        tp_text(0, 13, "[A] CONTINUE", 20);
+    }
+    if (same_screen) {
+        for (y = 2; y < 18; y++) {
+            if (!s_row_used[y]) {
+                tp_text(0, y, "", 20);
+            }
+        }
     }
 }

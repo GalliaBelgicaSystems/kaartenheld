@@ -48,35 +48,36 @@ static void tb_rng_step(void)
     g_travel_rng ^= (uint16_t)(g_travel_rng << 8);
 }
 
-/* Uniform range roll without % or /: rejection-sample a byte under
- * the span, like the fixed-bank pool pick. */
+/* Uniform range roll without % or /: masked rejection-sample a byte
+ * under the span, like the fixed-bank pool pick. */
 static uint8_t tb_roll(uint8_t lo, uint8_t hi)
 {
     uint8_t span;
+    uint8_t mask;
     uint8_t r;
     if (hi <= lo) return lo;
     span = (uint8_t)(hi - lo + 1);
     if (span == 0) return lo;
+    mask = 1;
+    while (mask < (uint8_t)(span - 1)) {
+        mask = (uint8_t)((mask << 1) | 1);
+    }
     do {
         tb_rng_step();
-        r = (uint8_t)g_travel_rng;
+        r = (uint8_t)((uint8_t)g_travel_rng & mask);
     } while (r >= span);
     return (uint8_t)(lo + r);
 }
 
-/* Grow both journey counters (clamped, never wraps). */
+/* Grow both journey counters by the same clamped delta so
+ * steps_done (total - left) stays invariant at the 255 ceiling. */
 static void tb_add_steps(uint8_t delay)
 {
-    if (g_travel_total <= (uint8_t)(255 - delay)) {
-        g_travel_total = (uint8_t)(g_travel_total + delay);
-    } else {
-        g_travel_total = 255;
-    }
-    if (g_travel_left <= (uint8_t)(255 - delay)) {
-        g_travel_left = (uint8_t)(g_travel_left + delay);
-    } else {
-        g_travel_left = 255;
-    }
+    uint8_t room;
+    room = (uint8_t)(255 - g_travel_total);
+    if (delay > room) delay = room;
+    g_travel_total = (uint8_t)(g_travel_total + delay);
+    g_travel_left = (uint8_t)(g_travel_left + delay);
 }
 
 static void tb_starve(uint8_t noprov);
@@ -122,6 +123,7 @@ void travel_camp_banked(void)
     uint8_t delay;
     uint8_t saved;
     uint8_t lost;
+    uint8_t old_hp;
     int16_t net;
     int16_t v;
     int16_t healed;
@@ -129,15 +131,17 @@ void travel_camp_banked(void)
     g_bk_byte_b = 0;
     g_bk_byte_c = SFX_CONFIRM;
     if (action == 0) {
-        /* Hunt/forage: finds provisions, may add a
-         * detour; the day is spent off the trail (no road event). */
+        /* Hunt/forage: finds provisions before the day's burn so a
+         * starving hero can eat what they just found; may add a
+         * detour (no road event). */
         found = tb_roll(s_route.hunt_prov_min, s_route.hunt_prov_max);
         delay = tb_roll(s_route.hunt_delay_min, s_route.hunt_delay_max);
-        g_bk_byte_a = 1;
-        travel_burn_banked();
-        if (g_game.state.party.members[0].hp == 0) return;
         v = tb_get(VARIABLE_ID_PROVISIONS);
         tb_set(VARIABLE_ID_PROVISIONS, (int16_t)(v + (int16_t)found));
+        g_bk_byte_a = 1;
+        g_bk_byte_b = 0;
+        travel_burn_banked();
+        if (g_game.state.party.members[0].hp == 0) return;
         tb_add_steps(delay);
         g_travel_amount = found;
         g_travel_extra = delay;
@@ -148,9 +152,11 @@ void travel_camp_banked(void)
     if (action == 1) {
         /* Rest: a day off that heals and still costs the schedule. */
         g_bk_byte_a = 1;
+        g_bk_byte_b = 0;
         travel_burn_banked();
         if (g_game.state.party.members[0].hp == 0) return;
-        healed = (int16_t)g_game.state.party.members[0].hp;
+        old_hp = g_game.state.party.members[0].hp;
+        healed = (int16_t)old_hp;
         healed = (int16_t)(healed + (int16_t)s_route.rest_heal);
         if (healed > (int16_t)g_game.state.party.members[0].max_hp) {
             healed = (int16_t)g_game.state.party.members[0].max_hp;
@@ -158,7 +164,7 @@ void travel_camp_banked(void)
         g_game.state.party.members[0].hp = (uint8_t)healed;
         g_game.world.player.hp = (uint8_t)healed;
         tb_add_steps(s_route.rest_delay);
-        g_travel_amount = s_route.rest_heal;
+        g_travel_amount = (uint8_t)((uint8_t)healed - old_hp);
         g_travel_extra = s_route.rest_delay;
         g_travel_msg = TRAVEL_MSG_RESTED;
         return;
@@ -169,6 +175,7 @@ void travel_camp_banked(void)
     lost = tb_roll(s_route.study_lost_min, s_route.study_lost_max);
     net = (int16_t)((int16_t)saved - (int16_t)lost);
     g_bk_byte_a = 1;
+    g_bk_byte_b = 0;
     travel_burn_banked();
     if (g_game.state.party.members[0].hp == 0) return;
     v = tb_get(VARIABLE_ID_PROVISIONS);
@@ -208,6 +215,7 @@ static void tb_weather_roll(void)
 {
     uint8_t i;
     uint8_t sum;
+    uint8_t mask;
     uint8_t r;
     uint8_t cum;
     uint8_t w;
@@ -223,10 +231,18 @@ static void tb_weather_roll(void)
         g_travel_weather_left = 0;
         return;
     }
-    do {
-        tb_rng_step();
-        r = (uint8_t)g_travel_rng;
-    } while (r >= sum);
+    if (sum == 1) {
+        r = 0;
+    } else {
+        mask = 1;
+        while (mask < (uint8_t)(sum - 1)) {
+            mask = (uint8_t)((mask << 1) | 1);
+        }
+        do {
+            tb_rng_step();
+            r = (uint8_t)((uint8_t)g_travel_rng & mask);
+        } while (r >= sum);
+    }
     cum = 0;
     for (i = 0; i < TRAVEL_WEATHER_COUNT; i++) {
         cum = (uint8_t)(cum + s_route.weather_weight[i]);
@@ -240,22 +256,31 @@ static void tb_weather_roll(void)
                                     s_route.weather_days_max[w]);
 }
 
-/* No-arg dispatch body: day count arrives staged in g_bk_byte_a.
- * Burns Convergence days, route rations, starvation tallies, and
- * flips the Lord supreme at zero -- the fixed-bank loop it replaces,
- * minus the call layer.  The camp body calls it directly: same-bank
- * plain call, never through the WRAM trampoline. */
+/* No-arg dispatch body: day count arrives staged in g_bk_byte_a,
+ * step_mode in g_bk_byte_b (1 = travelled step: roll today's weather
+ * first and burn 2 days if SNOW; 0 = explicit n days).  Burns
+ * Convergence days, route rations, starvation tallies, and flips the
+ * Lord supreme at zero.  The camp body calls it directly (same bank). */
 void travel_burn_banked(void)
 {
     uint8_t n;
+    uint8_t step_mode;
     uint8_t i;
+    uint8_t hungry;
     int16_t day;
     int16_t prov;
     int16_t rate;
     uint8_t w;
     n = g_bk_byte_a;
-    for (i = 0; i < n; i++) {
+    step_mode = g_bk_byte_b;
+    if (step_mode) {
         tb_weather_roll();
+        n = (g_travel_weather == TRAVEL_WEATHER_SNOW) ? 2 : 1;
+    }
+    for (i = 0; i < n; i++) {
+        if (!step_mode) {
+            tb_weather_roll();
+        }
         w = g_travel_weather;
         day = tb_get(VARIABLE_ID_DAY);
         if (day > 0) {
@@ -267,12 +292,13 @@ void travel_burn_banked(void)
             rate = (int16_t)(rate + (int16_t)s_route.weather_prov[w]);
             if (rate < 0) rate = 0;
         }
+        hungry = (uint8_t)(prov < rate);
         if (prov > rate) {
             tb_set(VARIABLE_ID_PROVISIONS, (int16_t)(prov - rate));
         } else if (prov > 0) {
             tb_set(VARIABLE_ID_PROVISIONS, 0);
         }
-        tb_starve((uint8_t)(tb_get(VARIABLE_ID_PROVISIONS) <= 0));
+        tb_starve(hungry);
         if (w != TRAVEL_WEATHER_NONE && g_travel_weather_left > 0) {
             g_travel_weather_left--;
         }

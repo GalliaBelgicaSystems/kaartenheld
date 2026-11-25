@@ -47,6 +47,9 @@ static void game_prepare_new_game(Game *g)
     g->game_over_choice = 0;
     g->shop_id = 0;
     g->notice_frame = 0;
+#ifdef TRAVEL_DEMO
+    travel_abandon(g);
+#endif
     game_new_game(&g->state);
     world_init(&g->world, &g->state);
     dialogue_init(&g->dialogue);
@@ -292,6 +295,9 @@ void game_render(Game *g)
         !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
           (rc->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD) ||
           (rc->prev_screen == SCREEN_ITEM && g->screen == SCREEN_ITEM) ||
+#ifdef TRAVEL_DEMO
+          (rc->prev_screen == SCREEN_JOURNEY && g->screen == SCREEN_JOURNEY) ||
+#endif
           (rc->prev_screen == SCREEN_SHOP && g->screen == SCREEN_SHOP))) {
         /* A full redraw hides the sprite in real OAM first: the redraw
          * runs synchronously inside this frame, and the sprite must not

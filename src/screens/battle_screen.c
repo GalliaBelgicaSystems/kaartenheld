@@ -80,6 +80,7 @@ void battle_screen_update(Game *g)
                     world_on_battle_fled(g);
 #ifdef TRAVEL_DEMO
                     if (game_travel_active() && !game_travel_in_ruins()) {
+                        travel_on_fled();
                         screen_change(g, SCREEN_JOURNEY);
                     } else {
 #endif
@@ -99,12 +100,11 @@ void battle_screen_update(Game *g)
                     return;
                 }
 #ifdef TRAVEL_DEMO
-                /* Road ambush lost: travel deaths are terminal -- the
-                 * hook abandons the journey and declines, so this
-                 * falls through to the normal cold game over below. */
-                if (game_travel_consume_defeat(g)) {
-                    screen_change(g, SCREEN_JOURNEY);
-                } else {
+                /* Travel deaths (road ambush or ruins) are terminal:
+                 * abandon the journey and fall through to cold game over. */
+                if (game_travel_active()) {
+                    travel_abandon(g);
+                }
 #endif
                 world_on_battle_end(g, false);
                 vg->game_over_choice = 0;
@@ -113,9 +113,6 @@ void battle_screen_update(Game *g)
                  * from the defeat would drone on under GAME_OVER. */
                 audio_play_music(MUSIC_NONE);
                 screen_change(g, SCREEN_GAME_OVER);
-#ifdef TRAVEL_DEMO
-                }
-#endif
             }
         }
         return;

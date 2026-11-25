@@ -427,6 +427,19 @@ def test_help(help_it):
         d.close()
 
 
+def _force_starve_ambush(d):
+    """Drain provisions to 0 so the next step forces a battle event
+    deterministically on the shipped ROM without editing JSON pools."""
+    import struct
+    addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
+    raw = struct.pack("<h", 0)
+    d.pb.memory[addr] = raw[0]
+    d.pb.memory[addr + 1] = raw[1]
+    d.tick(2)
+    d.press("a", settle=20)
+    assert d.wait_for(lambda: d.text_has("[A] FIGHT"), ticks=300), d.rows()
+
+
 def test_defeat():
     """Lose the ambush on purpose: empty turns until DEFEATED, then a
     cold hard game over (no floor, no resume)."""
@@ -435,18 +448,13 @@ def test_defeat():
         boot_to_journey(d)
         select_foot(d)
         gold0 = d.gold()
-        for _ in range(6):
-            d.press("a", settle=20)
-            if d.text_has("AMBUSH!"):
-                break
-        assert d.text_has("AMBUSH!"), d.rows()
+        _force_starve_ambush(d)
         d.poke_day(10)
-        d.poke_php(3)  # quick deterministic defeat (2 slime hits)
+        d.poke_php(3)  # quick deterministic defeat (2 hits)
         d.press("a", settle=30)  # fight
         assert d.wait_for(lambda: d.screen() == SCREEN_BATTLE,
                           ticks=600), "no battle"
-        # stage nothing, execute empty turns until the slime wins
-        # (~2 dmg/round vs 15 HP: needs ~8 rounds, ~6 loop iters each)
+        # stage nothing, execute empty turns until the enemy wins
         for _ in range(80):
             if d.text_has("VICTORY") or d.text_has("DEFEATED"):
                 break
@@ -456,7 +464,7 @@ def test_defeat():
                 d.press("select", settle=40)
             else:
                 d.tick(30)
-        assert d.text_has("DEFEATED"), "slime never won"
+        assert d.text_has("DEFEATED"), "enemy never won"
         d.press("a", settle=30)
         assert d.wait_for(lambda: d.screen() == 3,
                           ticks=600), "no GAME OVER after defeat (screen=%d)" \
@@ -477,20 +485,21 @@ def test_flee():
     try:
         boot_to_journey(d)
         select_foot(d)
-        for _ in range(6):
-            d.press("a", settle=20)
-            if d.text_has("AMBUSH!"):
-                break
-        assert d.text_has("AMBUSH!"), d.rows()
+        _force_starve_ambush(d)
         d.press("a", settle=30)  # fight
         assert d.wait_for(lambda: d.screen() == SCREEN_BATTLE, ticks=600)
+        assert d.pb.memory[d.r.sym.wram("g_audio_current_track")] == 2, \
+            "expected MUSIC_BATTLE"
         assert d.wait_for(lambda: d.text_has("TARGET "), ticks=600)
         d.press("b", settle=40)  # flee with empty combo
         assert d.wait_for(lambda: d.text_has("FLED!"), ticks=600), d.rows()
         d.press("a", settle=20)
         assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
                           ticks=600), "no journey resume after flee"
-        print("flee OK: journey resumes")
+        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300), d.rows()
+        assert d.pb.memory[d.r.sym.wram("g_audio_current_track")] == 1, \
+            "expected MUSIC_OVERWORLD restored after flee"
+        print("flee OK: journey resumes, music restored")
     finally:
         d.close()
 
@@ -606,7 +615,10 @@ def test_nogold():
             if d.wait_for(lambda: d.text_has("> CARRIAGE"), ticks=120):
                 break
         assert d.text_has("> CARRIAGE"), d.rows()
-        print("nogold OK: refused, gold and days untouched")
+        d.press("b", settle=20)  # cancel back to field
+        assert d.wait_for(lambda: d.screen() == SCREEN_OVERWORLD,
+                          ticks=300), "B did not exit method pick"
+        print("nogold + B-cancel OK: refused, gold/days untouched, exited")
     finally:
         d.close()
 
@@ -659,8 +671,8 @@ def test_starve():
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
         assert d.prov() == 0, d.prov()
-        d.press("a", settle=20)  # advance: quiet roll is 0, hunger forces it
-        assert d.wait_for(lambda: d.text_has("AMBUSH!"), ticks=300), d.rows()
+        d.press("a", settle=20)  # advance: quiet roll is 0, hunger forces battle
+        assert d.wait_for(lambda: d.text_has("[A] FIGHT"), ticks=300), d.rows()
         print("starve OK: 100% ambush with empty belly")
     finally:
         d.close()
@@ -1109,13 +1121,19 @@ def test_events():
         d = None
         # FIGHT path (act-2 road via chapter 2).
         d = D()
+        boot_to_overworld(d)
         import struct
         addr = d.r.state + OFF_VARIABLES + 2 * (1 - 1)
         raw = struct.pack("<h", 2)
         d.pb.memory[addr] = raw[0]
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
-        boot_to_journey(d)
+        d.press("down")
+        st = d.scene()
+        assert (st["player_x"], st["player_y"]) == (5, 8), st
+        d.press("a", settle=30)
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=300), \
+            "no JOURNEY after signpost (screen=%d)" % d.screen()
         select_foot(d)
         assert d.total_steps() == 10, d.total_steps()
         gold0 = d.gold()
@@ -1311,6 +1329,81 @@ def test_weather():
         d.close()
 
 
+def test_fixes():
+    """Verify travel-demo bug fixes on the shipped ROM:
+    1. Exact-ration consumption does not count as a starving day.
+    2. Same-screen cursor moves keep LCD on (no white flash).
+    3. Snow Day-1 burns 2 days; expired snow (left=0) rolls new weather
+       and burns 1 day when not snow."""
+    import struct
+    d = D()
+    try:
+        boot_to_journey(d)
+        select_foot(d)
+        # 1. Exact rations: 3 prov with 3/day REST (no weather delta) -> noprov == 0
+        addr_prov = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
+        raw = struct.pack("<h", 3)
+        d.pb.memory[addr_prov] = raw[0]
+        d.pb.memory[addr_prov + 1] = raw[1]
+        # Force CLEAR weather (0, 5 days) so rate == 3
+        d.pb.memory[d.r.sym.wram("g_travel_weather")] = 0
+        d.pb.memory[d.r.sym.wram("g_travel_weather_left")] = 5
+        d.pb.memory[d.r.sym.wram("g_travel_noprov")] = 0
+        d.tick(2)
+        d.press("down", settle=12)
+        d.press("down", settle=12)  # -> REST
+        assert d.wait_for(lambda: d.text_has("> REST"), ticks=200), d.rows()
+        # Check LCD stays on during cursor moves
+        assert (d.pb.memory[0xFF40] & 0x80) != 0, "LCD off after cursor move"
+        d.press("a", settle=30)
+        assert d.wait_for(lambda: d.text_has("YOU REST."), ticks=300), d.rows()
+        assert d.prov() == 0, d.prov()
+        assert d.pb.memory[d.r.sym.wram("g_travel_noprov")] == 0, \
+            "exact rations counted as starving day!"
+        d.press("a", settle=20)
+        # 2. Snow Day-1 vs expired snow: force route weather weights in WRAM
+        # s_route offset: name[21]+dest_scene+act+x+y+price+per_day+hunt*4+starve*2+rest*2+study*5 = 40
+        s_route = d.r.sym.wram("s_route")
+        # Clear all weather weights, set CLEAR=0, SNOW=100, days 1..1
+        for i in range(8):
+            d.pb.memory[s_route + 40 + i] = 100 if i == 6 else 0
+            d.pb.memory[s_route + 48 + i] = 1
+            d.pb.memory[s_route + 56 + i] = 1
+        d.pb.memory[d.r.sym.wram("g_travel_weather")] = 0xFF
+        d.pb.memory[d.r.sym.wram("g_travel_weather_left")] = 0
+        raw = struct.pack("<h", 30)
+        d.pb.memory[addr_prov] = raw[0]
+        d.pb.memory[addr_prov + 1] = raw[1]
+        d.tick(2)
+        day0 = d.day()
+        d.press("a", settle=20)  # CONTINUE: rolls SNOW on Day 1 -> must burn 2 days!
+        assert d.weather() == 6, d.weather()
+        assert d.day() == day0 - 2, ("Day-1 SNOW should burn 2 days", day0, d.day())
+        assert d.pb.memory[d.r.sym.wram("g_travel_weather_left")] == 0
+        # Dismiss any rolled event so we are back at IDLE
+        if not d.text_has("> CONTINUE"):
+            if d.text_has("YOU SPOT") or d.text_has("EXPLORE") or d.text_has("> "):
+                d.press("down", settle=12)
+                d.press("a", settle=20)
+            if d.text_has("[A] CONTINUE"):
+                d.press("a", settle=20)
+            elif d.text_has("[A] FIGHT"):
+                d.press("a", settle=30)
+                assert win_fight(d)
+                d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
+                d.press("a", settle=20)
+        # Now switch weights to CLEAR=100, SNOW=0; expired snow must burn 1 day!
+        for i in range(8):
+            d.pb.memory[s_route + 40 + i] = 100 if i == 0 else 0
+        day1 = d.day()
+        d.press("a", settle=20)
+        assert d.weather() == 0, d.weather()
+        assert d.day() == day1 - 1, ("Expired SNOW should burn 1 day", day1, d.day())
+        print("fixes OK: exact rations, LCD-on cursor, Day-1 snow (-2), expired snow (-1)")
+    finally:
+        d.close()
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "full"
     if mode == "ambush":
@@ -1347,5 +1440,7 @@ if __name__ == "__main__":
         test_ruins_ignore()
     elif mode == "weather":
         test_weather()
+    elif mode == "fixes":
+        test_fixes()
     else:
         test_full()

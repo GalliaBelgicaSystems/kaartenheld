@@ -22,7 +22,6 @@ uint8_t g_travel_supply;
 uint8_t g_travel_total;
 uint8_t g_travel_left;
 uint8_t g_travel_event;
-uint8_t g_travel_fought;
 uint8_t g_travel_choice;
 uint8_t g_travel_msg;
 uint8_t g_travel_seen;
@@ -41,7 +40,6 @@ TravelEventFail s_event_fail;
  * Non-static: the banked paint/logic bodies read them straight from
  * WRAM (same-bank reads would pin them to the content bank). */
 TravelRoute s_route;
-TravelMethod s_method;
 TravelEvent s_event;
 
 static void travel_arrive(Game *g);
@@ -70,15 +68,19 @@ uint8_t travel_steps_done(void)
 /* banked_copy() takes a uint8_t byte count; a larger row is silently
  * truncated (78 bytes kept of a 334-byte route once wiped the second
  * method).  The route row stages in three chunks that each fit, the
- * method/event rows in one.  Grow a chunk past 255 and the typedefs
+ * event rows in one.  Grow a chunk past 255 and the typedefs
  * below fail the build loudly instead of corrupting the journey. */
+typedef char travel_methods_max_is_2[TRAVEL_METHODS_MAX == 2 ? 1 : -1];
 typedef char travel_method_fits_banked_copy[sizeof(TravelMethod) <= 255 ? 1 : -1];
 typedef char travel_event_fits_banked_copy[sizeof(TravelEvent) <= 255 ? 1 : -1];
 typedef char travel_event_fail_fits_banked_copy[sizeof(TravelEventFail) <= 255 ? 1 : -1];
-/* The route row stages in three banked_copy chunks; the head chunk
- * (everything before methods) must fit the uint8_t count. */
 typedef char travel_route_head_fits_banked_copy[offsetof(TravelRoute, methods) <= 255 ? 1 : -1];
 typedef char travel_wxmod_fits_banked_copy[sizeof(TravelWxMod) <= 255 ? 1 : -1];
+
+static const TravelMethod *travel_method_ptr(uint8_t idx)
+{
+    return (idx == 0) ? &s_route.methods[0] : &s_route.methods[1];
+}
 
 static void travel_load_route(uint8_t route)
 {
@@ -105,20 +107,9 @@ static void travel_load_event(uint8_t event)
                 (uint8_t)sizeof(TravelEventFail));
 }
 
-static void travel_load_method(uint8_t method)
-{
-    banked_copy(14, (uint8_t *)&s_method,
-                (const uint8_t *)&g_travel_routes[g_travel_route].methods[method],
-                (uint8_t)sizeof(TravelMethod));
-}
-
 /* Start a route (event-executor hook, content.h).  Opens the method
  * pick (carriage vs foot); the default is the first free method so a
- * stray confirm never spends gold.  Out-of-range ids are a
- * compiler-rejected case; the runtime guard is belt and braces.
- * The count lives in ROM bank 14, so the guard stages it with
- * banked_copy: a direct fixed-bank read would see whatever bank is
- * mapped (a layout shift once blocked route 2 while 0/1 passed). */
+ * stray confirm never spends gold. */
 void travel_start(uint8_t route)
 {
     uint8_t i;
@@ -146,29 +137,15 @@ bool game_travel_active(void)
     return g_travel_active != 0;
 }
 
-/* Burn n days off the Convergence clock (floor at zero, never
- * negative) plus the route's road provisions (provisions per day from
- * the route table, floored -- a desert route eats more).  Days
- * spent with no provisions count up a starvation
- * tally; every Nth such day costs HP outright (a travel death is a
- * cold hard game over, routed by the callers).  A day with supplies
- * resets that tally.  Crossing zero flips the Lord supreme (one-way):
- * late ambushes use their buffed HP and the end fight reads the same
- * flag.
- *
- * Thin fixed-bank wrapper (fixed bank sits hard against 0x8000,
- * AGENTS.md §52.18): the loop lives as the bank-12 body
- * travel_burn_banked() (travel_logic_banked.c); only the staging
- * call stays fixed. */
 void travel_burn_banked(void);
 
-static void travel_burn_days(Game *g, uint8_t n)
+static void travel_burn(Game *g, uint8_t n, uint8_t step_mode)
 {
-    if (!g) return;
-    (void)g;
+    if (!g || (n == 0 && !step_mode)) return;
     g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&travel_burn_banked;
     g_bk_byte_a = n;
+    g_bk_byte_b = step_mode;
     banked_call_run();
 }
 
@@ -177,30 +154,31 @@ static void travel_burn_days(Game *g, uint8_t n)
  * duration and event pool.  Too poor stays put with a refusal line. */
 static void travel_confirm_method(Game *g)
 {
+    const TravelMethod *m;
     int16_t gold;
     if (!g) return;
-    travel_load_method(g_travel_choice);
+    m = travel_method_ptr(g_travel_choice);
     gold = currency_get(&g->state, CURRENCY_ID_GOLD);
-    if (gold < s_method.cost_gold) {
+    if (gold < m->cost_gold) {
         g_travel_msg = TRAVEL_MSG_NOGOLD;
         audio_play_sfx(SFX_BACK);
         game_render_reset(g);
         return;
     }
-    if (s_method.cost_gold > 0) {
+    if (m->cost_gold > 0) {
         currency_add(&g->state, CURRENCY_ID_GOLD,
-                     (int16_t)(0 - s_method.cost_gold));
+                     (int16_t)(0 - m->cost_gold));
     }
     audio_play_sfx(SFX_CONFIRM);
     g_travel_method = g_travel_choice;
     g_travel_choice = 0;
-    if (s_method.steps == 0) {
+    if (m->steps == 0) {
         travel_arrive(g);
         return;
     }
     travel_clear_state();
-    g_travel_total = s_method.steps;
-    g_travel_left = s_method.steps;
+    g_travel_total = m->steps;
+    g_travel_left = m->steps;
     /* Seed the camp-action stream from the shared RNG (one draw per
      * journey; nonzero seeds can never hit the xorshift fixed point). */
     g_travel_rng = rng_next();
@@ -208,10 +186,7 @@ static void travel_confirm_method(Game *g)
     game_render_reset(g);
 }
 
-/* Open the route's supply merchant (event-executor hook, content.h).
- * Pre-travel shop on the field: buy rations with gold, LEAVE (or B)
- * walks away.  Out-of-range ids are rejected like travel_start
- * (same banked count staging: the table lives in ROM bank 14). */
+/* Open the route's supply merchant (event-executor hook, content.h). */
 void travel_open_supply(uint8_t route)
 {
     uint8_t count;
@@ -226,14 +201,11 @@ void travel_open_supply(uint8_t route)
     screen_change(&g_game, SCREEN_JOURNEY);
 }
 
-/* Leave the supply merchant without buying (back to the field). */
-static void travel_close_supply(Game *g)
+/* Back out of supply shop or method picker to the overworld. */
+static void travel_exit_to_overworld(Game *g)
 {
     if (!g) return;
-    g_travel_supply = 0;
-    g_travel_active = 0;
-    g_travel_method = 0xFF;
-    g_travel_choice = 0;
+    travel_abandon(g);
     audio_play_sfx(SFX_BACK);
     screen_change(g, SCREEN_OVERWORLD);
 }
@@ -270,20 +242,21 @@ static void travel_update_supply(Game *g)
         return;
     }
     if (input_pressed(INPUT_B)) {
-        travel_close_supply(g);
+        travel_exit_to_overworld(g);
         return;
     }
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
         if (g_travel_choice >= 1) {
-            travel_close_supply(g);
+            travel_exit_to_overworld(g);
         } else {
             travel_buy_supply(g);
         }
     }
 }
 
-/* Arrive: load the route destination, stop travel.  The scene load
- * forces a tileset revalidate, so no battle art leaks into town. */
+/* Arrive: load the route destination, stop travel, switch back to
+ * OVERWORLD on the same frame.  scene_load forces a tileset revalidate,
+ * so no battle/UI art leaks into the arrived map. */
 static void travel_arrive(Game *g)
 {
     const SceneDefinition *def;
@@ -296,34 +269,19 @@ static void travel_arrive(Game *g)
     y = s_route.dest_y;
     travel_abandon(g);
     scene_load(g, scene, x, y);
+    screen_change(g, SCREEN_OVERWORLD);
     def = scene_definition_for_map(g->world.map_id);
     audio_play_music(def ? def->music : MUSIC_OVERWORLD);
 }
 
-/* Drop the whole journey (terminal game over): the road is done,
- * win or lose, so no suspended ruins, staged event, message, menu
- * cursor, or starvation tally may leak into whatever runs next. */
+/* Drop the whole journey (arrival / cancel / terminal game over / load). */
 void travel_abandon(Game *g)
 {
     (void)g;
     g_travel_active = 0;
     g_travel_method = 0xFF;
     g_travel_supply = 0;
-    g_travel_total = 0;
-    g_travel_left = 0;
-    g_travel_event = TRAVEL_EVENT_NONE;
-    g_travel_fought = 0;
-    g_travel_msg = TRAVEL_MSG_NONE;
-    g_travel_choice = 0;
-    g_travel_seen = 0;
-    g_travel_in_ruins = 0;
-    g_travel_amount = 0;
-    g_travel_extra = 0;
-    g_travel_noprov = 0;
-    g_travel_failed = 0;
-    g_travel_noprov = 0;
-    g_travel_weather = TRAVEL_WEATHER_NONE;
-    g_travel_weather_left = 0;
+    travel_clear_state();
 }
 
 bool travel_hero_dead(const Game *g)
@@ -344,7 +302,7 @@ static void travel_game_over(Game *g)
 }
 
 /* Launch the staged ambush as a solo battle.  The name was copied to
- * WRAM by battle_start, so the bank-9 pointer dies safely here.  Post-
+ * WRAM by battle_start, so the bank-14 pointer dies safely here.  Post-
  * Convergence the Lord's strength shows: the buffed late HP. */
 static void travel_open_ambush(Game *g)
 {
@@ -358,7 +316,6 @@ static void travel_open_ambush(Game *g)
         hp = s_event.enemy_hp;
     }
     max_hp = hp;
-    g_travel_fought = 1;
     battle_start(&g->battle, s_event.enemy_name,
                  g->state.party.members[0].hp,
                  g->state.party.members[0].max_hp,
@@ -371,11 +328,7 @@ static void travel_open_ambush(Game *g)
 /* Resolve the staged choice.  Every option of every scenario shares
  * the same odds (the compiler enforces risk == 50): roll under the
  * pre-scaled threshold and the failure branch applies instead of the
- * success branch.  A set battle stages the referenced fight (an
- * ambush hurt still lands first); otherwise days burn, then
- * gold/rations apply (floored), heal caps, hurt can kill, and steps
- * add or shave (zero arrives).  The event stays staged so the
- * message render still sees its row (cleared on dismiss). */
+ * success branch. */
 static void travel_resolve_help(Game *g)
 {
     uint8_t is_opt1;
@@ -437,24 +390,24 @@ static void travel_resolve_help(Game *g)
         travel_open_ambush(g);
         return;
     }
-    travel_burn_days(g, (uint8_t)days);
-    if (travel_hero_dead(g)) {
-        travel_game_over(g);
-        return;
+    /* Positive provisions apply before multi-day event burns so newly
+     * shared meals feed the party instead of starving first. */
+    if (prov > 0) {
+        game_variable_add(&g->state, VARIABLE_ID_PROVISIONS, (int16_t)prov);
     }
-    v = (int16_t)currency_get(&g->state, CURRENCY_ID_GOLD);
-    v = (int16_t)(v + gold);
-    if (v < 0) {
-        /* Pay what you have: clamp the spend at zero. */
-        currency_add(&g->state, CURRENCY_ID_GOLD,
-                     (int16_t)(0 - currency_get(&g->state, CURRENCY_ID_GOLD)));
-    } else {
-        currency_add(&g->state, CURRENCY_ID_GOLD, gold);
+    if (days > 0) {
+        travel_burn(g, (uint8_t)days, 0);
+        if (travel_hero_dead(g)) {
+            travel_game_over(g);
+            return;
+        }
     }
-    v = game_variable_get(&g->state, VARIABLE_ID_PROVISIONS);
-    v = (int16_t)(v + (int16_t)prov);
-    if (v < 0) v = 0;
-    game_variable_set(&g->state, VARIABLE_ID_PROVISIONS, v);
+    currency_add(&g->state, CURRENCY_ID_GOLD, gold);
+    if (prov < 0) {
+        v = (int16_t)(game_variable_get(&g->state, VARIABLE_ID_PROVISIONS) + (int16_t)prov);
+        if (v < 0) v = 0;
+        game_variable_set(&g->state, VARIABLE_ID_PROVISIONS, v);
+    }
     healed = (int16_t)g->state.party.members[0].hp;
     healed = (int16_t)(healed + (int16_t)heal);
     if (healed > (int16_t)g->state.party.members[0].max_hp) {
@@ -473,42 +426,37 @@ static void travel_resolve_help(Game *g)
         travel_game_over(g);
         return;
     }
-    travel_add_steps((uint8_t)delay);
-    if (save >= g_travel_left) {
-        travel_arrive(g);
-        return;
+    if (delay > 0) travel_add_steps((uint8_t)delay);
+    if (save > 0) {
+        if ((uint8_t)save >= g_travel_left) {
+            travel_arrive(g);
+            return;
+        }
+        g_travel_left = (uint8_t)(g_travel_left - (uint8_t)save);
+        g_travel_total = (uint8_t)(g_travel_total - (uint8_t)save);
     }
-    g_travel_left = (uint8_t)(g_travel_left - save);
-    g_travel_total = (uint8_t)(g_travel_total - save);
     travel_show_msg(g, is_opt1 ? TRAVEL_MSG_HELPED : TRAVEL_MSG_IGNORED,
                     gold > 0 ? SFX_CASH : SFX_CONFIRM);
 }
 
-/* Grow both journey counters by a detour (clamped, never wraps):
- * one helper for the help/hunt/rest delays (fixed-bank budget). */
+/* Grow both journey counters by the same clamped delta so
+ * steps_done (total - left) stays invariant at the 255 ceiling. */
 static void travel_add_steps(uint8_t delay)
 {
-    if (g_travel_total <= (uint8_t)(255 - delay)) {
-        g_travel_total = (uint8_t)(g_travel_total + delay);
-    } else {
-        g_travel_total = 255;
-    }
-    if (g_travel_left <= (uint8_t)(255 - delay)) {
-        g_travel_left = (uint8_t)(g_travel_left + delay);
-    } else {
-        g_travel_left = 255;
-    }
+    uint8_t room;
+    room = (uint8_t)(255 - g_travel_total);
+    if (delay > room) delay = room;
+    g_travel_total = (uint8_t)(g_travel_total + delay);
+    g_travel_left = (uint8_t)(g_travel_left + delay);
 }
 
-/* Clear the transient journey counters (fixed-bank budget: one copy
- * for the start/supply/confirm/arrive resets).  Route, method and
- * active stay site-owned. */
+/* Clear the transient journey counters.  Route, method and active
+ * stay site-owned. */
 static void travel_clear_state(void)
 {
     g_travel_total = 0;
     g_travel_left = 0;
     g_travel_event = TRAVEL_EVENT_NONE;
-    g_travel_fought = 0;
     g_travel_msg = TRAVEL_MSG_NONE;
     g_travel_choice = 0;
     g_travel_seen = 0;
@@ -517,14 +465,11 @@ static void travel_clear_state(void)
     g_travel_extra = 0;
     g_travel_noprov = 0;
     g_travel_failed = 0;
-    g_travel_noprov = 0;
     g_travel_weather = TRAVEL_WEATHER_NONE;
     g_travel_weather_left = 0;
 }
 
-/* Show a result line: stage the message, blip, repaint (one copy
- * for the camp/event resolves).  The menu cursor is left alone: the
- * choice paint reads the picked option until the dismiss resets it. */
+/* Show a result line: stage the message, blip, repaint. */
 static void travel_show_msg(Game *g, uint8_t msg, uint8_t sfx)
 {
     g_travel_msg = msg;
@@ -532,8 +477,7 @@ static void travel_show_msg(Game *g, uint8_t msg, uint8_t sfx)
     game_render_reset(g);
 }
 
-/* Cycle the menu cursor 0..max with wrap (one copy for the
- * event toggles and the camp menu).  max 1 toggles YES/NO. */
+/* Cycle the menu cursor 0..max with wrap. */
 static void travel_cycle_choice(Game *g, uint8_t max, uint8_t down)
 {
     if (down) {
@@ -557,9 +501,7 @@ void travel_camp_banked(void);
 
 /* Camp menu actions (0 hunt, 1 rest, 2 study): thin fixed-bank
  * wrapper -- the bank-11 travel_camp_banked() body owns the rolls,
- * rations, HP and step math behind one staging call (the fixed bank
- * sits hard against 0x8000, AGENTS.md §52.18); this plays the
- * staged jingle and routes the fixed-bank exits (death, arrival). */
+ * rations, HP and step math behind one staging call. */
 static void travel_do_camp(Game *g, uint8_t action)
 {
     uint8_t sfx;
@@ -569,11 +511,11 @@ static void travel_do_camp(Game *g, uint8_t action)
     g_bk_byte_a = action;
     banked_call_run();
     sfx = g_bk_byte_c;
-    audio_play_sfx(sfx);
     if (travel_hero_dead(g)) {
         travel_game_over(g);
         return;
     }
+    audio_play_sfx(sfx);
     if (g_bk_byte_b) {
         travel_arrive(g);
         return;
@@ -582,14 +524,7 @@ static void travel_do_camp(Game *g, uint8_t action)
 }
 
 /* Bake the active weather's interaction deltas into the staged event
- * copy (both branches).  The staged row is WRAM scratch discarded on
- * dismiss, so paint and resolve automatically see the weather-
- * sharpened numbers with no extra lookups.  Bank-14 body (emitted into
- * travel_content.c next to the tables it reads): the fixed bank is
- * hard against 0x8000 (AGENTS.md 52.18), so only this thin staging
- * wrapper stays fixed. */
-void travel_wx_apply_banked(void);
-
+ * copy (both branches) in bank 14. */
 static void travel_apply_weather(void)
 {
     g_bk_call_bank = 14;
@@ -597,30 +532,39 @@ static void travel_apply_weather(void)
     banked_call_run();
 }
 
-/* Weighted pool pick: rejection-sample a byte under the weight
+/* Weighted pool pick: masked rejection-sample a byte under the weight
  * sum, walk the cumulative weights, and stage the picked event
- * with the alert.  One copy for the guarantee and the normal roll.
- * The compiler guarantees a non-empty pool (and nonzero weights)
- * wherever this runs, so the sample always terminates. */
+ * with the alert. */
 static void travel_stage_pick(Game *g)
 {
+    const TravelMethod *m;
     uint8_t pick;
     uint8_t i;
     uint8_t cum;
     uint8_t sum;
+    uint8_t mask;
+    m = travel_method_ptr(g_travel_method);
     sum = 0;
-    for (i = 0; i < s_method.pool_count; i++) {
-        sum = (uint8_t)(sum + s_method.pool_weight[i]);
+    for (i = 0; i < m->pool_count; i++) {
+        sum = (uint8_t)(sum + m->pool_weight[i]);
     }
-    do {
-        pick = (uint8_t)rng_next();
-    } while (pick >= sum);
+    if (sum <= 1) {
+        pick = 0;
+    } else {
+        mask = 1;
+        while (mask < (uint8_t)(sum - 1)) {
+            mask = (uint8_t)((mask << 1) | 1);
+        }
+        do {
+            pick = (uint8_t)((uint8_t)rng_next() & mask);
+        } while (pick >= sum);
+    }
     cum = 0;
     g_travel_event = 0;
-    for (i = 0; i < s_method.pool_count; i++) {
-        cum = (uint8_t)(cum + s_method.pool_weight[i]);
+    for (i = 0; i < m->pool_count; i++) {
+        cum = (uint8_t)(cum + m->pool_weight[i]);
         if (pick < cum) {
-            g_travel_event = s_method.pool_event[i];
+            g_travel_event = m->pool_event[i];
             break;
         }
     }
@@ -632,27 +576,20 @@ static void travel_stage_pick(Game *g)
     game_render_reset(g);
 }
 
-/* Advance one step: count down, arrive on the last step, otherwise
- * roll the route pool.  The pick rejection-samples under the weight
- * sum (compiler-capped at 255), so no %, /, or * in fixed bank. */
+/* Advance one step: roll weather + burn step days, arrive on zero,
+ * otherwise roll the route pool (or starving ambush). */
 static void travel_advance(Game *g)
 {
+    const TravelMethod *m;
     uint16_t roll;
-    uint8_t i;
     if (!g) return;
     if (g_travel_left == 0) {
         travel_arrive(g);
         return;
     }
+    m = travel_method_ptr(g_travel_method);
     g_travel_left--;
-    /* Snow slows the march: every travelled step costs two days while
-     * it falls (the burn ticks the weather per day, so a snowy step
-     * may also end the fall). */
-    if (g_travel_weather == TRAVEL_WEATHER_SNOW) {
-        travel_burn_days(g, 2);
-    } else {
-        travel_burn_days(g, 1); /* every travelled step costs a day */
-    }
+    travel_burn(g, 1, 1);
     if (travel_hero_dead(g)) {
         travel_game_over(g);
         return;
@@ -662,34 +599,34 @@ static void travel_advance(Game *g)
         return;
     }
     roll = rng_next();
-    /* Starving parties draw trouble: with no provisions the next
-     * step is always an ambush (first battle event in the pool).  A pool
-     * with no battle falls back to the normal roll below. */
+    /* Starving parties draw trouble: pick a battle from the pool in
+     * bank 14 without 64x banked_copy calls. */
     if (game_variable_get(&g->state, VARIABLE_ID_PROVISIONS) <= 0) {
-        for (i = 0; i < s_method.pool_count; i++) {
-            travel_load_event(s_method.pool_event[i]);
-            if (s_event.kind == TRAVEL_EVENT_BATTLE) {
-                g_travel_event = s_method.pool_event[i];
-                break;
-            }
-        }
-        if (g_travel_event != TRAVEL_EVENT_NONE) {
-            g_travel_seen = 1;
+        g_bk_call_bank = 14;
+        g_bk_call_target = (uint16_t)&travel_starve_battle_banked;
+        g_bk_byte_a = g_travel_route;
+        g_bk_byte_b = g_travel_method;
+        g_bk_byte_c = (uint8_t)roll;
+        banked_call_run();
+        if (g_bk_byte_a != TRAVEL_EVENT_NONE) {
+            g_travel_event = g_bk_byte_a;
+            travel_load_event(g_travel_event);
             travel_apply_weather();
+            g_travel_choice = 0;
+            g_travel_seen = 1;
             travel_show_msg(g, TRAVEL_MSG_NONE, SFX_ALERT);
             return;
         }
     }
     /* On-foot guarantee: the last rollable step forces an event when
-     * nothing has fired yet (pool must be non-empty; carriage methods
-     * never reach here with steps).  Starvation above already covers
-     * empty-belly trips. */
-    if (g_travel_left == 1 && !g_travel_seen && s_method.pool_count > 0) {
+     * nothing has fired yet. */
+    if (g_travel_left == 1 && !g_travel_seen && m->pool_count > 0) {
         travel_stage_pick(g);
         return;
     }
-    if ((uint8_t)roll >= s_method.frequency) {
+    if ((uint8_t)roll >= m->frequency) {
         g_travel_choice = 0;
+        audio_play_sfx(SFX_CONFIRM);
         game_render_reset(g);
         return;
     }
@@ -704,6 +641,7 @@ static void travel_enter_ruins(Game *g);
 static void travel_resolve_ruins(Game *g, uint8_t explore)
 {
     if (!g) return;
+    g_travel_failed = 0;
     if (explore) {
         g_travel_msg = TRAVEL_MSG_NONE;
         g_travel_event = TRAVEL_EVENT_NONE;
@@ -715,13 +653,13 @@ static void travel_resolve_ruins(Game *g, uint8_t explore)
 }
 
 /* Suspend the journey inside the ruins (entry map, no day burn).
- * g_travel_in_ruins keeps the battle exits routed to the overworld
- * while the journey state (steps left, seen flag) waits untouched. */
+ * g_travel_in_ruins records whether the chest was unlooted (1) or
+ * already looted (2) at entry so revisits never burn a second day. */
 static void travel_enter_ruins(Game *g)
 {
     if (!g) return;
-    g_travel_in_ruins = 1;
-    g_travel_fought = 0;
+    g_travel_in_ruins = game_flag_is_set(&g->state,
+        (FlagId)STORY_FLAG_ID_RUINS_CHEST) ? 2 : 1;
     audio_play_sfx(SFX_CONFIRM);
     scene_load(g, SCENE_ACT2_RUINS, 2, 2);
     audio_play_music(MUSIC_DUNGEON);
@@ -730,13 +668,21 @@ static void travel_enter_ruins(Game *g)
 }
 
 /* Leave the ruins back to the journey.  The trip itself costs no
- * days; a looted treasure chest adds one day (its flag is set by the
- * ruins chest event row).  Called from the YES/NO leave dialogue. */
+ * days; looting the relic chest during THIS visit burns one extra day. */
 void travel_resume_from_ruins(Game *g)
 {
     if (!g) return;
-    if (game_flag_is_set(&g->state, (FlagId)STORY_FLAG_ID_RUINS_CHEST)) {
-        travel_burn_days(g, 1);
+    if (!g_travel_active) {
+        /* Guard against any loaded save inside the detour map: exit to
+         * the field instead of softlocking in ruins. */
+        scene_load(g, SCENE_ACT2_FIELD, 5, 7);
+        screen_change(g, SCREEN_OVERWORLD);
+        audio_play_music(MUSIC_OVERWORLD);
+        return;
+    }
+    if (g_travel_in_ruins == 1 &&
+        game_flag_is_set(&g->state, (FlagId)STORY_FLAG_ID_RUINS_CHEST)) {
+        travel_burn(g, 1, 0);
         if (travel_hero_dead(g)) {
             travel_game_over(g);
             return;
@@ -744,10 +690,11 @@ void travel_resume_from_ruins(Game *g)
     }
     g_travel_in_ruins = 0;
     g_travel_event = TRAVEL_EVENT_NONE;
-    g_travel_fought = 0;
     g_travel_msg = TRAVEL_MSG_NONE;
     g_travel_choice = 0;
+    g_travel_failed = 0;
     audio_play_sfx(SFX_CONFIRM);
+    audio_play_music(MUSIC_OVERWORLD);
     screen_change(g, SCREEN_JOURNEY);
     game_render_reset(g);
 }
@@ -800,29 +747,21 @@ void travel_update(Game *g)
         travel_update_supply(g);
         return;
     }
-    /* A staged event with fought set means the battle just exited.
-     * Victory/defeat messages ride g_travel_msg instead: keep the event
-     * staged so the message render still sees its row (it clears on
-     * dismiss).  A flee (no message) drops straight back to IDLE. */
-    if (g_travel_fought) {
-        g_travel_fought = 0;
-        if (g_travel_msg == TRAVEL_MSG_NONE) {
-            g_travel_event = TRAVEL_EVENT_NONE;
-            g_travel_choice = 0;
-        }
-        game_render_reset(g);
-        return;
-    }
     if (g_travel_msg != TRAVEL_MSG_NONE) {
         if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
             g_travel_event = TRAVEL_EVENT_NONE;
             g_travel_choice = 0;
+            g_travel_failed = 0;
             travel_show_msg(g, TRAVEL_MSG_NONE, SFX_CONFIRM);
         }
         return;
     }
     if (g_travel_method == 0xFF) {
-        /* Method pick: toggle the way, confirm to ride or walk. */
+        /* Method pick: toggle the way, B backs out, A confirms. */
+        if (input_pressed(INPUT_B)) {
+            travel_exit_to_overworld(g);
+            return;
+        }
         if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN) ||
             input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
             if (s_route.method_count > 1) {
@@ -839,9 +778,7 @@ void travel_update(Game *g)
         travel_update_event(g);
         return;
     }
-    /* Camp menu: one action per day.  UP/LEFT move up the list,
-     * DOWN/RIGHT move down (wraps over the four options); A/START
-     * works the selected day. */
+    /* Camp menu: one action per day. */
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_LEFT)) {
         travel_cycle_choice(g, 3, 0);
         return;
@@ -858,32 +795,31 @@ void travel_update(Game *g)
         } else if (g_travel_choice == TRAVEL_CAMP_STUDY) {
             travel_do_camp(g, 2);
         } else {
-            audio_play_sfx(SFX_CONFIRM);
             travel_advance(g);
             g_travel_choice = 0;
         }
     }
 }
 
-/* Victory hook (game_screen_after_victory): the ambush pays its
- * data-driven gold and burns its data-driven days, then shows the loot
- * line on return.  world_on_battle_end already no-ops for actor-less
- * fights, so no double grant. */
+/* Victory hook (game_screen_after_victory): pays loot, burns victory
+ * days, restores road music, and shows the loot line on return. */
 void travel_on_victory(void)
 {
     travel_load_event(g_travel_event);
     currency_add(&g_game.state, CURRENCY_ID_GOLD, s_event.victory_gold);
-    travel_burn_days(&g_game, s_event.victory_days);
+    travel_burn(&g_game, s_event.victory_days, 0);
+    g_travel_failed = 0;
     g_travel_msg = TRAVEL_MSG_WON;
+    audio_play_music(MUSIC_OVERWORLD);
 }
 
-/* Defeat hook (battle-screen defeat branch): travel deaths are
- * terminal -- abandon the journey and decline, so the battle screen
- * runs its normal cold game over (GAME_OVER screen, continue-from-
- * save or thanks).  Always false: the journey never resumes. */
-bool game_travel_consume_defeat(Game *g)
+/* Flee hook (battle_screen): clears the staged ambush and restores road
+ * music immediately so SCREEN_JOURNEY renders IDLE on the first frame. */
+void travel_on_fled(void)
 {
-    if (!g || !g_travel_active) return false;
-    travel_abandon(g);
-    return false;
+    g_travel_event = TRAVEL_EVENT_NONE;
+    g_travel_choice = 0;
+    g_travel_msg = TRAVEL_MSG_NONE;
+    g_travel_failed = 0;
+    audio_play_music(MUSIC_OVERWORLD);
 }

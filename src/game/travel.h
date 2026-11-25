@@ -59,12 +59,11 @@
 #define TRAVEL_MSG_HELPED 1
 #define TRAVEL_MSG_IGNORED 2
 #define TRAVEL_MSG_WON 3
-#define TRAVEL_MSG_DEFEAT 4
-#define TRAVEL_MSG_NOGOLD 5
-#define TRAVEL_MSG_HUNTED 6
-#define TRAVEL_MSG_RESTED 7
-#define TRAVEL_MSG_STUDIED 8
-#define TRAVEL_MSG_LOST 9
+#define TRAVEL_MSG_NOGOLD 4
+#define TRAVEL_MSG_HUNTED 5
+#define TRAVEL_MSG_RESTED 6
+#define TRAVEL_MSG_STUDIED 7
+#define TRAVEL_MSG_LOST 8
 
 /* Camp menu options (IDLE view, g_travel_choice order). */
 #define TRAVEL_CAMP_CONTINUE 0
@@ -200,11 +199,10 @@ extern uint8_t g_travel_supply; /* supply merchant open (pre-travel shop) */
 extern uint8_t g_travel_total;
 extern uint8_t g_travel_left;
 extern uint8_t g_travel_event;
-extern uint8_t g_travel_fought;
 extern uint8_t g_travel_choice;
 extern uint8_t g_travel_msg;
 extern uint8_t g_travel_seen;    /* an event rolled this journey (guarantee) */
-extern uint8_t g_travel_in_ruins; /* suspended in the ruins map */
+extern uint8_t g_travel_in_ruins; /* suspended in ruins (1=unlooted, 2=already looted) */
 extern uint8_t g_travel_amount;  /* camp result size (provisions/heal/steps saved) */
 extern uint8_t g_travel_extra;   /* camp detour size (extra steps added) */
 extern uint8_t g_travel_noprov;  /* consecutive starving days (no provisions) */
@@ -216,7 +214,6 @@ extern uint8_t g_travel_failed;  /* last choice failed its risk roll */
  * resets to NONE at journey start, so the boot value never applies. */
 extern uint8_t g_travel_weather;
 extern uint8_t g_travel_weather_left;
-extern TravelEventFail s_event_fail; /* staged fail row (WRAM scratch) */
 
 /* Staged table rows (travel.c WRAM, copied from bank 14 on stage,
  * read by logic and render from WRAM -- never map a ROM window
@@ -224,21 +221,21 @@ extern TravelEventFail s_event_fail; /* staged fail row (WRAM scratch) */
  * and burn logic) read them directly; fixed code keeps using the
  * row accessors below. */
 extern TravelRoute s_route;
-extern TravelMethod s_method;
 extern TravelEvent s_event;
 extern TravelEventFail s_event_fail;
 
 /* Current screen view for the renderer. */
 uint8_t travel_view(void);
 
-/* No-arg banked weather-bake body (emitted into travel_content.c,
- * ROM bank 14, next to the tables it reads). */
+/* No-arg banked weather-bake & starve-pick bodies (emitted into
+ * travel_content.c, ROM bank 14, next to the tables they read). */
 void travel_wx_apply_banked(void);
+void travel_starve_battle_banked(void);
 
 /* Per-frame input/logic for the journey screen. */
 void travel_update(struct Game *g);
 
-/* No-arg banked paint body (travel_paint_banked.c, ROM bank 9). */
+/* No-arg banked paint body (travel_paint_banked.c, ROM bank 11). */
 void travel_paint_banked(void);
 
 /* Steps done (total - left), for the progress row. */

@@ -64,7 +64,7 @@ def extract(archive, dest):
 def scan_dir(d):
     objs = []
     for root, dirs, files in os.walk(d):
-        dirs[:] = [dd for dd in dirs if not dd.startswith(".")]
+        dirs[:] = [dd for dd in dirs if not dd.startswith(".") and dd != "travel"]
         for fn in files:
             if fn.endswith(".o"):
                 objs.append(os.path.join(root, fn))

@@ -38,6 +38,7 @@
  */
 #ifdef TRAVEL_DEMO
 #pragma bank 12
+#include "travel_routes_generated.h"
 #else
 #pragma bank 10
 #endif
@@ -49,70 +50,69 @@ const EventDefinition g_events[] = {
          * the provisions shop instead of talking.  One ANY-map row
          * serves the field, town and desolate merchants because every
          * route prices supplies identically (2G, 3/day); a per-route
-         * price split would need per-map rows again (and the bank-10
-         * budget for them, AGENTS.md 52.18).  First-match wins, so
-         * this precedes the dialogue fallthrough (which the
+         * price split would need per-map rows again.  First-match wins,
+         * so this precedes the dialogue fallthrough (which the
          * consume-guard also skips after a screen change). */
         EVENT_ID_TRAVEL_SUPPLY, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
-        {{ EVENT_ACTION_TRAVEL_SUPPLY, 1, 0, 0 }}
+        {{ EVENT_ACTION_TRAVEL_SUPPLY, TRAVEL_ROUTE_FIELD_TO_VILLAGE, 0, 0 }}
     },
     {
         /* Same road, younger days: while the Convergence countdown is
          * still chapter 1 the field signpost walks the act-1 road
-         * table (route 2) instead of the act-2 one.  First-match wins,
+         * table instead of the act-2 one.  First-match wins,
          * so this precedes the act-2 fallthrough below. */
         EVENT_ID_TRAVEL_DEMO_ACT1, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_FIELD,
         1,
         {{ EVENT_COND_VARIABLE, VARIABLE_ID_CHAPTER, 1, false, false }},
         1,
-        {{ EVENT_ACTION_JOURNEY_START, 2, 0, 0 }}
+        {{ EVENT_ACTION_JOURNEY_START, TRAVEL_ROUTE_FIELD_TO_VILLAGE_ACT1, 0, 0 }}
     },
     {
         /* Travel-demo prototype: the field signpost starts the
-         * field-to-village journey (route 1) instead of teleporting.
+         * field-to-village journey instead of teleporting.
          * First-match wins, so this precedes the signpost dialogue
          * fallthrough (which the travel consume-guard also skips). */
         EVENT_ID_TRAVEL_DEMO, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_FIELD,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
-        {{ EVENT_ACTION_JOURNEY_START, 1, 0, 0 }}
+        {{ EVENT_ACTION_JOURNEY_START, TRAVEL_ROUTE_FIELD_TO_VILLAGE, 0, 0 }}
     },
     {
         /* Outward leg: the town signpost walks the 16-step road to
-         * the desolate field (route 3, its own pool) instead of
-         * talking. */
+         * the desolate field instead of talking. */
         EVENT_ID_TRAVEL_RETURN, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_TOWN,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
-        {{ EVENT_ACTION_JOURNEY_START, 3, 0, 0 }}
+        {{ EVENT_ACTION_JOURNEY_START, TRAVEL_ROUTE_TOWN_TO_DESOLATE, 0, 0 }}
     },
     {
         /* Loop closer: the desolate signpost walks the road back to
-         * the field (route 0, its own pool) instead of talking. */
+         * the field instead of talking. */
         EVENT_ID_TRAVEL_DESOLATE_RETURN, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_DESOLATE_FIELD,
         0,
         {{ EVENT_COND_NONE, 0, 0, false, false }},
         1,
-        {{ EVENT_ACTION_JOURNEY_START, 0, 0, 0 }}
+        {{ EVENT_ACTION_JOURNEY_START, TRAVEL_ROUTE_DESOLATE_TO_FIELD, 0, 0 }}
     },
     {
         /* Sunken-ruins AP chest (travel demo, one-shot via its own
          * flag): the relic raises the pool by 1 and warns the road
-         * will cost one more day (burned on the way out). */
+         * will cost one more day (burned on the way out).  No
+         * autosave here: journey state is transient WRAM, so saving
+         * inside the detour map would trap CONTINUE in ruins. */
         EVENT_ID_RUINS_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, MAP_ACT2_RUINS,
         1,
         {{ EVENT_COND_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, false, false }},
-        4,
+        3,
         {
             { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_RUINS_CHEST_AP, 0, 0 },
             { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
-            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, 0 },
-            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, 0 }
         }
     },
     {

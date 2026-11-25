@@ -5,6 +5,7 @@
  */
 
 #include "travel.h"
+#include "banked.h"
 
 #pragma bank 14
 
@@ -2795,6 +2796,58 @@ void travel_wx_apply_banked(void)
             *fsave = wx_clamp((int16_t)(*fsave + m->save), 0, 10);
             *fdays = wx_clamp((int16_t)(*fdays + m->days), 0, 10);
             *fprov = wx_clamp((int16_t)(*fprov + m->prov), -30, 30);
+        }
+    }
+}
+
+/* Starving-party ambush picker (this bank, next to its tables):
+ * counts battle events in the route's pool and picks the k-th one
+ * without 64x banked_copy() loops in the fixed bank.
+ * In: g_bk_byte_a = route, g_bk_byte_b = method, g_bk_byte_c = rng.
+ * Out: g_bk_byte_a = event index or TRAVEL_EVENT_NONE. */
+void travel_starve_battle_banked(void)
+{
+    uint8_t route;
+    uint8_t method;
+    uint8_t pick;
+    uint8_t i;
+    uint8_t count;
+    uint8_t mask;
+    uint8_t ev;
+    const TravelMethod *m;
+    route = g_bk_byte_a;
+    method = g_bk_byte_b;
+    pick = g_bk_byte_c;
+    g_bk_byte_a = TRAVEL_EVENT_NONE;
+    if (route >= g_travel_route_count) return;
+    if (method >= g_travel_routes[route].method_count) return;
+    m = &g_travel_routes[route].methods[method];
+    count = 0;
+    for (i = 0; i < m->pool_count; i++) {
+        ev = m->pool_event[i];
+        if (g_travel_events[ev].kind == TRAVEL_EVENT_BATTLE) {
+            count++;
+        }
+    }
+    if (count == 0) return;
+    if (count > 1) {
+        mask = 1;
+        while (mask < (uint8_t)(count - 1)) {
+            mask = (uint8_t)((mask << 1) | 1);
+        }
+        pick = (uint8_t)(pick & mask);
+        if (pick >= count) pick = (uint8_t)(pick - count);
+    } else {
+        pick = 0;
+    }
+    for (i = 0; i < m->pool_count; i++) {
+        ev = m->pool_event[i];
+        if (g_travel_events[ev].kind == TRAVEL_EVENT_BATTLE) {
+            if (pick == 0) {
+                g_bk_byte_a = ev;
+                return;
+            }
+            pick--;
         }
     }
 }

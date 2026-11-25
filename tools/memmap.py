@@ -444,6 +444,11 @@ def main():
         "_terrain_stamp_b11_banked": "overflow terrain stamp (bank 11)",
         "_terrain_stamp_b9_banked": "overflow terrain stamp (bank 9)",
         "_terrain_stamp_b12_banked": "overflow terrain stamp (bank 12)",
+        "_travel_paint_banked": "travel-demo journey paint (bank 11)",
+        "_travel_burn_banked": "travel-demo day burn (bank 11)",
+        "_travel_camp_banked": "travel-demo camp actions (bank 11)",
+        "_travel_wx_apply_banked": "travel-demo weather mod applicator (bank 14)",
+        "_travel_starve_battle_banked": "travel-demo starving ambush picker (bank 14)",
     }
     for sym, desc in optional_banked_targets.items():
         if sym in symbols:

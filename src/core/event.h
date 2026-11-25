@@ -86,11 +86,9 @@ typedef enum {
      * into g_travel_routes.  Handled by the game layer (travel.c);
      * the engine only forwards the id. */
     EVENT_ACTION_JOURNEY_START = 12,
-#ifdef TRAVEL_DEMO
     /* Open the route's supply merchant (travel-demo ROM): arg0 = route
      * index whose supply table prices provisions.  Game layer. */
     EVENT_ACTION_TRAVEL_SUPPLY = 13
-#endif
 #endif
 } EventActionType;
 

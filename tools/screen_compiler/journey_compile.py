@@ -64,6 +64,7 @@ ACTOR_H = REPO_ROOT / "src" / "world" / "actor.h"
 LEVELS_DIR = REPO_ROOT / "levels"
 
 OUT_DEFAULT = REPO_ROOT / "src" / "game" / "travel_content.c"
+OUT_IDS_NAME = "travel_routes_generated.h"
 
 TRAVEL_POOL_MAX = 64
 TRAVEL_TEXT_LEN = 20
@@ -288,6 +289,9 @@ def load_events(battle_ids):
             fail("%s: kind must be 'battle', 'choice' or 'ruins'" % eid)
     if not events:
         fail("no events in journeys/events/")
+    if len(events) >= 255:
+        fail("too many events (%d, max 254: 255 is TRAVEL_EVENT_NONE)"
+             % len(events))
     return events
 
 
@@ -472,6 +476,8 @@ def load_routes(scenes, event_ids, event_acts):
         routes.append(doc)
     if not routes:
         fail("no routes in journeys/routes/")
+    if len(routes) > 255:
+        fail("too many routes (%d, max 255)" % len(routes))
     return routes
 
 
@@ -485,6 +491,7 @@ def emit(routes, events, scenes, battle_ids):
     lines.append(" */")
     lines.append("")
     lines.append('#include "travel.h"')
+    lines.append('#include "banked.h"')
     lines.append("")
     lines.append("#pragma bank %d" % TRAVEL_BANK)
     lines.append("")
@@ -622,7 +629,7 @@ def emit(routes, events, scenes, battle_ids):
                 idx = event_index[ref] if ref is not None else 255
                 lines.append("        %d, /* %s battle event or 255 */"
                              % (idx, opt))
-            vals = [doc[opt + "_effects"]["risk"] * 256 // 100
+            vals = [doc[opt + "_effects"].get("risk", 50) * 256 // 100
                     for opt in ("opt1", "opt2")]
             lines.append("        %d, %d, /* opt risk (50/50 pre-scaled) */"
                          % (vals[0], vals[1]))
@@ -724,6 +731,58 @@ void travel_wx_apply_banked(void)
         }
     }
 }
+
+/* Starving-party ambush picker (this bank, next to its tables):
+ * counts battle events in the route's pool and picks the k-th one
+ * without 64x banked_copy() loops in the fixed bank.
+ * In: g_bk_byte_a = route, g_bk_byte_b = method, g_bk_byte_c = rng.
+ * Out: g_bk_byte_a = event index or TRAVEL_EVENT_NONE. */
+void travel_starve_battle_banked(void)
+{
+    uint8_t route;
+    uint8_t method;
+    uint8_t pick;
+    uint8_t i;
+    uint8_t count;
+    uint8_t mask;
+    uint8_t ev;
+    const TravelMethod *m;
+    route = g_bk_byte_a;
+    method = g_bk_byte_b;
+    pick = g_bk_byte_c;
+    g_bk_byte_a = TRAVEL_EVENT_NONE;
+    if (route >= g_travel_route_count) return;
+    if (method >= g_travel_routes[route].method_count) return;
+    m = &g_travel_routes[route].methods[method];
+    count = 0;
+    for (i = 0; i < m->pool_count; i++) {
+        ev = m->pool_event[i];
+        if (g_travel_events[ev].kind == TRAVEL_EVENT_BATTLE) {
+            count++;
+        }
+    }
+    if (count == 0) return;
+    if (count > 1) {
+        mask = 1;
+        while (mask < (uint8_t)(count - 1)) {
+            mask = (uint8_t)((mask << 1) | 1);
+        }
+        pick = (uint8_t)(pick & mask);
+        if (pick >= count) pick = (uint8_t)(pick - count);
+    } else {
+        pick = 0;
+    }
+    for (i = 0; i < m->pool_count; i++) {
+        ev = m->pool_event[i];
+        if (g_travel_events[ev].kind == TRAVEL_EVENT_BATTLE) {
+            if (pick == 0) {
+                g_bk_byte_a = ev;
+                return;
+            }
+            pick--;
+        }
+    }
+}
 """
 
 
@@ -778,24 +837,44 @@ def emit_wxmod_body(events, event_index):
             for wname, mod in wx.items():
                 rows.append((event_index[e["id"]], opt_i,
                              WEATHER_ID[wname], e["id"], opt, wname, mod))
+    if len(rows) > 255:
+        fail("too many weather mods (%d, max 255)" % len(rows))
     lines = []
     lines.append("/* Weather interactions: sparse (event, option, "
                  "weather) deltas. */")
     lines.append("const TravelWxMod g_travel_wxmods[] = {")
-    for (eidx, opt_i, wid, eid, opt, wname, mod) in rows:
-        lines.append("    { /* %s %s in %s */" % (eid, opt, wname))
-        lines.append("        %d, /* event */" % eidx)
-        lines.append("        %d, /* option (0 = opt1) */" % opt_i)
-        lines.append("        %d, /* weather (%s) */" % (wid, wname))
-        for key in ("hurt", "delay", "save", "days", "provisions"):
-            lines.append("        %d, /* %s delta */"
-                         % (mod.get(key, 0), key))
-        lines.append("    },")
+    if rows:
+        for (eidx, opt_i, wid, eid, opt, wname, mod) in rows:
+            lines.append("    { /* %s %s in %s */" % (eid, opt, wname))
+            lines.append("        %d, /* event */" % eidx)
+            lines.append("        %d, /* option (0 = opt1) */" % opt_i)
+            lines.append("        %d, /* weather (%s) */" % (wid, wname))
+            for key in ("hurt", "delay", "save", "days", "provisions"):
+                lines.append("        %d, /* %s delta */"
+                             % (mod.get(key, 0), key))
+            lines.append("    },")
+    else:
+        lines.append("    { 255, 0, 0, 0, 0, 0, 0, 0 },")
     lines.append("};")
     lines.append("")
     lines.append("const uint8_t g_travel_wxmod_count = %d;" % len(rows))
     lines.append("")
     lines.append(emit_wx_apply_body())
+    return "\n".join(lines)
+
+
+def emit_route_ids(routes):
+    lines = []
+    lines.append("#ifndef TRAVEL_ROUTES_GENERATED_H")
+    lines.append("#define TRAVEL_ROUTES_GENERATED_H")
+    lines.append("")
+    lines.append("/* Generated by journey_compile.py. Do not edit directly. */")
+    for idx, doc in enumerate(routes):
+        sym = "TRAVEL_ROUTE_" + re.sub(r"[^A-Z0-9]+", "_", doc["id"].upper()).strip("_")
+        lines.append("#define %-32s %d" % (sym, idx))
+    lines.append("")
+    lines.append("#endif /* TRAVEL_ROUTES_GENERATED_H */")
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -836,9 +915,11 @@ def compile_all(out_path):
                                  "road is act %d"
                                  % (eid, ref, by_id[ref]["acts"], r["act"]))
     text = emit(routes, events, scenes, battle_ids)
+    hdr = emit_route_ids(routes)
     if out_path is not None:
         out_path.write_text(text, encoding="utf-8")
-    return text
+        (out_path.parent / OUT_IDS_NAME).write_text(hdr, encoding="utf-8")
+    return text, hdr
 
 
 def main():
@@ -848,19 +929,18 @@ def main():
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
     try:
+        out = Path(args.out) if args.out else OUT_DEFAULT
         if args.check:
-            fresh = compile_all(None)
-            if args.out:
-                want = Path(args.out).read_text(encoding="utf-8")
-            else:
-                want = OUT_DEFAULT.read_text(encoding="utf-8")
-            if fresh != want:
+            fresh, fresh_hdr = compile_all(None)
+            want = out.read_text(encoding="utf-8")
+            hdr_path = out.parent / OUT_IDS_NAME
+            want_hdr = hdr_path.read_text(encoding="utf-8") if hdr_path.exists() else ""
+            if fresh != want or fresh_hdr != want_hdr:
                 print("journeys-check: committed travel content is stale "
                       "(re-run journey_compile.py --all)", file=sys.stderr)
                 return 1
             print("journeys-check: fresh")
             return 0
-        out = Path(args.out) if args.out else OUT_DEFAULT
         compile_all(out)
         print("Compiled %s" % out)
         return 0

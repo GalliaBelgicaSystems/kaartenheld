@@ -6,6 +6,9 @@
 #include "scene.h"
 #include "ui.h"
 #include "banked.h"
+#ifdef TRAVEL_DEMO
+#include "content.h"
+#endif
 
 /* Full save/load content draw lives in the bank-11 body
  * (save_load_banked.c) so the fixed _CODE/_HOME area stays under
@@ -53,6 +56,9 @@ void save_load_screen_update(Game *g)
             g->save_slot_message = 2;
             g->render_cache.valid = false;
         } else {
+#ifdef TRAVEL_DEMO
+            travel_abandon(g);
+#endif
             telemetry_emit(EVENT_GAME_LOADED, (uint8_t)(slot + 1), 0, 0, 0);
             scene_load(g, st->scene.scene_id, st->scene.player_x, st->scene.player_y);
             g->world.player.facing = (Direction)st->scene.player_facing;
