@@ -686,7 +686,7 @@ def verify_dialogue_transition(sess):
     # VBlank from the gate above: CRAM reads are exact here.
     paper = bg_cram(sess)[4]
     check("dialogue entry: paper ramp intact (slot 4)",
-          [0x7FFF, 0x3256, 0x0C71, 0x196E], paper)
+          _ramp_words("fight3"), paper)
 
     # Sprite stays visible behind the box at the player's position (9,5),
     # camera (0,0) -> OAM y=5*8+16=56, x=9*8+8=80.
@@ -849,7 +849,7 @@ def verify_scene_transition(sess):
     check("town CRAM read in VBlank (arrival)", True, wait_vblank(sess))
     arr_cram = bg_cram(sess)
     check("gate crossing: slot 4 holds the HUD paper ramp",
-          [0x7FFF, 0x3256, 0x0C71, 0x196E], arr_cram[4])
+          _ramp_words("fight3"), arr_cram[4])
     same = all(ref_cram[p] == arr_cram[p]
                for p in (0, 1, 2, 3, 4, 5, 6, 7))
     check("gate crossing: TOWN CRAM matches fresh boot (all slots)",

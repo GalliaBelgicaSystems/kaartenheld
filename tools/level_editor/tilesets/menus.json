@@ -288,7 +288,7 @@
       "label": "status bar full heart",
       "gb_constant": "TILE_MENUS_STATUS_BAR_FULL_HEART",
       "walkable": false,
-      "color": "#8b1b1b",
+      "color": "#c34e1b",
       "ascii": "#",
       "image_url": "/tiles/menus/menus_status_bar_full_heart.png",
       "category": "ui"
@@ -298,7 +298,7 @@
       "label": "status bar half heart",
       "gb_constant": "TILE_MENUS_STATUS_BAR_HALF_HEART",
       "walkable": false,
-      "color": "#8b1b1b",
+      "color": "#c34e1b",
       "ascii": "#",
       "image_url": "/tiles/menus/menus_status_bar_half_heart.png",
       "category": "ui"

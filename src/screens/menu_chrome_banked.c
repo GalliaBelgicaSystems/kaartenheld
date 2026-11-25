@@ -76,7 +76,7 @@ static const uint8_t s_menus_hero_slots[16] = {
 static const uint8_t s_status_paper[8] = {
     0xFF, 0x7F, /* RGB8(255,255,255) */
     0x56, 0x32, /* RGB8(176,146,102) tan (fight3 spare) */
-    0x71, 0x0C, /* RGB8(139,27,27) heart red */
+    0x38, 0x0D, /* RGB8(195,78,27) heart red */
     0x6E, 0x19  /* RGB8(117,89,48) icon bronze */
 };
 

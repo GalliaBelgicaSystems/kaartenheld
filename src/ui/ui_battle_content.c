@@ -812,13 +812,20 @@ static void battle_draw_hero_row(const volatile Battle *battle)
     battle_color_span(label_col, label_row, 1,
                       battle_status_color(&s_battle_status[0]));
 
-    /* HP block: two digits + status-bar heart (full normally, half
-     * at half HP or less) + current HP only -- no slash, no total.
-     * Icon stamps unconditionally (skip-guards cannot clear art
-     * tiles). */
-    if (((uint16_t)battle->player.hp + (uint16_t)battle->player.hp) <=
-        (uint16_t)battle->player.max_hp)
-        heart_tile = UI_TILE_MENUS_STATUS_HALF;
+    /* HP block: two digits + status-bar heart. Hurt (half HP or less)
+     * blinks a FULL heart slowly instead of the old static half heart:
+     * g_game.frame bit 5 gives a ~1 s period, and the feedback tick
+     * re-arms HERO dirty on every toggle edge (this painter only runs
+     * on dirty). At 0 HP (DEFEATED!), stamp blank so the dead hero
+     * does not blink a full heart. Stamped unconditionally through the
+     * shared cell primitive (skip-guards cannot clear art tiles); the
+     * semantic buffer keeps its blank either way, so no text assert
+     * can ever observe the blink phase. */
+    if (battle->player.hp == 0 ||
+        (((uint16_t)battle->player.hp + (uint16_t)battle->player.hp) <=
+         (uint16_t)battle->player.max_hp &&
+         (g_game.frame & 32u) != 0))
+        heart_tile = (uint8_t)ui_font_tile_base;
     else
         heart_tile = UI_TILE_MENUS_STATUS_HEART;
     battle_draw_num2(hp_col, hp_row, battle->player.hp);
@@ -832,12 +839,7 @@ static void battle_draw_hero_row(const volatile Battle *battle)
         battle_color_span(hp_col, hp_row, 2, UI_COLOR_FIELD);
     }
 
-    dst = (volatile uint8_t *)(0x9800 + ((uint16_t)hp_row << 5) + hp_col + 2);
-    VBK_REG = 0;
-    battle_vram_sync_write(dst, heart_tile);
-#ifdef DEBUG_BUILD
-    g_tilemap_mirror[hp_row * 32 + hp_col + 2] = heart_tile;
-#endif
+    battle_stamp_cell((uint8_t)(hp_col + 2), hp_row, ' ', heart_tile);
     battle_color_span((uint8_t)(hp_col + 2), hp_row, 1, g_hud_skin_wram.hp_icon_color);
 
     /* Row-7 forecast trios (cols 9-11).  Enemy turn: down arrow +

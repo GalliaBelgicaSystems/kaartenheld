@@ -38,7 +38,7 @@
       "label": "kobold idle",
       "gb_constant": "TILE_ACTORS_KOBOLD_IDLE",
       "walkable": false,
-      "color": "#673c3c",
+      "color": "#a44b4d",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_kobold_idle.png",
       "category": "enemy"
@@ -48,7 +48,7 @@
       "label": "kobold frame 1",
       "gb_constant": "TILE_ACTORS_KOBOLD_FRAME_1",
       "walkable": false,
-      "color": "#673c3c",
+      "color": "#a44b4d",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_kobold_frame_1.png",
       "category": "enemy"
@@ -58,7 +58,7 @@
       "label": "kobold frame 2",
       "gb_constant": "TILE_ACTORS_KOBOLD_FRAME_2",
       "walkable": false,
-      "color": "#673c3c",
+      "color": "#a44b4d",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_kobold_frame_2.png",
       "category": "enemy"
@@ -108,7 +108,7 @@
       "label": "boss top left corner",
       "gb_constant": "TILE_ACTORS_BOSS_TOP_LEFT_CORNER",
       "walkable": false,
-      "color": "#110b0b",
+      "color": "#140e0b",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_boss_top_left_corner.png",
       "category": "enemy"
@@ -118,7 +118,7 @@
       "label": "boss top right corner",
       "gb_constant": "TILE_ACTORS_BOSS_TOP_RIGHT_CORNER",
       "walkable": false,
-      "color": "#1e0a0a",
+      "color": "#27130a",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_boss_top_right_corner.png",
       "category": "enemy"
@@ -158,7 +158,7 @@
       "label": "mayor",
       "gb_constant": "TILE_ACTORS_MAYOR",
       "walkable": false,
-      "color": "#5e4635",
+      "color": "#654c35",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_mayor.png",
       "category": "npc"
@@ -168,7 +168,7 @@
       "label": "dog frame 1",
       "gb_constant": "TILE_ACTORS_DOG_FRAME_1",
       "walkable": false,
-      "color": "#8c7147",
+      "color": "#8f7347",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_dog_frame_1.png",
       "category": "npc"
@@ -178,7 +178,7 @@
       "label": "dog frame 2",
       "gb_constant": "TILE_ACTORS_DOG_FRAME_2",
       "walkable": false,
-      "color": "#8c6d46",
+      "color": "#917146",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_dog_frame_2.png",
       "category": "npc"
@@ -208,7 +208,7 @@
       "label": "boss top left corner 2",
       "gb_constant": "TILE_ACTORS_BOSS_TOP_LEFT_CORNER_2",
       "walkable": false,
-      "color": "#16100d",
+      "color": "#16110f",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_boss_top_left_corner_2.png",
       "category": "enemy"
@@ -218,7 +218,7 @@
       "label": "boss top right corner 2",
       "gb_constant": "TILE_ACTORS_BOSS_TOP_RIGHT_CORNER_2",
       "walkable": false,
-      "color": "#30190f",
+      "color": "#312018",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_boss_top_right_corner_2.png",
       "category": "enemy"
@@ -278,7 +278,7 @@
       "label": "rider fire",
       "gb_constant": "TILE_ACTORS_RIDER_FIRE",
       "walkable": false,
-      "color": "#8b1b1b",
+      "color": "#c34e1b",
       "ascii": "#",
       "image_url": "/tiles/actors/actors_rider_fire.png",
       "category": "object"
