@@ -173,8 +173,10 @@ void ic_menu_riders_load(void);
 #define UI_TILE_MENUS_HERO_COUNT 16u
 #define UI_TILE_MENUS_STATUS_COUNT 4u
 /* Status-bar icon slots (VRAM 248-251, header indices 28-31): full
- * heart, half heart, AP and arrow from sheet row 1, cols 0-3.  Streamed
- * with the chrome sheet on every BATTLE/ITEM/SHOP entry. */
+ * heart, half heart (unused in battle since hurt-heart blinks full,
+ * kept in the 4-tile stream order), AP and arrow from sheet row 1,
+ * cols 0-3.  Streamed with the chrome sheet on every BATTLE/ITEM/SHOP
+ * entry. */
 #define UI_TILE_MENUS_STATUS_BASE (248u)
 #define UI_TILE_MENUS_STATUS_HEART (UI_TILE_MENUS_STATUS_BASE + 0u)
 #define UI_TILE_MENUS_STATUS_HALF  (UI_TILE_MENUS_STATUS_BASE + 1u)

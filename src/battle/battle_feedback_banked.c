@@ -120,9 +120,11 @@ void battle_feedback_tick_banked(void)
     /* Hurt-heart slow blink: the hero-row painter keys the full-heart
      * stamp off g_game.frame bit 5, but it only repaints on HERO dirty
      * -- re-arm it on every 32-frame boundary while the hero is hurt
-     * so each toggle edge repaints (stateless: a missed boundary just
-     * delays the toggle by one period). */
-    if (((uint16_t)b->player.hp + (uint16_t)b->player.hp) <=
+     * and alive so each toggle edge repaints (stateless: a missed
+     * boundary just delays the toggle by one period; 0 HP stays static
+     * blank on the DEFEATED! screen). */
+    if (b->player.hp != 0 &&
+        ((uint16_t)b->player.hp + (uint16_t)b->player.hp) <=
         (uint16_t)b->player.max_hp && ((g_game.frame & 31u) == 0)) {
         b->dirty |= BATTLE_DIRTY_HERO;
     }

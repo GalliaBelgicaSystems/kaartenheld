@@ -816,13 +816,15 @@ static void battle_draw_hero_row(const volatile Battle *battle)
      * blinks a FULL heart slowly instead of the old static half heart:
      * g_game.frame bit 5 gives a ~1 s period, and the feedback tick
      * re-arms HERO dirty on every toggle edge (this painter only runs
-     * on dirty). Stamped unconditionally through the shared cell
-     * primitive (skip-guards cannot clear art tiles); the semantic
-     * buffer keeps its blank either way, so no text assert can ever
-     * observe the blink phase. */
-    if (((uint16_t)battle->player.hp + (uint16_t)battle->player.hp) <=
-        (uint16_t)battle->player.max_hp &&
-        (g_game.frame & 32u) != 0)
+     * on dirty). At 0 HP (DEFEATED!), stamp blank so the dead hero
+     * does not blink a full heart. Stamped unconditionally through the
+     * shared cell primitive (skip-guards cannot clear art tiles); the
+     * semantic buffer keeps its blank either way, so no text assert
+     * can ever observe the blink phase. */
+    if (battle->player.hp == 0 ||
+        (((uint16_t)battle->player.hp + (uint16_t)battle->player.hp) <=
+         (uint16_t)battle->player.max_hp &&
+         (g_game.frame & 32u) != 0))
         heart_tile = (uint8_t)ui_font_tile_base;
     else
         heart_tile = UI_TILE_MENUS_STATUS_HEART;

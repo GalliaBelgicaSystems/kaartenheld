@@ -1,0 +1,83 @@
+{
+ "act": "always",
+ "name": "battle_defeat_no_heart",
+ "test": true,
+ "description": "At 0 HP (DEFEATED! result screen), the hero HUD heart cell stays blank (tile 0) rather than blinking a full heart.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "RIGHT"
+  },
+  {
+   "type": "wait",
+   "frames": 8
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 125
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 44
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_result",
+   "expected": "DEFEAT"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 0
+  },
+  {
+   "type": "screen_row",
+   "row": 0,
+   "contains": "DEFEATED"
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 4,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 9,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "seed": 4000,
+  "party": {
+   "HERO": {
+    "hp": 2
+   }
+  }
+ }
+}

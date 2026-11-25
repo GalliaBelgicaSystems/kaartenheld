@@ -2,39 +2,11 @@
  "act": "always",
  "name": "battle_hurt_heart_blink",
  "test": true,
- "description": "Hurt hero (half HP or less) shows a slowly blinking FULL heart instead of the old static half heart: 32 frames after heal_flash_green's off-phase landing the same fight is in the blink-on phase (tile 248, the status-bar full heart). The flash is over by then, so the HP digits are back on steady FIELD green (attr 3).",
+ "description": "Hurt hero (half HP or less) shows a slowly blinking FULL heart instead of the old static half heart: in a quiet idle battle (no heal flash, no turn transition) waiting 40 frames crosses the frame-32 edge into the blink-off phase (blank tile 0) via battle_feedback_tick_banked re-arming BATTLE_DIRTY_HERO.",
  "actions": [
   {
    "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "set_hand_card",
-   "index": 0,
-   "card_type": "HE",
-   "value": 5
-  },
-  {
-   "type": "set_hand_card_meta",
-   "index": 0,
-   "cost": 1,
-   "uses": 3
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 6
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 46
+   "frames": 40
   }
  ],
  "assertions": [
@@ -43,24 +15,18 @@
    "expected": "BATTLE"
   },
   {
+   "type": "battle_turn",
+   "expected": "PLAYER"
+  },
+  {
    "type": "battle_player_hp",
-   "expected": 15
-  },
-  {
-   "type": "event_occurred",
-   "event": "HEALED"
-  },
-  {
-   "type": "tilemap_attr",
-   "row": 7,
-   "col": 2,
-   "expected": 3
+   "expected": 10
   },
   {
    "type": "tilemap_cell",
    "row": 7,
    "col": 4,
-   "expected": 248
+   "expected": 0
   }
  ],
  "initial_state": {

@@ -31,7 +31,7 @@
 00:94000 000031F5
 00:84000 000033FA
 00:F4000 000035AA
-00:34000 00003AE4
+00:34000 00003ADE
 00:A4000 00003BAD
 00:64000 00003C0B
 00:44000 00003C71
@@ -1249,7 +1249,7 @@
 00:65FF _ui_draw_actors_sprites
 00:698F _ui_draw_battle_full
 00:695D _ui_draw_battle_timer
-00:372AE _ui_draw_battle_timer_banked
+00:372A8 _ui_draw_battle_timer_banked
 00:6BA1 _ui_draw_dialogue
 00:5F57 _ui_draw_dialogue_line
 00:6A08 _ui_draw_dialogue_page
@@ -1292,7 +1292,7 @@
 00:57097 _ui_title_logo_load_banked
 00:6847 _ui_updat
 00:69D7 _ui_update_battle
-00:3771A _ui_update_battle_banked
+00:37714 _ui_update_battle_banked
 00:6847 _ui_update_camera
 00:56F16 _ui_wipe_
 00:56F16 _ui_wipe_black_banked
@@ -2021,7 +2021,7 @@
 00:0489 l__CODE_14
 00:35AA l__CODE_15
 00:3F88 l__CODE_2
-00:3AE4 l__CODE_3
+00:3ADE l__CODE_3
 00:3C71 l__CODE_4
 00:3DE2 l__CODE_5
 00:3C0B l__CODE_6
@@ -2394,7 +2394,7 @@
 00:65FF ui_draw_actors_sprites
 00:698F ui_draw_battle_full
 00:695D ui_draw_battle_timer
-00:372AE ui_draw_battle_timer_banked
+00:372A8 ui_draw_battle_timer_banked
 00:6BA1 ui_draw_dialogue
 00:5F57 ui_draw_dialogue_line
 00:6A08 ui_draw_dialogue_page
@@ -2437,7 +2437,7 @@
 00:57097 ui_title_logo_load_banked
 00:6847 ui_updat
 00:69D7 ui_update_battle
-00:3771A ui_update_battle_banked
+00:37714 ui_update_battle_banked
 00:6847 ui_update_camera
 00:56F16 ui_wipe_
 00:56F16 ui_wipe_black_banked
