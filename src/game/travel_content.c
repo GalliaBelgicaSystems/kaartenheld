@@ -16,13 +16,13 @@ const TravelRoute g_travel_routes[] = {
         2, /* act (road act) */
         5, 7, /* dest_x, dest_y */
         2, /* provisions_price */
-        3, /* provisions_per_day */
-        1, /* hunt_prov_min */
-        7, /* hunt_prov_max */
+        2, /* provisions_per_day */
+        2, /* hunt_prov_min */
+        8, /* hunt_prov_max */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
-        2, /* hunt_delay_max */
+        1, /* hunt_delay_max */
         5, /* rest_heal */
         1, /* rest_delay */
         0, /* study_save_min */
@@ -63,12 +63,12 @@ const TravelRoute g_travel_routes[] = {
         2, 7, /* dest_x, dest_y */
         2, /* provisions_price */
         3, /* provisions_per_day */
-        1, /* hunt_prov_min */
-        7, /* hunt_prov_max */
+        2, /* hunt_prov_min */
+        8, /* hunt_prov_max */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
-        2, /* hunt_delay_max */
+        1, /* hunt_delay_max */
         5, /* rest_heal */
         1, /* rest_delay */
         0, /* study_save_min */
@@ -109,12 +109,12 @@ const TravelRoute g_travel_routes[] = {
         2, 7, /* dest_x, dest_y */
         2, /* provisions_price */
         3, /* provisions_per_day */
-        1, /* hunt_prov_min */
-        7, /* hunt_prov_max */
+        2, /* hunt_prov_min */
+        8, /* hunt_prov_max */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
-        2, /* hunt_delay_max */
+        1, /* hunt_delay_max */
         5, /* rest_heal */
         1, /* rest_delay */
         0, /* study_save_min */
@@ -154,13 +154,13 @@ const TravelRoute g_travel_routes[] = {
         2, /* act (road act) */
         5, 17, /* dest_x, dest_y */
         2, /* provisions_price */
-        3, /* provisions_per_day */
-        1, /* hunt_prov_min */
-        7, /* hunt_prov_max */
+        2, /* provisions_per_day */
+        2, /* hunt_prov_min */
+        8, /* hunt_prov_max */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
-        2, /* hunt_delay_max */
+        1, /* hunt_delay_max */
         5, /* rest_heal */
         1, /* rest_delay */
         0, /* study_save_min */

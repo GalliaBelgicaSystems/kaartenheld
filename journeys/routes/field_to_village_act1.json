@@ -12,9 +12,9 @@
   "camp": {
     "hunt": {
       "delay_min": 0,
-      "delay_max": 2,
-      "provisions_min": 1,
-      "provisions_max": 7
+      "delay_max": 1,
+      "provisions_min": 2,
+      "provisions_max": 8
     },
     "rest": {
       "heal": 5,

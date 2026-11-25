@@ -16,8 +16,8 @@ inside `nix develop` for PyBoy)
   events:  route pools forced to single events + clear weather
            (rebuild ROM first):
            SHARE path on the act-1 road, FIGHT path on act 2.
-  camp:    daily camp menu (shipped tuning): HUNT finds 1-7 prov
-           with a 0-2 step detour, REST heals 5 for
+  camp:    daily camp menu (shipped tuning): HUNT finds 2-8 prov
+           with a 0-1 step detour, REST heals 5 for
            +1 step, STUDY costs 6 prov and saves 0-2
            steps (or wanders lost +0-2), 2 dry days cost 5 HP.
   acts:    per-road per-act tables (shipped tuning): chapter 1
@@ -31,6 +31,10 @@ inside `nix develop` for PyBoy)
            the journey costing one extra day, trip arrives.
   ruins_ignore: same tuning; IGNORE keeps the schedule, no day burn.
   full:    shipped tuning (35%, mixed pool); asserts arrival only.
+  loop:    honest-economy full loop (no pokes): fresh hero walks
+           field -> town -> desolate -> field, buying out both
+           merchants and hunting/resting on the road; arrival
+           alive proves the tuned economy funds the loop.
 
 Drives: field boot -> signpost -> JOURNEY -> steps/events -> village.
 Battle wins use the walkthrough's poke-99 technique (test cheat, same
@@ -836,6 +840,92 @@ def _walk_until_scene(d, scene_id, label):
     return st
 
 
+
+def _idle_cursor(d):
+    """Camp-menu cursor 0/1/2 (CONTINUE/HUNT/REST), or None when the
+    journey screen shows a message, event or battle prompt instead."""
+    if d.text_has("[A]"):
+        return None
+    for i, m in enumerate(("> CONTINUE", "> HUNT", "> REST")):
+        if d.text_has(m):
+            return i
+    return None
+
+
+def _camp_goto(d, target):
+    for _ in range(6):
+        cur = _idle_cursor(d)
+        if cur is None:
+            return False
+        if cur == target:
+            return True
+        d.press("down", settle=12)
+    return _idle_cursor(d) == target
+
+
+def _buy_all_provisions(d):
+    """Buy provisions with all affordable gold, then leave the shop."""
+    for _ in range(40):
+        if d.gold() < 2:
+            break
+        d.press("a", settle=20)
+    d.press("b", settle=20)
+    assert d.wait_for(lambda: d.screen() == SCREEN_OVERWORLD,
+                      ticks=300), "supply did not exit"
+
+
+def _walk_leg_econ(d, scene_id, label):
+    """Walk a journey leg on the honest economy: REST when hurt, HUNT
+    when low, otherwise walk on.  Ignores choices, fights ambushes.
+    Fails loudly on death: the loop must be survivable, not just the
+    mechanics correct."""
+    for _ in range(300):
+        st = d.scene()
+        if st["scene_id"] == scene_id:
+            return st
+        if d.screen() == 3:
+            assert False, "%s: hero died on the road" % label
+        if d.screen() == SCREEN_BATTLE:
+            assert win_fight(d), "%s: fight lost?" % label
+            d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
+            d.press("a", settle=20)
+        elif d.screen() == SCREEN_JOURNEY:
+            if d.text_has("AMBUSH!"):
+                d.press("a", settle=30)
+            elif d.text_has("TRAVELER NEEDS") or d.text_has("YOU SPOT OLD RUINS"):
+                d.press("down", settle=12)
+                d.press("a", settle=20)
+                d.wait_for(lambda: d.text_has("YOU WALK ON."), ticks=300)
+                d.press("a", settle=20)
+            elif d.text_has("[A] CONTINUE") or d.text_has("[A] FIGHT"):
+                d.press("a", settle=20)
+            elif _idle_cursor(d) is not None:
+                hp = d.r.hero()["hp"]
+                if d.prov() <= 8:
+                    assert _camp_goto(d, 1), d.rows()
+                    d.press("a", settle=30)
+                    assert d.wait_for(lambda: d.text_has("YOU FORAGE."),
+                                      ticks=300), d.rows()
+                    d.press("a", settle=20)
+                elif hp <= 7:
+                    assert _camp_goto(d, 2), d.rows()
+                    d.press("a", settle=30)
+                    assert d.wait_for(lambda: d.text_has("YOU REST."),
+                                      ticks=300), d.rows()
+                    d.press("a", settle=20)
+                else:
+                    assert _camp_goto(d, 0), d.rows()
+                    d.press("a", settle=20)
+            else:
+                # Choice prompt: confirm opt1 like the suite's walker.
+                d.press("a", settle=20)
+        else:
+            d.tick(30)
+    st = d.scene()
+    assert st["scene_id"] == scene_id, (label, st)
+    return st
+
+
 def test_risk():
     """Every scenario shares 50/50 success/failure odds (route pool
     forced to [stranded_merchant] @100% and weather forced clear,
@@ -961,7 +1051,7 @@ def test_ruins_ignore():
 def test_camp():
     """Daily camp menu (shipped tuning, no forced pool needed: camp
     actions roll no road events, so the deterministic stream cannot
-    interfere).  HUNT nets found-3 provisions with a 0-2 detour, REST heals
+    interfere).  HUNT nets found-3 provisions with a 0-1 detour, REST heals
     5 for +1 step, STUDY saves 0-2 steps, and two consecutive dry
     days cost 5 HP (route starve tuning)."""
     d = D()
@@ -969,8 +1059,8 @@ def test_camp():
         boot_to_journey(d)
         select_foot(d)
         assert d.ap() == 5, d.ap()
-        # HUNT: +1..7 provisions found (-3 eaten),
-        # +0..2 steps, -1 day.
+        # HUNT: +2..8 provisions found (-3 eaten),
+        # +0..1 steps, -1 day.
         f0 = d.prov()
         day0 = d.day()
         tot0 = d.total_steps()
@@ -981,10 +1071,10 @@ def test_camp():
             d.rows()
         assert d.wait_for(lambda: d.text_has("PROV"), ticks=120), d.rows()
         net = d.prov() - f0
-        assert -2 <= net <= 4, (f0, d.prov())
+        assert -1 <= net <= 5, (f0, d.prov())
         assert d.day() == day0 - 1, (d.day(), day0)
         detour = d.total_steps() - tot0
-        assert 0 <= detour <= 2, detour
+        assert 0 <= detour <= 1, detour
         print("hunt OK: net %+d provisions, detour +%d, day -1"
               % (net, detour))
         d.press("a", settle=20)  # dismiss
@@ -1196,7 +1286,7 @@ def test_acts():
         print("outward road OK: 16 steps")
         # Provision for the loop (the demo boots light and the
         # outward leg eats the rations; like the other poke setups):
-        # 16 + 10 steps at 3/day, plus detour margin.
+        # 16 + 10 steps at 2/day, plus detour margin.
         import struct
         d.poke_php(15)
         addr = d.r.state + OFF_VARIABLES + 2 * (12 - 1)
@@ -1414,6 +1504,63 @@ def test_fixes():
         d.close()
 
 
+def test_loop_economy():
+    """Honest-economy loop: no provisions pokes.  Fresh hero walks the
+    full field -> town -> desolate -> field loop, buying out the town
+    and desolate merchants and hunting/resting on the road.  Arrival
+    alive proves the tuned economy funds the loop (hunt first, for
+    which this test would previously starve)."""
+    d = D()
+    try:
+        boot_to_journey(d)
+        select_foot(d)
+        st = _walk_leg_econ(d, SCENE_ACT2_TOWN, "field->town")
+        assert (st["player_x"], st["player_y"]) == (2, 7), st
+        print("loop-econ: reached town with %d prov %dG" % (d.prov(), d.gold()))
+        # Town merchant at (3,8): bump from (2,8), buy out, leave.
+        d.press("down", settle=14)
+        d.press("right", settle=14)
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=300), d.screen()
+        assert d.text_has("PROV"), d.rows()
+        _buy_all_provisions(d)
+        print("loop-econ: stocked at town: %d prov %dG" % (d.prov(), d.gold()))
+        # Town signpost at (5,7): walk east into it from (2,8).
+        d.press("up", settle=14)
+        for _ in range(5):
+            d.press("right", settle=14)
+            if d.screen() == SCREEN_JOURNEY:
+                break
+        assert d.wait_for(lambda: d.text_has("DESOLATE ROAD"), ticks=300)
+        d.press("a", settle=20)
+        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
+        st = _walk_leg_econ(d, SCENE_ACT2_DESOLATE, "town->desolate")
+        assert (st["player_x"], st["player_y"]) == (5, 17), st
+        print("loop-econ: reached desolate with %d prov %dG" % (d.prov(), d.gold()))
+        # Desolate merchant at (4,16): bump from (5,16), buy out, leave.
+        d.press("up", settle=14)
+        d.press("left", settle=14)
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=300), d.screen()
+        assert d.text_has("PROV"), d.rows()
+        _buy_all_provisions(d)
+        print("loop-econ: stocked at desolate: %d prov %dG" % (d.prov(), d.gold()))
+        # Desolate signpost at (5,15): bump from (5,16).
+        d.press("right", settle=14)
+        d.press("up", settle=14)
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=300), d.screen()
+        assert d.wait_for(lambda: d.text_has("FIELD ROAD"), ticks=300)
+        d.press("a", settle=20)
+        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
+        st = _walk_leg_econ(d, SCENE_ACT2_FIELD, "desolate->field")
+        assert (st["player_x"], st["player_y"]) == (5, 7), st
+        print("loop-econ OK: closed the loop alive with %d prov %dG"
+              % (d.prov(), d.gold()))
+    finally:
+        d.close()
+
+
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "full"
     if mode == "ambush":
@@ -1450,6 +1597,8 @@ if __name__ == "__main__":
         test_ruins_ignore()
     elif mode == "weather":
         test_weather()
+    elif mode == "loop":
+        test_loop_economy()
     elif mode == "fixes":
         test_fixes()
     else:

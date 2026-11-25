@@ -460,7 +460,7 @@
       "id": "act2_town_supplier",
       "type": "npc",
       "position": {
-        "x": 7,
+        "x": 3,
         "y": 8
       },
       "properties": {
