@@ -2,7 +2,7 @@
  "act": "always",
  "name": "heal_flash_green",
  "test": true,
- "description": "Heal flash rides the slime-light green ramp: after an HE5 heal the hero HP block carries the GOLD slot (reprogrammed to #77E331) during a green pulse, then returns to the steady FIELD green. Pins the pulse phase, not just the timer.",
+ "description": "Heal flash rides the slime-light green ramp: after an HE5 heal the hero HP block carries the GOLD slot (reprogrammed to #77E331) during a green pulse, then returns to the steady FIELD green. Pins the pulse phase, not just the timer. The hurt hero (15/40 HP) blinks a full heart instead of the old static half heart: this lands in the blink-off phase (blank tile 0).",
  "actions": [
   {
    "type": "wait",
@@ -60,7 +60,7 @@
    "type": "tilemap_cell",
    "row": 7,
    "col": 4,
-   "expected": 249
+   "expected": 0
   }
  ],
  "initial_state": {

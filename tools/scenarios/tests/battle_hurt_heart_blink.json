@@ -1,0 +1,82 @@
+{
+ "act": "always",
+ "name": "battle_hurt_heart_blink",
+ "test": true,
+ "description": "Hurt hero (half HP or less) shows a slowly blinking FULL heart instead of the old static half heart: 32 frames after heal_flash_green's off-phase landing the same fight is in the blink-on phase (tile 248, the status-bar full heart). The flash is over by then, so the HP digits are back on steady FIELD green (attr 3).",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "set_hand_card",
+   "index": 0,
+   "card_type": "HE",
+   "value": 5
+  },
+  {
+   "type": "set_hand_card_meta",
+   "index": 0,
+   "cost": 1,
+   "uses": 3
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 6
+  },
+  {
+   "type": "press",
+   "button": "SELECT"
+  },
+  {
+   "type": "wait",
+   "frames": 46
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 15
+  },
+  {
+   "type": "event_occurred",
+   "event": "HEALED"
+  },
+  {
+   "type": "tilemap_attr",
+   "row": 7,
+   "col": 2,
+   "expected": 3
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 4,
+   "expected": 248
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 40
+   }
+  },
+  "seed": 6001,
+  "start_battle": true
+ }
+}
