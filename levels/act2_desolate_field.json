@@ -626,7 +626,8 @@
         "hp": 0,
         "max_hp": 0,
         "gold_reward": 0,
-        "ai": "AI_NONE"
+        "ai": "AI_NONE",
+        "sprite_kind": "ascii"
       }
     },
     {

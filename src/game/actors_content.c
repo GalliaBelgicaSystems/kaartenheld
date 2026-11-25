@@ -547,7 +547,7 @@ static const WorldActorDefinition g_act2_town_actors[] = {
          SPRITE_KIND_TILE, 0xFF, 0
     },
     {
-        0, ENTITY_ID_MERCHANT, 7, 8, DIRECTION_DOWN,
+        0, ENTITY_ID_MERCHANT, 3, 8, DIRECTION_DOWN,
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         'C', "MERCHANT", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_FIELD_MERCHANT, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
@@ -602,7 +602,7 @@ static const WorldActorDefinition g_act2_desolate_field_actors[] = {
         ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
         '?', "SIGNPOST", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_FIELD_SIGNPOST, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
         0, 0,
-         SPRITE_KIND_TILE, 0xFF, 0
+         SPRITE_KIND_ASCII, 0xFF, 0
     },
     {
         0, ENTITY_ID_MERCHANT, 4, 16, DIRECTION_DOWN,

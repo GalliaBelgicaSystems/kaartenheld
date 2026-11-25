@@ -865,6 +865,15 @@ background, chests, NPC tiles, ASCII).  The old per-tileset kobold/bat
 substring branches are gone: every hostile resolves through its enemy
 type to one shared transparent sprite."""
 def resolve_sprite_kind(obj, entity_types=None):
+    # Per-object override (e.g. a signpost in a tileset with no signpost
+    # art keeps its "?" readable via the ASCII glyph stamp instead of
+    # the invisible TILE kind).  Checked before the entity-type
+    # fallback so one object can differ from its type default.
+    sk_prop = (obj.get("properties") or {}).get("sprite_kind")
+    if sk_prop == "ascii":
+        return "SPRITE_KIND_ASCII"
+    if sk_prop == "tile":
+        return "SPRITE_KIND_TILE"
     frames = obj.get("animation_frames") or []
     names = " ".join(str(f) for f in frames) + " " + str(obj.get("overworld_sprite") or "")
     for token, kind in (("boss", "SPRITE_KIND_BOSS"),

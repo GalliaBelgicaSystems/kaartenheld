@@ -154,6 +154,7 @@ const SceneTerrainBlock s_act2_town_terrain[] = {
     { 16, 5, 1, 1, TILE_VILLAGE_44 },
     { 18, 5, 1, 1, TILE_VILLAGE_20 },
     { 8, 6, 1, 1, TILE_VILLAGE_20 },
+    { 5, 7, 1, 1, TILE_VILLAGE_41 },
     { 13, 7, 1, 1, TILE_VILLAGE_20 },
     { 16, 7, 1, 1, TILE_VILLAGE_20 },
     { 0, 8, 4, 1, TILE_VILLAGE_06 },
