@@ -2836,7 +2836,15 @@ void travel_starve_battle_banked(void)
             mask = (uint8_t)((mask << 1) | 1);
         }
         pick = (uint8_t)(pick & mask);
-        if (pick >= count) pick = (uint8_t)(pick - count);
+        if (pick >= count && !g_travel_rng) {
+            g_travel_rng = 0xACE1;
+        }
+        while (pick >= count) {
+            g_travel_rng ^= (uint16_t)(g_travel_rng << 7);
+            g_travel_rng ^= (uint16_t)(g_travel_rng >> 9);
+            g_travel_rng ^= (uint16_t)(g_travel_rng << 8);
+            pick = (uint8_t)((uint8_t)g_travel_rng & mask);
+        }
     } else {
         pick = 0;
     }

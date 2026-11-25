@@ -1350,11 +1350,21 @@ def test_fixes():
         d.pb.memory[d.r.sym.wram("g_travel_weather_left")] = 5
         d.pb.memory[d.r.sym.wram("g_travel_noprov")] = 0
         d.tick(2)
+        # Check ui_lcd_off() never fires during same-screen cursor moves:
+        # ui_lcd_off() wipes all 1024 bytes of VBK=1 (0x9800..0x9BFF) to 0
+        # on CGB, whereas same-screen diff-skipping leaves VBK=1 intact.
+        assert d.pb.memory[d.r.sym.wram("g_is_cgb")] == 1, "expected CGB boot"
+        d.pb.memory[0xFF4F] = 1
+        d.pb.memory[0x9BFF] = 0x5A
+        d.pb.memory[0xFF4F] = 0
         d.press("down", settle=12)
         d.press("down", settle=12)  # -> REST
         assert d.wait_for(lambda: d.text_has("> REST"), ticks=200), d.rows()
-        # Check LCD stays on during cursor moves
-        assert (d.pb.memory[0xFF40] & 0x80) != 0, "LCD off after cursor move"
+        d.pb.memory[0xFF4F] = 1
+        sentinel = d.pb.memory[0x9BFF]
+        d.pb.memory[0xFF4F] = 0
+        assert sentinel == 0x5A, \
+            "VBK=1 sentinel wiped (0x%02X): ui_lcd_off() ran on cursor move!" % sentinel
         d.press("a", settle=30)
         assert d.wait_for(lambda: d.text_has("YOU REST."), ticks=300), d.rows()
         assert d.prov() == 0, d.prov()

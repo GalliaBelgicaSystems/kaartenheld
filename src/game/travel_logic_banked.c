@@ -8,7 +8,7 @@
 /* ── Travel day-burn body, bank-11 ───────────────────────────────
  * The fixed bank sits hard against 0x8000 (AGENTS.md §52.18), so the
  * pure day-burn arithmetic lives here behind the thin fixed-bank
- * wrapper travel_burn_days(): the wrapper stages the day count and
+ * wrapper travel_burn(): the wrapper stages the day count and
  * calls in.  Follows the actor_load_banked.c precedent (same-bank
  * table reads, no banked_copy, no fixed-bank calls).
  *

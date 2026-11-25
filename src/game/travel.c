@@ -162,7 +162,7 @@ static void travel_confirm_method(Game *g)
     if (gold < m->cost_gold) {
         g_travel_msg = TRAVEL_MSG_NOGOLD;
         audio_play_sfx(SFX_BACK);
-        game_render_reset(g);
+        g->render_cache.valid = false;
         return;
     }
     if (m->cost_gold > 0) {
@@ -183,7 +183,7 @@ static void travel_confirm_method(Game *g)
      * journey; nonzero seeds can never hit the xorshift fixed point). */
     g_travel_rng = rng_next();
     if (!g_travel_rng) g_travel_rng = 0xACE1;
-    game_render_reset(g);
+    g->render_cache.valid = false;
 }
 
 /* Open the route's supply merchant (event-executor hook, content.h). */
@@ -227,7 +227,7 @@ static void travel_buy_supply(Game *g)
     }
     game_variable_add(&g->state, VARIABLE_ID_PROVISIONS, 1);
     audio_play_sfx(SFX_CASH);
-    game_render_reset(g);
+    g->render_cache.valid = false;
 }
 
 static void travel_update_supply(Game *g)
@@ -298,7 +298,6 @@ static void travel_game_over(Game *g)
     g->game_over_choice = 0;
     audio_play_music(MUSIC_NONE);
     screen_change(g, SCREEN_GAME_OVER);
-    game_render_reset(g);
 }
 
 /* Launch the staged ambush as a solo battle.  The name was copied to
@@ -402,6 +401,10 @@ static void travel_resolve_help(Game *g)
             return;
         }
     }
+    if (gold < 0) {
+        v = currency_get(&g->state, CURRENCY_ID_GOLD);
+        if (v < (int16_t)(0 - gold)) gold = (int16_t)(0 - v);
+    }
     currency_add(&g->state, CURRENCY_ID_GOLD, gold);
     if (prov < 0) {
         v = (int16_t)(game_variable_get(&g->state, VARIABLE_ID_PROVISIONS) + (int16_t)prov);
@@ -474,7 +477,7 @@ static void travel_show_msg(Game *g, uint8_t msg, uint8_t sfx)
 {
     g_travel_msg = msg;
     audio_play_sfx(sfx);
-    game_render_reset(g);
+    g->render_cache.valid = false;
 }
 
 /* Cycle the menu cursor 0..max with wrap. */
@@ -494,7 +497,7 @@ static void travel_cycle_choice(Game *g, uint8_t max, uint8_t down)
         }
     }
     audio_play_sfx(SFX_CURSOR);
-    game_render_reset(g);
+    g->render_cache.valid = false;
 }
 
 void travel_camp_banked(void);
@@ -520,7 +523,7 @@ static void travel_do_camp(Game *g, uint8_t action)
         travel_arrive(g);
         return;
     }
-    game_render_reset(g);
+    g->render_cache.valid = false;
 }
 
 /* Bake the active weather's interaction deltas into the staged event
@@ -573,7 +576,7 @@ static void travel_stage_pick(Game *g)
     g_travel_choice = 0;
     g_travel_seen = 1;
     audio_play_sfx(SFX_ALERT);
-    game_render_reset(g);
+    g->render_cache.valid = false;
 }
 
 /* Advance one step: roll weather + burn step days, arrive on zero,
@@ -627,7 +630,7 @@ static void travel_advance(Game *g)
     if ((uint8_t)roll >= m->frequency) {
         g_travel_choice = 0;
         audio_play_sfx(SFX_CONFIRM);
-        game_render_reset(g);
+        g->render_cache.valid = false;
         return;
     }
     travel_stage_pick(g);
@@ -664,7 +667,6 @@ static void travel_enter_ruins(Game *g)
     scene_load(g, SCENE_ACT2_RUINS, 2, 2);
     audio_play_music(MUSIC_DUNGEON);
     screen_change(g, SCREEN_OVERWORLD);
-    game_render_reset(g);
 }
 
 /* Leave the ruins back to the journey.  The trip itself costs no
@@ -696,7 +698,6 @@ void travel_resume_from_ruins(Game *g)
     audio_play_sfx(SFX_CONFIRM);
     audio_play_music(MUSIC_OVERWORLD);
     screen_change(g, SCREEN_JOURNEY);
-    game_render_reset(g);
 }
 
 bool game_travel_in_ruins(void)

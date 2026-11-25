@@ -191,7 +191,7 @@ def load_events(battle_ids):
                 if not isinstance(opt_doc, dict):
                     fail("%s: %s_effects must be an object" % (eid, opt))
                 check_text(opt + "_text", opt_doc.get("text"), eid)
-                risk = opt_doc.get("risk", 50)
+                risk = opt_doc.get("risk")
                 if risk != 50:
                     fail("%s: %s_effects.risk must be 50 (every scenario "
                          "shares the same success/failure odds)" % (eid, opt))
@@ -629,7 +629,7 @@ def emit(routes, events, scenes, battle_ids):
                 idx = event_index[ref] if ref is not None else 255
                 lines.append("        %d, /* %s battle event or 255 */"
                              % (idx, opt))
-            vals = [doc[opt + "_effects"].get("risk", 50) * 256 // 100
+            vals = [doc[opt + "_effects"]["risk"] * 256 // 100
                     for opt in ("opt1", "opt2")]
             lines.append("        %d, %d, /* opt risk (50/50 pre-scaled) */"
                          % (vals[0], vals[1]))
@@ -768,7 +768,15 @@ void travel_starve_battle_banked(void)
             mask = (uint8_t)((mask << 1) | 1);
         }
         pick = (uint8_t)(pick & mask);
-        if (pick >= count) pick = (uint8_t)(pick - count);
+        if (pick >= count && !g_travel_rng) {
+            g_travel_rng = 0xACE1;
+        }
+        while (pick >= count) {
+            g_travel_rng ^= (uint16_t)(g_travel_rng << 7);
+            g_travel_rng ^= (uint16_t)(g_travel_rng >> 9);
+            g_travel_rng ^= (uint16_t)(g_travel_rng << 8);
+            pick = (uint8_t)((uint8_t)g_travel_rng & mask);
+        }
     } else {
         pick = 0;
     }
