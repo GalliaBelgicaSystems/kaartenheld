@@ -21,7 +21,7 @@ const TravelRoute g_travel_routes[] = {
         8, /* hunt_prov_max */
         20, /* hunt_jackpot_min */
         30, /* hunt_jackpot_max */
-        30, /* hunt_jackpot_chance */
+        20, /* hunt_jackpot_chance */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
@@ -37,6 +37,7 @@ const TravelRoute g_travel_routes[] = {
         { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
         { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
         { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
+        { 10, -10, -20, -10, -10, -5, -15, -5 }, /* weather_hunt (jackpot-chance delta) */
         2, /* method_count */
         {
             { /* carriage */
@@ -52,7 +53,7 @@ const TravelRoute g_travel_routes[] = {
                 "ON FOOT", /* name */
                 0, /* cost_gold */
                 10, /* steps (0 = instant) */
-                35, /* frequency */
+                64, /* frequency */
                 36, /* pool_count */
                 { 0, 2, 3, 32, 4, 6, 12, 14, 15, 16, 17, 18, 20, 21, 23, 25, 26, 28, 29, 30, 31, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 50, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
                 { 3, 6, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
@@ -86,6 +87,7 @@ const TravelRoute g_travel_routes[] = {
         { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
         { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
         { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
+        { 10, -10, -20, -10, -10, -5, -15, -5 }, /* weather_hunt (jackpot-chance delta) */
         2, /* method_count */
         {
             { /* carriage */
@@ -101,7 +103,7 @@ const TravelRoute g_travel_routes[] = {
                 "ON FOOT", /* name */
                 0, /* cost_gold */
                 10, /* steps (0 = instant) */
-                35, /* frequency */
+                64, /* frequency */
                 36, /* pool_count */
                 { 0, 2, 3, 32, 4, 6, 12, 14, 15, 16, 17, 18, 20, 21, 23, 25, 26, 28, 29, 30, 31, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 50, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
                 { 3, 6, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
@@ -135,6 +137,7 @@ const TravelRoute g_travel_routes[] = {
         { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
         { 2, 2, 1, 2, 2, 1, 1, 1 }, /* weather_days_max */
         { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
+        { 10, -10, -20, -10, -10, -5, -15, -5 }, /* weather_hunt (jackpot-chance delta) */
         2, /* method_count */
         {
             { /* carriage */
@@ -150,7 +153,7 @@ const TravelRoute g_travel_routes[] = {
                 "ON FOOT", /* name */
                 0, /* cost_gold */
                 8, /* steps (0 = instant) */
-                35, /* frequency */
+                64, /* frequency */
                 37, /* pool_count */
                 { 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 19, 22, 23, 24, 25, 26, 27, 30, 33, 34, 35, 37, 38, 40, 41, 42, 43, 44, 45, 48, 49, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
                 { 3, 3, 5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
@@ -168,7 +171,7 @@ const TravelRoute g_travel_routes[] = {
         8, /* hunt_prov_max */
         20, /* hunt_jackpot_min */
         30, /* hunt_jackpot_max */
-        30, /* hunt_jackpot_chance */
+        20, /* hunt_jackpot_chance */
         5, /* starve_prov_hp */
         2, /* starve_prov_every */
         0, /* hunt_delay_min */
@@ -184,6 +187,7 @@ const TravelRoute g_travel_routes[] = {
         { 1, 1, 1, 1, 1, 1, 1, 1 }, /* weather_days_min */
         { 2, 2, 2, 3, 2, 1, 2, 1 }, /* weather_days_max */
         { 0, -1, 1, 1, 1, 1, 2, 0 }, /* weather_prov (extra/day) */
+        { 10, -10, -20, -10, -10, -5, -15, -5 }, /* weather_hunt (jackpot-chance delta) */
         2, /* method_count */
         {
             { /* carriage */
@@ -199,7 +203,7 @@ const TravelRoute g_travel_routes[] = {
                 "ON FOOT", /* name */
                 0, /* cost_gold */
                 16, /* steps (0 = instant) */
-                35, /* frequency */
+                64, /* frequency */
                 36, /* pool_count */
                 { 0, 2, 3, 32, 4, 6, 12, 14, 15, 16, 17, 18, 20, 21, 23, 25, 26, 28, 29, 30, 31, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 50, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
                 { 3, 6, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */

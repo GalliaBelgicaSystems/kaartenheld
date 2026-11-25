@@ -40,49 +40,57 @@
       "weight": 90,
       "days_min": 1,
       "days_max": 2,
-      "provisions": 0
+      "provisions": 0,
+      "hunt": 10
     },
     "rain": {
       "weight": 35,
       "days_min": 1,
       "days_max": 2,
-      "provisions": -1
+      "provisions": -1,
+      "hunt": -10
     },
     "storm": {
       "weight": 20,
       "days_min": 1,
       "days_max": 2,
-      "provisions": 1
+      "provisions": 1,
+      "hunt": -20
     },
     "heat": {
       "weight": 30,
       "days_min": 1,
       "days_max": 3,
-      "provisions": 1
+      "provisions": 1,
+      "hunt": -10
     },
     "cold": {
       "weight": 20,
       "days_min": 1,
       "days_max": 2,
-      "provisions": 1
+      "provisions": 1,
+      "hunt": -10
     },
     "wind": {
       "weight": 25,
       "days_min": 1,
       "days_max": 1,
-      "provisions": 1
+      "provisions": 1,
+      "hunt": -5
     },
     "snow": {
       "weight": 15,
       "days_min": 1,
       "days_max": 2,
-      "provisions": 2
+      "provisions": 2,
+      "hunt": -15
     },
     "fog": {
       "weight": 20,
       "days_min": 1,
       "days_max": 1,
-      "provisions": 0
+      "provisions": 0,
+      "hunt": -5
     }
   },
   "methods": [
@@ -99,7 +107,7 @@
       "name": "ON FOOT",
       "cost_gold": 0,
       "steps": 10,
-      "frequency": 35,
+      "frequency": 64,
       "pool": [
         {
           "event": "abandoned_camp",
