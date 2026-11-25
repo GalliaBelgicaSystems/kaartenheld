@@ -107,15 +107,11 @@
           "weight": 6
         },
         {
-          "event": "bandits",
-          "weight": 3
-        },
-        {
           "event": "battle_signs",
           "weight": 3
         },
         {
-          "event": "brigand_trio",
+          "event": "slime_trio",
           "weight": 4
         },
         {

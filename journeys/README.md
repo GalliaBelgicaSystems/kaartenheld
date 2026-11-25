@@ -123,17 +123,16 @@ show the weather-sharpened numbers.
 ### Combat & danger
 
 - `ambush_slimes`: Slimes burst from the roadside and must be fought off.
-- `bandits`: Pay off bandits with provisions and gold, or draw weapons and fight their trio.
+- `slime_trio`: Staged battle row only — a slime trio ambush with victory gold.
 - `passage_guard`: Fight the beast blocking the pass, or detour a long way around it.
 - `night_stalker`: Stand watch through a fearful night, or sleep and wake up bitten.
 - `occupied_camp`: Fight the monsters holding a campsite, or sneak quietly past them.
 - `wounded_monster`: Finish a hurt beast for its bounty, or give it a wide berth.
 - `battle_signs`: Search a recent battlefield for loot, or hurry on and save a step.
-- `powerful_enemy`: Fight a huge foe for a rich reward, or flee and lose time instead.
+- `powerful_enemy`: Fight a slime pack for a rich reward, or flee and lose time instead.
 - `skirmish_bats`: Staged battle row only — a bat ambush with victory gold.
 - `skirmish_spiders`: Staged battle row only — a spider ambush with victory gold.
 - `weak_beast`: Staged battle row only — a wounded beast that pays a small bounty.
-- `brigand_trio`: Staged battle row only — a brigand trio ambush with victory gold.
 
 ### Mysteries & worldbuilding
 
@@ -154,5 +153,5 @@ show the weather-sharpened numbers.
 - `share_food`: Share provisions with a hungry family for their gratitude, or refuse them.
 - `help_settlement`: Spend two days helping a village for provisions and gold, or pass by.
 - `distress_signal`: Answer a signal fire for a delayed reward, or ignore it and keep the pace.
-- `protect_caravan`: Guard a caravan against brigands, or decline the work.
+- `protect_caravan`: Guard a caravan against slimes, or decline the work.
 - `ruins_sight`: Spot old ruins off the road and choose to explore or ignore them.

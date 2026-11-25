@@ -1,15 +1,15 @@
 {
   "id": "powerful_enemy",
   "kind": "choice",
-  "text": "HUGE FOE LOOMS.",
+  "text": "SLIME PACK LOOMS.",
   "opt1": "FIGHT",
   "opt1_effects": {
     "text": "DRAW WEAPONS!",
     "risk": 50,
-    "battle": "brigand_trio",
+    "battle": "slime_trio",
     "fail": {
-      "text": "THEIR CHAMPION.",
-      "battle": "brigand_trio",
+      "text": "THEIR BIG ONE.",
+      "battle": "slime_trio",
       "hurt": 5
     }
   },

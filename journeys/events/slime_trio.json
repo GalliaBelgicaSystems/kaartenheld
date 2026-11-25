@@ -1,9 +1,9 @@
 {
-  "id": "brigand_trio",
+  "id": "slime_trio",
   "kind": "battle",
-  "text": "BRIGANDS ATTACK!",
+  "text": "SLIMES ATTACK!",
   "battle": "BATTLE_SLIME_TRIO",
-  "enemy_name": "BRIGANDS",
+  "enemy_name": "SLIMES",
   "enemy_hp": 14,
   "victory_gold": 14,
   "victory_days": 1,

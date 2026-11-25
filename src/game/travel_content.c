@@ -50,9 +50,9 @@ const TravelRoute g_travel_routes[] = {
                 0, /* cost_gold */
                 10, /* steps (0 = instant) */
                 35, /* frequency */
-                37, /* pool_count */
-                { 0, 2, 3, 4, 5, 6, 8, 14, 16, 17, 18, 19, 20, 22, 23, 25, 27, 28, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 51, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
-                { 3, 6, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+                36, /* pool_count */
+                { 0, 2, 3, 32, 4, 6, 12, 14, 15, 16, 17, 18, 20, 21, 23, 25, 26, 28, 29, 30, 31, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 50, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 3, 6, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
         },
     },
@@ -96,9 +96,9 @@ const TravelRoute g_travel_routes[] = {
                 0, /* cost_gold */
                 10, /* steps (0 = instant) */
                 35, /* frequency */
-                37, /* pool_count */
-                { 0, 2, 3, 4, 5, 6, 8, 14, 16, 17, 18, 19, 20, 22, 23, 25, 27, 28, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 51, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
-                { 3, 6, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+                36, /* pool_count */
+                { 0, 2, 3, 32, 4, 6, 12, 14, 15, 16, 17, 18, 20, 21, 23, 25, 26, 28, 29, 30, 31, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 50, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 3, 6, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
         },
     },
@@ -143,7 +143,7 @@ const TravelRoute g_travel_routes[] = {
                 8, /* steps (0 = instant) */
                 35, /* frequency */
                 37, /* pool_count */
-                { 0, 1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19, 21, 24, 25, 26, 27, 28, 29, 32, 34, 35, 36, 38, 39, 41, 42, 43, 44, 45, 46, 49, 50, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 19, 22, 23, 24, 25, 26, 27, 30, 33, 34, 35, 37, 38, 40, 41, 42, 43, 44, 45, 48, 49, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
                 { 3, 3, 5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
         },
@@ -188,9 +188,9 @@ const TravelRoute g_travel_routes[] = {
                 0, /* cost_gold */
                 16, /* steps (0 = instant) */
                 35, /* frequency */
-                37, /* pool_count */
-                { 0, 2, 3, 4, 5, 6, 8, 14, 16, 17, 18, 19, 20, 22, 23, 25, 27, 28, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 51, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
-                { 3, 6, 3, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
+                36, /* pool_count */
+                { 0, 2, 3, 32, 4, 6, 12, 14, 15, 16, 17, 18, 20, 21, 23, 25, 26, 28, 29, 30, 31, 33, 34, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 50, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_event */
+                { 3, 6, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6, 3, 3, 3, 4, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
         },
     },
@@ -270,30 +270,6 @@ const TravelEvent g_travel_events[] = {
         0, 0, /* opt save */
         0, 0, /* opt days */
     },
-    { /* bandits */
-        TRAVEL_EVENT_CHOICE,
-        0, /* battle */
-        "", /* enemy_name (unused) */
-        0, /* enemy_hp */
-        0, /* victory_gold (unused) */
-        0, /* victory_days (unused) */
-        0, /* late_enemy_hp (unused) */
-        "BANDITS BLOCK ROAD.", /* text */
-        "THEY LET YOU PASS.", /* opt1 result */
-        "DRAW WEAPONS!", /* opt2 result */
-        "PAY", /* opt1 label */
-        "FIGHT", /* opt2 label */
-        255, /* opt1 battle event or 255 */
-        5, /* opt2 battle event or 255 */
-        128, 128, /* opt risk (50/50 pre-scaled) */
-        -6, 0, /* opt gold */
-        -4, 0, /* opt provisions */
-        0, 0, /* opt heal */
-        0, 0, /* opt hurt */
-        0, 0, /* opt delay */
-        0, 0, /* opt save */
-        0, 0, /* opt days */
-    },
     { /* battle_signs */
         TRAVEL_EVENT_CHOICE,
         0, /* battle */
@@ -316,29 +292,6 @@ const TravelEvent g_travel_events[] = {
         0, 0, /* opt hurt */
         0, 0, /* opt delay */
         0, 1, /* opt save */
-        0, 0, /* opt days */
-    },
-    { /* brigand_trio */
-        TRAVEL_EVENT_BATTLE,
-        3, /* battle (BATTLE_SLIME_TRIO) */
-        "BRIGANDS", /* enemy_name */
-        14, /* enemy_hp */
-        14, /* victory_gold */
-        1, /* victory_days */
-        20, /* late_enemy_hp */
-        "BRIGANDS ATTACK!", /* text */
-        "", /* text2 (unused) */
-        "", /* text3 (unused) */
-        "", /* opt1 (unused) */
-        "", /* opt2 (unused) */
-        255, 255, /* opt battles (none) */
-        0, 0, /* opt risk (unused) */
-        0, 0, /* opt gold */
-        0, 0, /* opt prov */
-        0, 0, /* opt heal */
-        0, 0, /* opt hurt */
-        0, 0, /* opt delay */
-        0, 0, /* opt save */
         0, 0, /* opt days */
     },
     { /* convergence_talk */
@@ -618,7 +571,7 @@ const TravelEvent g_travel_events[] = {
         "SILENT STEPS.", /* opt2 result */
         "FIGHT", /* opt1 label */
         "SNEAK BY", /* opt2 label */
-        30, /* opt1 battle event or 255 */
+        28, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
@@ -690,7 +643,7 @@ const TravelEvent g_travel_events[] = {
         "LONG WAY ROUND.", /* opt2 result */
         "FIGHT", /* opt1 label */
         "DETOUR", /* opt2 label */
-        31, /* opt1 battle event or 255 */
+        29, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
@@ -733,12 +686,12 @@ const TravelEvent g_travel_events[] = {
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
         0, /* late_enemy_hp (unused) */
-        "HUGE FOE LOOMS.", /* text */
+        "SLIME PACK LOOMS.", /* text */
         "DRAW WEAPONS!", /* opt1 result */
         "LIVE TO WALK.", /* opt2 result */
         "FIGHT", /* opt1 label */
         "FLEE", /* opt2 label */
-        5, /* opt1 battle event or 255 */
+        32, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
@@ -762,7 +715,7 @@ const TravelEvent g_travel_events[] = {
         "YOU WALK ON.", /* opt2 result */
         "GUARD", /* opt1 label */
         "DECLINE", /* opt2 label */
-        5, /* opt1 battle event or 255 */
+        32, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
@@ -1010,6 +963,29 @@ const TravelEvent g_travel_events[] = {
         0, 0, /* opt save */
         0, 0, /* opt days */
     },
+    { /* slime_trio */
+        TRAVEL_EVENT_BATTLE,
+        3, /* battle (BATTLE_SLIME_TRIO) */
+        "SLIMES", /* enemy_name */
+        14, /* enemy_hp */
+        14, /* victory_gold */
+        1, /* victory_days */
+        20, /* late_enemy_hp */
+        "SLIMES ATTACK!", /* text */
+        "", /* text2 (unused) */
+        "", /* text3 (unused) */
+        "", /* opt1 (unused) */
+        "", /* opt2 (unused) */
+        255, 255, /* opt battles (none) */
+        0, 0, /* opt risk (unused) */
+        0, 0, /* opt gold */
+        0, 0, /* opt prov */
+        0, 0, /* opt heal */
+        0, 0, /* opt hurt */
+        0, 0, /* opt delay */
+        0, 0, /* opt save */
+        0, 0, /* opt days */
+    },
     { /* spoiled_food */
         TRAVEL_EVENT_CHOICE,
         0, /* battle */
@@ -1167,7 +1143,7 @@ const TravelEvent g_travel_events[] = {
         "YOU WALK ON.", /* opt2 result */
         "CHECK", /* opt1 label */
         "IGNORE", /* opt2 label */
-        31, /* opt1 battle event or 255 */
+        29, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
@@ -1430,7 +1406,7 @@ const TravelEvent g_travel_events[] = {
         "WIDE BERTH.", /* opt2 result */
         "FINISH", /* opt1 label */
         "AVOID", /* opt2 label */
-        48, /* opt1 battle event or 255 */
+        47, /* opt1 battle event or 255 */
         255, /* opt2 battle event or 255 */
         128, 128, /* opt risk (50/50 pre-scaled) */
         0, 0, /* opt gold */
@@ -1467,7 +1443,7 @@ const TravelEvent g_travel_events[] = {
     },
 };
 
-const uint8_t g_travel_event_count = 53;
+const uint8_t g_travel_event_count = 52;
 
 /* Fail branches: same order as g_travel_events. */
 const TravelEventFail g_travel_event_fails[] = {
@@ -1523,30 +1499,6 @@ const TravelEventFail g_travel_event_fails[] = {
         { "", 255, 0, 0, 0, 0, 0, 0, 0 },
         { "", 255, 0, 0, 0, 0, 0, 0, 0 },
     },
-    { /* bandits */
-        { /* opt1 fail */
-            "OUTNUMBERED.", /* text */
-            255, /* fail battle or 255 */
-            -9, /* fail gold */
-            -6, /* fail provisions */
-            0, /* fail heal */
-            0, /* fail hurt */
-            0, /* fail delay */
-            0, /* fail save */
-            0, /* fail days */
-        },
-        { /* opt2 fail */
-            "SURROUNDED!", /* text */
-            5, /* fail battle or 255 */
-            0, /* fail gold */
-            0, /* fail provisions */
-            0, /* fail heal */
-            4, /* fail hurt */
-            0, /* fail delay */
-            0, /* fail save */
-            0, /* fail days */
-        },
-    },
     { /* battle_signs */
         { /* opt1 fail */
             "FALSE BOTTOM.", /* text */
@@ -1570,10 +1522,6 @@ const TravelEventFail g_travel_event_fails[] = {
             0, /* fail save */
             0, /* fail days */
         },
-    },
-    { /* brigand_trio */
-        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
-        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
     },
     { /* convergence_talk */
         { /* opt1 fail */
@@ -1842,7 +1790,7 @@ const TravelEventFail g_travel_event_fails[] = {
     { /* occupied_camp */
         { /* opt1 fail */
             "THEY WERE READY.", /* text */
-            30, /* fail battle or 255 */
+            28, /* fail battle or 255 */
             0, /* fail gold */
             0, /* fail provisions */
             0, /* fail heal */
@@ -1914,7 +1862,7 @@ const TravelEventFail g_travel_event_fails[] = {
     { /* passage_guard */
         { /* opt1 fail */
             "FROM BEHIND!", /* text */
-            31, /* fail battle or 255 */
+            29, /* fail battle or 255 */
             0, /* fail gold */
             0, /* fail provisions */
             0, /* fail heal */
@@ -1961,8 +1909,8 @@ const TravelEventFail g_travel_event_fails[] = {
     },
     { /* powerful_enemy */
         { /* opt1 fail */
-            "THEIR CHAMPION.", /* text */
-            5, /* fail battle or 255 */
+            "THEIR BIG ONE.", /* text */
+            32, /* fail battle or 255 */
             0, /* fail gold */
             0, /* fail provisions */
             0, /* fail heal */
@@ -1986,7 +1934,7 @@ const TravelEventFail g_travel_event_fails[] = {
     { /* protect_caravan */
         { /* opt1 fail */
             "AMBUSH ON ROAD.", /* text */
-            5, /* fail battle or 255 */
+            32, /* fail battle or 255 */
             0, /* fail gold */
             0, /* fail provisions */
             0, /* fail heal */
@@ -2187,6 +2135,10 @@ const TravelEventFail g_travel_event_fails[] = {
             0, /* fail days */
         },
     },
+    { /* slime_trio */
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
+        { "", 255, 0, 0, 0, 0, 0, 0, 0 },
+    },
     { /* spoiled_food */
         { /* opt1 fail */
             "SPOILED THE REST.", /* text */
@@ -2334,7 +2286,7 @@ const TravelEventFail g_travel_event_fails[] = {
     { /* strange_noises */
         { /* opt1 fail */
             "THEY HEARD YOU.", /* text */
-            31, /* fail battle or 255 */
+            29, /* fail battle or 255 */
             0, /* fail gold */
             0, /* fail provisions */
             0, /* fail heal */
@@ -2578,7 +2530,7 @@ const TravelEventFail g_travel_event_fails[] = {
     { /* wounded_monster */
         { /* opt1 fail */
             "IT LASHES OUT.", /* text */
-            48, /* fail battle or 255 */
+            47, /* fail battle or 255 */
             0, /* fail gold */
             0, /* fail provisions */
             0, /* fail heal */
@@ -2625,12 +2577,12 @@ const TravelEventFail g_travel_event_fails[] = {
     },
 };
 
-const uint8_t g_travel_event_fail_count = 53;
+const uint8_t g_travel_event_fail_count = 52;
 
 /* Weather interactions: sparse (event, option, weather) deltas. */
 const TravelWxMod g_travel_wxmods[] = {
     { /* dangerous_shortcut opt1 in fog */
-        8, /* event */
+        6, /* event */
         0, /* option (0 = opt1) */
         7, /* weather (fog) */
         0, /* hurt delta */
@@ -2640,7 +2592,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* provisions delta */
     },
     { /* dangerous_shortcut opt1 in rain */
-        8, /* event */
+        6, /* event */
         0, /* option (0 = opt1) */
         1, /* weather (rain) */
         2, /* hurt delta */
@@ -2650,7 +2602,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* provisions delta */
     },
     { /* landslide opt1 in rain */
-        14, /* event */
+        12, /* event */
         0, /* option (0 = opt1) */
         1, /* weather (rain) */
         2, /* hurt delta */
@@ -2660,7 +2612,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* provisions delta */
     },
     { /* landslide opt1 in storm */
-        14, /* event */
+        12, /* event */
         0, /* option (0 = opt1) */
         2, /* weather (storm) */
         3, /* hurt delta */
@@ -2670,7 +2622,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* provisions delta */
     },
     { /* river_crossing opt1 in rain */
-        25, /* event */
+        23, /* event */
         0, /* option (0 = opt1) */
         1, /* weather (rain) */
         2, /* hurt delta */
@@ -2680,7 +2632,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* provisions delta */
     },
     { /* river_crossing opt1 in storm */
-        25, /* event */
+        23, /* event */
         0, /* option (0 = opt1) */
         2, /* weather (storm) */
         4, /* hurt delta */
@@ -2690,7 +2642,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* provisions delta */
     },
     { /* storm_shelter opt2 in storm */
-        35, /* event */
+        34, /* event */
         1, /* option (0 = opt1) */
         2, /* weather (storm) */
         3, /* hurt delta */
@@ -2700,7 +2652,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* provisions delta */
     },
     { /* storm_shelter opt2 in rain */
-        35, /* event */
+        34, /* event */
         1, /* option (0 = opt1) */
         1, /* weather (rain) */
         1, /* hurt delta */
@@ -2710,7 +2662,7 @@ const TravelWxMod g_travel_wxmods[] = {
         0, /* provisions delta */
     },
     { /* wrong_sign opt1 in fog */
-        52, /* event */
+        51, /* event */
         0, /* option (0 = opt1) */
         7, /* weather (fog) */
         0, /* hurt delta */

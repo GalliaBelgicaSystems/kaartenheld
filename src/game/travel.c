@@ -779,13 +779,18 @@ void travel_update(Game *g)
         travel_update_event(g);
         return;
     }
-    /* Camp menu: one action per day. */
+    /* Camp menu: HUNT/REST/STUDY via A, B walks on (advance). */
     if (input_pressed(INPUT_UP) || input_pressed(INPUT_LEFT)) {
-        travel_cycle_choice(g, 3, 0);
+        travel_cycle_choice(g, 2, 0);
         return;
     }
     if (input_pressed(INPUT_DOWN) || input_pressed(INPUT_RIGHT)) {
-        travel_cycle_choice(g, 3, 1);
+        travel_cycle_choice(g, 2, 1);
+        return;
+    }
+    if (input_pressed(INPUT_B)) {
+        travel_advance(g);
+        g_travel_choice = 0;
         return;
     }
     if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
@@ -793,11 +798,8 @@ void travel_update(Game *g)
             travel_do_camp(g, 0);
         } else if (g_travel_choice == TRAVEL_CAMP_REST) {
             travel_do_camp(g, 1);
-        } else if (g_travel_choice == TRAVEL_CAMP_STUDY) {
-            travel_do_camp(g, 2);
         } else {
-            travel_advance(g);
-            g_travel_choice = 0;
+            travel_do_camp(g, 2);
         }
     }
 }

@@ -395,7 +395,8 @@ static void tp_daycost(const TravelEvent *e)
     tp_line_done(11);
 }
 
-/* One camp menu row: "> CONTINUE", "  HUNT", ... (IDLE options). */
+/* One camp menu row: "> HUNT", "  REST", ... (IDLE options;
+ * walking on is the B button, never a menu row). */
 static void tp_camp(uint8_t idx, uint8_t y, const char *label)
 {
     s_n = 0;
@@ -543,10 +544,10 @@ void travel_paint_banked(void)
     tp_supplies();
     tp_hp();
     if (view == TRAVEL_VIEW_IDLE) {
-        tp_camp(0, 9, "CONTINUE");
-        tp_camp(1, 10, "HUNT");
-        tp_camp(2, 11, "REST");
-        tp_camp(3, 12, "STUDY MAP");
+        tp_camp(0, 9, "HUNT");
+        tp_camp(1, 10, "REST");
+        tp_camp(2, 11, "STUDY MAP");
+        tp_text(0, 13, "[B] CONTINUE", 20);
     } else if (view == TRAVEL_VIEW_SUPPLY) {
         tp_supply(0, 9, "PROV");
         tp_text(0, 13, (g_travel_choice == 1) ? "> LEAVE" : "  LEAVE", 20);

@@ -3,9 +3,11 @@
 
 /* Travel-demo journey slice (travel-demo ROM only, TRAVEL_SRCS).
  * Data-driven random road events over a fixed-step route: each
- * [Continue] press advances one step and may roll a pool event
+ * [B] press advances one step and may roll a pool event
  * (ambush battle or help/ignore choice).  Helping pays gold but
- * adds a detour step; ignoring keeps the schedule.
+ * adds a detour step; ignoring keeps the schedule.  The camp menu
+ * (HUNT/REST/STUDY) holds the once-a-day camp actions; walking on
+ * is never a menu pick.
  *
  * Engine vs game layer: everything here is game content + game-owned
  * runtime.  The engine only reaches it through the hooks declared in
@@ -65,11 +67,11 @@
 #define TRAVEL_MSG_STUDIED 7
 #define TRAVEL_MSG_LOST 8
 
-/* Camp menu options (IDLE view, g_travel_choice order). */
-#define TRAVEL_CAMP_CONTINUE 0
-#define TRAVEL_CAMP_HUNT 1
-#define TRAVEL_CAMP_REST 2
-#define TRAVEL_CAMP_STUDY 3
+/* Camp menu options (IDLE view, g_travel_choice order).  Walking on
+ * is the B button, never a menu pick. */
+#define TRAVEL_CAMP_HUNT 0
+#define TRAVEL_CAMP_REST 1
+#define TRAVEL_CAMP_STUDY 2
 
 /* One way to travel a route: paid instant (steps 0, empty pool) or a
  * slow foot slog with its own event pool.  Fixed-size rows (bank 9,

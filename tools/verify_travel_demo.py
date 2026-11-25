@@ -15,9 +15,9 @@ inside `nix develop` for PyBoy)
            + clear weather forced; rebuild ROM first)
   events:  route pools forced to single events + clear weather
            (rebuild ROM first):
-           SHARE path on the act-1 road, FIGHT path on act 2.
-  camp:    daily camp menu (shipped tuning): HUNT finds 2-8 prov
-           with a 0-1 step detour, REST heals 5 for
+           SHARE path on the act-1 road, slime-pack FIGHT on act 2.
+  camp:    daily camp menu (shipped tuning): B walks on, HUNT
+           finds 2-8 prov with a 0-1 step detour, REST heals 5 for
            +1 step, STUDY costs 6 prov and saves 0-2
            steps (or wanders lost +0-2), 2 dry days cost 5 HP.
   acts:    per-road per-act tables (shipped tuning): chapter 1
@@ -315,10 +315,11 @@ def boot_to_journey(d):
 def select_foot(d):
     # default choice is the free method (ON FOOT): confirm straight in
     d.press("a", settle=20)
-    assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300), d.rows()
-    assert d.text_has("HUNT"), d.rows()
+    assert d.wait_for(lambda: d.text_has("> HUNT"), ticks=300), d.rows()
     assert d.text_has("REST"), d.rows()
     assert d.text_has("MAP"), d.rows()
+    assert d.text_has("[B] CONTINUE"), d.rows()
+    assert not d.text_has("> CONTINUE"), d.rows()
     print("foot selected OK")
 
 
@@ -331,7 +332,7 @@ def test_ambush():
         wins = 0
         # first event: keep stepping until the ambush stages
         for _ in range(6):
-            d.press("a", settle=30)
+            d.press("b", settle=30)
             if d.wait_for(lambda: d.text_has("AMBUSH!"), ticks=120):
                 break
         assert d.text_has("AMBUSH!"), d.rows()
@@ -359,7 +360,10 @@ def test_ambush():
                 d.wait_for(lambda: d.screen() == SCREEN_JOURNEY, ticks=600)
                 d.press("a", settle=20)  # dismiss loot msg
             elif d.screen() == SCREEN_JOURNEY:
-                d.press("a", settle=20)
+                if d.text_has("[B] CONTINUE"):
+                    d.press("b", settle=20)  # IDLE: walk on
+                else:
+                    d.press("a", settle=30)  # AMBUSH! staged: fight
             else:
                 d.tick(30)
         st = d.scene()
@@ -378,7 +382,7 @@ def test_help(help_it):
         select_foot(d)
         gold0 = d.gold()
         for _ in range(6):
-            d.press("a", settle=30)
+            d.press("b", settle=30)
             if d.wait_for(lambda: d.text_has("TRAVELER NEEDS"), ticks=120):
                 break
         assert d.wait_for(lambda: d.text_has("TRAVELER NEEDS"),
@@ -421,7 +425,7 @@ def test_help(help_it):
                     d.wait_for(lambda: d.text_has("YOU WALK ON"), ticks=300)
                     d.press("a", settle=20)
                 else:
-                    d.press("a", settle=20)
+                    d.press("b", settle=20)
             else:
                 d.tick(30)
         st = d.scene()
@@ -440,7 +444,7 @@ def _force_starve_ambush(d):
     d.pb.memory[addr] = raw[0]
     d.pb.memory[addr + 1] = raw[1]
     d.tick(2)
-    d.press("a", settle=20)
+    d.press("b", settle=20)
     assert d.wait_for(lambda: d.text_has("[A] FIGHT"), ticks=300), d.rows()
 
 
@@ -500,7 +504,7 @@ def test_flee():
         d.press("a", settle=20)
         assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
                           ticks=600), "no journey resume after flee"
-        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300), d.rows()
+        assert d.wait_for(lambda: d.text_has("> HUNT"), ticks=300), d.rows()
         assert d.pb.memory[d.r.sym.wram("g_audio_current_track")] == 1, \
             "expected MUSIC_OVERWORLD restored after flee"
         print("flee OK: journey resumes, music restored")
@@ -518,25 +522,38 @@ def test_days():
     advances ~5 times, so arrival cannot trigger.)"""
     d = D()
     try:
-        # Chapter 2 walks the act-2 road (the forced 99-step one);
-        # a fresh boot starts chapter 1 (8-step act-1 road).
+        # Chapter 2 walks the act-2 road (the forced 99-step one).
+        # Poke AFTER boot: NEW GAME resets the chapter to 1, so a
+        # pre-boot poke is wiped (same pattern as test_acts).
+        boot_to_overworld(d)
         import struct
         addr = d.r.state + OFF_VARIABLES + 2 * (1 - 1)
         raw = struct.pack("<h", 2)
         d.pb.memory[addr] = raw[0]
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
-        boot_to_journey(d)
+        assert d.r.variable(1) == 2, d.r.variable(1)
+        st = d.scene()
+        d.press("down")
+        st = d.scene()
+        assert (st["player_x"], st["player_y"]) == (5, 8), st
+        d.press("a", settle=30)
+        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
+                          ticks=300), \
+            "no JOURNEY after signpost (screen=%d)" % d.screen()
+        assert d.wait_for(lambda: d.text_has("TRAVEL"), ticks=300), d.rows()
+        assert d.text_has("FIELD ROAD"), d.rows()
+        print("boot->journey OK (chapter 2)")
         select_foot(d)
         assert d.total_steps() >= 10, d.total_steps()
         assert d.day() == 180, d.day()
         assert d.text_has("DAYS 180"), d.rows()
-        d.press("a", settle=20)  # advance: step + day (always burns 1)
+        d.press("b", settle=20)  # advance: step + day (always burns 1)
         assert d.day() == 179, d.day()
         for _ in range(6):  # first advance may roll quiet (1/256 at 255)
             if d.text_has("AMBUSH!"):
                 break
-            d.press("a", settle=20)
+            d.press("b", settle=20)
         assert d.text_has("AMBUSH!"), d.rows()
         day0 = d.day()
         d.press("a", settle=30)  # fight
@@ -550,7 +567,7 @@ def test_days():
         d.press("a", settle=20)  # dismiss
         d.poke_day(2)
         assert d.day() == 2
-        d.press("a", settle=20)  # advance: day 2 -> 1, ambush staged
+        d.press("b", settle=20)  # advance: day 2 -> 1, ambush staged
         assert d.day() == 1, d.day()
         d.press("a", settle=30)  # fight
         assert d.wait_for(lambda: d.screen() == SCREEN_BATTLE, ticks=600)
@@ -561,7 +578,7 @@ def test_days():
         assert d.text_has("LATE!"), d.rows()
         print("zero crossing OK: LORD_POWER=1, LATE! shown")
         d.press("a", settle=20)  # dismiss
-        d.press("a", settle=20)  # advance: day stays 0, ambush staged
+        d.press("b", settle=20)  # advance: day stays 0, ambush staged
         assert d.day() == 0, d.day()
         d.press("a", settle=30)  # fight the buffed slime
         assert d.wait_for(lambda: d.screen() == SCREEN_BATTLE, ticks=600)
@@ -675,7 +692,7 @@ def test_starve():
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
         assert d.prov() == 0, d.prov()
-        d.press("a", settle=20)  # advance: quiet roll is 0, hunger forces battle
+        d.press("b", settle=20)  # advance: quiet roll is 0, hunger forces battle
         assert d.wait_for(lambda: d.text_has("[A] FIGHT"), ticks=300), d.rows()
         print("starve OK: 100% ambush with empty belly")
     finally:
@@ -771,7 +788,10 @@ def _journey_until_ruins(d, ignore_first):
             d.wait_for(lambda: d.text_has("YOU SHARE"), ticks=300)
             d.press("a", settle=20)
         else:
-            d.press("a", settle=20)
+            if d.text_has("[B] CONTINUE"):
+                d.press("b", settle=20)  # IDLE: walk on
+            else:
+                d.press("a", settle=20)  # ack/confirm, as before
     return "timeout"
 
 
@@ -798,7 +818,10 @@ def _finish_trip(d):
                 d.wait_for(lambda: d.text_has("YOU WALK ON."), ticks=300)
                 d.press("a", settle=20)
             else:
-                d.press("a", settle=20)
+                if d.text_has("[B] CONTINUE"):
+                    d.press("b", settle=20)  # IDLE: walk on
+                else:
+                    d.press("a", settle=20)  # ack/confirm, as before
         else:
             d.tick(30)
     st = d.scene()
@@ -832,7 +855,10 @@ def _walk_until_scene(d, scene_id, label):
                            ticks=300)
                 d.press("a", settle=20)
             else:
-                d.press("a", settle=20)
+                if d.text_has("[B] CONTINUE"):
+                    d.press("b", settle=20)  # IDLE: walk on
+                else:
+                    d.press("a", settle=20)  # ack/confirm, as before
         else:
             d.tick(30)
     st = d.scene()
@@ -842,11 +868,11 @@ def _walk_until_scene(d, scene_id, label):
 
 
 def _idle_cursor(d):
-    """Camp-menu cursor 0/1/2 (CONTINUE/HUNT/REST), or None when the
+    """Camp-menu cursor 0/1/2 (HUNT/REST/STUDY), or None when the
     journey screen shows a message, event or battle prompt instead."""
     if d.text_has("[A]"):
         return None
-    for i, m in enumerate(("> CONTINUE", "> HUNT", "> REST")):
+    for i, m in enumerate(("> HUNT", "> REST", "> STUDY")):
         if d.text_has(m):
             return i
     return None
@@ -902,20 +928,19 @@ def _walk_leg_econ(d, scene_id, label):
             elif _idle_cursor(d) is not None:
                 hp = d.r.hero()["hp"]
                 if d.prov() <= 8:
-                    assert _camp_goto(d, 1), d.rows()
+                    assert _camp_goto(d, 0), d.rows()
                     d.press("a", settle=30)
                     assert d.wait_for(lambda: d.text_has("YOU FORAGE."),
                                       ticks=300), d.rows()
                     d.press("a", settle=20)
                 elif hp <= 7:
-                    assert _camp_goto(d, 2), d.rows()
+                    assert _camp_goto(d, 1), d.rows()
                     d.press("a", settle=30)
                     assert d.wait_for(lambda: d.text_has("YOU REST."),
                                       ticks=300), d.rows()
                     d.press("a", settle=20)
                 else:
-                    assert _camp_goto(d, 0), d.rows()
-                    d.press("a", settle=20)
+                    d.press("b", settle=20)  # walk on (B, not a menu pick)
             else:
                 # Choice prompt: confirm opt1 like the suite's walker.
                 d.press("a", settle=20)
@@ -946,7 +971,10 @@ def test_risk():
                 d.tick(30)
                 continue
             if not d.text_has("MERCHANT NEEDS"):
-                d.press("a", settle=20)
+                if d.text_has("[B] CONTINUE"):
+                    d.press("b", settle=20)  # IDLE: walk on
+                else:
+                    d.press("a", settle=20)  # ack a result line, as before
                 continue
             gold0 = d.gold()
             food0 = d.prov()
@@ -975,9 +1003,9 @@ def test_risk():
 
 
 def test_ruins():
-    """Roadside ruins (shipped tuning, reboot until the prompt stages):
-    EXPLORE -> 3-room map, relic chest +1 AP, LEAVE RUINS? YES resumes
-    the journey costing one extra day, trip still arrives."""
+    """Roadside ruins (route pool forced to [ruins_sight] @100%, rebuild
+    ROM first): EXPLORE -> 3-room map, relic chest +1 AP, LEAVE RUINS?
+    YES resumes the journey costing one extra day, trip still arrives."""
     d = None
     try:
         for _ in range(5):
@@ -1027,7 +1055,8 @@ def test_ruins():
 
 
 def test_ruins_ignore():
-    """IGNORE on the ruins prompt: no detour, no day burn, schedule kept."""
+    """IGNORE on the ruins prompt (pool forced to [ruins_sight] like
+    test_ruins): no detour, no day burn, schedule kept."""
     d = None
     try:
         for _ in range(5):
@@ -1064,7 +1093,7 @@ def test_camp():
         f0 = d.prov()
         day0 = d.day()
         tot0 = d.total_steps()
-        d.press("down", settle=12)  # CONTINUE -> HUNT
+        # HUNT is the default cursor: no navigation needed.
         assert d.wait_for(lambda: d.text_has("> HUNT"), ticks=200), d.rows()
         d.press("a", settle=30)
         assert d.wait_for(lambda: d.text_has("YOU FORAGE."), ticks=300), \
@@ -1088,16 +1117,16 @@ def test_camp():
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
         assert d.prov() == 0, d.prov()
-        for _ in range(3):
-            d.press("down", settle=12)  # CONTINUE -> HUNT -> REST -> MAP
+        for _ in range(2):
+            d.press("down", settle=12)  # HUNT -> REST -> STUDY MAP
         assert d.wait_for(lambda: d.text_has("> STUDY MAP"), ticks=200), d.rows()
         d.press("a", settle=30)  # study 1: dry day 1, no damage
         assert d.wait_for(lambda: d.text_has("YOU STUDY MAP.")
                           or d.text_has("YOU GET LOST."), ticks=300)
         assert d.r.hero()["hp"] == 15, d.r.hero()
         d.press("a", settle=20)
-        for _ in range(3):
-            d.press("down", settle=12)
+        for _ in range(2):
+            d.press("down", settle=12)  # HUNT -> REST -> STUDY MAP
         d.press("a", settle=30)  # study 2: dry day 2, -5 HP
         assert d.wait_for(lambda: d.text_has("YOU STUDY MAP.")
                           or d.text_has("YOU GET LOST."), ticks=300)
@@ -1107,8 +1136,7 @@ def test_camp():
         # REST: +5 HP (capped), +1 step, -1 day.
         tot0 = d.total_steps()
         day0 = d.day()
-        d.press("down", settle=12)
-        d.press("down", settle=12)  # CONTINUE -> HUNT -> REST
+        d.press("down", settle=12)  # HUNT -> REST
         assert d.wait_for(lambda: d.text_has("> REST"), ticks=200), d.rows()
         d.press("a", settle=30)
         assert d.wait_for(lambda: d.text_has("YOU REST."), ticks=300), \
@@ -1124,8 +1152,7 @@ def test_camp():
         day0 = d.day()
         f0 = d.prov()
         d.press("down", settle=12)
-        d.press("down", settle=12)
-        d.press("down", settle=12)  # -> STUDY MAP
+        d.press("down", settle=12)  # HUNT -> REST -> STUDY MAP
         assert d.wait_for(lambda: d.text_has("> STUDY MAP"), ticks=200), d.rows()
         d.press("a", settle=30)
         assert d.wait_for(lambda: d.text_has("YOU STUDY MAP.")
@@ -1155,14 +1182,14 @@ def test_camp():
         d.pb.memory[addr + 1] = raw[1]
         d.tick(2)
         assert d.prov() == 0, d.prov()
-        for _ in range(3):
-            d.press("down", settle=12)  # -> STUDY MAP
+        for _ in range(2):
+            d.press("down", settle=12)  # HUNT -> REST -> STUDY MAP
         d.press("a", settle=30)  # dry day 1: 4 HP left, no damage
         assert d.wait_for(lambda: d.text_has("YOU STUDY MAP.")
                           or d.text_has("YOU GET LOST."), ticks=300)
         assert d.r.hero()["hp"] == 4, d.r.hero()
         d.press("a", settle=20)
-        for _ in range(3):
+        for _ in range(2):
             d.press("down", settle=12)
         d.press("a", settle=30)  # dry day 2: -5 HP -> 0, game over
         assert d.wait_for(lambda: d.screen() == 3, ticks=600), \
@@ -1181,7 +1208,7 @@ def test_events():
     single events and weather forced clear, rebuild ROM first): on
     the act-1 road the
     stranded merchant's SHARE path applies prov/gold effects with a
-    delta line; on the act-2 road (chapter 2) the bandits' FIGHT
+    delta line; on the act-2 road (chapter 2) the slime pack's FIGHT
     path dispatches the staged battle event and pays victory gold."""
     d = D()
     try:
@@ -1192,7 +1219,7 @@ def test_events():
         gold0 = d.gold()
         day0 = d.day()
         for _ in range(6):
-            d.press("a", settle=30)
+            d.press("b", settle=30)
             if d.text_has("MERCHANT NEEDS"):
                 break
         assert d.text_has("MERCHANT NEEDS"), d.rows()
@@ -1229,14 +1256,12 @@ def test_events():
         gold0 = d.gold()
         day0 = d.day()
         for _ in range(6):
-            d.press("a", settle=30)
-            if d.text_has("BANDITS BLOCK"):
+            d.press("b", settle=30)
+            if d.text_has("SLIME PACK LOOMS"):
                 break
-        assert d.text_has("BANDITS BLOCK"), d.rows()
-        d.press("down", settle=12)  # toggle to FIGHT
-        assert d.wait_for(lambda: d.text_has("PAY>FIGHT"), ticks=200), \
-            d.rows()
-        d.press("a", settle=30)  # FIGHT
+        assert d.text_has("SLIME PACK LOOMS"), d.rows()
+        assert d.text_has("> FIGHT FLEE"), d.rows()
+        d.press("a", settle=30)  # FIGHT (opt1 default, no toggle)
         assert d.wait_for(lambda: d.screen() == SCREEN_BATTLE,
                           ticks=600), "no battle (screen=%d)" % d.screen()
         assert win_fight(d), "brigands not won"
@@ -1281,7 +1306,7 @@ def test_acts():
                           ticks=300), d.screen()
         assert d.wait_for(lambda: d.text_has("DESOLATE ROAD"), ticks=300)
         d.press("a", settle=20)  # foot
-        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
+        assert d.wait_for(lambda: d.text_has("> HUNT"), ticks=300)
         assert d.total_steps() == 16, d.total_steps()
         print("outward road OK: 16 steps")
         # Provision for the loop (the demo boots light and the
@@ -1307,7 +1332,7 @@ def test_acts():
                           ticks=300), d.screen()
         assert d.wait_for(lambda: d.text_has("FIELD ROAD"), ticks=300)
         d.press("a", settle=20)  # foot
-        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
+        assert d.wait_for(lambda: d.text_has("> HUNT"), ticks=300)
         assert d.total_steps() == 10, d.total_steps()
         print("loop road OK: 10 steps")
         st = _walk_until_scene(d, SCENE_ACT2_FIELD, "desolate->field")
@@ -1377,7 +1402,12 @@ def test_full():
                                       ticks=300), d.rows()
                     d.press("a", settle=20)
                 else:
-                    d.press("a", settle=20)
+                    if d.text_has("[B] CONTINUE"):
+                        d.press("b", settle=20)  # IDLE camp menu: walk on
+                    else:
+                        # Any other prompt (message ack or an unlisted
+                        # choice): A dismisses/confirms opt1, as before.
+                        d.press("a", settle=20)
             else:
                 d.tick(30)
         st = d.scene()
@@ -1403,7 +1433,7 @@ def test_weather():
         assert d.weather() == 0xFF, d.weather()
         f0 = d.prov()
         day0 = d.day()
-        d.press("a", settle=20)  # CONTINUE: first step, weather rolls
+        d.press("b", settle=20)  # B walks on: first step, weather rolls
         w = d.weather()
         assert 0 <= w <= 7, w
         assert WX[w] in d.rows()[3], (d.rows()[3], WX[w])
@@ -1447,8 +1477,7 @@ def test_fixes():
         d.pb.memory[0xFF4F] = 1
         d.pb.memory[0x9BFF] = 0x5A
         d.pb.memory[0xFF4F] = 0
-        d.press("down", settle=12)
-        d.press("down", settle=12)  # -> REST
+        d.press("down", settle=12)  # HUNT -> REST
         assert d.wait_for(lambda: d.text_has("> REST"), ticks=200), d.rows()
         d.pb.memory[0xFF4F] = 1
         sentinel = d.pb.memory[0x9BFF]
@@ -1476,12 +1505,12 @@ def test_fixes():
         d.pb.memory[addr_prov + 1] = raw[1]
         d.tick(2)
         day0 = d.day()
-        d.press("a", settle=20)  # CONTINUE: rolls SNOW on Day 1 -> must burn 2 days!
+        d.press("b", settle=20)  # B walks on: rolls SNOW on Day 1 -> must burn 2 days!
         assert d.weather() == 6, d.weather()
         assert d.day() == day0 - 2, ("Day-1 SNOW should burn 2 days", day0, d.day())
         assert d.pb.memory[d.r.sym.wram("g_travel_weather_left")] == 0
         # Dismiss any rolled event so we are back at IDLE
-        if not d.text_has("> CONTINUE"):
+        if not d.text_has("> HUNT"):
             if d.text_has("YOU SPOT") or d.text_has("EXPLORE") or d.text_has("> "):
                 d.press("down", settle=12)
                 d.press("a", settle=20)
@@ -1496,7 +1525,7 @@ def test_fixes():
         for i in range(8):
             d.pb.memory[s_route + 40 + i] = 100 if i == 0 else 0
         day1 = d.day()
-        d.press("a", settle=20)
+        d.press("b", settle=20)
         assert d.weather() == 0, d.weather()
         assert d.day() == day1 - 1, ("Expired SNOW should burn 1 day", day1, d.day())
         print("fixes OK: exact rations, LCD-on cursor, Day-1 snow (-2), expired snow (-1)")
@@ -1533,7 +1562,7 @@ def test_loop_economy():
                 break
         assert d.wait_for(lambda: d.text_has("DESOLATE ROAD"), ticks=300)
         d.press("a", settle=20)
-        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
+        assert d.wait_for(lambda: d.text_has("> HUNT"), ticks=300)
         st = _walk_leg_econ(d, SCENE_ACT2_DESOLATE, "town->desolate")
         assert (st["player_x"], st["player_y"]) == (5, 17), st
         print("loop-econ: reached desolate with %d prov %dG" % (d.prov(), d.gold()))
@@ -1552,7 +1581,7 @@ def test_loop_economy():
                           ticks=300), d.screen()
         assert d.wait_for(lambda: d.text_has("FIELD ROAD"), ticks=300)
         d.press("a", settle=20)
-        assert d.wait_for(lambda: d.text_has("> CONTINUE"), ticks=300)
+        assert d.wait_for(lambda: d.text_has("> HUNT"), ticks=300)
         st = _walk_leg_econ(d, SCENE_ACT2_FIELD, "desolate->field")
         assert (st["player_x"], st["player_y"]) == (5, 7), st
         print("loop-econ OK: closed the loop alive with %d prov %dG"

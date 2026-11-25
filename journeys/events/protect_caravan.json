@@ -6,10 +6,10 @@
   "opt1_effects": {
     "text": "DRAW WEAPONS!",
     "risk": 50,
-    "battle": "brigand_trio",
+    "battle": "slime_trio",
     "fail": {
       "text": "AMBUSH ON ROAD.",
-      "battle": "brigand_trio",
+      "battle": "slime_trio",
       "hurt": 3
     }
   },
