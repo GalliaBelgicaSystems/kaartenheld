@@ -364,6 +364,7 @@ static void tp_lastrow(void)
     s_n = 0;
     tp_put_u16(g_game.state.party.members[0].hp);
     tp_putc(' ');
+    tp_putc(' ');
     tp_put_u16((uint16_t)gold);
     tp_putc('G');
     tp_putc(' ');
