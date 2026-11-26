@@ -13,9 +13,9 @@
     "kind static: fixed ASCII letter from the intrepid tileset (see fonts).",
     "kind variable: dynamic digit cell; field names the value, place the digit (tens/ones/...). Values are right-aligned: the ones digit cell is fixed, the field grows left.",
     "Two-row glyphs split into top/bottom halves; single-row glyphs use part \"single\".",
-    "Scenery tiles are positional slots (starting-point-*/destination-*, rows top/middle/bottom). The biome providing the art is resolved per journey route (origin_biome/destination_biome -> assets/travels/<biome>.png); mockup shows forest origin + snow destination.",
-    "Scenery tiles are named side-row-zone (starting-point-*/destination-*, rows top/middle/bottom, zones left/middle/right plus stem/accent/far/sky/edge/base/ground/speckles details). Origin = route start, destination = route end; wiring picks the biome tileset per side (see scenery).",
-    "Scenery tiles are named side-row-zone (starting-point-*/destination-*, rows top/middle/bottom, zones left/middle/right plus stem/accent/far/sky/edge/base/ground/speckles details). Origin = route start, destination = route end; wiring picks the biome tileset per side (see scenery).",
+    "Scenery rows 2-4 are positional slots (starting-point-*/destination-*, rows top/middle/bottom). The biome art comes from assets/travels/<biome>.json (grove 3x8 + vista 3x8 of existing tileset tiles); origin = route start, destination = route end, wiring picks the biome tileset per side (see scenery).",
+    "Journey chrome (box, icons, labels, progress markers) comes from assets/travel-tile.png (160x16 px, 20 cols x 2 rows) named by assets/travel-tileset.csv; \"what\" on chrome cells is the CSV name verbatim. Brown-top markers run on the origin half, grey-top on the destination half.",
+    "Forest ground uses the 3 travel floor icons (forest floor icon 1/2/3) for the forest biome as starter or destination; they are staged in the travel sheet (missing from the forest tileset) and get backported into forest gfx at wiring — assets/travels/forest.json keeps forest.* names until TILE ids exist.",
     "Names follow the assets/*.csv style: lowercase words with spaces.",
     "The mockup is a loose artist render, not pixel-exact: names describe INTENT per cell, the artist snaps art to the 8px grid when drawing."
   ],
@@ -645,7 +645,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar start",
-      "what": "Black rounded left cap, includes the first lit dot (combined tile)."
+      "what": "Travel tile \"start marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Trip start, origin half."
     },
     {
       "at": [
@@ -654,7 +654,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -663,7 +663,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -672,7 +672,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -681,7 +681,7 @@
       ],
       "kind": "tile",
       "tile": "progress dot lit",
-      "what": "White dot on black (reached milestones in the mockup). Static art; if progress states are wanted, lit = reached and dim = upcoming, decide at wiring."
+      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
     },
     {
       "at": [
@@ -690,7 +690,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -699,7 +699,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -708,7 +708,7 @@
       ],
       "kind": "tile",
       "tile": "progress dot lit",
-      "what": "White dot on black (reached milestones in the mockup). Static art; if progress states are wanted, lit = reached and dim = upcoming, decide at wiring."
+      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
     },
     {
       "at": [
@@ -717,7 +717,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -726,7 +726,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Origin/destination seam."
     },
     {
       "at": [
@@ -735,7 +735,7 @@
       ],
       "kind": "tile",
       "tile": "progress dot dim",
-      "what": "Gray dot on black (upcoming milestones in the mockup). See lit note."
+      "what": "Travel tile \"step marker grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Upcoming milestone."
     },
     {
       "at": [
@@ -744,7 +744,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -753,7 +753,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -762,7 +762,7 @@
       ],
       "kind": "tile",
       "tile": "progress dot dim",
-      "what": "Gray dot on black (upcoming milestones in the mockup). See lit note."
+      "what": "Travel tile \"step marker grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Upcoming milestone."
     },
     {
       "at": [
@@ -771,7 +771,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -780,7 +780,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -789,7 +789,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar",
-      "what": "Plain black bar segment."
+      "what": "Travel tile \"black empty grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -798,7 +798,7 @@
       ],
       "kind": "tile",
       "tile": "progress bar end flag",
-      "what": "Black rounded right cap with white pole and red flag (destination)."
+      "what": "Travel tile \"ending flag marker grey top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Trip end, destination half."
     },
     {
       "at": [
@@ -807,7 +807,7 @@
       ],
       "kind": "tile",
       "tile": "button corner top left",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"top left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -816,7 +816,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -825,7 +825,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -834,7 +834,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -843,7 +843,7 @@
       ],
       "kind": "tile",
       "tile": "button corner top right",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"top right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -852,7 +852,7 @@
       ],
       "kind": "tile",
       "tile": "button corner top left",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"top left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -861,7 +861,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -870,7 +870,7 @@
       ],
       "kind": "tile",
       "tile": "rest icon zzz",
-      "what": "Sleeping Z letters (top half of the REST icon), dark brown on tan."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv). Single rest icon lives in row 8; this cell is plain edge."
     },
     {
       "at": [
@@ -879,7 +879,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -888,7 +888,7 @@
       ],
       "kind": "tile",
       "tile": "button corner top right",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"top right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -897,7 +897,7 @@
       ],
       "kind": "tile",
       "tile": "button corner top left",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"top left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -906,7 +906,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -915,7 +915,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -924,7 +924,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -933,7 +933,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -942,7 +942,7 @@
       ],
       "kind": "tile",
       "tile": "button corner top right",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"top right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -951,7 +951,7 @@
       ],
       "kind": "tile",
       "tile": "button edge left",
-      "what": "Wooden button straight left edge. Shared by all buttons."
+      "what": "Travel tile \"left box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -960,7 +960,7 @@
       ],
       "kind": "tile",
       "tile": "hunt icon fork",
-      "what": "Dinner fork (left half of the HUNT icon), dark brown on tan."
+      "what": "Travel tile \"hunt icon bow\" (assets/travel-tile.png, see assets/travel-tileset.csv). HUNT icon, single tile."
     },
     {
       "at": [
@@ -969,7 +969,7 @@
       ],
       "kind": "tile",
       "tile": "hunt icon knife",
-      "what": "Dinner knife (right half of the HUNT icon), dark brown on tan."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv). Was dinner knife; single bow icon now, fill interior."
     },
     {
       "at": [
@@ -978,7 +978,7 @@
       ],
       "kind": "tile",
       "tile": "button fill",
-      "what": "Plain tan button interior."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -987,7 +987,7 @@
       ],
       "kind": "tile",
       "tile": "button edge right",
-      "what": "Wooden button straight right edge. Shared by all buttons."
+      "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -996,7 +996,7 @@
       ],
       "kind": "tile",
       "tile": "button edge left",
-      "what": "Wooden button straight left edge. Shared by all buttons."
+      "what": "Travel tile \"left box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1005,7 +1005,7 @@
       ],
       "kind": "tile",
       "tile": "button fill",
-      "what": "Plain tan button interior."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1014,7 +1014,7 @@
       ],
       "kind": "tile",
       "tile": "rest icon bed",
-      "what": "Rolled bed/bedroll (bottom half of the REST icon), dark brown on tan."
+      "what": "Travel tile \"rest icon bed\" (assets/travel-tile.png, see assets/travel-tileset.csv). REST icon, single tile centered."
     },
     {
       "at": [
@@ -1023,7 +1023,7 @@
       ],
       "kind": "tile",
       "tile": "button fill",
-      "what": "Plain tan button interior."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1032,7 +1032,7 @@
       ],
       "kind": "tile",
       "tile": "button edge right",
-      "what": "Wooden button straight right edge. Shared by all buttons."
+      "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1041,7 +1041,7 @@
       ],
       "kind": "tile",
       "tile": "button edge left",
-      "what": "Wooden button straight left edge. Shared by all buttons."
+      "what": "Travel tile \"left box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1050,7 +1050,7 @@
       ],
       "kind": "tile",
       "tile": "study icon magnifier left",
-      "what": "Left half of the magnifier glass, dark brown on tan."
+      "what": "Travel tile \"study glass icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). STUDY icon left half."
     },
     {
       "at": [
@@ -1059,7 +1059,7 @@
       ],
       "kind": "tile",
       "tile": "study icon magnifier right",
-      "what": "Right half of the magnifier glass with handle, dark brown on tan."
+      "what": "Travel tile \"study map icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). STUDY icon right half."
     },
     {
       "at": [
@@ -1068,7 +1068,7 @@
       ],
       "kind": "tile",
       "tile": "study icon map left",
-      "what": "Left half of the folded map, dark brown on tan."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv). Was folded map; icons condensed to 2 tiles, fill interior."
     },
     {
       "at": [
@@ -1077,7 +1077,7 @@
       ],
       "kind": "tile",
       "tile": "study icon map right",
-      "what": "Right half of the folded map with corner fold, dark brown on tan."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv). Was folded map; icons condensed to 2 tiles, fill interior."
     },
     {
       "at": [
@@ -1086,7 +1086,7 @@
       ],
       "kind": "tile",
       "tile": "button edge right",
-      "what": "Wooden button straight right edge. Shared by all buttons."
+      "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1095,7 +1095,7 @@
       ],
       "kind": "tile",
       "tile": "button edge left",
-      "what": "Wooden button straight left edge. Shared by all buttons."
+      "what": "Travel tile \"left box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1104,7 +1104,7 @@
       ],
       "kind": "tile",
       "tile": "button label hunt left",
-      "what": "Left slice of the HUNT button label (H). Custom button-label art on tan fill; slices tile seamlessly."
+      "what": "Travel tile \"H icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). HUNT label slice 1/3."
     },
     {
       "at": [
@@ -1113,7 +1113,7 @@
       ],
       "kind": "tile",
       "tile": "button label hunt center",
-      "what": "Middle slice of the HUNT button label (U, start of N)."
+      "what": "Travel tile \"UN icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). HUNT label slice 2/3."
     },
     {
       "at": [
@@ -1122,7 +1122,7 @@
       ],
       "kind": "tile",
       "tile": "button label hunt right",
-      "what": "Right slice of the HUNT button label (N, T)."
+      "what": "Travel tile \"T for hunt icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). HUNT label slice 3/3."
     },
     {
       "at": [
@@ -1131,7 +1131,7 @@
       ],
       "kind": "tile",
       "tile": "button edge right",
-      "what": "Wooden button straight right edge. Shared by all buttons."
+      "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1140,7 +1140,7 @@
       ],
       "kind": "tile",
       "tile": "button edge left",
-      "what": "Wooden button straight left edge. Shared by all buttons."
+      "what": "Travel tile \"left box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1149,7 +1149,7 @@
       ],
       "kind": "tile",
       "tile": "button label rest left",
-      "what": "Left slice of the REST button label (R)."
+      "what": "Travel tile \"R icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). REST label slice 1/3."
     },
     {
       "at": [
@@ -1158,7 +1158,7 @@
       ],
       "kind": "tile",
       "tile": "button label rest center",
-      "what": "Middle slice of the REST button label (E)."
+      "what": "Travel tile \"ES icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). REST label slice 2/3."
     },
     {
       "at": [
@@ -1167,7 +1167,7 @@
       ],
       "kind": "tile",
       "tile": "button label rest right",
-      "what": "Right slice of the REST button label (S, T)."
+      "what": "Travel tile \"T for rest icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). REST label slice 3/3."
     },
     {
       "at": [
@@ -1176,7 +1176,7 @@
       ],
       "kind": "tile",
       "tile": "button edge right",
-      "what": "Wooden button straight right edge. Shared by all buttons."
+      "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1185,7 +1185,7 @@
       ],
       "kind": "tile",
       "tile": "button label study map left",
-      "what": "Left slice of the STUDY MAP button label (S, T)."
+      "what": "Travel tile \"ST icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). STUDY MAP label slice 1/4."
     },
     {
       "at": [
@@ -1194,7 +1194,7 @@
       ],
       "kind": "tile",
       "tile": "button label study map inner left",
-      "what": "Inner-left slice of the STUDY MAP button label (T, U)."
+      "what": "Travel tile \"UD icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). STUDY MAP label slice 2/4."
     },
     {
       "at": [
@@ -1203,7 +1203,7 @@
       ],
       "kind": "tile",
       "tile": "button label study map middle",
-      "what": "Middle slice of the STUDY MAP button label (D, Y)."
+      "what": "Travel tile \"YM icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). STUDY MAP label slice 3/4."
     },
     {
       "at": [
@@ -1212,7 +1212,7 @@
       ],
       "kind": "tile",
       "tile": "button label study map inner right",
-      "what": "Inner-right slice of the STUDY MAP button label (M, A)."
+      "what": "Travel tile \"AP icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). STUDY MAP label slice 4/4."
     },
     {
       "at": [
@@ -1221,7 +1221,7 @@
       ],
       "kind": "tile",
       "tile": "button label study map right",
-      "what": "Right slice of the STUDY MAP button label (A, P)."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv). Was 5th label slice; 4 slices now, fill interior."
     },
     {
       "at": [
@@ -1230,7 +1230,7 @@
       ],
       "kind": "tile",
       "tile": "button edge right",
-      "what": "Wooden button straight right edge. Shared by all buttons."
+      "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1239,7 +1239,7 @@
       ],
       "kind": "tile",
       "tile": "button corner bottom left",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"bottom left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1248,7 +1248,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1257,7 +1257,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom cursor",
-      "what": "Bottom edge with the selection-cursor shaft emerging downward. Stamped ONLY under the selected option; other options use the plain bottom edge."
+      "what": "Travel tile \"bottom box with cursor\" (assets/travel-tile.png, see assets/travel-tileset.csv). Stamped ONLY under the selected option; others use bottom box."
     },
     {
       "at": [
@@ -1266,7 +1266,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1275,7 +1275,7 @@
       ],
       "kind": "tile",
       "tile": "button corner bottom right",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"bottom right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1284,7 +1284,7 @@
       ],
       "kind": "tile",
       "tile": "button corner bottom left",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"bottom left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1293,7 +1293,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1302,7 +1302,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1311,7 +1311,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1320,7 +1320,7 @@
       ],
       "kind": "tile",
       "tile": "button corner bottom right",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"bottom right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1329,7 +1329,7 @@
       ],
       "kind": "tile",
       "tile": "button corner bottom left",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"bottom left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1338,7 +1338,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1347,7 +1347,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1356,7 +1356,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1365,7 +1365,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Wooden button straight bottom edge. Shared by all buttons."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1374,7 +1374,7 @@
       ],
       "kind": "tile",
       "tile": "button corner bottom right",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"bottom right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1383,7 +1383,7 @@
       ],
       "kind": "tile",
       "tile": "cursor arrow head",
-      "what": "Dark down-arrowhead below the selected button (pairs with the edge above)."
+      "what": "Dark down-arrowhead below the selected button (pairs with the edge above). NOT in assets/travel-tile.png; reuse an existing arrow or draw at wiring."
     },
     {
       "at": [
@@ -1392,7 +1392,7 @@
       ],
       "kind": "tile",
       "tile": "button corner top left",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"top left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1401,7 +1401,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1410,7 +1410,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1419,7 +1419,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1428,7 +1428,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1437,7 +1437,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1446,7 +1446,7 @@
       ],
       "kind": "tile",
       "tile": "button edge top",
-      "what": "Wooden button straight top edge. Shared by all buttons."
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1455,7 +1455,7 @@
       ],
       "kind": "tile",
       "tile": "button corner top right",
-      "what": "Rounded wooden button corner. Shared by all buttons."
+      "what": "Travel tile \"top right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1464,7 +1464,7 @@
       ],
       "kind": "tile",
       "tile": "button b icon",
-      "what": "Circled B prompt, INCLUDES the button left edge (combined tile). Compare with the existing menu b button tile at wiring; redraw if it does not match."
+      "what": "Travel tile \"B button icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). Confirm prompt."
     },
     {
       "at": [
@@ -1473,7 +1473,7 @@
       ],
       "kind": "tile",
       "tile": "button label continue left",
-      "what": "Left slice of the CONTINUE button label (C, O)."
+      "what": "Travel tile \"CO icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). CONTINUE label slice 1/4."
     },
     {
       "at": [
@@ -1482,7 +1482,7 @@
       ],
       "kind": "tile",
       "tile": "button label continue inner left",
-      "what": "Inner-left slice of the CONTINUE button label (O, N)."
+      "what": "Travel tile \"NT icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). CONTINUE label slice 2/4."
     },
     {
       "at": [
@@ -1491,7 +1491,7 @@
       ],
       "kind": "tile",
       "tile": "button label continue middle left",
-      "what": "Middle-left slice of the CONTINUE button label (N, T)."
+      "what": "Travel tile \"IN icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). CONTINUE label slice 3/4."
     },
     {
       "at": [
@@ -1500,7 +1500,7 @@
       ],
       "kind": "tile",
       "tile": "button label continue middle right",
-      "what": "Middle-right slice of the CONTINUE button label (I, N)."
+      "what": "Travel tile \"UE icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). CONTINUE label slice 4/4."
     },
     {
       "at": [
@@ -1509,7 +1509,7 @@
       ],
       "kind": "tile",
       "tile": "button label continue inner right",
-      "what": "Inner-right slice of the CONTINUE button label (N, U)."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv). Was 5th/6th label slice; 4 slices now, fill interior."
     },
     {
       "at": [
@@ -1518,7 +1518,7 @@
       ],
       "kind": "tile",
       "tile": "button label continue right",
-      "what": "Right slice of the CONTINUE button label (U, E)."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv). Was 5th/6th label slice; 4 slices now, fill interior."
     },
     {
       "at": [
@@ -1527,7 +1527,7 @@
       ],
       "kind": "tile",
       "tile": "button edge right",
-      "what": "Wooden button straight right edge. Shared by all buttons."
+      "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -2152,7 +2152,7 @@
     "intrepid large": "Double-height ASCII for SUPPLIES/stats (each glyph 2 cells tall). Not in intrepid.png yet: the artist extends the sheet with top/bottom halves per glyph (mockup shows tall narrow serif caps, digits and colon)."
   },
   "scenery": {
-    "rule": "Rows 2-4 form the journey strip. Cols 1-10 stamp the ORIGIN biome grove kit; cols 11-18 stamp the DESTINATION biome vista kit. Each journey route declares origin_biome/destination_biome (e.g. forest->desolate); tools/screen_compiler/travel_art_compile.py fetches assets/travels/<biome>.png for each side and emits planar tile data + a per-route strip table (src/game/travel_art_content.c). Horse, progress bar/flag and all UI are journey chrome overlaid on top, not scenery.",
+    "rule": "Rows 2-4 form the journey strip. Cols 1-10 stamp the ORIGIN biome grove; cols 11-18 stamp the DESTINATION biome vista. Each journey route declares origin_biome/destination_biome (e.g. forest->desolate); tools/screen_compiler/travel_art_compile.py fetches assets/travels/<biome>.json for each side and emits a per-route strip table (src/game/travel_art_content.c). Horse, progress markers and all UI are journey chrome overlaid on top, not scenery.",
     "origin_cols": [
       1,
       10
@@ -2194,7 +2194,7 @@
         "tilesets": [
           "forest"
         ],
-        "note": "Mockup pair shows the forest grove (green trees, dirt trail)."
+        "note": "Forest grove + vista (see forest tileset). Ground cells use the 3 travel floor icons (forest floor icon 1/2/3, staged in the travel sheet) as starter or destination."
       },
       "village": {
         "tilesets": [
@@ -2214,11 +2214,17 @@
       }
     },
     "sheet": {
-      "file": "assets/travels/<biome>.png",
-      "size": "64x24 px = 8 columns x 3 rows of 8px tiles",
-      "order": "row-major: grove kit slots (cells 0-9) then vista kit slots (cells 10-23), in scenery grove_slots/vista_slots order",
-      "palette": "Transparent background; at most 4 shades per tile (Game Boy 2bpp, enforced by the compiler).",
+      "file": "assets/travels/<biome>.json",
+      "size": "3 rows x 8 cols of named tileset tiles per side (grove + vista) + 3 transition tiles",
+      "order": "grove: origin arrangement cols 0-7; transition: one tile per row stamped in cols 8-9; vista: destination arrangement cols 10-17",
+      "palette": "Tiles already live in the ROM tilesets; no new pixel art, no palette constraint beyond the source tileset.",
       "pipeline": "tools/screen_compiler/travel_art_compile.py --all"
+    },
+    "chrome": {
+      "file": "assets/travel-tile.png",
+      "size": "160x16 px = 20 columns x 2 rows of 8px tiles",
+      "names": "assets/travel-tileset.csv (row-major, 40 tiles)",
+      "note": "Box chrome (10), single-tile icons (bow/bed/glass/map), label slices (HUNT 3 incl. T for hunt; REST 3 incl. T for rest; STUDY MAP 4; CONTINUE 4), B button, 3 forest floor icons, progress markers x2 sets (brown-top origin, grey-top destination: start/black empty/step/ending flag each). Brown ending-flag and grey start are spares for reversed legs."
     }
   },
   "palette": {
@@ -2228,7 +2234,7 @@
     "dirt tan": "#A78855~ grove ground",
     "forest greens": "#78B75F~ wash, #2E5230~ foliage, #2B4D12~ trunks (approx)",
     "snow blue": "#C8DFE6~ ground, #EAF4F8~ sky, #CDE1E2~ mountains (approx)",
-    "progress black": "#000000 bar; dots white, upcoming dim gray",
+    "progress black": "Brown-top markers on the origin half, grey-top on the destination half (start/black empty/step/ending flag per half).",
     "flag and heart red": "#C02028~ (verify against existing tiles at wiring)"
   }
 }
