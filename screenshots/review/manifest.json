@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v12: last row digits end col 18 (WIP: grayscale, palettes pending)",
-      "taken_from": "94a3cc3586c149c19390fe7cf6cbc73d14b19a65"
+      "description": "Journey camp menu v13: STUDY frame cols 12-17 (WIP: grayscale, palettes pending)",
+      "taken_from": "7ca3734a3e85f06c5d1d5d921a54d0a03f46fdef"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "94a3cc3586c149c19390fe7cf6cbc73d14b19a65"
+      "taken_from": "7ca3734a3e85f06c5d1d5d921a54d0a03f46fdef"
     }
   ]
 }
