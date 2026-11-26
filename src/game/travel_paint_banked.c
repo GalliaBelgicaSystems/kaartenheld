@@ -308,24 +308,8 @@ static void tp_line_done(uint8_t y)
     tp_text(0, y, s_line, 20);
 }
 
-static void tp_hline(uint8_t y, char ch)
-{
-    uint8_t x;
-    volatile uint8_t *vram;
-    if (y >= 18) return;
-    s_row_used[y] = 1;
-    vram = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5));
-    VBK_REG = 0;
-    for (x = 0; x < 20; x++) {
-        if (g_ui_screen_buf[y][x] != ch) {
-            tp_sync_write(&vram[x],
-                          (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' ')));
-            g_ui_screen_buf[y][x] = ch;
-        }
-    }
-}
-
-/* First-entry full clear + centered title + separator (LCD off). */
+/* First-entry full clear + centered title (LCD off). Row 1 stays
+ * empty: no separator line under the title. */
 static void tp_frame_init(const char *title)
 {
     uint8_t x;
@@ -346,7 +330,6 @@ static void tp_frame_init(const char *title)
         while (title[len] != '\0' && len < 20) len++;
     }
     tp_text((uint8_t)((20 - len) >> 1), 0, title, 20);
-    tp_hline(1, '-');
 }
 
 /* Last row (row 17): heart + health, money with G, DAYS: + days left.
