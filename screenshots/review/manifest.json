@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v9: STUDY frame cols 12-18, SUPPLIES indented col 2 (WIP: grayscale, palettes pending)",
-      "taken_from": "dd74f377e82b3cb88cc4eaf86841c85406ae0aca"
+      "description": "Journey camp menu v10: DAYS:180 no gap (WIP: grayscale, palettes pending)",
+      "taken_from": "4ee9b04f0f5f191734e5a93e62489928c2fcaa6f"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "dd74f377e82b3cb88cc4eaf86841c85406ae0aca"
+      "taken_from": "4ee9b04f0f5f191734e5a93e62489928c2fcaa6f"
     }
   ]
 }
