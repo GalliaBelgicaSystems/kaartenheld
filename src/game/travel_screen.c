@@ -4,7 +4,7 @@
 #include "banked.h"
 #include "ui.h"
 
-/* Journey screen (travel-demo ROM only).  The paint lives in the bank-11
+/* Journey screen (travel-demo ROM only).  The paint lives in the bank-13
  * body (travel_paint_banked.c: the fixed bank cannot host it, AGENTS.md
  * 52.18); this TU keeps only the thin dispatch, first-entry CRAM reset,
  * and render-cache validation (same contract as the shop/item screens). */
@@ -29,7 +29,7 @@ void travel_screen_render(Game *g)
          * painting the journey UI (mirrors shop/item screens). */
         ui_set_cram_palette(0);
     }
-    g_bk_call_bank = 11;
+    g_bk_call_bank = 13;
     g_bk_call_target = (uint16_t)&travel_paint_banked;
     g_bk_byte_a = same_screen;
     banked_call_run();

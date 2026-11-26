@@ -248,4 +248,60 @@ void travel_paint_banked(void);
 /* Steps done (total - left), for the progress row. */
 uint8_t travel_steps_done(void);
 
+/* ── Travel chrome tiles (assets/travel-tile.png, 20x2 sheet) ──────
+ * Invariant journey UI: box, icons, label slices, progress markers,
+ * forest floors. Names follow assets/travel-tileset.csv in sheet
+ * row-major order. Loaded by travel_chrome_load_banked() into the
+ * journey-owned VRAM window (UI_TILE_TRAVEL_CHROME_BASE + id) on
+ * every journey first-entry; battle/menu/dice streams may clobber
+ * the window afterwards (full repaint restreams). Scenery rows keep
+ * using the world tileset window (128+). */
+#define UI_TILE_TRAVEL_CHROME_BASE 208u
+#define UI_TILE_TRAVEL_CHROME_COUNT 40u
+
+#define TCHROME_TOP_LEFT_BOX_CORNER 0u
+#define TCHROME_TOP_BOX 1u
+#define TCHROME_TOP_RIGHT_BOX_CORNER 2u
+#define TCHROME_LEFT_BOX_SIDE 3u
+#define TCHROME_BOX_BACKGROUND 4u
+#define TCHROME_RIGHT_BOX_SIDE 5u
+#define TCHROME_BOTTOM_LEFT_BOX_CORNER 6u
+#define TCHROME_BOTTOM_BOX 7u
+#define TCHROME_BOTTOM_BOX_CURSOR 8u
+#define TCHROME_BOTTOM_RIGHT_BOX_CORNER 9u
+#define TCHROME_HUNT_ICON_BOW 10u
+#define TCHROME_REST_ICON_BED 11u
+#define TCHROME_STUDY_GLASS_ICON 12u
+#define TCHROME_STUDY_MAP_ICON 13u
+#define TCHROME_H_ICON 14u
+#define TCHROME_UN_ICON 15u
+#define TCHROME_T_FOR_HUNT_ICON 16u
+#define TCHROME_R_ICON 17u
+#define TCHROME_ES_ICON 18u
+#define TCHROME_T_FOR_REST_ICON 19u
+#define TCHROME_ST_ICON 20u
+#define TCHROME_UD_ICON 21u
+#define TCHROME_YM_ICON 22u
+#define TCHROME_AP_ICON 23u
+#define TCHROME_B_BUTTON_ICON 24u
+#define TCHROME_CO_ICON 25u
+#define TCHROME_NT_ICON 26u
+#define TCHROME_IN_ICON 27u
+#define TCHROME_UE_ICON 28u
+#define TCHROME_FOREST_FLOOR_ICON_1 29u
+#define TCHROME_FOREST_FLOOR_ICON_2 30u
+#define TCHROME_FOREST_FLOOR_ICON_3 31u
+#define TCHROME_START_MARKER_BROWN_TOP 32u
+#define TCHROME_BLACK_EMPTY_BROWN_TOP 33u
+#define TCHROME_STEP_MARKER_BROWN_TOP 34u
+#define TCHROME_ENDING_FLAG_MARKER_BROWN_TOP 35u
+#define TCHROME_START_MARKER_GREY_TOP 36u
+#define TCHROME_BLACK_EMPTY_GREY_TOP 37u
+#define TCHROME_STEP_MARKER_GREY_TOP 38u
+#define TCHROME_ENDING_FLAG_MARKER_GREY_TOP 39u
+
+/* One-shot chrome streamer (travel_chrome_content.c, ROM bank 11,
+ * same bank as the paint body that calls it). */
+void travel_chrome_load_banked(void);
+
 #endif /* TRAVEL_H */

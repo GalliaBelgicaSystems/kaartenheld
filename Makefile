@@ -48,7 +48,8 @@ CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c
 # memory budget; linked into OBJS_TRAVEL only.
 TRAVEL_SRCS = $(SRC_DIR)/game/travel.c $(SRC_DIR)/game/travel_screen.c \
 	$(SRC_DIR)/game/travel_content.c $(SRC_DIR)/game/travel_paint_banked.c \
-	$(SRC_DIR)/game/travel_logic_banked.c $(SRC_DIR)/game/travel_art_content.c
+	$(SRC_DIR)/game/travel_logic_banked.c $(SRC_DIR)/game/travel_art_content.c \
+	$(SRC_DIR)/game/travel_chrome_content.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS) $(TRAVEL_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 11 in
@@ -392,6 +393,14 @@ gfx: manifest
 	@mkdir -p tools/level_editor/public/tiles/title
 	@cp assets/title-red.png tools/level_editor/public/tiles/title/logo.png
 	@echo "Title logo: src/gfx/title_logo_tiles.inc + public/tiles/title/logo.png"
+	# ── Travel chrome (assets/travel-tile.png, 20 cols × 2 rows) ────────
+	# Invariant journey UI (box, icons, labels, markers, floors). Ramps
+	# are per-tile light->dark in assets/travel-chrome-shades.json
+	# (regen: python3 tools/travel_chrome_shades.py). Sheet order is
+	# row-major = assets/travel-tileset.csv order = TCHROME_* order.
+	@python3 tools/png2gb.py assets/travel-tile.png --name travel_chrome_tiles \
+		--shade-map assets/travel-chrome-shades.json --raw \
+		-o $(GFX_OUT_DIR)/travel_chrome_tiles.inc
 	# ── Studio splash logo (assets/gallia_belgica_systems.png, 13x5) ──────
 	# Fixed global shade map -> one CGB palette [white, red, blue, black]
 	# rendered by the bank-11 splash body.  LLM-only content (no editor view).
