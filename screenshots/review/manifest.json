@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v6: continue rows 11-13 (B on 12), SUPPLIES on 15, row 16 empty (WIP: grayscale, palettes pending)",
-      "taken_from": "f4689a62a576247391ea38fcde6119cb160c85dd"
+      "description": "Journey camp menu v7: bow right-aligned, slim heart row (blank, heart, HP, gold, DAYS) (WIP: grayscale, palettes pending)",
+      "taken_from": "a09394c422f81388316820c3eb99c44074473e0d"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "f4689a62a576247391ea38fcde6119cb160c85dd"
+      "taken_from": "a09394c422f81388316820c3eb99c44074473e0d"
     }
   ]
 }
