@@ -181,18 +181,19 @@ static const ChromeCell s_rest_cells[] = {
     { 11, 10, 9 }
 };
 
-/* STUDY MAP button (cols 12-18, 7 wide): frame starts at col 12 while
- * icons (glass 14, map 15) and labels (ST/UD/YM/AP at 14-17) stay put;
- * col 13 is new fill. Gap col 19 blanked. */
+/* STUDY MAP button (cols 12-17, 6 wide): frame starts at col 12 and
+ * ends at col 17. Icons (glass 14, map 15) and labels stay put; col 13
+ * is new fill on rows 8-9, labels run ST/UD/YM/AP at 13-16. Cols 18-19
+ * blanked (old right edge stood at 18). */
 static const ChromeCell s_study_cells[] = {
     { 12, 7, 0 }, { 13, 7, 1 }, { 14, 7, 1 }, { 15, 7, 1 },
-    { 16, 7, 1 }, { 17, 7, 1 }, { 18, 7, 2 }, { 19, 7, 0xFF },
+    { 16, 7, 1 }, { 17, 7, 2 }, { 18, 7, 0xFF }, { 19, 7, 0xFF },
     { 12, 8, 3 }, { 13, 8, 4 }, { 14, 8, 12 }, { 15, 8, 13 },
-    { 16, 8, 4 }, { 17, 8, 4 }, { 18, 8, 5 }, { 19, 8, 0xFF },
-    { 12, 9, 3 }, { 13, 9, 4 }, { 14, 9, 20 }, { 15, 9, 21 },
-    { 16, 9, 22 }, { 17, 9, 23 }, { 18, 9, 5 }, { 19, 9, 0xFF },
-    { 12, 10, 6 }, { 13, 10, 7 }, { 14, 10, 7 }, { 15, 10, 0xFE },
-    { 16, 10, 7 }, { 17, 10, 7 }, { 18, 10, 9 }, { 19, 10, 0xFF }
+    { 16, 8, 4 }, { 17, 8, 5 }, { 18, 8, 0xFF }, { 19, 8, 0xFF },
+    { 12, 9, 3 }, { 13, 9, 20 }, { 14, 9, 21 }, { 15, 9, 22 },
+    { 16, 9, 23 }, { 17, 9, 5 }, { 18, 9, 0xFF }, { 19, 9, 0xFF },
+    { 12, 10, 6 }, { 13, 10, 7 }, { 14, 10, 0xFE }, { 15, 10, 7 },
+    { 16, 10, 7 }, { 17, 10, 9 }, { 18, 10, 0xFF }, { 19, 10, 0xFF }
 };
 
 /* CONTINUE button (cols 6-13, rows 11-13): B icon + CO/NT/IN/UE.

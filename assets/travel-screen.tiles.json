@@ -941,15 +941,6 @@
         7
       ],
       "kind": "tile",
-      "tile": "button edge top",
-      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
-    },
-    {
-      "at": [
-        18,
-        7
-      ],
-      "kind": "tile",
       "tile": "button corner top right",
       "what": "Travel tile \"top right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
@@ -1094,15 +1085,6 @@
         8
       ],
       "kind": "tile",
-      "tile": "study icon map right",
-      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv). Was folded map; icons condensed to 2 tiles, fill interior."
-    },
-    {
-      "at": [
-        18,
-        8
-      ],
-      "kind": "tile",
       "tile": "button edge right",
       "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
@@ -1211,21 +1193,12 @@
         9
       ],
       "kind": "tile",
-      "tile": "button fill",
-      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
-    },
-    {
-      "at": [
-        14,
-        9
-      ],
-      "kind": "tile",
       "tile": "button label study map left",
       "what": "Travel tile \"ST icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). STUDY MAP label slice 1/4."
     },
     {
       "at": [
-        15,
+        14,
         9
       ],
       "kind": "tile",
@@ -1234,7 +1207,7 @@
     },
     {
       "at": [
-        16,
+        15,
         9
       ],
       "kind": "tile",
@@ -1243,7 +1216,7 @@
     },
     {
       "at": [
-        17,
+        16,
         9
       ],
       "kind": "tile",
@@ -1252,7 +1225,7 @@
     },
     {
       "at": [
-        18,
+        17,
         9
       ],
       "kind": "tile",
@@ -1374,7 +1347,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+      "what": "Travel tile \"bottom box with cursor\" (assets/travel-tile.png, see assets/travel-tileset.csv). Stamped ONLY under the selected option; others use bottom box."
     },
     {
       "at": [
@@ -1383,7 +1356,7 @@
       ],
       "kind": "tile",
       "tile": "button edge bottom",
-      "what": "Travel tile \"bottom box with cursor\" (assets/travel-tile.png, see assets/travel-tileset.csv). Stamped ONLY under the selected option; others use bottom box."
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1397,15 +1370,6 @@
     {
       "at": [
         17,
-        10
-      ],
-      "kind": "tile",
-      "tile": "button edge bottom",
-      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
-    },
-    {
-      "at": [
-        18,
         10
       ],
       "kind": "tile",
