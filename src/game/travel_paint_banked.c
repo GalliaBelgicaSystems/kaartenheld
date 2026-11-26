@@ -367,6 +367,7 @@ static void tp_lastrow(void)
     tp_put_u16((uint16_t)gold);
     tp_putc('G');
     tp_putc(' ');
+    tp_putc(' ');
     tp_puts("DAYS:");
     tp_put_u16((uint16_t)day);
     tp_text(2, 17, s_line, 18);
