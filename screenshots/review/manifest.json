@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v2: TRAVELING title, no route line, heart + HP/GOLD/DAYS last row (WIP: grayscale, palettes pending)",
-      "taken_from": "f1f5d030b96446d1bbe3f0d19a5642bfb21136e5"
+      "description": "Journey camp menu v3: SUPPLIES row 16, no PROV/STEP rows, heart stat last row (WIP: grayscale, palettes pending)",
+      "taken_from": "631afa69848bd46e3340d0725aa71e1ac827210b"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "f1f5d030b96446d1bbe3f0d19a5642bfb21136e5"
+      "taken_from": "631afa69848bd46e3340d0725aa71e1ac827210b"
     }
   ]
 }
