@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu with tile chrome: wash, markers, HUNT/REST/STUDY MAP buttons + cursor, B-CONTINUE (WIP: grayscale, palettes pending)",
-      "taken_from": "65015b6ec4e8927c57a3d17a55fb77385b36c2be"
+      "description": "Journey camp menu v2: TRAVELING title, no route line, heart + HP/GOLD/DAYS last row (WIP: grayscale, palettes pending)",
+      "taken_from": "f1f5d030b96446d1bbe3f0d19a5642bfb21136e5"
     },
     {
       "file": "travel-chrome-method.png",
-      "description": "Journey method pick with chrome frame (text options: no label tiles in sheet)",
-      "taken_from": "65015b6ec4e8927c57a3d17a55fb77385b36c2be"
+      "description": "Journey method pick v2 (no route line)",
+      "taken_from": "f1f5d030b96446d1bbe3f0d19a5642bfb21136e5"
     }
   ]
 }
