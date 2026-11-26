@@ -155,17 +155,17 @@ static const ChromeCell s_marker_cells[] = {
     { 17, 5, 37 }, { 18, 5, 39 }
 };
 
-/* HUNT button (cols 1-5): bow icon + H/UN/T label. Gap cols 0 and 6
- * blanked: the previous view's text would otherwise show through. */
+/* HUNT button (cols 2-6): bow icon + H/UN/T label. Bow sits at col 4;
+ * gap col 1 blanked (button starts at col 2). */
 static const ChromeCell s_hunt_cells[] = {
-    { 0, 7, 0xFF }, { 1, 7, 0 }, { 2, 7, 1 }, { 3, 7, 1 }, { 4, 7, 1 },
-    { 5, 7, 2 }, { 6, 7, 0xFF },
-    { 0, 8, 0xFF }, { 1, 8, 3 }, { 2, 8, 4 }, { 3, 8, 4 }, { 4, 8, 10 },
-    { 5, 8, 5 }, { 6, 8, 0xFF },
-    { 0, 9, 0xFF }, { 1, 9, 3 }, { 2, 9, 14 }, { 3, 9, 15 }, { 4, 9, 16 },
-    { 5, 9, 5 }, { 6, 9, 0xFF },
-    { 0, 10, 0xFF }, { 1, 10, 6 }, { 2, 10, 7 }, { 3, 10, 0xFE },
-    { 4, 10, 7 }, { 5, 10, 9 }, { 6, 10, 0xFF }
+    { 0, 7, 0xFF }, { 1, 7, 0xFF }, { 2, 7, 0 }, { 3, 7, 1 }, { 4, 7, 1 },
+    { 5, 7, 1 }, { 6, 7, 2 },
+    { 0, 8, 0xFF }, { 1, 8, 0xFF }, { 2, 8, 3 }, { 3, 8, 4 }, { 4, 8, 10 },
+    { 5, 8, 4 }, { 6, 8, 5 },
+    { 0, 9, 0xFF }, { 1, 9, 0xFF }, { 2, 9, 3 }, { 3, 9, 14 }, { 4, 9, 15 },
+    { 5, 9, 16 }, { 6, 9, 5 },
+    { 0, 10, 0xFF }, { 1, 10, 0xFF }, { 2, 10, 6 }, { 3, 10, 7 },
+    { 4, 10, 0xFE }, { 5, 10, 7 }, { 6, 10, 9 }
 };
 
 /* REST button (cols 7-11): centered bed icon + R/ES/T label. Gap col 12

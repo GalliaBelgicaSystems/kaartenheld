@@ -802,21 +802,12 @@
     },
     {
       "at": [
-        1,
+        2,
         7
       ],
       "kind": "tile",
       "tile": "button corner top left",
       "what": "Travel tile \"top left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
-    },
-    {
-      "at": [
-        2,
-        7
-      ],
-      "kind": "tile",
-      "tile": "button edge top",
-      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -839,6 +830,15 @@
     {
       "at": [
         5,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        6,
         7
       ],
       "kind": "tile",
@@ -946,7 +946,7 @@
     },
     {
       "at": [
-        1,
+        2,
         8
       ],
       "kind": "tile",
@@ -955,21 +955,12 @@
     },
     {
       "at": [
-        2,
+        3,
         8
       ],
       "kind": "tile",
       "tile": "hunt icon fork",
       "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
-    },
-    {
-      "at": [
-        3,
-        8
-      ],
-      "kind": "tile",
-      "tile": "hunt icon knife",
-      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv). Was dinner knife; single bow icon now, fill interior."
     },
     {
       "at": [
@@ -983,6 +974,15 @@
     {
       "at": [
         5,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button fill",
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        6,
         8
       ],
       "kind": "tile",
@@ -1090,7 +1090,7 @@
     },
     {
       "at": [
-        1,
+        2,
         9
       ],
       "kind": "tile",
@@ -1099,7 +1099,7 @@
     },
     {
       "at": [
-        2,
+        3,
         9
       ],
       "kind": "tile",
@@ -1108,7 +1108,7 @@
     },
     {
       "at": [
-        3,
+        4,
         9
       ],
       "kind": "tile",
@@ -1117,7 +1117,7 @@
     },
     {
       "at": [
-        4,
+        5,
         9
       ],
       "kind": "tile",
@@ -1126,7 +1126,7 @@
     },
     {
       "at": [
-        5,
+        6,
         9
       ],
       "kind": "tile",
@@ -1234,7 +1234,7 @@
     },
     {
       "at": [
-        1,
+        2,
         10
       ],
       "kind": "tile",
@@ -1243,7 +1243,7 @@
     },
     {
       "at": [
-        2,
+        3,
         10
       ],
       "kind": "tile",
@@ -1252,7 +1252,7 @@
     },
     {
       "at": [
-        3,
+        4,
         10
       ],
       "kind": "tile",
@@ -1261,7 +1261,7 @@
     },
     {
       "at": [
-        4,
+        5,
         10
       ],
       "kind": "tile",
@@ -1270,7 +1270,7 @@
     },
     {
       "at": [
-        5,
+        6,
         10
       ],
       "kind": "tile",
