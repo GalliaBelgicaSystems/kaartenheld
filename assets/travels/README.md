@@ -1,35 +1,47 @@
-# Travel strip sheets (`assets/travels/*.png`)
+# Travel strip layouts (`assets/travels/<biome>.json`)
 
-One 8×3-tile sheet per journey biome. The current PNGs are
-**programmer-art placeholders** — flat fills in distinct hues so the
-import pipeline and the wiring can be verified before real art exists.
-Overwrite them in place with real art; file names and layout stay fixed.
+One JSON layout per journey biome. Each layout names **existing
+tileset tiles** (`"<tileset>.<tile_id>"`, same refs as levels use) —
+no new pixel art is compiled here; the tiles already live in the ROM's
+tilesets and the generated strip is just TileType ids the paint code
+stamps verbatim.
 
-## Sheet layout (24 tiles, 8 wide x 3 tall, 8px tiles, row-major)
+Current biomes: `forest`, `village`, `desolate` (plus `snow`, which has
+no routes yet and needs no layout file until one does).  Add a new
+`<biome>.json` here to support a new journey biome; the compiler
+(`tools/screen_compiler/travel_art_compile.py`) picks it up automatically
+when a route names it, and fails loudly otherwise.
 
-- Cells 0-9: the **grove kit** (origin side arrangement), in this order:
-  `grove edge left`, `grove feature left`, `grove feature right`,
-  `grove edge right`, `grove wash`, `grove stem`, `grove wash edge`,
-  `grove ground`, `grove ground speckles`, `grove ground edge`.
-  (Full order lives in `assets/travel-screen.tiles.json`, `scenery.grove_slots`.)
-- Cells 10-23: the **vista kit** (destination side arrangement), in this order:
-  `vista skyline left`, `vista skyline`, `vista skyline right`,
-  `vista sky`, `vista accent top`, `vista far`, `vista edge`,
-  `vista base left`, `vista base`, `vista base right`,
-  `vista accent bottom`, `vista far base`, `vista ground`,
-  `vista ground speckles`.
-  (Full order lives in `assets/travel-screen.tiles.json`, `scenery.vista_slots`.)
+## Layout format
 
-Draw each cell as a self-contained 8x8 tile; the engine stamps cells
-verbatim, no blending. Keep the palette Game Boy-native: at most
-4 shades per tile (the import pipeline fails loudly otherwise).
+```json
+{
+  "biome": "forest",
+  "tileset": "forest",
+  "grove": [[ /* 3 rows x 8 cols of tile names (origin side) */ ]],
+  "vista": [[ /* 3 rows x 8 cols of tile names (destination side) */ ]],
+  "transition": ["<wash tile>", "<wash tile>", "<dirt tile>"]
+}
+```
 
-## How a sheet is used
+- `tileset` must be a key of `TILESET_KIND_MAP`
+  (`tools/level_compiler/compile.py`): `forest`, `village`,
+  `desolate_landscape`, ... Every tile name in the file must start
+  with `"<tileset>."` and resolve in that tileset's manifest
+  (`tools/level_editor/tilesets/<tileset>.json`).
+- `grove` is the origin-side arrangement (cols 0-7 of the strip):
+  edge, 3x feature pair, wash col. `vista` is the destination-side
+  arrangement (cols 10-17): skyline, accent, far peak, ground.
+- `transition` is one tile per row, stamped in both cols 8-9 (the
+  strip's middle seam). Use the biome's plain wash/wash/dirt tiles.
+
+## How a layout is used
 
 Each journey route declares `origin_biome` / `destination_biome`.
-`tools/screen_compiler/travel_art_compile.py` fetches this sheet plus the
-destination sheet, converts both to planar tile data, and emits
-`src/game/travel_art_content.c` with a per-route strip table. The ROM
-stamps the origin half (cols 1-10) from the origin sheet and the
-destination half (cols 11-18) from the destination sheet; the horse,
-progress bar and flag are journey UI drawn on top.
+`tools/screen_compiler/travel_art_compile.py` fetches the origin grove
+plus dest vista per route, resolves every name through the tileset
+manifest to a `TILE_*` symbol (validated against `src/world/world.h`,
+uint8_t range), and emits `src/game/travel_art_content.c` with one
+composed 3-row x 18-col strip per route (grove 8 + transition 2 +
+vista 8), parallel to `g_travel_routes`. The horse, progress bar and
+flag are journey UI drawn on top.

@@ -48,7 +48,7 @@ CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c
 # memory budget; linked into OBJS_TRAVEL only.
 TRAVEL_SRCS = $(SRC_DIR)/game/travel.c $(SRC_DIR)/game/travel_screen.c \
 	$(SRC_DIR)/game/travel_content.c $(SRC_DIR)/game/travel_paint_banked.c \
-	$(SRC_DIR)/game/travel_logic_banked.c
+	$(SRC_DIR)/game/travel_logic_banked.c $(SRC_DIR)/game/travel_art_content.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS) $(TRAVEL_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 11 in
@@ -501,12 +501,11 @@ journeys:
 journeys-check:
 	@python3 tools/screen_compiler/journey_compile.py --all --check
 
-# Travel strip art: assets/travels/<biome>.png (one 8x3 sheet per biome,
+# Travel strip art: assets/travels/<biome>.json (one layout per biome,
 # see assets/travels/README.md) is the source of truth for the journey
-# backdrop tiles.  The compiler fetches the sheets named by each route's
-# origin_biome/destination_biome, validates size and the 2bpp limit, and
-# emits planar tile data + a per-route strip table.  Main ROMs never
-# build it (TRAVEL_SRCS).
+# backdrop tiles.  The compiler resolves the named tileset tiles per
+# route's origin_biome/destination_biome and emits a per-route strip
+# table.  Main ROMs never build it (TRAVEL_SRCS).
 travel-art:
 	@python3 tools/screen_compiler/travel_art_compile.py --all -o src/game/travel_art_content.c
 	@echo "All travel art compiled to src/game/travel_art_content.c"
@@ -724,8 +723,8 @@ src/game/travel_content.c src/game/travel_routes_generated.h &: $(wildcard journ
 	@python3 tools/screen_compiler/journey_compile.py --all -o src/game/travel_content.c
 
 # File-timestamp rule for travel strip art so travel_art_content.o only
-# recompiles when routes, biome sheets or the compiler change.
-src/game/travel_art_content.c &: $(wildcard journeys/routes/*.json) $(wildcard assets/travels/*.png) tools/screen_compiler/travel_art_compile.py
+# recompiles when routes, biome layouts or the compiler change.
+src/game/travel_art_content.c &: $(wildcard journeys/routes/*.json) $(wildcard assets/travels/*.json) tools/screen_compiler/travel_art_compile.py
 	@python3 tools/screen_compiler/travel_art_compile.py --all -o src/game/travel_art_content.c
 
 $(BUILD_DIR)/travel/game/travel_content.o: src/game/travel_content.c src/game/travel_routes_generated.h
