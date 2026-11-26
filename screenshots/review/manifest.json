@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v4: 3-row CONTINUE with centered B (WIP: grayscale, palettes pending)",
-      "taken_from": "6dd5ef71a23ed581ff4da940ca6db8f407434b88"
+      "description": "Journey camp menu v5: no title separator; numbered rows prove B=14, SUPPLIES=16 (WIP: grayscale, palettes pending)",
+      "taken_from": "b3a9a51f518c70ddf7582948214ff46946635f49"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "6dd5ef71a23ed581ff4da940ca6db8f407434b88"
+      "taken_from": "b3a9a51f518c70ddf7582948214ff46946635f49"
     }
   ]
 }
