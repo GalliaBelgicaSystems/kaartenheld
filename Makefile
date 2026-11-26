@@ -119,7 +119,7 @@ OBJS_TRAVEL = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/travel/%.o,$(RELEASE_SRCS))
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug travel-demo run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint lint-travel memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check journeys journeys-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
+.PHONY: all release debug travel-demo run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint lint-travel memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check journeys journeys-check travel-art travel-art-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
 
 all: $(TARGET)
 
@@ -501,6 +501,19 @@ journeys:
 journeys-check:
 	@python3 tools/screen_compiler/journey_compile.py --all --check
 
+# Travel strip art: assets/travels/<biome>.png (one 8x3 sheet per biome,
+# see assets/travels/README.md) is the source of truth for the journey
+# backdrop tiles.  The compiler fetches the sheets named by each route's
+# origin_biome/destination_biome, validates size and the 2bpp limit, and
+# emits planar tile data + a per-route strip table.  Main ROMs never
+# build it (TRAVEL_SRCS).
+travel-art:
+	@python3 tools/screen_compiler/travel_art_compile.py --all -o src/game/travel_art_content.c
+	@echo "All travel art compiled to src/game/travel_art_content.c"
+
+travel-art-check:
+	@python3 tools/screen_compiler/travel_art_compile.py --all --check
+
 # Spawn actions: EVENT_ACTION_SPAWN_* rows in src/game/events_content.c
 # carry compiled bytes (e.g. the slime ow_type); validate.py resolves
 # the live values and fails loudly on drift (never hand-synced).
@@ -709,6 +722,11 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 # recompiles when journey JSONs change (not on every make invocation).
 src/game/travel_content.c src/game/travel_routes_generated.h &: $(wildcard journeys/routes/*.json) $(wildcard journeys/events/*.json) tools/screen_compiler/journey_compile.py
 	@python3 tools/screen_compiler/journey_compile.py --all -o src/game/travel_content.c
+
+# File-timestamp rule for travel strip art so travel_art_content.o only
+# recompiles when routes, biome sheets or the compiler change.
+src/game/travel_art_content.c &: $(wildcard journeys/routes/*.json) $(wildcard assets/travels/*.png) tools/screen_compiler/travel_art_compile.py
+	@python3 tools/screen_compiler/travel_art_compile.py --all -o src/game/travel_art_content.c
 
 $(BUILD_DIR)/travel/game/travel_content.o: src/game/travel_content.c src/game/travel_routes_generated.h
 $(BUILD_DIR)/travel/game/events_content.o: src/game/travel_routes_generated.h

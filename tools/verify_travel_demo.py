@@ -272,7 +272,14 @@ def boot_to_overworld(d):
         "no TITLE after boot (screen=%d)" % d.screen()
     assert d.wait_for(lambda: d.text_has("TRAVEL DEMO"), ticks=300), d.rows()
     assert not d.text_has("BATTLE DEMO"), d.rows()
-    assert d.text_has("PRESS START"), d.rows()
+    # Prompt is "PRESS " text plus the 3-tile START button icon
+    # (UI_TILE_BUTTON_START_1..3 = 178..180, stamped, not font text).
+    assert d.text_has("PRESS "), d.rows()
+    scx = d.pb.memory[0xFF43]
+    scy = d.pb.memory[0xFF42]
+    got = [d.pb.memory[0x9800 + ((scy // 8 + 14) % 32) * 32
+                        + (scx // 8 + c) % 32] for c in (11, 12, 13)]
+    assert got == [178, 179, 180], got
     print("boot splash/title OK (TRAVEL DEMO subtitle)")
     d.press("start", settle=30)  # PRESS START -> menu
     assert d.wait_for(lambda: d.text_has("NEW GAME"), ticks=300), d.rows()
@@ -399,13 +406,19 @@ def test_help(help_it):
         total0 = d.total_steps()
         d.press("a", settle=30)  # confirm
         if help_it:
-            assert d.wait_for(lambda: d.text_has("YOU SHARE"), ticks=300), \
-                d.rows()
-            assert d.text_has("+15G +1 STEP"), d.rows()
-            assert d.gold() == gold0 + 15, "gold %d" % d.gold()
+            # 50/50 risk branch: assert whichever outcome rolled.
+            if d.wait_for(lambda: d.text_has("YOU SHARE"), ticks=120):
+                assert d.text_has("+15G +1 STEP"), d.rows()
+                assert d.gold() == gold0 + 15, "gold %d" % d.gold()
+                print("help OK (success branch): +15G, detour +1 step")
+            elif d.wait_for(lambda: d.text_has("EMPTY PURSE."), ticks=120):
+                assert d.text_has("+1 STEP"), d.rows()
+                assert d.gold() == gold0, "gold changed %d" % d.gold()
+                print("help OK (fail branch): no gold, detour +1 step")
+            else:
+                assert False, d.rows()
             d.press("a", settle=20)  # dismiss
             assert d.total_steps() == total0 + 1, d.total_steps()
-            print("help OK: +15G, detour +1 step")
         else:
             assert d.wait_for(lambda: d.text_has("YOU WALK ON"), ticks=300), \
                 d.rows()
@@ -1102,8 +1115,12 @@ def test_camp():
         assert d.wait_for(lambda: d.text_has("YOU FORAGE."), ticks=300), \
             d.rows()
         assert d.wait_for(lambda: d.text_has("PROV"), ticks=120), d.rows()
+        # Either a base haul (2-8) or the jackpot (20-30): the amount
+        # byte stages the pre-burn find, so it pins the branch exactly.
+        found = d.pb.memory[d.r.sym.wram("g_travel_amount")]
+        assert (2 <= found <= 8) or (20 <= found <= 30), (found, d.prov())
         net = d.prov() - f0
-        assert -1 <= net <= 5, (f0, d.prov())
+        assert -3 <= net <= 28, (f0, d.prov())
         assert d.day() == day0 - 1, (d.day(), day0)
         detour = d.total_steps() - tot0
         assert 0 <= detour <= 1, detour
@@ -1247,14 +1264,20 @@ def test_events():
         assert d.text_has("MERCHANT NEEDS"), d.rows()
         assert d.text_has("> SHARE LEAVE"), d.rows()
         d.press("a", settle=30)  # SHARE
-        assert d.wait_for(lambda: d.text_has("HE PAYS IN GOLD."),
-                          ticks=300), d.rows()
-        assert d.text_has("+12G"), d.rows()
+        # 50/50 risk branch: assert whichever outcome rolled.
+        if d.wait_for(lambda: d.text_has("HE PAYS IN GOLD."), ticks=120):
+            assert d.text_has("+12G"), d.rows()
+            assert d.gold() == gold0 + 12, (gold0, d.gold())
+            print("events SHARE OK (success branch): -2 prov, +12 gold")
+        elif d.wait_for(lambda: d.text_has("EMPTY PURSE."), ticks=120):
+            assert not d.text_has("+12G"), d.rows()
+            assert d.gold() == gold0, (gold0, d.gold())
+            print("events SHARE OK (fail branch): -2 prov, no gold")
+        else:
+            assert False, d.rows()
         assert d.text_has("-2P"), d.rows()
         assert d.prov() == f0 - 5, (f0, d.prov())  # step (3) + share (2)
-        assert d.gold() == gold0 + 12, (gold0, d.gold())
         assert d.day() == day0 - 1, (day0, d.day())  # step only
-        print("events SHARE OK: -2 prov, +12 gold, delta line")
         d.press("a", settle=20)
         d.close()
         d = None

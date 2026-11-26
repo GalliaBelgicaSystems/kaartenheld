@@ -3,6 +3,8 @@
   "name": "FIELD ROAD",
   "start": "field",
   "destination": "act2_town",
+  "origin_biome": "forest",
+  "destination_biome": "village",
   "dest_x": 2,
   "dest_y": 7,
   "supply": {

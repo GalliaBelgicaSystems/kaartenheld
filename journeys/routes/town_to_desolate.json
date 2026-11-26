@@ -3,6 +3,8 @@
   "name": "DESOLATE ROAD",
   "start": "act2_town",
   "destination": "act2_desolate_field",
+  "origin_biome": "village",
+  "destination_biome": "desolate",
   "dest_x": 5,
   "dest_y": 17,
   "supply": {

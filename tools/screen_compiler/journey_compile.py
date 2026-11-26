@@ -79,6 +79,11 @@ WEATHER_NAMES = ["clear", "rain", "storm", "heat",
                  "cold", "wind", "snow", "fog"]
 WEATHER_ID = {n: i for i, n in enumerate(WEATHER_NAMES)}
 
+# Journey scenery biomes.  Each route declares origin_biome/destination_biome
+# from this set; the travel art pipeline fetches assets/travels/<biome>.png
+# for each side (see assets/travel-screen.tiles.json "scenery").
+TRAVEL_BIOMES = {"forest", "village", "desolate", "snow"}
+
 WX_MOD_KEYS = ("hurt", "delay", "save", "days", "provisions")
 
 
@@ -310,6 +315,10 @@ def load_routes(scenes, event_ids, event_acts):
             if doc.get(key) not in scenes:
                 fail("%s: unknown scene '%s' (%s not in registry.json)"
                      % (rid, doc.get(key), key))
+        for key in ("origin_biome", "destination_biome"):
+            if doc.get(key) not in TRAVEL_BIOMES:
+                fail("%s: %s must be one of %s (assets/travels/<biome>.png)"
+                     % (rid, key, sorted(TRAVEL_BIOMES)))
         w, h = load_level_size(doc["destination"])
         for key in ("dest_x", "dest_y"):
             if not isinstance(doc.get(key), int):

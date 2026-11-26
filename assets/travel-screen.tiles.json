@@ -1,0 +1,2234 @@
+{
+  "screen": "travel journey",
+  "source_mockup": "assets/travel-screen.png",
+  "grid": {
+    "cols": 20,
+    "rows": 18,
+    "cell_px": 8,
+    "origin": "top-left, zero-based [x, y] = [col, row]"
+  },
+  "conventions": [
+    "cells lists every non-empty coordinate in row-major order: \"at\" is [x, y], then what is there plus a one-line description. This section alone fully describes the screen.",
+    "kind tile: art tile stamped at the cell.",
+    "kind static: fixed ASCII letter from the intrepid tileset (see fonts).",
+    "kind variable: dynamic digit cell; field names the value, place the digit (tens/ones/...). Values are right-aligned: the ones digit cell is fixed, the field grows left.",
+    "Two-row glyphs split into top/bottom halves; single-row glyphs use part \"single\".",
+    "Scenery tiles are positional slots (starting-point-*/destination-*, rows top/middle/bottom). The biome providing the art is resolved per journey route (origin_biome/destination_biome -> assets/travels/<biome>.png); mockup shows forest origin + snow destination.",
+    "Scenery tiles are named side-row-zone (starting-point-*/destination-*, rows top/middle/bottom, zones left/middle/right plus stem/accent/far/sky/edge/base/ground/speckles details). Origin = route start, destination = route end; wiring picks the biome tileset per side (see scenery).",
+    "Scenery tiles are named side-row-zone (starting-point-*/destination-*, rows top/middle/bottom, zones left/middle/right plus stem/accent/far/sky/edge/base/ground/speckles details). Origin = route start, destination = route end; wiring picks the biome tileset per side (see scenery).",
+    "Names follow the assets/*.csv style: lowercase words with spaces.",
+    "The mockup is a loose artist render, not pixel-exact: names describe INTENT per cell, the artist snaps art to the 8px grid when drawing."
+  ],
+  "cells": [
+    {
+      "at": [
+        4,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'T' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "T"
+    },
+    {
+      "at": [
+        5,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'R' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "R"
+    },
+    {
+      "at": [
+        6,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'A' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "A"
+    },
+    {
+      "at": [
+        7,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'V' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "V"
+    },
+    {
+      "at": [
+        8,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'E' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "E"
+    },
+    {
+      "at": [
+        9,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'L' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "L"
+    },
+    {
+      "at": [
+        10,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'I' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "I"
+    },
+    {
+      "at": [
+        11,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'N' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "N"
+    },
+    {
+      "at": [
+        12,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter 'G' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "G"
+    },
+    {
+      "at": [
+        13,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter '.' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "."
+    },
+    {
+      "at": [
+        14,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter '.' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "."
+    },
+    {
+      "at": [
+        15,
+        0
+      ],
+      "kind": "static",
+      "font": "intrepid",
+      "what": "Static letter '.' of 'TRAVELING...'.",
+      "part": "single",
+      "char": "."
+    },
+    {
+      "at": [
+        1,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-left",
+      "what": "Left edge of the origin strip: grove feature clipped by the edge (mockup: green canopy cut)."
+    },
+    {
+      "at": [
+        2,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-middle-left",
+      "what": "Left half of the repeating grove feature, reused 4x per strip (mockup: dark-green tree canopy)."
+    },
+    {
+      "at": [
+        3,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-middle-right",
+      "what": "Right half of the repeating grove feature."
+    },
+    {
+      "at": [
+        4,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-middle-left",
+      "what": "Left half of the repeating grove feature, reused 4x per strip (mockup: dark-green tree canopy)."
+    },
+    {
+      "at": [
+        5,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-middle-right",
+      "what": "Right half of the repeating grove feature."
+    },
+    {
+      "at": [
+        6,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-middle-left",
+      "what": "Left half of the repeating grove feature, reused 4x per strip (mockup: dark-green tree canopy)."
+    },
+    {
+      "at": [
+        7,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-middle-right",
+      "what": "Right half of the repeating grove feature."
+    },
+    {
+      "at": [
+        8,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-middle-left",
+      "what": "Left half of the repeating grove feature, reused 4x per strip (mockup: dark-green tree canopy)."
+    },
+    {
+      "at": [
+        9,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-middle-right",
+      "what": "Right half of the repeating grove feature."
+    },
+    {
+      "at": [
+        10,
+        2
+      ],
+      "kind": "tile",
+      "tile": "starting-point-top-right",
+      "what": "Right edge of the origin strip fading into the destination side (mockup: canopy fading to snow)."
+    },
+    {
+      "at": [
+        11,
+        2
+      ],
+      "kind": "tile",
+      "tile": "destination-top-left",
+      "what": "Left slope of the vista skyline top row (mockup: white-blue peak)."
+    },
+    {
+      "at": [
+        12,
+        2
+      ],
+      "kind": "tile",
+      "tile": "destination-top-middle",
+      "what": "Vista skyline top (spans 2 cells)."
+    },
+    {
+      "at": [
+        13,
+        2
+      ],
+      "kind": "tile",
+      "tile": "destination-top-middle",
+      "what": "Vista skyline top (spans 2 cells)."
+    },
+    {
+      "at": [
+        14,
+        2
+      ],
+      "kind": "tile",
+      "tile": "destination-top-middle-right",
+      "what": "Right slope of the vista skyline top row."
+    },
+    {
+      "at": [
+        15,
+        2
+      ],
+      "kind": "tile",
+      "tile": "destination sky",
+      "what": "Plain vista sky (used in both sky rows)."
+    },
+    {
+      "at": [
+        16,
+        2
+      ],
+      "kind": "tile",
+      "tile": "destination-top-accent",
+      "what": "Top half of the tall vista accent right of center (mockup: bare dead tree)."
+    },
+    {
+      "at": [
+        17,
+        2
+      ],
+      "kind": "tile",
+      "tile": "destination-top-far",
+      "what": "Smaller distant vista feature (mockup: far peak)."
+    },
+    {
+      "at": [
+        18,
+        2
+      ],
+      "kind": "tile",
+      "tile": "destination edge",
+      "what": "Right-border column of the strip (spans all three rows)."
+    },
+    {
+      "at": [
+        1,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle",
+      "what": "Plain grove background wash (mockup: light green)."
+    },
+    {
+      "at": [
+        2,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle-stem",
+      "what": "Vertical feature stem centered on wash, one per grove feature (mockup: dark trunk)."
+    },
+    {
+      "at": [
+        3,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle",
+      "what": "Plain grove background wash (mockup: light green)."
+    },
+    {
+      "at": [
+        4,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle-stem",
+      "what": "Vertical feature stem centered on wash, one per grove feature (mockup: dark trunk)."
+    },
+    {
+      "at": [
+        5,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle",
+      "what": "Plain grove background wash (mockup: light green)."
+    },
+    {
+      "at": [
+        6,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle-stem",
+      "what": "Vertical feature stem centered on wash, one per grove feature (mockup: dark trunk)."
+    },
+    {
+      "at": [
+        7,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle",
+      "what": "Plain grove background wash (mockup: light green)."
+    },
+    {
+      "at": [
+        8,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle-stem",
+      "what": "Vertical feature stem centered on wash, one per grove feature (mockup: dark trunk)."
+    },
+    {
+      "at": [
+        9,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle",
+      "what": "Plain grove background wash (mockup: light green)."
+    },
+    {
+      "at": [
+        10,
+        3
+      ],
+      "kind": "tile",
+      "tile": "starting-point-middle-right",
+      "what": "Wash fading right into the destination side."
+    },
+    {
+      "at": [
+        11,
+        3
+      ],
+      "kind": "tile",
+      "tile": "destination-middle-left",
+      "what": "Left slope of the vista lower row (mockup: gray-blue mountain)."
+    },
+    {
+      "at": [
+        12,
+        3
+      ],
+      "kind": "tile",
+      "tile": "destination-middle-middle",
+      "what": "Vista lower row body (spans 2 cells)."
+    },
+    {
+      "at": [
+        13,
+        3
+      ],
+      "kind": "tile",
+      "tile": "destination-middle-middle",
+      "what": "Vista lower row body (spans 2 cells)."
+    },
+    {
+      "at": [
+        14,
+        3
+      ],
+      "kind": "tile",
+      "tile": "destination-middle-middle-right",
+      "what": "Right slope of the vista lower row."
+    },
+    {
+      "at": [
+        15,
+        3
+      ],
+      "kind": "tile",
+      "tile": "destination sky",
+      "what": "Plain vista sky (used in both sky rows)."
+    },
+    {
+      "at": [
+        16,
+        3
+      ],
+      "kind": "tile",
+      "tile": "destination-middle-accent",
+      "what": "Bottom half of the tall vista accent (mockup: dead tree trunk)."
+    },
+    {
+      "at": [
+        17,
+        3
+      ],
+      "kind": "tile",
+      "tile": "destination-middle-far",
+      "what": "Base/slope under the far vista feature."
+    },
+    {
+      "at": [
+        18,
+        3
+      ],
+      "kind": "tile",
+      "tile": "destination edge",
+      "what": "Right-border column of the strip (spans all three rows)."
+    },
+    {
+      "at": [
+        1,
+        4
+      ],
+      "kind": "tile",
+      "tile": "starting-point-bottom",
+      "what": "Plain grove ground (mockup: tan dirt)."
+    },
+    {
+      "at": [
+        2,
+        4
+      ],
+      "kind": "tile",
+      "tile": "starting-point-bottom",
+      "what": "Plain grove ground (mockup: tan dirt)."
+    },
+    {
+      "at": [
+        3,
+        4
+      ],
+      "kind": "tile",
+      "tile": "starting-point-bottom",
+      "what": "Plain grove ground (mockup: tan dirt)."
+    },
+    {
+      "at": [
+        4,
+        4
+      ],
+      "kind": "tile",
+      "tile": "starting-point-bottom-speckles",
+      "what": "Ground with detail speckles (detail slots: positions 4 and 7 of the row)."
+    },
+    {
+      "at": [
+        5,
+        4
+      ],
+      "kind": "tile",
+      "tile": "horse rider left",
+      "what": "Left half of the black horse+rider silhouette (rearing, facing right). DYNAMIC: x position follows journey progress; mockup shows the trip start."
+    },
+    {
+      "at": [
+        6,
+        4
+      ],
+      "kind": "tile",
+      "tile": "horse rider right",
+      "what": "Right half of the black horse+rider silhouette. DYNAMIC, see left half."
+    },
+    {
+      "at": [
+        7,
+        4
+      ],
+      "kind": "tile",
+      "tile": "starting-point-bottom-speckles",
+      "what": "Ground with detail speckles (detail slots: positions 4 and 7 of the row)."
+    },
+    {
+      "at": [
+        8,
+        4
+      ],
+      "kind": "tile",
+      "tile": "starting-point-bottom",
+      "what": "Plain grove ground (mockup: tan dirt)."
+    },
+    {
+      "at": [
+        9,
+        4
+      ],
+      "kind": "tile",
+      "tile": "starting-point-bottom",
+      "what": "Plain grove ground (mockup: tan dirt)."
+    },
+    {
+      "at": [
+        10,
+        4
+      ],
+      "kind": "tile",
+      "tile": "starting-point-bottom-right",
+      "what": "Ground fading right into the destination side."
+    },
+    {
+      "at": [
+        11,
+        4
+      ],
+      "kind": "tile",
+      "tile": "destination-bottom",
+      "what": "Plain vista ground (mockup: pale-blue snowfield)."
+    },
+    {
+      "at": [
+        12,
+        4
+      ],
+      "kind": "tile",
+      "tile": "destination-bottom-speckles",
+      "what": "Vista ground with sparkle details."
+    },
+    {
+      "at": [
+        13,
+        4
+      ],
+      "kind": "tile",
+      "tile": "destination-bottom",
+      "what": "Plain vista ground (mockup: pale-blue snowfield)."
+    },
+    {
+      "at": [
+        14,
+        4
+      ],
+      "kind": "tile",
+      "tile": "destination-bottom-speckles",
+      "what": "Vista ground with sparkle details."
+    },
+    {
+      "at": [
+        15,
+        4
+      ],
+      "kind": "tile",
+      "tile": "destination-bottom",
+      "what": "Plain vista ground (mockup: pale-blue snowfield)."
+    },
+    {
+      "at": [
+        16,
+        4
+      ],
+      "kind": "tile",
+      "tile": "destination-bottom",
+      "what": "Plain vista ground (mockup: pale-blue snowfield)."
+    },
+    {
+      "at": [
+        17,
+        4
+      ],
+      "kind": "tile",
+      "tile": "destination-bottom-speckles",
+      "what": "Vista ground with sparkle details."
+    },
+    {
+      "at": [
+        18,
+        4
+      ],
+      "kind": "tile",
+      "tile": "destination edge",
+      "what": "Right-border column of the strip (spans all three rows)."
+    },
+    {
+      "at": [
+        1,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar start",
+      "what": "Black rounded left cap, includes the first lit dot (combined tile)."
+    },
+    {
+      "at": [
+        2,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        3,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        4,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        5,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress dot lit",
+      "what": "White dot on black (reached milestones in the mockup). Static art; if progress states are wanted, lit = reached and dim = upcoming, decide at wiring."
+    },
+    {
+      "at": [
+        6,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        7,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        8,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress dot lit",
+      "what": "White dot on black (reached milestones in the mockup). Static art; if progress states are wanted, lit = reached and dim = upcoming, decide at wiring."
+    },
+    {
+      "at": [
+        9,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        10,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        11,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress dot dim",
+      "what": "Gray dot on black (upcoming milestones in the mockup). See lit note."
+    },
+    {
+      "at": [
+        12,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        13,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        14,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress dot dim",
+      "what": "Gray dot on black (upcoming milestones in the mockup). See lit note."
+    },
+    {
+      "at": [
+        15,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        16,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        17,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar",
+      "what": "Plain black bar segment."
+    },
+    {
+      "at": [
+        18,
+        5
+      ],
+      "kind": "tile",
+      "tile": "progress bar end flag",
+      "what": "Black rounded right cap with white pole and red flag (destination)."
+    },
+    {
+      "at": [
+        1,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button corner top left",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        2,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        3,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        4,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        5,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button corner top right",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        7,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button corner top left",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        8,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        9,
+        7
+      ],
+      "kind": "tile",
+      "tile": "rest icon zzz",
+      "what": "Sleeping Z letters (top half of the REST icon), dark brown on tan."
+    },
+    {
+      "at": [
+        10,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        11,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button corner top right",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        13,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button corner top left",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        14,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        15,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        16,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        17,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        18,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button corner top right",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        1,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button edge left",
+      "what": "Wooden button straight left edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        2,
+        8
+      ],
+      "kind": "tile",
+      "tile": "hunt icon fork",
+      "what": "Dinner fork (left half of the HUNT icon), dark brown on tan."
+    },
+    {
+      "at": [
+        3,
+        8
+      ],
+      "kind": "tile",
+      "tile": "hunt icon knife",
+      "what": "Dinner knife (right half of the HUNT icon), dark brown on tan."
+    },
+    {
+      "at": [
+        4,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button fill",
+      "what": "Plain tan button interior."
+    },
+    {
+      "at": [
+        5,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button edge right",
+      "what": "Wooden button straight right edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        7,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button edge left",
+      "what": "Wooden button straight left edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        8,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button fill",
+      "what": "Plain tan button interior."
+    },
+    {
+      "at": [
+        9,
+        8
+      ],
+      "kind": "tile",
+      "tile": "rest icon bed",
+      "what": "Rolled bed/bedroll (bottom half of the REST icon), dark brown on tan."
+    },
+    {
+      "at": [
+        10,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button fill",
+      "what": "Plain tan button interior."
+    },
+    {
+      "at": [
+        11,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button edge right",
+      "what": "Wooden button straight right edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        13,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button edge left",
+      "what": "Wooden button straight left edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        14,
+        8
+      ],
+      "kind": "tile",
+      "tile": "study icon magnifier left",
+      "what": "Left half of the magnifier glass, dark brown on tan."
+    },
+    {
+      "at": [
+        15,
+        8
+      ],
+      "kind": "tile",
+      "tile": "study icon magnifier right",
+      "what": "Right half of the magnifier glass with handle, dark brown on tan."
+    },
+    {
+      "at": [
+        16,
+        8
+      ],
+      "kind": "tile",
+      "tile": "study icon map left",
+      "what": "Left half of the folded map, dark brown on tan."
+    },
+    {
+      "at": [
+        17,
+        8
+      ],
+      "kind": "tile",
+      "tile": "study icon map right",
+      "what": "Right half of the folded map with corner fold, dark brown on tan."
+    },
+    {
+      "at": [
+        18,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button edge right",
+      "what": "Wooden button straight right edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        1,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button edge left",
+      "what": "Wooden button straight left edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        2,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label hunt left",
+      "what": "Left slice of the HUNT button label (H). Custom button-label art on tan fill; slices tile seamlessly."
+    },
+    {
+      "at": [
+        3,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label hunt center",
+      "what": "Middle slice of the HUNT button label (U, start of N)."
+    },
+    {
+      "at": [
+        4,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label hunt right",
+      "what": "Right slice of the HUNT button label (N, T)."
+    },
+    {
+      "at": [
+        5,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button edge right",
+      "what": "Wooden button straight right edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        7,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button edge left",
+      "what": "Wooden button straight left edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        8,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label rest left",
+      "what": "Left slice of the REST button label (R)."
+    },
+    {
+      "at": [
+        9,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label rest center",
+      "what": "Middle slice of the REST button label (E)."
+    },
+    {
+      "at": [
+        10,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label rest right",
+      "what": "Right slice of the REST button label (S, T)."
+    },
+    {
+      "at": [
+        11,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button edge right",
+      "what": "Wooden button straight right edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        13,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label study map left",
+      "what": "Left slice of the STUDY MAP button label (S, T)."
+    },
+    {
+      "at": [
+        14,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label study map inner left",
+      "what": "Inner-left slice of the STUDY MAP button label (T, U)."
+    },
+    {
+      "at": [
+        15,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label study map middle",
+      "what": "Middle slice of the STUDY MAP button label (D, Y)."
+    },
+    {
+      "at": [
+        16,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label study map inner right",
+      "what": "Inner-right slice of the STUDY MAP button label (M, A)."
+    },
+    {
+      "at": [
+        17,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button label study map right",
+      "what": "Right slice of the STUDY MAP button label (A, P)."
+    },
+    {
+      "at": [
+        18,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button edge right",
+      "what": "Wooden button straight right edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        1,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button corner bottom left",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        2,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        3,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom cursor",
+      "what": "Bottom edge with the selection-cursor shaft emerging downward. Stamped ONLY under the selected option; other options use the plain bottom edge."
+    },
+    {
+      "at": [
+        4,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        5,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button corner bottom right",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        7,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button corner bottom left",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        8,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        9,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        10,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        11,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button corner bottom right",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        13,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button corner bottom left",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        14,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        15,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        16,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        17,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Wooden button straight bottom edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        18,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button corner bottom right",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        3,
+        11
+      ],
+      "kind": "tile",
+      "tile": "cursor arrow head",
+      "what": "Dark down-arrowhead below the selected button (pairs with the edge above)."
+    },
+    {
+      "at": [
+        6,
+        12
+      ],
+      "kind": "tile",
+      "tile": "button corner top left",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        7,
+        12
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        8,
+        12
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        9,
+        12
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        10,
+        12
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        11,
+        12
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        12,
+        12
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Wooden button straight top edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        13,
+        12
+      ],
+      "kind": "tile",
+      "tile": "button corner top right",
+      "what": "Rounded wooden button corner. Shared by all buttons."
+    },
+    {
+      "at": [
+        6,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button b icon",
+      "what": "Circled B prompt, INCLUDES the button left edge (combined tile). Compare with the existing menu b button tile at wiring; redraw if it does not match."
+    },
+    {
+      "at": [
+        7,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button label continue left",
+      "what": "Left slice of the CONTINUE button label (C, O)."
+    },
+    {
+      "at": [
+        8,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button label continue inner left",
+      "what": "Inner-left slice of the CONTINUE button label (O, N)."
+    },
+    {
+      "at": [
+        9,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button label continue middle left",
+      "what": "Middle-left slice of the CONTINUE button label (N, T)."
+    },
+    {
+      "at": [
+        10,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button label continue middle right",
+      "what": "Middle-right slice of the CONTINUE button label (I, N)."
+    },
+    {
+      "at": [
+        11,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button label continue inner right",
+      "what": "Inner-right slice of the CONTINUE button label (N, U)."
+    },
+    {
+      "at": [
+        12,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button label continue right",
+      "what": "Right slice of the CONTINUE button label (U, E)."
+    },
+    {
+      "at": [
+        13,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button edge right",
+      "what": "Wooden button straight right edge. Shared by all buttons."
+    },
+    {
+      "at": [
+        1,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'S' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": "S"
+    },
+    {
+      "at": [
+        2,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'U' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": "U"
+    },
+    {
+      "at": [
+        3,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'P' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": "P"
+    },
+    {
+      "at": [
+        4,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'P' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": "P"
+    },
+    {
+      "at": [
+        5,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'L' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": "L"
+    },
+    {
+      "at": [
+        6,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'I' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": "I"
+    },
+    {
+      "at": [
+        7,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'E' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": "E"
+    },
+    {
+      "at": [
+        8,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'S' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": "S"
+    },
+    {
+      "at": [
+        9,
+        14
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter ':' of 'SUPPLIES:'.",
+      "part": "top",
+      "char": ":"
+    },
+    {
+      "at": [
+        12,
+        14
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "supplies tens digit (dynamic).",
+      "part": "top",
+      "field": "supplies",
+      "place": "tens"
+    },
+    {
+      "at": [
+        13,
+        14
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "supplies ones digit (dynamic).",
+      "part": "top",
+      "field": "supplies",
+      "place": "ones"
+    },
+    {
+      "at": [
+        1,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'S' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": "S"
+    },
+    {
+      "at": [
+        2,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'U' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": "U"
+    },
+    {
+      "at": [
+        3,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'P' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": "P"
+    },
+    {
+      "at": [
+        4,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'P' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": "P"
+    },
+    {
+      "at": [
+        5,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'L' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": "L"
+    },
+    {
+      "at": [
+        6,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'I' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": "I"
+    },
+    {
+      "at": [
+        7,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'E' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": "E"
+    },
+    {
+      "at": [
+        8,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'S' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": "S"
+    },
+    {
+      "at": [
+        9,
+        15
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter ':' of 'SUPPLIES:', bottom half.",
+      "part": "bottom",
+      "char": ":"
+    },
+    {
+      "at": [
+        12,
+        15
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "supplies tens digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "supplies",
+      "place": "tens"
+    },
+    {
+      "at": [
+        13,
+        15
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "supplies ones digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "supplies",
+      "place": "ones"
+    },
+    {
+      "at": [
+        1,
+        16
+      ],
+      "kind": "tile",
+      "tile": "status bar full heart",
+      "what": "Red heart icon. Reuse candidate: matches combat tileset status bar full heart, verify pixel match at wiring, else draw new."
+    },
+    {
+      "at": [
+        2,
+        16
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "hp tens digit (dynamic).",
+      "part": "top",
+      "field": "hp",
+      "place": "tens"
+    },
+    {
+      "at": [
+        3,
+        16
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "hp ones digit (dynamic).",
+      "part": "top",
+      "field": "hp",
+      "place": "ones"
+    },
+    {
+      "at": [
+        5,
+        16
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "gold hundreds digit (dynamic).",
+      "part": "top",
+      "field": "gold",
+      "place": "hundreds"
+    },
+    {
+      "at": [
+        6,
+        16
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "gold tens digit (dynamic).",
+      "part": "top",
+      "field": "gold",
+      "place": "tens"
+    },
+    {
+      "at": [
+        7,
+        16
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "gold ones digit (dynamic).",
+      "part": "top",
+      "field": "gold",
+      "place": "ones"
+    },
+    {
+      "at": [
+        8,
+        16
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'G' of 'G'.",
+      "part": "top",
+      "char": "G"
+    },
+    {
+      "at": [
+        10,
+        16
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'D' of 'DAYS:'.",
+      "part": "top",
+      "char": "D"
+    },
+    {
+      "at": [
+        11,
+        16
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'A' of 'DAYS:'.",
+      "part": "top",
+      "char": "A"
+    },
+    {
+      "at": [
+        12,
+        16
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'Y' of 'DAYS:'.",
+      "part": "top",
+      "char": "Y"
+    },
+    {
+      "at": [
+        13,
+        16
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'S' of 'DAYS:'.",
+      "part": "top",
+      "char": "S"
+    },
+    {
+      "at": [
+        14,
+        16
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter ':' of 'DAYS:'.",
+      "part": "top",
+      "char": ":"
+    },
+    {
+      "at": [
+        15,
+        16
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "days hundreds digit (dynamic).",
+      "part": "top",
+      "field": "days",
+      "place": "hundreds"
+    },
+    {
+      "at": [
+        16,
+        16
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "days tens digit (dynamic).",
+      "part": "top",
+      "field": "days",
+      "place": "tens"
+    },
+    {
+      "at": [
+        17,
+        16
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "days ones digit (dynamic).",
+      "part": "top",
+      "field": "days",
+      "place": "ones"
+    },
+    {
+      "at": [
+        2,
+        17
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "hp tens digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "hp",
+      "place": "tens"
+    },
+    {
+      "at": [
+        3,
+        17
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "hp ones digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "hp",
+      "place": "ones"
+    },
+    {
+      "at": [
+        5,
+        17
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "gold hundreds digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "gold",
+      "place": "hundreds"
+    },
+    {
+      "at": [
+        6,
+        17
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "gold tens digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "gold",
+      "place": "tens"
+    },
+    {
+      "at": [
+        7,
+        17
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "gold ones digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "gold",
+      "place": "ones"
+    },
+    {
+      "at": [
+        8,
+        17
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'G' of 'G', bottom half.",
+      "part": "bottom",
+      "char": "G"
+    },
+    {
+      "at": [
+        10,
+        17
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'D' of 'DAYS:', bottom half.",
+      "part": "bottom",
+      "char": "D"
+    },
+    {
+      "at": [
+        11,
+        17
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'A' of 'DAYS:', bottom half.",
+      "part": "bottom",
+      "char": "A"
+    },
+    {
+      "at": [
+        12,
+        17
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'Y' of 'DAYS:', bottom half.",
+      "part": "bottom",
+      "char": "Y"
+    },
+    {
+      "at": [
+        13,
+        17
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter 'S' of 'DAYS:', bottom half.",
+      "part": "bottom",
+      "char": "S"
+    },
+    {
+      "at": [
+        14,
+        17
+      ],
+      "kind": "static",
+      "font": "intrepid large",
+      "what": "Static letter ':' of 'DAYS:', bottom half.",
+      "part": "bottom",
+      "char": ":"
+    },
+    {
+      "at": [
+        15,
+        17
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "days hundreds digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "days",
+      "place": "hundreds"
+    },
+    {
+      "at": [
+        16,
+        17
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "days tens digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "days",
+      "place": "tens"
+    },
+    {
+      "at": [
+        17,
+        17
+      ],
+      "kind": "variable",
+      "font": "intrepid large",
+      "what": "days ones digit bottom half (dynamic).",
+      "part": "bottom",
+      "field": "days",
+      "place": "ones"
+    }
+  ],
+  "variables": [
+    {
+      "name": "supplies",
+      "x": 12,
+      "y": 14,
+      "width": 2,
+      "align": "right",
+      "font": "intrepid large",
+      "what": "Supplies count, dynamic. Right-aligned; ones digit fixed at col 13, grows left as needed. Mockup shows 12."
+    },
+    {
+      "name": "hp",
+      "x": 2,
+      "y": 16,
+      "width": 2,
+      "align": "right",
+      "font": "intrepid large",
+      "what": "Hero HP, dynamic. Right-aligned; ones digit fixed at col 3. Heart icon is the separate art tile at col 1. Mockup shows 12."
+    },
+    {
+      "name": "gold",
+      "x": 5,
+      "y": 16,
+      "width": 3,
+      "align": "right",
+      "font": "intrepid large",
+      "what": "Gold pieces, dynamic. Right-aligned ending at col 7 with the static G suffix fixed at col 8. Mockup shows 121."
+    },
+    {
+      "name": "days",
+      "x": 15,
+      "y": 16,
+      "width": 3,
+      "align": "right",
+      "font": "intrepid large",
+      "what": "Days left, dynamic. Right-aligned; ones digit fixed at col 17. Mockup shows 121."
+    }
+  ],
+  "fonts": {
+    "intrepid": "ASCII tileset assets/intrepid.png (16x6 sheet, chars 32-127), 1 tile per cell. Renders the 1-row TRAVELING... title. The artist may restyle glyphs; the wiring stays ASCII codes.",
+    "intrepid large": "Double-height ASCII for SUPPLIES/stats (each glyph 2 cells tall). Not in intrepid.png yet: the artist extends the sheet with top/bottom halves per glyph (mockup shows tall narrow serif caps, digits and colon)."
+  },
+  "scenery": {
+    "rule": "Rows 2-4 form the journey strip. Cols 1-10 stamp the ORIGIN biome grove kit; cols 11-18 stamp the DESTINATION biome vista kit. Each journey route declares origin_biome/destination_biome (e.g. forest->desolate); tools/screen_compiler/travel_art_compile.py fetches assets/travels/<biome>.png for each side and emits planar tile data + a per-route strip table (src/game/travel_art_content.c). Horse, progress bar/flag and all UI are journey chrome overlaid on top, not scenery.",
+    "origin_cols": [
+      1,
+      10
+    ],
+    "destination_cols": [
+      11,
+      18
+    ],
+    "grove_slots": [
+      "starting-point-top-left",
+      "starting-point-top-middle-left",
+      "starting-point-top-middle-right",
+      "starting-point-top-right",
+      "starting-point-middle",
+      "starting-point-middle-stem",
+      "starting-point-middle-right",
+      "starting-point-bottom",
+      "starting-point-bottom-speckles",
+      "starting-point-bottom-right"
+    ],
+    "vista_slots": [
+      "destination-top-left",
+      "destination-top-middle",
+      "destination-top-middle-right",
+      "destination sky",
+      "destination-top-accent",
+      "destination-top-far",
+      "destination edge",
+      "destination-middle-left",
+      "destination-middle-middle",
+      "destination-middle-middle-right",
+      "destination-middle-accent",
+      "destination-middle-far",
+      "destination-bottom",
+      "destination-bottom-speckles"
+    ],
+    "biomes": {
+      "forest": {
+        "tilesets": [
+          "forest"
+        ],
+        "note": "Mockup pair shows the forest grove (green trees, dirt trail)."
+      },
+      "village": {
+        "tilesets": [
+          "village"
+        ],
+        "note": "Orchard grove + rooftop vista to be drawn (see town tileset)."
+      },
+      "desolate": {
+        "tilesets": [
+          "desolate_landscape"
+        ],
+        "note": "Dead scrub grove + boulder vista to be drawn (see desolate tileset)."
+      },
+      "snow": {
+        "tilesets": [],
+        "note": "No current route ends in snow; mockup pair shows the snow vista. Sheet to be drawn when a snowy destination exists."
+      }
+    },
+    "sheet": {
+      "file": "assets/travels/<biome>.png",
+      "size": "64x24 px = 8 columns x 3 rows of 8px tiles",
+      "order": "row-major: grove kit slots (cells 0-9) then vista kit slots (cells 10-23), in scenery grove_slots/vista_slots order",
+      "palette": "Transparent background; at most 4 shades per tile (Game Boy 2bpp, enforced by the compiler).",
+      "pipeline": "tools/screen_compiler/travel_art_compile.py --all"
+    }
+  },
+  "palette": {
+    "background": "#FFFFFF (plain white)",
+    "button wood light": "#DDBE8F~ tan fill",
+    "button wood dark": "#8A6F4D~ edges and lettering",
+    "dirt tan": "#A78855~ grove ground",
+    "forest greens": "#78B75F~ wash, #2E5230~ foliage, #2B4D12~ trunks (approx)",
+    "snow blue": "#C8DFE6~ ground, #EAF4F8~ sky, #CDE1E2~ mountains (approx)",
+    "progress black": "#000000 bar; dots white, upcoming dim gray",
+    "flag and heart red": "#C02028~ (verify against existing tiles at wiring)"
+  }
+}
