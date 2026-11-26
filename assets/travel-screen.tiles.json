@@ -892,12 +892,21 @@
     },
     {
       "at": [
-        13,
+        12,
         7
       ],
       "kind": "tile",
       "tile": "button corner top left",
       "what": "Travel tile \"top left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        13,
+        7
+      ],
+      "kind": "tile",
+      "tile": "button edge top",
+      "what": "Travel tile \"top box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1036,12 +1045,21 @@
     },
     {
       "at": [
-        13,
+        12,
         8
       ],
       "kind": "tile",
       "tile": "button edge left",
       "what": "Travel tile \"left box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        13,
+        8
+      ],
+      "kind": "tile",
+      "tile": "button fill",
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1180,12 +1198,21 @@
     },
     {
       "at": [
-        13,
+        12,
         9
       ],
       "kind": "tile",
       "tile": "button label study map left",
       "what": "Travel tile \"ST icon\" (assets/travel-tile.png, see assets/travel-tileset.csv). STUDY MAP label slice 1/4."
+    },
+    {
+      "at": [
+        13,
+        9
+      ],
+      "kind": "tile",
+      "tile": "button fill",
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -1324,12 +1351,21 @@
     },
     {
       "at": [
-        13,
+        12,
         10
       ],
       "kind": "tile",
       "tile": "button corner bottom left",
       "what": "Travel tile \"bottom left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        13,
+        10
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -2184,8 +2220,8 @@
   "variables": [
     {
       "name": "supplies",
-      "x": 12,
-      "y": 14,
+      "x": 2,
+      "y": 15,
       "width": 2,
       "align": "right",
       "font": "intrepid large",

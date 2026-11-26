@@ -168,30 +168,31 @@ static const ChromeCell s_hunt_cells[] = {
     { 4, 10, 0xFE }, { 5, 10, 7 }, { 6, 10, 9 }
 };
 
-/* REST button (cols 7-11): centered bed icon + R/ES/T label. Gap col 12
- * blanked for the same reason. */
+/* REST button (cols 7-11): centered bed icon + R/ES/T label. STUDY's
+ * frame now starts at col 12, so no gap blank is needed. */
 static const ChromeCell s_rest_cells[] = {
     { 7, 7, 0 }, { 8, 7, 1 }, { 9, 7, 1 }, { 10, 7, 1 },
-    { 11, 7, 2 }, { 12, 7, 0xFF },
+    { 11, 7, 2 },
     { 7, 8, 3 }, { 8, 8, 4 }, { 9, 8, 11 }, { 10, 8, 4 },
-    { 11, 8, 5 }, { 12, 8, 0xFF },
+    { 11, 8, 5 },
     { 7, 9, 3 }, { 8, 9, 17 }, { 9, 9, 18 }, { 10, 9, 19 },
-    { 11, 9, 5 }, { 12, 9, 0xFF },
+    { 11, 9, 5 },
     { 7, 10, 6 }, { 8, 10, 7 }, { 9, 10, 0xFE }, { 10, 10, 7 },
-    { 11, 10, 9 }, { 12, 10, 0xFF }
+    { 11, 10, 9 }
 };
 
-/* STUDY MAP button (cols 13-18, 6 wide): glass+map + ST/UD/YM/AP.
- * Gap col 19 blanked. */
+/* STUDY MAP button (cols 12-18, 7 wide): frame starts at col 12 while
+ * icons (glass 14, map 15) and labels (ST/UD/YM/AP at 14-17) stay put;
+ * col 13 is new fill. Gap col 19 blanked. */
 static const ChromeCell s_study_cells[] = {
-    { 13, 7, 0 }, { 14, 7, 1 }, { 15, 7, 1 }, { 16, 7, 1 },
-    { 17, 7, 1 }, { 18, 7, 2 }, { 19, 7, 0xFF },
-    { 13, 8, 3 }, { 14, 8, 12 }, { 15, 8, 13 }, { 16, 8, 4 },
-    { 17, 8, 4 }, { 18, 8, 5 }, { 19, 8, 0xFF },
-    { 13, 9, 3 }, { 14, 9, 20 }, { 15, 9, 21 }, { 16, 9, 22 },
-    { 17, 9, 23 }, { 18, 9, 5 }, { 19, 9, 0xFF },
-    { 13, 10, 6 }, { 14, 10, 7 }, { 15, 10, 0xFE }, { 16, 10, 7 },
-    { 17, 10, 7 }, { 18, 10, 9 }, { 19, 10, 0xFF }
+    { 12, 7, 0 }, { 13, 7, 1 }, { 14, 7, 1 }, { 15, 7, 1 },
+    { 16, 7, 1 }, { 17, 7, 1 }, { 18, 7, 2 }, { 19, 7, 0xFF },
+    { 12, 8, 3 }, { 13, 8, 4 }, { 14, 8, 12 }, { 15, 8, 13 },
+    { 16, 8, 4 }, { 17, 8, 4 }, { 18, 8, 5 }, { 19, 8, 0xFF },
+    { 12, 9, 3 }, { 13, 9, 4 }, { 14, 9, 20 }, { 15, 9, 21 },
+    { 16, 9, 22 }, { 17, 9, 23 }, { 18, 9, 5 }, { 19, 9, 0xFF },
+    { 12, 10, 6 }, { 13, 10, 7 }, { 14, 10, 7 }, { 15, 10, 0xFE },
+    { 16, 10, 7 }, { 17, 10, 7 }, { 18, 10, 9 }, { 19, 10, 0xFF }
 };
 
 /* CONTINUE button (cols 6-13, rows 11-13): B icon + CO/NT/IN/UE.
@@ -261,12 +262,12 @@ static void tp_hunt_button(uint8_t selected)
 
 static void tp_rest_button(uint8_t selected)
 {
-    tp_chrome_run(s_rest_cells, 24, selected);
+    tp_chrome_run(s_rest_cells, 20, selected);
 }
 
 static void tp_study_button(uint8_t selected)
 {
-    tp_chrome_run(s_study_cells, 28, selected);
+    tp_chrome_run(s_study_cells, 32, selected);
 }
 
 static void tp_continue_button(void)
@@ -379,6 +380,8 @@ static void tp_supplies(void)
     prov = g_game.state.variables.values[VARIABLE_ID_PROVISIONS - 1];
     if (prov < 0) prov = 0;
     s_n = 0;
+    tp_putc(' ');
+    tp_putc(' ');
     tp_puts("SUPPLIES: ");
     tp_put_u16((uint16_t)prov);
     if (prov == 0) {
