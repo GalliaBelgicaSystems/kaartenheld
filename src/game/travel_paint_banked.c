@@ -345,10 +345,11 @@ static void tp_frame_init(const char *title)
     tp_hline(1, '-');
 }
 
-/* Combined stat line (row 16): "HP 15/15 121G 180D" (hero pool,
- * wallet, clock in one diff-skipped line; the REST heal, shop spends
- * and day burn all show here). */
-static void tp_stats(void)
+/* Last row (row 17): heart + health, money with G, DAYS: + days left.
+ * "[heart]15/15 121G DAYS: 180". The heart is the boot-loaded HUD icon
+ * (UI_TILE_TRAVEL_HEART); buffer marker 'H' keeps the diff-skip stable
+ * (row 17 has no other writer). */
+static void tp_lastrow(void)
 {
     int16_t gold;
     int16_t day;
@@ -356,8 +357,15 @@ static void tp_stats(void)
     if (gold < 0) gold = 0;
     day = g_game.state.variables.values[VARIABLE_ID_DAY - 1];
     if (day < 0) day = 0;
+    VBK_REG = 0;
+    s_row_used[17] = 1;
+    s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)17 << 5));
+    s_buf = &g_ui_screen_buf[17][0];
+    if (*s_buf != 'H') {
+        tp_sync_write(s_dst, UI_TILE_TRAVEL_HEART);
+        *s_buf = 'H';
+    }
     s_n = 0;
-    tp_puts("HP ");
     tp_put_u16(g_game.state.party.members[0].hp);
     tp_putc('/');
     tp_put_u16(g_game.state.party.members[0].max_hp);
@@ -365,12 +373,10 @@ static void tp_stats(void)
     tp_put_u16((uint16_t)gold);
     tp_putc('G');
     tp_putc(' ');
+    tp_puts("DAYS:");
+    tp_putc(' ');
     tp_put_u16((uint16_t)day);
-    tp_putc('D');
-    if (day == 0) {
-        tp_puts(" LATE!");
-    }
-    tp_line_done(16);
+    tp_text(1, 17, s_line, 19);
 }
 
 static void tp_supplies(void)
@@ -387,8 +393,6 @@ static void tp_supplies(void)
     tp_line_done(14);
 }
 
-/* "HP 15/15" (hero pool, so the REST heal is visible). */
-
 static void tp_step(void)
 {
     uint8_t done;
@@ -399,33 +403,6 @@ static void tp_step(void)
     tp_puts(" OF ");
     tp_put_u16(g_travel_total);
     tp_line_done(15);
-}
-
-/* Ambient weather name (same vocabulary as travel.h; literals live in
- * this bank, so no cross-bank pointer table). */
-static const char *tp_wx_name(uint8_t w)
-{
-    if (w == TRAVEL_WEATHER_CLEAR) return "CLEAR";
-    if (w == TRAVEL_WEATHER_RAIN) return "RAIN";
-    if (w == TRAVEL_WEATHER_STORM) return "STORM";
-    if (w == TRAVEL_WEATHER_HEAT) return "HEAT";
-    if (w == TRAVEL_WEATHER_COLD) return "COLD";
-    if (w == TRAVEL_WEATHER_WIND) return "WIND";
-    if (w == TRAVEL_WEATHER_SNOW) return "SNOW";
-    if (w == TRAVEL_WEATHER_FOG) return "FOG";
-    return "";
-}
-
-/* Route line with the active weather appended ("FIELD ROAD CLEAR"). */
-static void tp_route(void)
-{
-    s_n = 0;
-    tp_puts(s_route.name);
-    if (g_travel_weather != TRAVEL_WEATHER_NONE) {
-        tp_putc(' ');
-        tp_puts(tp_wx_name(g_travel_weather));
-    }
-    tp_line_done(6);
 }
 
 static void tp_method_duration(void)
@@ -692,7 +669,7 @@ void travel_paint_banked(void)
         view = TRAVEL_VIEW_HELP;
     }
     if (!same_screen) {
-        tp_frame_init("TRAVEL");
+        tp_frame_init("TRAVELING...");
         travel_chrome_load_banked();
     } else {
         s_row_used[0] = 1;
@@ -700,14 +677,13 @@ void travel_paint_banked(void)
     }
     tp_wash();
     tp_markers();
-    tp_route();
     if (view == TRAVEL_VIEW_METHOD) {
         tp_method_duration();
     } else if (!g_travel_supply) {
         tp_step();
     }
     tp_supplies();
-    tp_stats();
+    tp_lastrow();
     if (view == TRAVEL_VIEW_IDLE) {
         tp_hunt_button((uint8_t)(g_travel_choice == TRAVEL_CAMP_HUNT));
         tp_rest_button((uint8_t)(g_travel_choice == TRAVEL_CAMP_REST));

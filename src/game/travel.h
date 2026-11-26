@@ -259,6 +259,14 @@ uint8_t travel_steps_done(void);
 #define UI_TILE_TRAVEL_CHROME_BASE 208u
 #define UI_TILE_TRAVEL_CHROME_COUNT 40u
 
+/* Boot-loaded combat HP (heart) icon: streamed by the bank-3 card-tile
+ * loader at boot and never clobbered on the journey screen (world and
+ * battle art live at 128+, UI chrome at 96-127 is boot-stable). The
+ * ow_hud status hearts (208-211) can NOT be used here: the chrome
+ * window overwrites them on journey entry (overworld restreams them
+ * on exit, same time-share contract). */
+#define UI_TILE_TRAVEL_HEART 113u
+
 #define TCHROME_TOP_LEFT_BOX_CORNER 0u
 #define TCHROME_TOP_BOX 1u
 #define TCHROME_TOP_RIGHT_BOX_CORNER 2u
