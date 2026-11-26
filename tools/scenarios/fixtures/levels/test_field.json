@@ -1,5 +1,6 @@
 {
   "id": "test_field",
+  "act": 1,
   "name": "TEST Emerald Plains",
   "map": {
     "width": 32,

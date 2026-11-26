@@ -95,18 +95,23 @@ def load_scenario(sess, name):
         return json.load(f)
 
 
+"""Authoritative sprite position (y, x) from the hero's shadow OAM slot."""
+PLAYER_OAM_SLOT = 38
+
+
 def shadow_oam(sess):
-    """Authoritative sprite position (y, x) from shadow OAM slot 0."""
-    return (sess._memread(0xC000), sess._memread(0xC001))
+    """Authoritative sprite position (y, x) from the hero's shadow OAM slot."""
+    base = 0xC000 + 4 * PLAYER_OAM_SLOT
+    return (sess._memread(base), sess._memread(base + 1))
 
 
 def shadow_sprite_tile(sess):
-    """Sprite tile byte from shadow OAM slot 0 (y, x, tile, attr)."""
-    return sess._memread(0xC002)
+    """Sprite tile byte from the hero's shadow OAM slot (y, x, tile, attr)."""
+    return sess._memread(0xC000 + 4 * PLAYER_OAM_SLOT + 2)
 
 
 def shadow_oam_slot_tile(sess, slot):
-    """Tile byte of shadow OAM entry `slot` (0 = player).  Each entry is
+    """Tile byte of shadow OAM entry `slot` (38 = hero).  Each entry is
     four bytes at 0xC000 + 4*slot: y, x, tile, attr."""
     return sess._memread(0xC000 + 4 * slot + 2)
 
@@ -681,7 +686,7 @@ def verify_dialogue_transition(sess):
     # VBlank from the gate above: CRAM reads are exact here.
     paper = bg_cram(sess)[4]
     check("dialogue entry: paper ramp intact (slot 4)",
-          [0x7FFF, 0x3256, 0x0C71, 0x196E], paper)
+          _ramp_words("fight3"), paper)
 
     # Sprite stays visible behind the box at the player's position (9,5),
     # camera (0,0) -> OAM y=5*8+16=56, x=9*8+8=80.
@@ -844,7 +849,7 @@ def verify_scene_transition(sess):
     check("town CRAM read in VBlank (arrival)", True, wait_vblank(sess))
     arr_cram = bg_cram(sess)
     check("gate crossing: slot 4 holds the HUD paper ramp",
-          [0x7FFF, 0x3256, 0x0C71, 0x196E], arr_cram[4])
+          _ramp_words("fight3"), arr_cram[4])
     same = all(ref_cram[p] == arr_cram[p]
                for p in (0, 1, 2, 3, 4, 5, 6, 7))
     check("gate crossing: TOWN CRAM matches fresh boot (all slots)",

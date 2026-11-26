@@ -418,7 +418,9 @@ const EventDefinition g_events[] = {
      * every milestone (tutorial win, chest, Monster Hunt, mimic) adds
      * exactly one to the base-1 pool, reaching 5 in any completion
      * order (fleeing the lesson grants nothing).  Carl's defeat is
-     * persistent (one-shot via GameState.world).  The lesson's +1 AP is
+     * persistent within the zone (zone defeat bit; leaving the zone
+     * respawns him, but the TUTORIAL_SPAR_WON flag latch keeps the
+     * spar offer, the ? mark and the re-fight suppressed).  The lesson's +1 AP is
      * handed over when the spar STARTS (overworld encounter path,
      * one-shot via TUTORIAL_SKIPPED -- shared with the leave-the-field
      * skip, which hands over the same point), so the win row below keeps
@@ -587,9 +589,13 @@ const EventDefinition g_events[] = {
     /* ── Village Heal Mage (one free heal, YES/NO ask) ───────────────
      * The mage asks once ("do you want me to heal your wounds?") with a
      * YES/NO choice prompt (DIALOGUE_CHOICE_YES_NO, last line "> YES   NO").
-     * The dialogue screen dispatches the game-owned bank-5 body
-     * (src/game/heal_mage_banked.c), which owns what the answer means:
-     * YES heals the whole party, stages the jingle + telemetry the
+     * The dialogue screen dispatches the game-owned bank-12 body
+     * (src/game/choice_nav_banked.c), which owns what the answer means:
+     * YES heals the whole party, unless the party is at 2/3+ of max HP
+     * (10+ at base 15 HP) -- then a second YES/NO confirm opens first
+     * ("he can only heal once"); its NO opens DECLINED and its YES
+     * heals.  Under 2/3 max HP YES heals at once.  The heal stages the
+     * jingle + telemetry the
      * fixed wrapper owes, and sets HEAL_MAGE_USED; NO stages the
      * "come back when you're hurt" follow-up and sets nothing, so the
      * mage asks again next time.  Once used, talks match REFUSED first

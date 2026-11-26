@@ -20,15 +20,15 @@
     "palette": 1
   },
   "subtitle": {
-    "text": "BATTLE DEMO",
+    "text": "",
     "y": 5,
     "align": "center"
   },
   "prompt": {
-    "x": 4,
+    "x": 5,
     "y": 14,
     "text": "PRESS START",
-    "align": "center"
+    "align": "left"
   },
   "graphic": {
     "enabled": false,
@@ -59,7 +59,6 @@
     "options": [
       "> CONTINUE",
       "> NEW GAME",
-      "> SOUND",
       "> TUTORIAL",
       "> CREDITS"
     ]

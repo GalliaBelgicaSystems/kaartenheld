@@ -47,7 +47,16 @@ enum {
     DBG_ACT_SET_MARKET_INDEX = 24,
     /* Pin the material filter mid-scenario (WEAPON/MATERIAL picker):
      * a0 = material id (MAT_*, 0xFF = ALL).  Pure WRAM write. */
-    DBG_ACT_SET_FILTER_MAT = 25
+    DBG_ACT_SET_FILTER_MAT = 25,
+    /* Set a zone defeat bit through the real mechanic
+     * (game_world_set_actor_state, ACTOR_STATE_CHANGE telemetry
+     * included): a0 = ActorId (1..128).  Stages defeats no battle
+     * could reach (e.g. 17+ kills to prove the bitmask has no cap). */
+    DBG_ACT_SET_DEFEAT = 26,
+    /* Teleport to a scene (debug travel, no exit logic): a0 = SceneId,
+     * a1lo = x, a1hi = y.  Runs the real scene_load (tiles, spawns,
+     * zone settle), so zone-change tests drive the production path. */
+    DBG_ACT_TELEPORT = 27
 };
 
 #endif /* SCENARIOS_H */

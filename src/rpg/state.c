@@ -77,37 +77,38 @@ void game_variable_add(GameState *state, VariableId variable, int16_t amount)
     game_variable_set(state, variable, (int16_t)(state->variables.values[variable - 1] + amount));
 }
 
-static PersistentActorState *find_actor_state(GameState *state, ActorId actor_id)
+static bool actor_id_valid(ActorId actor_id)
 {
-    uint8_t i;
-    if (!state || actor_id == 0) return 0;
-    for (i = 0; i < state->world.count; i++) {
-        if (state->world.actors[i].actor_id == actor_id) return &state->world.actors[i];
-    }
-    return 0;
+    return (actor_id >= 1 && actor_id <= ZONE_DEFEAT_BITS);
+}
+
+static void defeat_bit(ActorId actor_id, uint8_t *out_byte, uint8_t *out_mask)
+{
+    *out_byte = ZONE_DEFEAT_BYTE(actor_id);
+    *out_mask = (uint8_t)(1u << ZONE_DEFEAT_BIT(actor_id));
 }
 
 bool game_world_actor_is_defeated(const GameState *state, ActorId actor_id)
 {
-    const PersistentActorState *a = find_actor_state((GameState *)state, actor_id);
-    return a ? (a->state == (uint8_t)ACTOR_STATE_DEFEATED) : false;
+    uint8_t byte, mask;
+    if (!state || !actor_id_valid(actor_id)) return false;
+    defeat_bit(actor_id, &byte, &mask);
+    return (state->world.bits[byte] & mask) != 0;
 }
 
 void game_world_set_actor_state(GameState *state, ActorId actor_id,
                                 ActorStateId actor_state)
 {
-    PersistentActorState *a;
-    if (!state || actor_id == 0) return;
-
-    a = find_actor_state(state, actor_id);
-    if (a) {
-        if (a->state == (uint8_t)actor_state) return;
+    uint8_t byte, mask;
+    if (!state || !actor_id_valid(actor_id)) return;
+    defeat_bit(actor_id, &byte, &mask);
+    if (actor_state == (uint8_t)ACTOR_STATE_DEFEATED) {
+        if (state->world.bits[byte] & mask) return;
+        state->world.bits[byte] |= mask;
     } else {
-        if (state->world.count >= MAX_PERSISTENT_ACTORS) return;
-        a = &state->world.actors[state->world.count++];
-        a->actor_id = actor_id;
+        if (!(state->world.bits[byte] & mask)) return;
+        state->world.bits[byte] &= (uint8_t)~mask;
     }
-    a->state = (uint8_t)actor_state;
     telemetry_emit(EVENT_ACTOR_STATE_CHANGE,
                    (uint8_t)(actor_id & 0xFF),
                    (uint8_t)((actor_id >> 8) & 0xFF),

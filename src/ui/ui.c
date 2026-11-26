@@ -100,7 +100,12 @@ uint8_t ui_font_tile_base;
 #include "gfx/rpg_tile_lookup.h"
 #include "banked.h"
 
-#define PLAYER_SPRITE_NUM 0
+/* OAM priority is index order (lower index draws on top).  The hero sits
+ * at PLAYER_SPRITE_NUM (38, ui.h), AFTER the fixed HUD-marker block
+ * (entries 30-37: "?" quest / "!" pursuer badges) so a badge always
+ * covers the hero standing under it, and before the transient save
+ * spinner (entry 39).  The actor pass never writes past entry 29
+ * (capped), so nothing stomps a badge or the hero's slot. */
 
 /* ASCII semantic char per TileType (0..3): '.', '#', '>', 'B'.  The
  * overworld renders these via the console font (ui_font_tile_base + (ch -

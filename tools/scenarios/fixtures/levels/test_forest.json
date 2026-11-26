@@ -1,5 +1,6 @@
 {
  "id": "test_forest",
+  "act": 1,
  "name": "TEST Whispering Forest",
  "map": {
   "width": 20,

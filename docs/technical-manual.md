@@ -2,7 +2,7 @@
 
 > Looking for the friendly player's guide instead? See [`manual.md`](manual.md).
 
-A complete, machine-checked reference to **KAARTENHELD — BATTLE DEMO**, the
+A complete, machine-checked reference to **KAARTENHELD**, the
 Game Boy card-combat RPG.
 
 This manual describes the game exactly as implemented.  Where a design
@@ -19,23 +19,43 @@ it live with the deterministic harness (`make test-harness`,
 
 ### 1.1 Premise
 
-Three slides play over the intro (`src/screens/title_content.c`,
-`intro_screen.c`):
+Five slides play over the intro (`screens/intro.json`, rendered by
+`src/screens/title_content.c`, `intro_screen.c`):
 
-> A troubled land
-> calls out for a
-> hero of a new
-> kind.
+> The Lord of Slimes
+> has seized control
+> of Ofgeleeen.
+> His conquest has
+> stopped there.
 >
-> Your strength is
-> not in steel,
-> but in the cards
-> you carry.
+> The duchy is his.
+> Yet the realm's
+> other states
+> turn a blind eye,
+> unmoved by its
+> fate.
 >
-> Only the Lord of
-> Slimes stands
-> between all that
-> lives and the end.
+> Deep in the
+> castle lies the
+> Shaft of Minett,
+> holding power
+> for 180 days.
+>
+> A Card Wielder
+> has risen to free
+> Ofgeleeen, for
+> only he knows
+> the danger the
+> Lord of Slimes
+> poses to the
+> rest of the world.
+>
+> The clock is
+> ticking. Our hero
+> must make haste
+> and stop the Lord
+> before it's
+> too late!
 
 The land calls for a hero — but not one of sword and steel alone.  Your
 strength is in the **cards** you carry.  Monsters have begun to menace the
@@ -54,7 +74,7 @@ The **Castle** holds a bat, a spider and a solo **Mimic**; beyond it, the
 always present and reachable, so the final fight is open from the start.
 When entering the Throne Room and advancing five rows towards the boss,
 the Lord of Slimes addresses the hero in a standard dialogue box:
-*"Card wielder, you dare challenge me! You cannot stop what is coming. Slimes will rule this planet soon!"*
+*"Card Wielder, you dare challenge me! You cannot stop what is coming. Slimes will rule this planet soon!"*
 
 ---
 
@@ -66,14 +86,13 @@ Boot lands on the **studio splash** — the GALLIA BELGICA SYSTEMS bitmap
 logo (`assets/gallia_belgica_systems.png`, red/blue bracket) — which
 auto-advances to the title screen after ~2.5 seconds or is skipped
 immediately with `A`/`START`.  The title screen then shows the
-**KAARTENHELD** logo (a red bitmap logo, `assets/title-red.png`), its
-**BATTLE DEMO** subtitle, and `PRESS START`.
+**KAARTENHELD** logo (a red bitmap logo, `assets/title-red.png`) and `PRESS START`.
 
 The on-screen title block is:
 
 ```
     [  KAARTENHELD  ]     (red bitmap logo, assets/title-red.png)
-    BATTLE DEMO           (text)
+    (no subtitle)         (blank row 5)
 ```
 
 Pressing START opens a menu with four entries (`title_screen.c`,
@@ -83,13 +102,12 @@ Pressing START opens a menu with four entries (`title_screen.c`,
 |---|---|
 | `CONTINUE` | Opens the **LOAD GAME** screen (saves, see §10). |
 | `NEW GAME` | Starts a fresh game: intro slides → overworld. |
-| `SOUND: ON/OFF` | Toggles the soundtrack. |
-| `TUTORIAL` | Plays the 7-slide tutorial (see §2.4). |
+| `TUTORIAL` | Plays the 9-slide tutorial (see §2.4). |
 
 ### 2.2 Intro
 
-`NEW GAME` shows the three story slides above.  `A` or `START` advances;
-after the third slide the game drops into a fresh overworld.
+`NEW GAME` shows the five story slides above.  `A` or `START` advances;
+after the fifth slide the game drops into a fresh overworld.
 
 ### 2.3 Controls
 
@@ -109,18 +127,18 @@ Battle and menus have their own controls, covered in §6 and §7.
 
 ### 2.4 Tutorial
 
-`TUTORIAL` on the title menu plays seven slides (`tutorial_content.c`).
+`TUTORIAL` on the title menu plays nine slides (`tutorial_content.c`).
 `LEFT`/`RIGHT` navigates, `B` exits.  The slides cover:
 
-1. **HOW TO FIGHT** — fights use cards; LEFT/RIGHT flips slides, B exits.
-2. **KNOW YOUR CARDS** — SW/BO/DA damage, SH blocks hits, HE rings heal.
-3. **STRIKE FIRST** — choose cards, press SELECT; each card costs energy.
-4. **POKER PAYS** — pairs and better multiply damage; kill foes faster.
-5. **DEFEND YOURSELF** — the foe shows its hit; shields block, lone
-   daggers hit back.
-6. **BURN POISON ICE** — burn wounds, poison confuses; ice locks
-   your cards.
-7. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
+1. **HOW TO FIGHT** — fights use cards; L/R chooses, B cancels, A plays.
+2. **TURN BASED COMBAT** — two turns: attack and defend; foes only attack.
+3. **OFFENSE TURN** — choose cards, press SELECT; each costs AP.
+4. **OFFENSE TURN** — swords, daggers or bows; U/D selects enemies.
+5. **DO POKER HANDS** — pairs and better multiply damage; kill foes faster.
+6. **DEFENSE TURN** — the foe shows its hit; shields block it.
+7. **DAGGERS HIT BACK** — daggers on defense hit back first, kill weak foes.
+8. **FIRE POISON ICE** — burn wounds, poison confuses, ice halves damage.
+9. **SPARE SHIELDS** — spare shields deal 0 damage but build combos.
 
 ---
 
@@ -181,7 +199,7 @@ Hostiles patrol the whole width: a slime (14,8), a spider (23,9), a bat
 | Guard | (10,8) | Flavour dialogue; greets you warmly after you meet the Mayor. |
 | Lost Merchant | (11,3) | Runs the Lost Shop Keys quest, then the shop (§4.3, §9). |
 | Wizard | (6,10) | Lets you save the game to one of three slots (§10). |
-| Heal Mage | (12,10) | Red robe, wizard sprite. Restores the whole party to full HP and plays the chest-loot jingle; briefs you on ring healing. |
+| Heal Mage | (12,10) | Red robe, wizard sprite. Restores the whole party to full HP and plays the chest-loot jingle; briefs you on ring healing. If the party is at 2/3+ max HP (10+ at base 15 HP), saying YES first opens a second YES/NO confirm (he can only heal once) — its NO declines cleanly ("Come back when you're hurt."), its YES heals. |
 
 Three fire braziers (4,5), (4,12), (14,5) and two dogs (8,14), (11,8) are
 placed as blocking scenery.
@@ -864,12 +882,14 @@ Upon closing this dialogue, the screen fades to white, and the hero awakens in t
 final wake scene before advancing to the **ENDING** screen:
 
 ```
-      THE END
+       THE END
 --------------------
-The Hero cleared
-the land of slimes!
-Peace has returned!
+Congratulations on
+beating Kaartenheld!
 Thanks for playing!
+Follow
+@GBelgicaSystems
+on X for updates!
 [A] RESTART
 ```
 
@@ -885,7 +905,6 @@ fanfare), title, town, dungeon (castle), boss, mimic.  The boss theme plays only
 for the Lord of Slimes.  Mimic combat plays the short `Mimic_intro.uge`
 sting first (~0.9 s), then the looping `Mimic.uge` battle theme (timed swap in
 `audio_update()`; the tracker driver loops whole songs).  UI SFX: a short cursor blip and a confirm tone.
-`SOUND: ON/OFF` on the title menu toggles the soundtrack.
 
 Music runs on the hardware **timer interrupt** at a fixed 256 Hz, so
 tempos are stable across menus, dialogue and map transitions (AGENTS.md
@@ -907,7 +926,7 @@ above is observable through a deterministic, machine-readable harness:
 | `make verify-walkthrough` | Drive the release ROM (real `levels/` content) and assert canonical state. |
 | `make verify-scroll` / `verify-music` / `verify-patrol` / `verify-endurance` | Extra PyBoy regression checks. |
 | `make screenshots` | Deterministic headless walkthrough producing `screenshots/*.png`. |
-| `make gifs` | Regenerate the README demo GIFs (`screenshots/*.gif`). |
+| `make gifs` | Regenerate the README preview GIFs (`screenshots/*.gif`). |
 | `make memmap` | Memory-budget reporter (fails on fixed-bank overflow). |
 | `make lint` | `-Wf-Wall` compile-to-asm lint (no warnings allowed). |
 

@@ -73,7 +73,7 @@
   {
    "type": "screen_row",
    "row": 16,
-   "contains": "B:BACK"
+   "contains": "BACK"
   }
  ],
  "initial_state": {

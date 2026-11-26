@@ -1,0 +1,48 @@
+{
+ "act": "always",
+ "name": "battle_hurt_heart_blink",
+ "test": true,
+ "description": "Hurt hero (half HP or less) shows a slowly blinking FULL heart instead of the old static half heart: in a quiet idle battle (no heal flash, no turn transition) waiting 40 frames crosses the frame-32 edge into the blink-off phase (blank tile 0) via battle_feedback_tick_banked re-arming BATTLE_DIRTY_HERO.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 40
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_turn",
+   "expected": "PLAYER"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 10
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 4,
+   "expected": 0
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 40
+   }
+  },
+  "seed": 6001,
+  "start_battle": true
+ }
+}

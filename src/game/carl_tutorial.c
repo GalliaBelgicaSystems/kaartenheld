@@ -13,7 +13,7 @@
  * callers (battle_screen, dialogue_screen) reach this only through the
  * content.h hooks, so no engine file names Carl or his dialogues
  * (AGENTS.md 55.1).  YES/NO arbitration lives with the Heal Mage's in
- * the bank-10 choice body (choice_nav_banked.c).
+ * the bank-12 choice body (choice_nav_banked.c).
  *
  * The pre-battle lesson (TUTORIAL_CARL_INTRO) is a YES/NO ask: YES
  * assigns LESSON progress and closes into the stashed spar, NO clears

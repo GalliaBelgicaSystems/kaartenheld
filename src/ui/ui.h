@@ -173,8 +173,10 @@ void ic_menu_riders_load(void);
 #define UI_TILE_MENUS_HERO_COUNT 16u
 #define UI_TILE_MENUS_STATUS_COUNT 4u
 /* Status-bar icon slots (VRAM 248-251, header indices 28-31): full
- * heart, half heart, AP and arrow from sheet row 1, cols 0-3.  Streamed
- * with the chrome sheet on every BATTLE/ITEM/SHOP entry. */
+ * heart, half heart (unused in battle since hurt-heart blinks full,
+ * kept in the 4-tile stream order), AP and arrow from sheet row 1,
+ * cols 0-3.  Streamed with the chrome sheet on every BATTLE/ITEM/SHOP
+ * entry. */
 #define UI_TILE_MENUS_STATUS_BASE (248u)
 #define UI_TILE_MENUS_STATUS_HEART (UI_TILE_MENUS_STATUS_BASE + 0u)
 #define UI_TILE_MENUS_STATUS_HALF  (UI_TILE_MENUS_STATUS_BASE + 1u)
@@ -202,6 +204,27 @@ void ic_menu_riders_load(void);
  * Streamed with the chrome sheet, so no per-tab streaming is needed. */
 #define UI_TILE_MENUS_HP_ICON (UI_TILE_MENUS_BASE + 9u)
 #define UI_TILE_MENUS_AP_ICON (UI_TILE_MENUS_BASE + 10u)
+/* Menu button labels (assets/menus-tile.png row 1, cols 4-10 + row 2,
+ * cols 0-2; header indices 32-41, appended after the status icons so
+ * those indices never move).  Streamed to VRAM 176-185 by the bank-11
+ * chrome entry body on every BATTLE/ITEM/SHOP entry (plus boot for
+ * TITLE and the bank-8/11 gamble/save entries, which run LCD-off).
+ * Slots 176-185 sit above battle enemy-art growth (max ~36 tiles from
+ * 128) and below the menu chrome block (208+), and survive the title
+ * logo (128-175); the next overworld tileset reload restores world art
+ * there.  SELECT and START are three tiles each (SELECT 1-3, START
+ * 1-3); A, B and the dpad arrows are single tiles. */
+#define UI_TILE_BUTTON_COUNT      10u
+#define UI_TILE_BUTTON_A          176u
+#define UI_TILE_BUTTON_B          177u
+#define UI_TILE_BUTTON_START_1    178u
+#define UI_TILE_BUTTON_START_2    179u
+#define UI_TILE_BUTTON_START_3    180u
+#define UI_TILE_BUTTON_DPAD_UD    181u
+#define UI_TILE_BUTTON_DPAD_LR    182u
+#define UI_TILE_BUTTON_SELECT_1   183u
+#define UI_TILE_BUTTON_SELECT_2   184u
+#define UI_TILE_BUTTON_SELECT_3   185u
 
 /* Overworld status-bar icons (menus-tile.png row 1, cols 0-3: full
  * heart, half heart, AP, arrows; header indices 28-31, appended after
@@ -261,10 +284,13 @@ void ic_menu_riders_load(void);
 #define SPIN_PX                  152u
 #define SPIN_PY                  136u
 
-/* Max shadow-OAM entries the actor pipeline can touch: player (entry 0),
- * hostile actors up to MAX_WORLD_ACTORS each a w*h sprite (max 2x2 = 4),
- * then static actors.  Used by the transition-hide sweep. */
-#define OAM_MAX_ACTOR_ENTRIES     (1u + (MAX_WORLD_ACTORS * 4u) + MAX_STATIC_ACTORS)
+#define PLAYER_SPRITE_NUM        38u
+
+/* Shadow-OAM entries covered by the dialogue-box hide sweep
+ * (ui_sprite_hide_actors_below): hostile actors (1+), static actors
+ * (capped at entry 29), fixed HUD markers (30-37), and the player
+ * (entry 38); the save spinner owns entry 39. */
+#define OAM_MAX_ACTOR_ENTRIES     (PLAYER_SPRITE_NUM + 1u)
 
 /* Bank-4 no-arg body behind ui_draw_actors_sprites(): writes each active
  * non-boss actor's shadow-OAM entry (position/tile/prop from SPRITE_KIND_*)

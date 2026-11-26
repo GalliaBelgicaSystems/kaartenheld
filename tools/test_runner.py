@@ -19,6 +19,7 @@ from emulator import (EmulatorSession, STORY_FLAG_ID_MAP, DIALOGUE_ID_MAP,
                       ENTITY_ID_MAP, STATE_FLAG_ID_MAP,
                       VARIABLE_ID_MAP, ITEM_ID_MAP, ACTOR_ID_MAP,
                       ACTOR_STATE_NAME_MAP, CHARACTER_ID_MAP, SCENE_MAP,
+                      SCENE_NAME_TO_ID,
                       CHARACTER_ID_TO_NAME, ITEM_ID_TO_NAME, ACTOR_ID_TO_NAME,
                       CURRENCY_ID_MAP, PROGRESSION_TARGET_MAP,
                        CURRENCY_ID_TO_NAME, PROG_TYPE_HERO, CARD_TYPE_MAP,
@@ -31,8 +32,9 @@ VALID_ASSERTION_TYPES = {
     "game_over_choice", "story_flag", "screen", "scene",
     "event_occurred", "event_not_occurred", "event_count", "event_arg", "dialogue_active", "dialogue_line", "dialogue_id",
     "screen_row", "screen_row_exact", "screen_row_not_contains", "vram_row", "vram_row_not_contains", "actor_at",
+    "actor_absent",
     "flag", "variable", "inventory", "collection_count", "deck_contains",
-    "party_hp", "party_level", "actor_state",
+    "party_hp", "party_level", "actor_state", "defeat_bit", "zone",
     "currency", "market_index", "progression_level", "progression_progress",
     "camera", "scroll_x", "scroll_y", "world_width", "world_height",
     "camera_px_x", "camera_px_y", "scx", "scy", "tilemap_cell", "tilemap_attr",
@@ -127,18 +129,67 @@ VALID_PROGRESSION_NAMES = set(PROGRESSION_TARGET_MAP)
 # snapshot's actual origin instead.
 NEW_GAME_COLLECTION = {"WOOD_SWORD": 4, "WOODEN_SHIELD": 4, "BRONZE_SWORD": 2}
 
+# Scene -> story act, for the scenario-act consistency lint below.  Built
+# once from the level sources (upper-cased level id == scenario scene
+# name, verified 1:1); "always" scenarios may stage any scene.
+def _scene_act_map():
+    mapping = {}
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for pat in ("levels/*.json",
+                "tools/scenarios/fixtures/levels/test_*.json"):
+        for f in glob.glob(os.path.join(repo, pat)):
+            try:
+                d = json.load(open(f))
+            except OSError:
+                continue
+            if isinstance(d.get("id"), str):
+                mapping[d["id"].upper()] = d.get("act", 1)
+    return mapping
+_SCENE_ACT_MAP = _scene_act_map()
+
 def validate_scenario(data, filepath):
     act_tag = data.get("act")
     if act_tag != "always" and (isinstance(act_tag, bool) or not isinstance(act_tag, int) or act_tag < 1):
         raise ValueError(
             f"SCENARIO ERROR in {filepath}: Missing or invalid top-level 'act' tag {act_tag!r} "
             f"(want integer >= 1 or 'always'; see AGENTS.md 42.4).")
+    # A numbered scenario must stage its own act's scene: act-1 story
+    # content staged as background is fine, but the SCENE it runs in
+    # decides which zone's bits it exercises (AGENTS.md 53.8).
+    init_scene = (data.get("initial_state") or {}).get("scene")
+    if act_tag != "always" and init_scene:
+        scene_act = _SCENE_ACT_MAP.get(init_scene.upper())
+        if scene_act is not None and scene_act != act_tag:
+            raise ValueError(
+                f"SCENARIO ERROR in {filepath}: act {act_tag} scenario stages "
+                f"act {scene_act} scene '{init_scene}' (tag the scenario "
+                f"'always' if the scene is only background).")
 
     for act in data.get("actions", []):
         if act.get("type") == "interact":
             actor = act.get("actor")
             if actor and actor not in VALID_ENTITY_IDS:
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown interact actor '{actor}'. Valid entities: {sorted(list(VALID_ENTITY_IDS))}")
+        if act.get("type") == "set_defeat":
+            _sd = act.get("actor")
+            if isinstance(_sd, int):
+                _sd_id = _sd
+            elif isinstance(_sd, str) and _sd.isdigit():
+                _sd_id = int(_sd)
+            elif isinstance(_sd, str) and _sd in VALID_ACTOR_NAMES:
+                _sd_id = ACTOR_ID_MAP[_sd]
+            else:
+                raise ValueError(f"SCENARIO ERROR in {filepath}: set_defeat needs an actor name or a 1..128 id, got {_sd!r}")
+            if not (1 <= _sd_id <= 128):
+                raise ValueError(f"SCENARIO ERROR in {filepath}: set_defeat id {_sd_id} outside the zone bitmask range 1..128 (silently drops)")
+        if act.get("type") == "teleport":
+            _tscene = act.get("scene")
+            if _tscene not in SCENE_MAP.values():
+                raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown teleport scene '{_tscene}'. Valid scenes: {sorted(set(SCENE_MAP.values()))}")
+            for _k in ("x", "y"):
+                _v = act.get(_k)
+                if not isinstance(_v, int) or isinstance(_v, bool) or not (0 <= _v <= 31):
+                    raise ValueError(f"SCENARIO ERROR in {filepath}: teleport '{_k}' must be an int 0..31, got {_v!r}")
         # set_deck only forwards type/value/ring to the ROM (cost, uses,
         # status and chance are silently dropped -- the ROM pins cost = 1,
         # uses = 0xFF, no rider).  Fail loudly so a scenario that stages
@@ -180,7 +231,22 @@ def validate_scenario(data, filepath):
 
         actor = a.get("actor")
         if actor and actor not in VALID_ACTOR_NAMES:
-            raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown actor '{actor}'. Valid actors: {sorted(list(VALID_ACTOR_NAMES))}")
+            # defeat_bit also accepts raw 1..128 ids (the name map only
+            # covers fixtures; high bits have no names).
+            _is_raw = (isinstance(actor, int) or
+                       (isinstance(actor, str) and actor.isdigit()))
+            if not (a.get("type") == "defeat_bit" and _is_raw):
+                raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown actor '{actor}'. Valid actors: {sorted(list(VALID_ACTOR_NAMES))}")
+            _raw_id = actor if isinstance(actor, int) else int(actor)
+            if not (1 <= _raw_id <= 128):
+                raise ValueError(f"SCENARIO ERROR in {filepath}: defeat_bit id {_raw_id} outside the zone bitmask range 1..128")
+        if isinstance(actor, str) and actor in VALID_ACTOR_NAMES and not (1 <= ACTOR_ID_MAP[actor] <= 128):
+            raise ValueError(f"SCENARIO ERROR in {filepath}: Actor '{actor}' id {ACTOR_ID_MAP[actor]} outside the zone bitmask range 1..128 (asserts on it always read ALIVE)")
+        if a.get("type") == "zone":
+            try:
+                int(a.get("expected"))
+            except (TypeError, ValueError):
+                raise ValueError(f"SCENARIO ERROR in {filepath}: zone assert needs an integer 'expected' (story act)")
 
         # event_arg accepts a dialogue NAME as its value (resolved to the
         # numeric id at eval time); unknown names fail here, not silently.
@@ -225,6 +291,9 @@ def validate_scenario(data, filepath):
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown actor '{aname}' in initial_state. Valid actors: {sorted(list(VALID_ACTOR_NAMES))}")
             if aval not in VALID_ACTOR_STATES:
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown actor state '{aval}' for '{aname}'. Valid states: {sorted(list(VALID_ACTOR_STATES))}")
+            aid = ACTOR_ID_MAP[aname]
+            if not (1 <= aid <= 128):
+                raise ValueError(f"SCENARIO ERROR in {filepath}: Actor '{aname}' id {aid} outside the zone bitmask range 1..128 (staged ids silently drop in scenario_load_apply_banked)")
         for pname, pstats in (init.get("party") or {}).items():
             if pname not in set(CHARACTER_ID_MAP):
                 raise ValueError(f"SCENARIO ERROR in {filepath}: Unknown party member '{pname}'. Valid members: {sorted(list(CHARACTER_ID_MAP))}")
@@ -313,6 +382,29 @@ def run_scenario(scenario):
                 session.debug_action(session.DBG_ACT_ADD_CURRENCY,
                                      CURRENCY_ID_MAP[act.get("currency")],
                                      act.get("amount", 0), 0)
+            elif act_type == "set_defeat":
+                # Stage a zone defeat bit through the real mechanic
+                # (game_world_set_actor_state).  Accepts a registered
+                # actor name or a raw 1..128 id (the descriptor world
+                # section caps at 16 staged entries; this has no cap).
+                _sd = act.get("actor")
+                if isinstance(_sd, int):
+                    _sd_id = _sd
+                elif isinstance(_sd, str) and _sd.isdigit():
+                    _sd_id = int(_sd)
+                else:
+                    _sd_id = ACTOR_ID_MAP[_sd]
+                session.debug_action(session.DBG_ACT_SET_DEFEAT,
+                                     _sd_id & 0xFF, 0, 0)
+            elif act_type == "teleport":
+                # Debug travel through the real scene_load (tiles,
+                # spawns, zone settle).  Facing is left alone.
+                _tscene = act.get("scene", "FIELD")
+                _tx = act.get("x", 4) & 0xFF
+                _ty = act.get("y", 4) & 0xFF
+                session.debug_action(session.DBG_ACT_TELEPORT,
+                                     SCENE_NAME_TO_ID[_tscene],
+                                     _tx | (_ty << 8), 0)
             elif act_type == "add_progress":
                 ttype, tid = PROGRESSION_TARGET_MAP[act.get("target")]
                 session.debug_action(session.DBG_ACT_ADD_PROGRESS,
@@ -587,6 +679,23 @@ def run_scenario(scenario):
                 f"{ac.get('id_name')} at ({ac.get('x')},{ac.get('y')})" for ac in actors
             ) or "NO ACTORS"
             passed = len(found) > 0
+
+        elif a_type == "actor_absent":
+            # Runtime-spawn absence: the loader gated this enemy (its
+            # defeat bit is set), so no live slot renders it.  Only
+            # meaningful for stationary actors (patrols drift).
+            exp_entity = a.get("entity")
+            exp_x = a.get("x")
+            exp_y = a.get("y")
+            actors = snap.get("actors", [])
+            found = [ac for ac in actors
+                     if ac.get("id_name") == exp_entity and
+                     ac.get("x") == exp_x and ac.get("y") == exp_y]
+            expected = f"no {exp_entity} at ({exp_x},{exp_y})"
+            actual = "; ".join(
+                f"{ac.get('id_name')} at ({ac.get('x')},{ac.get('y')})" for ac in actors
+            ) or "NO ACTORS"
+            passed = len(found) == 0
 
         elif a_type == "player_hp":
             actual = snap.get("player_hp", 0)
@@ -1005,6 +1114,31 @@ def run_scenario(scenario):
             actual = entry["state"] if entry else "ALIVE"
             passed = (actual == exp_state)
 
+        elif a_type == "defeat_bit":
+            # Raw zone-bitmask read (no 16-entry list cap): bit (N-1)
+            # records ActorId N defeated in the current zone.
+            exp_actor = a.get("actor")
+            exp_state = a.get("expected_state", "DEFEATED")
+            expected = f"defeat bit {exp_actor} == {exp_state}"
+            bits = (state_snap or {}).get("defeat_bits", [])
+            if isinstance(exp_actor, int):
+                actor_id = exp_actor
+            elif isinstance(exp_actor, str) and exp_actor.isdigit():
+                actor_id = int(exp_actor)
+            else:
+                actor_id = ACTOR_ID_MAP[exp_actor]
+            if len(bits) == 16 and 1 <= actor_id <= 128:
+                byte = bits[(actor_id - 1) // 8]
+                actual = "DEFEATED" if byte & (1 << ((actor_id - 1) % 8)) else "ALIVE"
+            else:
+                actual = "ALIVE"
+            passed = (actual == exp_state)
+
+        elif a_type == "zone":
+            expected = f"zone == {a.get('expected')}"
+            actual = (state_snap or {}).get("zone")
+            passed = (actual == int(a.get("expected")))
+
         elif a_type == "currency":
             exp_cur = a.get("currency")
             expected = f"currency {exp_cur} == {expected}"
@@ -1115,7 +1249,8 @@ def format_state(snap, state_snap):
     world = (state_snap or {}).get("world", [])
     world_str = " ".join("{}={}".format(ACTOR_ID_TO_NAME.get(w.get("actor_id"),
                         f"ID{w.get('actor_id')}"), w.get("state")) for w in world)
-    lines.append("WORLD: " + (world_str if world_str else "(none)"))
+    lines.append("WORLD(zone={}): {}".format((state_snap or {}).get("zone"),
+                 world_str if world_str else "(none)"))
 
     progression = (state_snap or {}).get("progression", [])
     if progression:
@@ -1248,6 +1383,8 @@ def normalize_semantic_state(snap, state_snap):
         "deck": sorted((state_snap or {}).get("deck", [])),
         "world": sorted((w.get("actor_id"), w.get("state"))
                         for w in (state_snap or {}).get("world", [])),
+        "zone": (state_snap or {}).get("zone"),
+        "defeat_bits": list((state_snap or {}).get("defeat_bits", [])),
         "progression": sorted((p.get("name"), p.get("level"), p.get("progress"))
                                for p in (state_snap or {}).get("progression", [])),
     }

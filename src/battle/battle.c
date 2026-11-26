@@ -304,7 +304,7 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp)
 
 /* ── Banked navigation / selection wrappers ────────────────────────
  * The hand-cursor / combo-selection / target-selection / enemy-liveness
- * logic lives in ROM bank 4 (src/battle/battle_nav_banked.c) to relieve
+ * logic lives in ROM bank 11 (src/battle/battle_nav_banked.c) to relieve
  * the overflowing fixed bank (AGENTS.md §52.18); these thin WRAM-facing
  * wrappers stage the dispatch through the banked-call trampoline and keep
  * the public API (battle.h) stable.  The bodies are self-contained: they
@@ -313,7 +313,7 @@ void battle_add_enemy(Battle *b, const char *name, uint8_t hp, uint8_t max_hp)
  * here after the dispatch returns. */
 static void battle_nav(Battle *b, uint8_t op, uint8_t arg)
 {
-    g_bk_call_bank = 4;
+    g_bk_call_bank = 11;
     g_bk_call_target = (uint16_t)&battle_nav_banked;
     g_bk_ptr_a = (void *)b;
     g_bk_byte_a = op;

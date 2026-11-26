@@ -2,7 +2,7 @@
  "act": "always",
  "name": "tutorial_slide1",
  "test": true,
- "description": "RIGHT from slide 0 advances to slide 1 and its KNOW YOUR CARDS text is on screen.",
+ "description": "RIGHT from slide 0 advances to slide 1 and its TURN BASED COMBAT text is on screen.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -21,14 +21,6 @@
   {
    "type": "wait",
    "frames": 5
-  },
-  {
-   "type": "press",
-   "button": "DOWN"
-  },
-  {
-   "type": "wait",
-   "frames": 3
   },
   {
    "type": "press",
@@ -70,23 +62,23 @@
   },
   {
    "type": "screen_row",
-   "row": 5,
-   "contains": "KNOW YOUR CARDS"
-  },
-  {
-   "type": "screen_row",
-   "row": 6,
-   "contains": "SW BO DA"
-  },
-  {
-   "type": "screen_row",
    "row": 7,
-   "contains": "SH blocks"
+   "contains": "TURN BASED COMBAT"
   },
   {
    "type": "screen_row",
    "row": 8,
-   "contains": "HE rings"
+   "contains": "You get two turns"
+  },
+  {
+   "type": "screen_row",
+   "row": 9,
+   "contains": "attack and defend"
+  },
+  {
+   "type": "screen_row",
+   "row": 10,
+   "contains": "Foes only attack"
   }
  ]
 }

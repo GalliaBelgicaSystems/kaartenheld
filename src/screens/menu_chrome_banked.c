@@ -19,6 +19,7 @@
 extern uint8_t s_mark_tiles_loaded;
 extern uint8_t s_battle_tiles_loaded;
 extern uint8_t s_ap_pip_loaded;
+uint8_t g_menus_chrome_loaded;
 
 /* Menu chrome bytes (menus-tile.png, gfx rule --tile-coords order: 12
  * row-0 singles, then the 16 hero-status portrait cells, row-major from
@@ -44,7 +45,10 @@ static const uint8_t s_menus_hero_slots[16] = {
       UI_TILE_MENUS_HERO_COUNT == 16u && \
       UI_TILE_MENUS_STATUS_COUNT == 4u && \
       UI_TILE_MENUS_STATUS_BASE == 248u && \
-      UI_TILE_MENUS_LIST_SCROLL_UP == 245u)
+      UI_TILE_MENUS_LIST_SCROLL_UP == 245u && \
+      UI_TILE_BUTTON_COUNT == 10u && \
+      UI_TILE_BUTTON_A == 176u && \
+      UI_TILE_BUTTON_SELECT_3 == 185u)
 #error "menu chrome VRAM layout mismatch with ui.h"
 #endif
 #if !(UI_TILE_STATUS_HEART_FULL == 208u && UI_TILE_STATUS_ARROWS == 211u)
@@ -55,6 +59,11 @@ static const uint8_t s_menus_hero_slots[16] = {
  * singles + 16 hero cells, then the 4 row-1 status icons appended).
  * Appended-last so the chrome indices above never move. */
 #define MENUS_STATUS_CELL_BASE 28u
+
+/* Button header base (gfx rule --tile-coords order: 12 row-0
+ * singles + 16 hero cells + 4 status icons, then the 10 button cells
+ * appended).  Appended-last so the chrome indices above never move. */
+#define MENUS_BUTTON_CELL_BASE 32u
 
 /* Paper-white document ramp (CRAM slot 4): byte-identical to the
  * battle fight3 ramp (white, tan, dark red, dark bronze).  The HUD
@@ -67,7 +76,7 @@ static const uint8_t s_menus_hero_slots[16] = {
 static const uint8_t s_status_paper[8] = {
     0xFF, 0x7F, /* RGB8(255,255,255) */
     0x56, 0x32, /* RGB8(176,146,102) tan (fight3 spare) */
-    0x71, 0x0C, /* RGB8(139,27,27) heart red */
+    0x38, 0x0D, /* RGB8(195,78,27) heart red */
     0x6E, 0x19  /* RGB8(117,89,48) icon bronze */
 };
 
@@ -85,7 +94,7 @@ static uint8_t menus_bit_rev(uint8_t b)
     return r;
 }
 
-/* Stream the menu chrome sheet (28 + 4 cells, 512 bytes) to its VRAM
+/* Stream the menu chrome sheet (28 + 4 + 10 cells, 672 bytes) to its VRAM
  * slots.  Same LCD-safe pattern as the bank-8 OAM streamers
  * (BANKED_VRAM_WRITE per byte: the entry transition repaints with the
  * LCD on). */
@@ -117,6 +126,15 @@ static void menus_chrome_stream(void)
         src = &menus_tile_tiles[((uint16_t)(UI_TILE_MENUS_COUNT + k) << 4)];
         dst = (volatile uint8_t *)(0x8000u +
                                    ((uint16_t)s_menus_hero_slots[k] << 4));
+        for (j = 0; j < 16; j++) {
+            BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
+            dst++;
+        }
+    }
+    for (k = 0; k < UI_TILE_BUTTON_COUNT; k++) {
+        src = &menus_tile_tiles[((uint16_t)(MENUS_BUTTON_CELL_BASE + k) << 4)];
+        dst = (volatile uint8_t *)(0x8000u +
+                                   ((uint16_t)(UI_TILE_BUTTON_A + k) << 4));
         for (j = 0; j < 16; j++) {
             BANKED_VRAM_WRITE(dst, (uint8_t)src[j]);
             dst++;
@@ -180,37 +198,24 @@ void menus_status_stream_banked(void)
     }
 }
 
-/* Re-arm the battle tile stream after overworld entry restores the
- * time-shared OAM ids (AP pips 1-4 over hero idle/walk at 96-99, pip 5
- * plus riders over the blob tail at 122-125, material icons over blob
- * offsets 17-21 at 117-121), and stream the menu chrome sheet.
- * No-arg trampoline target for the fixed-bank screen_change() path.
- * No WRAM flag of its own: entry itself is the once-per-stay re-arm. */
+/* Stream menu chrome + button tiles during an LCD-off transition render
+ * (called from game_render() via the trampoline). */
+void menus_chrome_stream_banked(void)
+{
+    if (g_menus_chrome_loaded) return;
+    g_menus_chrome_loaded = 1;
+    menus_chrome_stream();
+}
+
+/* Re-arm the battle/menu tile streams on screen entry (WRAM flags only).
+ * Actual VRAM streaming runs later in game_render() once ui_lcd_off()
+ * has blanked the display, so the outgoing overworld never flashes
+ * overwritten tiles for 1-2 frames. */
 void menus_entry_invalidate_banked(void)
 {
-    /* Re-arm both streams: AP pips/riders time-share OAM ids with
-     * overworld art (96-99 hero, 122-125 blob tail), and the !/? marks
-     * (126-127) are streamed once per boot.  The material icons (streamed
-     * by the bank-2 menu render, restored with the rider tail below)
-     * need no flag: renders always precede their stamps.  screen_change()
-     * calls this on every BATTLE/ITEM/SHOP entry so the next tick
-     * restreams before the first render -- even if the flag powered up
-     * set (harness skips CRT0, so BSS is not cleared) or VRAM was
-     * clobbered by a path that did not clear the flag, the pips would
-     * otherwise show hero pixels with correct OAM ids (all id-only
-     * asserts green). */
     s_battle_tiles_loaded = 0;
     s_mark_tiles_loaded = 0;
     s_ap_pip_loaded = 0;
-    /* Card-menu rider icons (bank-2 streamer, plain WRAM flag): restream on
-     * every ITEM/SHOP entry for the same reason as the pips -- the flag
-     * may be boot garbage under the harness, and the menu must never stamp
-     * an icon id whose VRAM holds something else. */
     g_menu_riders_loaded = 0;
-    /* Menu chrome (208-219 + box slots): stream eagerly on every
-     * BATTLE/ITEM/SHOP entry.  The slots belong to no tileset and no
-     * battle art, so the 416 bytes survive until the next overworld
-     * tileset reload.  Battle pays it too -- same dispatch, and its
-     * entry loads dwarf it. */
-    menus_chrome_stream();
+    g_menus_chrome_loaded = 0;
 }

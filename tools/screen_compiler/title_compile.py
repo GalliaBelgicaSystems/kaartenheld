@@ -222,7 +222,7 @@ def build_title_c_output(data: dict) -> str:
     elif prompt_align == "right":
         prompt_x = max(0, 20 - len(prompt_text.strip()))
     elif prompt_align == "left":
-        prompt_x = 0
+        prompt_x = data["prompt"].get("x", 0)
     else:
         prompt_x = data["prompt"].get("x", 5)
     prompt_y = data["prompt"].get("y", 16)

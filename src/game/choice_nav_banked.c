@@ -1,4 +1,4 @@
-#pragma bank 10
+#pragma bank 12
 
 #include <gb/gb.h>
 #include "game.h"
@@ -8,15 +8,16 @@
 #include "game/gamble.h"
 #include "carl_tutorial.h"
 
-/* ── YES/NO choice navigation + resolve, bank-10 body ─────────
+/* ── YES/NO choice navigation + resolve, bank-12 body ─────────
  * Dispatched from dialogue_screen_update() when a choice dialogue sits
  * on its last page unconfirmed (fixed-bank cost: one predicate +
  * staging + call -- the fixed bank sits hard against 0x8000, AGENTS.md
  * §52.18).  Follows the quest-tab nav precedent (item_quest_banked.c):
  * pad edges read directly from WRAM (always mapped), compile-time
- * bitmasks, no helper calls.  Bank 10 (not 8): the fixed bank-8 budget
- * fits no new bodies, while bank 10 has room in both builds (AGENTS.md
- * 55.5: banks 8-15 need no asm change to reach).
+ * bitmasks, no helper calls.  Bank 12 (not 8 or 10): bank 8 is full and
+ * bank 10 carries the dialogue/event tables with <200 B free in debug,
+ * while bank 12 has kilobytes to spare in both builds (AGENTS.md 55.5:
+ * banks 8-15 need no asm change to reach).
  *
  * The engine owns the choice UI contract (option row on the last line,
  * cursor cells 0/7 -- "> YES   NO" for most prompts, "> STAY  LEAVE"
@@ -27,7 +28,15 @@
  * with the buffer-checked skip).  A/START confirms:
  *   - ASK + NO  -> the mage declines (the fixed wrapper opens the
  *                  follow-up; nothing is set, so the mage asks again).
- *   - ASK + YES -> full-party restore loop (kept bank-local: a banked
+ *   - ASK + YES -> whole-party restore (below), UNLESS total party HP
+ *                  is at 2/3+ of max HP (10+ at base 15 HP): then the
+ *                  mage first asks for confirmation (CONFIRM follow-up
+ *                  -- he can only heal once).  Under 2/3 heals at once.
+ *   - CONFIRM + NO  -> opens DECLINED ("Come back when you're hurt.")
+ *                  so the player exits cleanly without a double-NO loop
+ *                  (USED stays clear, mage keeps offering).
+ *   - CONFIRM + YES -> whole-party restore (below).
+ *   - restore: full-party restore loop (kept bank-local: a banked
  *                  body must never call across banks).  The fixed wrapper
  *                  marks HEAL_MAGE_USED through the real flag API (which
  *                  owns both the bit and the STORY_FLAG_SET telemetry);
@@ -51,7 +60,7 @@
  *
  * Out: g_bk_byte_a = 0 (not a choice situation and no advance input),
  *      1 (toggled, repainted), 2 (confirmed, no game effect),
- *      3 (NO: open the follow-up staged in g_bk_byte_c),
+ *      3 (follow-up: open the dialogue staged in g_bk_byte_c),
  *      6 (YES: healed; g_bk_byte_b = restored HP, g_bk_byte_c = flag id
  *      for the STORY_FLAG_SET telemetry, g_bk_byte_d = follow-up id:
  *      the fixed wrapper owes the jingle plus the staged telemetry,
@@ -155,12 +164,25 @@ void dialogue_choice_nav_banked(void)
             /* Carl's spar offer: NO clears the stashed spar so closing
              * the follow-up returns to the overworld with no fight; YES
              * assigns LESSON progress (full re-init, so re-accepting
-             * replays the lesson) and closes into the stashed spar. */
+             * replays the lesson) and closes into the stashed spar.
+             * Post-victory YES (one-shot latch STORY_FLAG_ID_TUTORIAL_SPAR_WON,
+             * which survives zone respawns): clear the stash and close
+             * plainly -- the lesson never re-fights.  The fixed close
+             * would otherwise auto-start the stashed spar. */
             if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
                 g_game.world.encounter_actor_index = NO_ACTOR_INDEX;
                 g_bk_byte_a = 3;
                 g_bk_byte_c = (uint8_t)DIALOGUE_ID_TUTORIAL_CARL_DECLINE;
                 return;
+            }
+            {
+                uint8_t sf = (uint8_t)(STORY_FLAG_ID_TUTORIAL_SPAR_WON - 1);
+                if ((g_game.state.flags.bytes[(uint8_t)(sf >> 3)] &
+                     (uint8_t)(1u << (sf & 7))) != 0) {
+                    g_game.world.encounter_actor_index = NO_ACTOR_INDEX;
+                    g_bk_byte_a = 2;
+                    return;
+                }
             }
             /* Full re-init, so re-accepting replays the lesson.  The
              * AP line of the attack box is truthful only when THIS
@@ -289,14 +311,44 @@ void dialogue_choice_nav_banked(void)
             g_bk_byte_c = (uint8_t)DIALOGUE_ID_HEAL_MAGE_RING;
             return;
         }
-        if (g_game.dialogue.id != DIALOGUE_ID_HEAL_MAGE_ASK) {
-            g_bk_byte_a = 2;
-            return;
-        }
-        if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
-            g_bk_byte_a = 3;
-            g_bk_byte_c = (uint8_t)DIALOGUE_ID_HEAL_MAGE_DECLINED;
-            return;
+        if (g_game.dialogue.id == DIALOGUE_ID_HEAL_MAGE_CONFIRM) {
+            if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
+                /* Second thoughts: decline cleanly so the player does
+                 * not have to toggle NO twice (USED stays clear, so
+                 * the mage keeps offering). */
+                g_bk_byte_a = 3;
+                g_bk_byte_c = (uint8_t)DIALOGUE_ID_HEAL_MAGE_DECLINED;
+                return;
+            }
+            /* YES falls through to the restore below. */
+        } else {
+            if (g_game.dialogue.id != DIALOGUE_ID_HEAL_MAGE_ASK) {
+                g_bk_byte_a = 2;
+                return;
+            }
+            if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
+                g_bk_byte_a = 3;
+                g_bk_byte_c = (uint8_t)DIALOGUE_ID_HEAL_MAGE_DECLINED;
+                return;
+            }
+            /* YES while the party is still in fairly good shape (2/3+ of
+             * max HP, i.e. hp * 1.5 >= max_hp using shift-only arithmetic;
+             * equals 10+ at base 15 HP): confirm first -- the old mage can
+             * only heal once.  Under 2/3 heals at once. */
+            {
+                uint16_t tot_hp = 0;
+                uint16_t tot_max = 0;
+                for (mi = 0; mi < g_game.state.party.count; mi++) {
+                    tot_hp += g_game.state.party.members[mi].hp;
+                    tot_max += g_game.state.party.members[mi].max_hp;
+                }
+                if (tot_max > 0 && (uint16_t)(tot_hp + (tot_hp >> 1)) >= tot_max) {
+                    g_bk_byte_a = 3;
+                    g_bk_byte_c = (uint8_t)DIALOGUE_ID_HEAL_MAGE_CONFIRM;
+                    return;
+                }
+            }
+            /* YES falls through to the restore below. */
         }
         /* YES: full restore loop (bank-local: a banked body must never
          * call across banks). USED is set by the fixed wrapper through

@@ -97,11 +97,11 @@ export const App: React.FC = () => {
 
   // Modals
   const [showValidateModal, setShowValidateModal] = useState<boolean>(false);
-  // Actor ids claimed by OTHER scenes (levels/*.json on disk).  Makes
-  // the browser validation catch the cross-scene uniqueness rule the
+  // Actor ids claimed by OTHER scenes (levels/*.json on disk, tagged by act).
+  // Makes the browser validation catch the per-zone uniqueness rule the
   // toolchain enforces at compile; refreshed on level load and each
   // time the Validate modal opens.
-  const [crossActorIds, setCrossActorIds] = useState<Array<{ id: number; level: string }>>([]);
+  const [crossActorIds, setCrossActorIds] = useState<Array<{ id: number; level: string; act?: number }>>([]);
   const refreshCrossActorIds = useCallback(() => {
     fetchUsedActorIds(level.id).then(setCrossActorIds).catch(() => setCrossActorIds([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -627,28 +627,43 @@ export const App: React.FC = () => {
         }
       };
       // A deep copy clones properties.actor_id verbatim, which collides
-      // with the original (actor ids are globally unique; validate.py and
-      // the Validate modal both reject duplicates).  Mint a fresh id for
-      // the copy: one past the highest id used in this level or any other
-      // scene on disk.  Unset (0/missing) stays unset -- it cannot collide.
+      // with the original (actor ids are unique per zone/act, 1..128;
+      // validate.py and the Validate modal both reject duplicates).  Mint a
+      // fresh id for the copy within the current zone.  Unset (0/missing)
+      // stays unset -- it cannot collide.
       // entity_id is the shared enemy *type* and is correctly kept as-is.
       const origAid = (orig.properties as any)?.actor_id;
       let dupNote = '';
       if (typeof origAid === 'number' && Number.isInteger(origAid) && origAid > 0) {
+        const curAct = level.act ?? (level.id.startsWith('act2_') ? 2 : 1);
+        const used = new Set<number>();
         let peak = 0;
         for (const o of level.objects) {
           const a = (o.properties as any)?.actor_id;
-          if (typeof a === 'number' && Number.isInteger(a) && a > peak) peak = a;
+          if (typeof a === 'number' && Number.isInteger(a) && a > 0) {
+            used.add(a);
+            if (a > peak) peak = a;
+          }
         }
         for (const c of crossActorIds) {
-          if (c.id > peak) peak = c.id;
+          if ((c.act ?? 1) === curAct) {
+            used.add(c.id);
+            if (c.id > peak) peak = c.id;
+          }
         }
-        if (peak >= 65535) {
+        let next = peak + 1;
+        if (next > 128) {
+          next = 0;
+          for (let cand = 1; cand <= 128; cand++) {
+            if (!used.has(cand)) { next = cand; break; }
+          }
+        }
+        if (next < 1 || next > 128) {
           (copy.properties as any).actor_id = 0;
-          dupNote = ' (actor_id pool exhausted, reset to unset!)';
+          dupNote = ' (actor_id pool 1..128 exhausted, reset to unset!)';
         } else {
-          (copy.properties as any).actor_id = peak + 1;
-          dupNote = ` (actor_id ${peak + 1})`;
+          (copy.properties as any).actor_id = next;
+          dupNote = ` (actor_id ${next})`;
         }
       }
       const newObjs = [...level.objects, copy];
@@ -822,6 +837,18 @@ export const App: React.FC = () => {
       errors.push(`Dimensions ${level.width}x${level.height} out of engine bounds (max 32x32)`);
     }
 
+    // Act tag (story zone, mirror of validate.py: required 1..255, act2_ prefix matches act 2)
+    const curAct = level.act ?? (level.id.startsWith('act2_') ? 2 : 1);
+    if (!Number.isInteger(curAct) || curAct < 1 || curAct > 255) {
+      errors.push(`Level '${level.id}' needs an integer 'act' 1..255 (story zone)`);
+    } else {
+      passed.push('Act tag valid');
+      const isAct2Name = level.id.startsWith('act2_') || level.id.startsWith('test_act2_');
+      if (isAct2Name !== (curAct === 2)) {
+        errors.push(`Level '${level.id}': act2_ id prefix must match act 2 (got act ${curAct})`);
+      }
+    }
+
     // Tileset
     const ts = BUILTIN_TILESETS[level.tileset];
     if (ts) {
@@ -936,8 +963,8 @@ export const App: React.FC = () => {
         const aid = typeof props.actor_id === 'number' && Number.isInteger(props.actor_id)
           ? props.actor_id
           : 0;
-        if (aid < 0 || aid > 65535) {
-          errors.push(`Object '${oid}' has invalid actor_id '${props.actor_id}' (0..65535)`);
+        if (aid < 0 || aid > 128) {
+          errors.push(`Object '${oid}' has invalid actor_id '${props.actor_id}' (0..128: zone bitmask bits)`);
           objectsOk = false;
         } else if (aid > 0) {
           // 0 = unset (toolchain default); only real ids must be unique
@@ -949,12 +976,11 @@ export const App: React.FC = () => {
           } else {
             seenActorIds.set(aid, oid);
           }
-          // ...and across scenes: ActorIds are global (the toolchain's
-          // cross-file check), so flag ids already claimed by another
-          // level on disk.
-          const other = crossActorIds.find((c) => c.id === aid);
+          // ...and across scenes in the SAME zone (act): leaving a zone
+          // clears its bits, so later zones may reuse ids.
+          const other = crossActorIds.find((c) => c.id === aid && (c.act ?? 1) === curAct);
           if (other) {
-            errors.push(`actor_id ${aid} on '${oid}' also used in scene '${other.level}'`);
+            errors.push(`actor_id ${aid} on '${oid}' also used in scene '${other.level}' in act ${curAct}`);
             objectsOk = false;
           }
         }

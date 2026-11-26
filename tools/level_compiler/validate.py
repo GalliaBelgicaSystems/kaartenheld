@@ -545,6 +545,22 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
     width = map_info.get("width", 0)
     height = map_info.get("height", 0)
 
+    # Act tag (story zone, AGENTS.md 42.4/53.8): required, 1..255 (emitted
+    # as a uint8 table byte).  An act-less level would silently join
+    # zone 1's ActorId namespace and share its defeat bits.
+    act = level_data.get("act")
+    if isinstance(act, bool) or not isinstance(act, int) or act < 1 or act > 255:
+        errors.append(f"Level '{level_id}' needs an integer 'act' 1..255 (story zone)")
+    else:
+        passed.append("Act tag valid")
+    # Act-2 naming: act2_ ids live in act 2 and vice versa, so the
+    # editor filter and the zone namespace never disagree.  Fixtures
+    # keep their test_ prefix (test_act2_*), real levels use act2_*.
+    is_act2_name = level_id.startswith("act2_") or level_id.startswith("test_act2_")
+    if isinstance(act, int) and not isinstance(act, bool):
+        if is_act2_name != (act == 2):
+            errors.append(f"Level '{level_id}': act2_ id prefix must match act 2 (got act {act})")
+
     # Bounds check
     if width <= 0 or width > MAX_WORLD_WIDTH:
         errors.append(f"Map width {width} is out of bounds (1..{MAX_WORLD_WIDTH})")
@@ -844,8 +860,8 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
                 f"#define {ent_id} (ENTITY_ID_FIRST_GAME + N) to src/game/game_ids.h")
             objects_ok = False
         aid = props.get("actor_id", 0)
-        if not isinstance(aid, int) or aid < 0 or aid > 65535:
-            errors.append(f"Object '{oid}' has invalid actor_id '{aid}' (0..65535)")
+        if not isinstance(aid, int) or aid < 0 or aid > 128:
+            errors.append(f"Object '{oid}' has invalid actor_id '{aid}' (0..128: zone bitmask bits)")
             objects_ok = False
         facing = props.get("facing", "DOWN")
         if facing not in ("UP", "DOWN", "LEFT", "RIGHT"):
@@ -1225,20 +1241,23 @@ def main():
             print(f"ERROR: {err}")
             overall_success = False
 
-    # Cross-file check: nonzero actor_id values drive persistent defeat
-    # tracking in GameState.world and must be unique across scenes.
+    # Cross-file check: nonzero actor_id values drive the zone defeat
+    # bitmask (bit N-1 per ActorId N) and must be unique within a zone
+    # (levels/*.json act): leaving a zone clears its bits, so a later
+    # zone may reuse ids.  Cross-zone duplicates are fine.
     seen_actor_ids = {}
     for p, data in loaded_levels:
+        zone = data.get("act", 1)
         for obj in data.get("objects", []):
             props = obj.get("properties", {}) or {}
             aid = props.get("actor_id", 0)
             if isinstance(aid, int) and aid != 0:
-                if aid in seen_actor_ids:
+                if (zone, aid) in seen_actor_ids:
                     print(f"ERROR: actor_id {aid} used by both "
-                          f"'{seen_actor_ids[aid]}' and '{obj.get('id')}' (must be unique)")
+                          f"'{seen_actor_ids[(zone, aid)]}' and '{obj.get('id')}' in act {zone} (must be unique within a zone)")
                     overall_success = False
                 else:
-                    seen_actor_ids[aid] = obj.get("id")
+                    seen_actor_ids[(zone, aid)] = obj.get("id")
 
     # Cross-file check: neighbor links must be reciprocal (walk back).
     # One-sided links used to warn; they now fail loudly -- a missing

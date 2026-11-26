@@ -1,0 +1,48 @@
+{
+ "act": "always",
+ "name": "battle_hurt_heart_blink_on",
+ "test": true,
+ "description": "Hurt hero (half HP or less) toggles back from blink-off (blank 0) to blink-on (full heart tile 248) on the quiet frame-64 boundary with no heal flash or turn transition.",
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 72
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "BATTLE"
+  },
+  {
+   "type": "battle_turn",
+   "expected": "PLAYER"
+  },
+  {
+   "type": "battle_player_hp",
+   "expected": 10
+  },
+  {
+   "type": "tilemap_cell",
+   "row": 7,
+   "col": 4,
+   "expected": 248
+  }
+ ],
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 40
+   }
+  },
+  "seed": 6001,
+  "start_battle": true
+ }
+}

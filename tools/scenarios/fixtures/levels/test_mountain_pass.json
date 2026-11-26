@@ -1,5 +1,6 @@
 {
   "id": "test_mountain_pass",
+  "act": 1,
   "name": "TEST Craggy Mountain Pass",
   "map": {
     "width": 20,

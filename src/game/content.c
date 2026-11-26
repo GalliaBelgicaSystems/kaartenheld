@@ -47,10 +47,10 @@ void game_new_game(GameState *state)
 
     /* Cross-session outro state is NOT GameState (module WRAM) and would
      * otherwise leak across a LOAD/RESET mid-session (AGENTS.md §20):
-     * a fresh game never starts demo-completed, mid-despair, or
+     * a fresh game never starts completed, mid-despair, or
      * partway through the THANKS hold.  BSS zero covers boot; this
      * covers scenario_load_state() and every new-game path. */
-    g_demo_completed = 0;
+    g_game_completed = 0;
     g_slime_despair = 0;
 
     /* Player start is compiled from the wake-grove spawn (the single source of

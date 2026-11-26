@@ -465,12 +465,15 @@ OVERFLOW_TERRAIN_BANK = {
     "mountain_pass": 9,
     "south_ridge": 9,
     # Act 2 wake opener (teleport-only, never walked): its 24x18 scattered
-    # floor is ~930 B of terrain blocks, which bank 5 cannot hold.
-    "act2_wake_start": 9,
+    # floor is ~930 B of terrain blocks, which bank 5 cannot hold.  Bank 9
+    # overflowed in the merge (repaint growth + the finale wake scene),
+    # so the whole wake network rides the bank-12 release spill bank,
+    # whose stamp body already exists (no scene.c dispatch change needed).
+    "act2_wake_start": 12,
     # Act-2 wake network side rooms (hall + cache): small square boxes,
     # same overflow bank as the wake opener.
-    "act2_wake_hall": 9,
-    "act2_wake_cache": 9,
+    "act2_wake_hall": 12,
+    "act2_wake_cache": 12,
     # Travel-demo field copy (same 24x18 footprint as field, ~1325 B):
     # bank 12 is the release spill bank with room to spare, and its
     # stamp body already exists (no scene.c dispatch change needed).
@@ -483,6 +486,11 @@ OVERFLOW_TERRAIN_BANK = {
     # bank-12 release spill bank, whose stamp body already exists (no
     # scene.c dispatch change needed).
     "act2_desolate_field": 12,
+    # Finale wake scene (teleport-only like the Act 2 opener): bank 9
+    # overflowed in the merge (act-2 rooms + repaint growth), and the
+    # travel-demo ROM's bank 12 is tight (travel event table), so it
+    # rides bank 11, whose stamp body already exists.
+    "end_wake_scene": 11,
 }
 
 
@@ -1115,8 +1123,8 @@ def emit_actors_code(levels_by_id, bank=2, registry=None,
     out.append(" * Friendly actors are pure static definitions.  Hostile actors are")
     out.append(" * spawned into World.actors runtime slots by actor_load_scene(), so a")
     out.append(" * scene can hold several hostile actors at once.  Each hostile definition")
-    out.append(" * carries a stable ActorId (unique across scenes) so its defeat can be")
-    out.append(" * recorded persistently in GameState.world and survive scene reloads.")
+    out.append(" * carries a stable ActorId (unique within its zone) so its defeat can be")
+    out.append(" * recorded in the zone defeat bitmask and survive scene reloads.")
     out.append(" */\n")
     empty_sids = set()
     for sid in ordered:
@@ -1138,12 +1146,17 @@ def emit_actors_code(levels_by_id, bank=2, registry=None,
     out.append("const WorldActorTable g_actor_tables[] = {")
     for sid in ordered:
         map_id_enum = map_enum[sid]
+        # Zone tag for the defeat bitmask (levels/*.json act, default 1):
+        # the loader clears the old zone's bits when it changes, so
+        # leaving a zone respawns its enemies (AGENTS.md 42.4).  Retired
+        # holes are unreachable (never loaded); they emit 1.
+        act = levels_by_id[sid].get("act", 1) if sid is not None else 1
         if sid in empty_sids:
             out.append(f"    {{ {map_id_enum + ',':<20s} 0,")
-            out.append("        0 },")
+            out.append(f"        0, {act} }},")
         else:
             out.append(f"    {{ {map_id_enum + ',':<20s} g_{sid}_actors,")
-            out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])) }},")
+            out.append(f"        (uint8_t)(sizeof(g_{sid}_actors) / sizeof(g_{sid}_actors[0])), {act} }},")
     out.append("};")
     # Chest-sprite open states: one resolved if per actor with an
     # open_flag/open_variable prop, in registry order.  No table, no

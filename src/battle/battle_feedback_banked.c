@@ -117,6 +117,17 @@ void battle_feedback_tick_banked(void)
         b->dirty |= BATTLE_DIRTY_HERO;
     }
     g_battle_fx_php = b->player.hp;
+    /* Hurt-heart slow blink: the hero-row painter keys the full-heart
+     * stamp off g_game.frame bit 5, but it only repaints on HERO dirty
+     * -- re-arm it on every 32-frame boundary while the hero is hurt
+     * and alive so each toggle edge repaints (stateless: a missed
+     * boundary just delays the toggle by one period; 0 HP stays static
+     * blank on the DEFEATED! screen). */
+    if (b->player.hp != 0 &&
+        ((uint16_t)b->player.hp + (uint16_t)b->player.hp) <=
+        (uint16_t)b->player.max_hp && ((g_game.frame & 31u) == 0)) {
+        b->dirty |= BATTLE_DIRTY_HERO;
+    }
     /* Fresh judder replaces the old mask (a previous shake always
      * clears it on expiry below, so a set mask here means genuinely
      * simultaneous damage -- e.g. one poison tick felling two slots). */

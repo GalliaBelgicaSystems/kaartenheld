@@ -66,7 +66,7 @@
     {
       "type": "screen_row",
       "row": 16,
-      "contains": "A:ROLL B:LEAVE"
+      "contains": "ROLL"
     },
     {
       "type": "screen_row_not_contains",

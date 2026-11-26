@@ -71,7 +71,7 @@
   {
    "type": "screen_row",
    "row": 11,
-   "contains": "[A] START"
+   "contains": "START"
   },
   {
    "type": "screen_row_not_contains",

@@ -106,16 +106,40 @@ def main():
     pb = PyBoy(args.rom, window="null")
 
     sfx_id_addr = get_symbol(SYM_DEBUG, "sfx_id")
-    if sfx_id_addr is None:
-        print("error: sfx_id not in symbol file (make debug first)", file=sys.stderr)
+    track_addr = get_symbol(SYM_DEBUG, "g_audio_current_track")
+    playing_addr = get_symbol(SYM_DEBUG, "g_huge_playing")
+    if sfx_id_addr is None or track_addr is None or playing_addr is None:
+        print("error: sfx_id/g_audio_current_track/g_huge_playing not in symbol file (make debug first)",
+              file=sys.stderr)
         return 1
 
     # Harness mode is NOT enabled: we need the real boot (interrupts on) so
     # the audio ISR actually runs.  Wait for g_boot_phase == 4 (first
-    # game_render complete; overworld music is already playing).
+    # game_render complete) while asserting silent boot: no track, driver
+    # playback, or active APU channel may trigger during game_init(), SPLASH,
+    # or NOTICE before SCREEN_TITLE starts MUSIC_TITLE.
     bp_addr = get_symbol(SYM_DEBUG, "g_boot_phase")
+    boot_audio_leak = None
+
+    def _check_boot_silence():
+        nonlocal boot_audio_leak
+        if boot_audio_leak is not None or not bp_addr:
+            return
+        bp = pb.memory[bp_addr]
+        scr = pb.memory[game_addr]
+        if bp >= 1 and scr != 9:
+            tr = pb.memory[track_addr]
+            pl = pb.memory[playing_addr]
+            nr52 = pb.memory[0xFF26]
+            if tr != 0 or pl != 0 or (nr52 & 0x0F) != 0:
+                boot_audio_leak = (
+                    f"boot_phase={bp} screen={scr} track={tr} "
+                    f"playing={pl} NR52=0x{nr52:02X}"
+                )
+
     for _ in range(600):
         pb.tick()
+        _check_boot_silence()
         if bp_addr and pb.memory[bp_addr] == 4:
             break
 
@@ -209,8 +233,11 @@ def main():
     # START until the SFX actually fires instead.
     for _ in range(300):
         pb.tick()
+        _check_boot_silence()
         if pb.memory[game_addr] == 9:
             break
+    check("0. silent-boot-before-title", boot_audio_leak is None,
+          f"audio leaked during boot/SPLASH/NOTICE ({boot_audio_leak})")
     pb.button_press("start")
     sfx_win = []
     triggered = False

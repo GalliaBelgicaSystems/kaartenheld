@@ -159,6 +159,10 @@ static void scenario_load_state(void)
      * loader support is needed.  The banked frame body auto-initializes
      * on entry.  The farewell dialogue is exercised by pressing B. */
 
+    if (g_game.screen == SCREEN_OVERWORLD) {
+        ui_restore_ow_oam();
+    }
+
     game_render_reset(&g_game);
 
     debug_snapshot();
@@ -190,6 +194,19 @@ static void debug_run_action(void)
     switch (action) {
         case DBG_ACT_ADD_ITEM:
             deck_collection_add(&g_game.state.cards, (CardId)a0, a2);
+            break;
+        case DBG_ACT_SET_DEFEAT:
+            /* Real defeat mechanic (ACTOR_STATE_CHANGE telemetry
+             * included); a0 = ActorId.  Out-of-range ids no-op in the
+             * setter, so no validation needed here. */
+            game_world_set_actor_state(&g_game.state, (ActorId)a0,
+                                       ACTOR_STATE_DEFEATED);
+            break;
+        case DBG_ACT_TELEPORT:
+            /* Real scene load (tiles, spawns, zone settle); a0 =
+             * SceneId, a1lo = x, a1hi = y.  Facing is left alone. */
+            scene_load(&g_game, (SceneId)a0, (uint8_t)(a1 & 0xFF),
+                       (uint8_t)((a1 >> 8) & 0xFF));
             break;
         case DBG_ACT_REMOVE_ITEM:
             deck_collection_remove(&g_game.state.cards, (CardId)a0, a2);

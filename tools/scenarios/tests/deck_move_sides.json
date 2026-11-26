@@ -120,12 +120,12 @@
     {
       "type": "screen_row",
       "row": 16,
-      "contains": "A:TO DECK"
+      "contains": "TO DECK"
     },
     {
       "type": "screen_row",
       "row": 17,
-      "contains": "L/R:SIDE"
+      "contains": "SIDE"
     },
     {
       "type": "deck_contains",

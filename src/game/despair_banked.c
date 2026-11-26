@@ -16,7 +16,7 @@
  * mechanism -- a cached unkillable slot, the DESPAIR hold phase, the
  * blink, the two-line message layout, WRAM-staged text -- and never
  * names a battle id, a threshold, or an English string (AGENTS.md
- * §55.1).  Everything game-specific lives here.  Because the demo has a
+ * §55.1).  Everything game-specific lives here.  Because the game has a
  * single unwinnable boss (BATTLE_NONE, slot 0, threshold 20 HP), the
  * parameters are inlined directly to save bank-8 ROM; reintroduce a
  * per-boss table here if additional despair bosses are added in the future.

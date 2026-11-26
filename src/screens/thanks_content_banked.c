@@ -5,7 +5,7 @@
 #include "banked.h"
 #include "screen.h"
 
-/* Battle-demo outro body.  Lives in bank 9 (not bank 4 with the other
+/* Outro body.  Lives in bank 9 (not bank 4 with the other
  * simple screens) because bank 4 is 13 bytes short of fitting the four
  * thanks lines (release link overflowed 0x13fee -> 0x1400d); bank 9 is
  * the project's overflow bank with kilobytes to spare.  Self-contained
@@ -35,16 +35,12 @@ static void thanks_draw_line(uint8_t x, uint8_t y, const char *text, uint8_t len
 
 void thanks_content_render(void)
 {
-    if (g_demo_completed != 0) {
+    if (g_game_completed != 0) {
         thanks_draw_line(1, 3, "Congratulations for", 19);
-        thanks_draw_line(1, 5, "beating the battle", 18);
-        thanks_draw_line(1, 7, "demo!", 5);
-        thanks_draw_line(1, 9, "Full game out", 13);
-        thanks_draw_line(1, 11, "sometime in the", 15);
-        thanks_draw_line(1, 13, "future!", 7);
+        thanks_draw_line(0, 5, "beating Kaartenheld!", 20);
+        thanks_draw_line(1, 7, "Thanks for playing!", 19);
     } else {
         thanks_draw_line(1, 5, "Try to beat the", 15);
-        thanks_draw_line(1, 7, "Lord of Slimes to", 17);
-        thanks_draw_line(1, 9, "complete the demo!", 18);
+        thanks_draw_line(1, 7, "Lord of Slimes!", 15);
     }
 }

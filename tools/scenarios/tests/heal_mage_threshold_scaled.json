@@ -1,0 +1,80 @@
+{
+ "act": 1,
+ "name": "heal_mage_threshold_scaled",
+ "test": true,
+ "description": "Heal Mage threshold scales with max_hp (10/25 HP = 40%): confirming YES on HEAL_MAGE_ASK heals at once without opening HEAL_MAGE_CONFIRM (proves the threshold is proportional to max_hp rather than hardcoded at 10 HP).",
+ "initial_state": {
+  "scene": "TEST_TOWN",
+  "player": {
+   "x": 12,
+   "y": 9,
+   "facing": "DOWN"
+  },
+  "party": {
+   "HERO": {
+    "hp": 10,
+    "max_hp": 25
+   }
+  },
+  "seed": 1007,
+  "flags": {
+   "ARRIVED_TOWN": true
+  }
+ },
+ "actions": [
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 120
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 240
+  }
+ ],
+ "assertions": [
+  {
+   "type": "dialogue_active",
+   "expected": true
+  },
+  {
+   "type": "dialogue_id",
+   "expected": "HEAL_MAGE_THANKS"
+  },
+  {
+   "type": "party_hp",
+   "expected": 25
+  },
+  {
+   "type": "event_count",
+   "event": "DIALOGUE_CHOICE",
+   "count": 1
+  },
+  {
+   "type": "flag",
+   "flag": "HEAL_MAGE_USED",
+   "expected": true
+  },
+  {
+   "type": "event_occurred",
+   "event": "HEALED"
+  },
+  {
+   "type": "event_arg",
+   "event": "HEALED",
+   "index": 0,
+   "value": 15
+  },
+  {
+   "type": "music_track",
+   "expected": "TOWN"
+  }
+ ]
+}

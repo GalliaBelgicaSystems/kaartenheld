@@ -250,6 +250,8 @@ void item_status_render_banked(void)
 
     for (hx = 0; hx < 20; hx++)
         menu_stamp_chrome(15, hx, UI_TILE_MENUS_BOTTOM_BORDER);
-    ST_DRAW_TEXT(0, 16, "B:BACK", 20);
+    ST_DRAW_TEXT(0, 16, NULL, 20);
+    menu_stamp_chrome(16, 0, UI_TILE_BUTTON_B);
+    ST_DRAW_TEXT(1, 16, "BACK", 19);
     ST_DRAW_TEXT(0, 17, NULL, 20);
 }

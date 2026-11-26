@@ -344,7 +344,7 @@ def write_obj_map_overrides(ramps):
 
 def main():
     import PIL.Image  # noqa: F401 (clear error if Pillow is missing)
-    _, ramps = parse_palette()
+    palette_colors, ramps = parse_palette()
     slotmap = load_slotmap()
     aliases = load_aliases(slotmap)
 
@@ -458,8 +458,10 @@ def main():
     # equal its unlit cell with red recoloured to orange ONLY (the
     # overlay assumes shape identity across the blink).
     from PIL import Image as _GlowImage
-    _GLOW_RED = (139, 27, 27)      # COMBAT/heart_fire_enemy_eyes
-    _GLOW_ORANGE = (245, 113, 55)  # COMBAT/eyes_glow
+    # Palette-derived (never hardcoded): the artist may repaint either red;
+    # the overlay assumes shape identity across the blink, not fixed hues.
+    _GLOW_RED = tuple(palette_colors["COMBAT"]["heart_fire_enemy_eyes"])
+    _GLOW_ORANGE = tuple(palette_colors["COMBAT"]["eyes_glow"])
     _GLOW_PUB = REPO_ROOT / "tools" / "level_editor" / "public" / "tiles" / "combat"
     for path in sorted((REPO_ROOT / "screens" / "combat_art").glob("*.json")):
         data = json.loads(path.read_text())
@@ -710,7 +712,9 @@ def main():
     compile_sheet("menus_tile",
                   {(x, 0): "fight1" for x in range(12)} |
                   {(x, y): "fight1" for y in range(4) for x in
-                   range(12, 16)},
+                   range(12, 16)} |
+                  {(x, 1): "fight1" for x in range(11)} |
+                  {(x, 2): "fight1" for x in range(3)},
                   require_slot=False)
     # Card-menu material OAM icons (material_tiles.png, 5x1 cells: steel,
     # bronze, iron, mythril icon art in that order, then the wood icon):

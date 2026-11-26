@@ -573,8 +573,8 @@ export const Inspector: React.FC<InspectorProps> = ({
               <label style={{ fontWeight: 600 }}>📝 Subtitle</label>
               <input
                 type="text"
-                placeholder="BATTLE DEMO"
-                value={level.titleLayout?.subtitle?.text ?? 'BATTLE DEMO'}
+                placeholder=""
+                value={level.titleLayout?.subtitle?.text ?? ''}
                 onChange={(e) =>
                   onUpdateLevelMeta({
                     titleLayout: {
@@ -600,7 +600,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         titleLayout: {
                           ...(level.titleLayout || {}),
                           subtitle: {
-                            ...(level.titleLayout?.subtitle || { text: 'BATTLE DEMO', align: 'center' }),
+                            ...(level.titleLayout?.subtitle || { text: '', align: 'center' }),
                             y: parseInt(e.target.value) || 0,
                           },
                         },
@@ -617,7 +617,7 @@ export const Inspector: React.FC<InspectorProps> = ({
                         titleLayout: {
                           ...(level.titleLayout || {}),
                           subtitle: {
-                            ...(level.titleLayout?.subtitle || { text: 'BATTLE DEMO', y: 5 }),
+                            ...(level.titleLayout?.subtitle || { text: '', y: 5 }),
                             align: e.target.value as 'left' | 'center' | 'right',
                           },
                         },
@@ -2010,16 +2010,14 @@ export const Inspector: React.FC<InspectorProps> = ({
                               .map((o) => (o.properties || {}).actor_id as number)
                               .filter((n) => typeof n === 'number' && n > 0));
                           // Stats/battle come from the type JSON and the
-                          // actor_id is assigned across ALL scenes
-                          // (ActorIds must be unique scene-to-scene, so a
-                          // within-level pick collides with e.g. the
-                          // forest slime at compile).  One async merge
-                          // (monotonic max-used + 1); the captured index
-                          // keeps a click-away in the fetch window from
-                          // updating the wrong object.
+                          // actor_id is assigned within the current zone (act):
+                          // ActorIds must be unique within a story zone (1..128).
+                          // One async merge; the captured index keeps a click-away
+                          // in the fetch window from updating the wrong object.
+                          const curAct = level.act ?? (level.id.startsWith('act2_') ? 2 : 1);
                           Promise.all([
                             fetchEnemyType(typeId).catch(() => null),
-                            fetchUsedActorIds().catch(() => null),
+                            fetchUsedActorIds(level.id, curAct).catch(() => null),
                           ]).then(([t, usedList]) => {
                             const cur = { ...props };
                             if (t) {
@@ -2036,9 +2034,17 @@ export const Inspector: React.FC<InspectorProps> = ({
                             }
                             if (!cur.actor_id) {
                               const used = new Set<number>(localUsed);
-                              (usedList || []).forEach((u) => used.add(u.id));
+                              (usedList || []).forEach((u) => {
+                                if ((u.act ?? curAct) === curAct) used.add(u.id);
+                              });
                               let next = 1;
                               used.forEach((v) => { if (v >= next) next = v + 1; });
+                              if (next > 128) {
+                                next = 0;
+                                for (let cand = 1; cand <= 128; cand++) {
+                                  if (!used.has(cand)) { next = cand; break; }
+                                }
+                              }
                               cur.actor_id = next;
                             }
                             onUpdateObject(objIndex, { ...nextObj, properties: cur });
@@ -2158,10 +2164,11 @@ export const Inspector: React.FC<InspectorProps> = ({
                         />
                       </div>
                       <div className="form-group">
-                        <label>Actor ID (0 = auto)</label>
+                        <label>Actor ID (0 = auto, 1..128)</label>
                         <input
                           type="number"
                           min="0"
+                          max="128"
                           value={selectedObject.properties?.actor_id ?? 0}
                           onChange={(e) =>
                             onUpdateObject(selectedEntityIndex, {

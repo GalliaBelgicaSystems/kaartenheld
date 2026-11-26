@@ -10,7 +10,7 @@
 #include "game_ids.h"
 #include "rpg/deck.h"
 
-/* Bank-10 choice nav body (src/game/choice_nav_banked.c): evaluates pad
+/* Bank-12 choice nav body (src/game/choice_nav_banked.c): evaluates pad
  * edges, toggles/confirms, and repaints the cursor cells inline, so the
  * fixed bank pays just the dispatch (AGENTS.md 52.11.1/52.18).  One body
  * arbitrates every YES/NO dialogue (Heal Mage, kobold table invite,
@@ -23,7 +23,7 @@ void dialogue_screen_update(Game *g)
 
     if (!g || !g->dialogue.active) return;
 
-    /* YES/NO choice arbitration lives in the game-owned bank-10 choice
+    /* YES/NO choice arbitration lives in the game-owned bank-12 choice
      * body (fixed-bank cost: staging + call -- the fixed bank sits hard
      * against 0x8000, AGENTS.md §52.18).  It reports 3 to open the
      * staged follow-up (stay), 2 to confirm (advance), 6 for a confirmed
@@ -42,7 +42,7 @@ void dialogue_screen_update(Game *g)
      * staged remove, then the staged thanks whose completion_flag owns
      * the one-shot flag), and 0/1/5 to stay/advance plainly.  The staged
      * ids are opaque data to the engine (never game branches). */
-    g_bk_call_bank = 10;
+    g_bk_call_bank = 12;
     g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
     banked_call_run();
     if (g_bk_byte_a != 0) {

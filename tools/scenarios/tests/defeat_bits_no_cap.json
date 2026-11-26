@@ -1,0 +1,125 @@
+{
+ "act": "always",
+ "name": "defeat_bits_no_cap",
+ "test": true,
+ "description": "No defeat cap: 17 staged kills (past the old 16-entry drop and past the 16-entry snapshot decode list) all survive a save/load roundtrip; bit 17 proves the raw bitmask, bit 1 the decoded list, gold proves the slot.",
+ "initial_state": {
+  "scene": "TEST_FOREST",
+  "player": {
+   "x": 8,
+   "y": 6,
+   "facing": "DOWN"
+  },
+  "seed": 4247,
+  "currency": {
+   "GOLD": 50
+  }
+ },
+ "actions": [
+  {
+   "type": "set_defeat",
+   "actor": 1
+  },
+  {
+   "type": "set_defeat",
+   "actor": 2
+  },
+  {
+   "type": "set_defeat",
+   "actor": 3
+  },
+  {
+   "type": "set_defeat",
+   "actor": 4
+  },
+  {
+   "type": "set_defeat",
+   "actor": 5
+  },
+  {
+   "type": "set_defeat",
+   "actor": 6
+  },
+  {
+   "type": "set_defeat",
+   "actor": 7
+  },
+  {
+   "type": "set_defeat",
+   "actor": 8
+  },
+  {
+   "type": "set_defeat",
+   "actor": 9
+  },
+  {
+   "type": "set_defeat",
+   "actor": 10
+  },
+  {
+   "type": "set_defeat",
+   "actor": 11
+  },
+  {
+   "type": "set_defeat",
+   "actor": 12
+  },
+  {
+   "type": "set_defeat",
+   "actor": 13
+  },
+  {
+   "type": "set_defeat",
+   "actor": 14
+  },
+  {
+   "type": "set_defeat",
+   "actor": 15
+  },
+  {
+   "type": "set_defeat",
+   "actor": 16
+  },
+  {
+   "type": "set_defeat",
+   "actor": 17
+  },
+  {
+   "type": "save"
+  },
+  {
+   "type": "add_currency",
+   "currency": "GOLD",
+   "amount": 100
+  },
+  {
+   "type": "load"
+  }
+ ],
+ "assertions": [
+  {
+   "type": "zone",
+   "expected": 1
+  },
+  {
+   "type": "defeat_bit",
+   "actor": 17,
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "defeat_bit",
+   "actor": 1,
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "actor_state",
+   "actor": "SLIME_FOREST",
+   "expected_state": "DEFEATED"
+  },
+  {
+   "type": "currency",
+   "currency": "GOLD",
+   "expected": 50
+  }
+ ]
+}

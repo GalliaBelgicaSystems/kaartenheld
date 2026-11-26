@@ -68,7 +68,7 @@ DEBUG_SRCS = $(filter-out $(CONTENT_SRCS) $(RELEASE_ONLY_SRCS),$(SRCS)) $(TEST_C
 DEBUG_ONLY_SRCS = $(SRC_DIR)/debug/scenarios.c $(SRC_DIR)/debug/telemetry.c $(SRC_DIR)/debug/telemetry_emit_banked.c $(SRC_DIR)/debug/telemetry_snap.c $(SRC_DIR)/debug/snapshot_banked.c $(SRC_DIR)/debug/dbg_action_banked.c $(SRC_DIR)/debug/scenario_load_banked.c $(SRC_DIR)/battle/battle_ff_defeat_banked.c
 RELEASE_SRCS = $(filter-out $(DEBUG_ONLY_SRCS),$(SRCS))
 
-MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening_more.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/demo_complete.c $(GENERATED_MUSIC_DIR)/casino.c $(GENERATED_MUSIC_DIR)/underground.c
+MUSIC_SRCS = $(GENERATED_MUSIC_DIR)/battle.c $(GENERATED_MUSIC_DIR)/desolate_landscape.c $(GENERATED_MUSIC_DIR)/forest.c $(GENERATED_MUSIC_DIR)/boss_fight.c $(GENERATED_MUSIC_DIR)/village.c $(GENERATED_MUSIC_DIR)/castle.c $(GENERATED_MUSIC_DIR)/mimic.c $(GENERATED_MUSIC_DIR)/mimic_intro.c $(GENERATED_MUSIC_DIR)/title.c $(GENERATED_MUSIC_DIR)/victory.c $(GENERATED_MUSIC_DIR)/opening_more.c $(GENERATED_MUSIC_DIR)/chest_opening.c $(GENERATED_MUSIC_DIR)/game_over.c $(GENERATED_MUSIC_DIR)/ending.c $(GENERATED_MUSIC_DIR)/casino.c $(GENERATED_MUSIC_DIR)/underground.c
 GENERATED_SFX_DIR = generated/sfx
 # Explicit list (not wildcard): asset names contain spaces, which make
 # would split. Escaped following the assets/music rules' convention.
@@ -357,7 +357,9 @@ gfx: manifest
 	# 12 single-cell UI icons (row 0, cols 0-11, CSV order) plus the 4x4
 	# hero-status portrait (cols 12-15, rows 0-3, "hero status RC" sheet
 	# order, blank transparent corners included) plus the 4 status-bar
-	# icons (row 1, cols 0-3: full heart, half heart, AP, arrow).
+	# icons (row 1, cols 0-3: full heart, half heart, AP, arrow)
+	# plus the 10 button cells (row 1, cols 4-10: A, B, START 1-3,
+	# dpad UD, dpad LR; row 2, cols 0-2: SELECT 1-3).
 	# Sliced for the editor
 	# by slice_menus_tile.py (public/tiles/menus/, tilesets/menus.json);
 	# encoded with the card chrome ramp (fight1: brown ink on white).
@@ -370,7 +372,10 @@ gfx: manifest
 	# them on every overworld full redraw (see ow_hud).
 	@python3 tools/png2gb.py assets/menus-tile.png --name menus_tile_tiles \
 		--shade-map generated/tiles/shades/menus_tile.json \
-		--tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 12,1 13,1 14,1 15,1 12,2 13,2 14,2 15,2 12,3 13,3 14,3 15,3 0,1 1,1 2,1 3,1" -o $(GFX_OUT_DIR)/menus_tile_tiles.h
+		--tile-coords "0,0 1,0 2,0 3,0 4,0 5,0 6,0 7,0 8,0 9,0 10,0 11,0 12,0 13,0 14,0 15,0 12,1 13,1 14,1 15,1 12,2 13,2 14,2 15,2 12,3 13,3 14,3 15,3 0,1 1,1 2,1 3,1 4,1 5,1 6,1 7,1 8,1 9,1 10,1 0,2 1,2 2,2" -o $(GFX_OUT_DIR)/menus_tile_tiles.h
+	@python3 tools/png2gb.py assets/menus-tile.png --name menus_button_tiles \
+		--shade-map generated/tiles/shades/menus_tile.json \
+		--tile-coords "4,1 5,1 6,1 7,1 8,1 9,1 10,1 0,2 1,2 2,2" -o $(GFX_OUT_DIR)/menus_button_tiles.h
 	# ── Chuck-a-luck bank-8 art bundle (kobold + CRAM, codegen) ──
 	# Regenerated every build from the live battle sources (never
 	# hand-copied): kobold frame0 bytes + fightgoblin OBJ ramp + base
@@ -454,12 +459,14 @@ screens:
 	@python3 tools/screen_compiler/title_compile.py -o src/game/title_data.c screens/title.json
 	@python3 tools/screen_compiler/battle_compile.py --all -o src/game/
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
-	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,enemy_ow_count,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h"
+	@python3 tools/screen_compiler/intro_compile.py --all -o src/screens/
+	@echo "All screens compiled to src/game/{title_data,battle_screens,battle_types,enemy_ow_count,battle_obj_tables,battle_glow_content,card_skin,rider_tiles_generated}.c/h + src/screens/tutorial_*_generated.h + src/screens/intro_*_generated.h"
 
 screens-check:
 	@python3 tools/screen_compiler/title_compile.py --check
 	@python3 tools/screen_compiler/battle_compile.py --all --check
 	@python3 tools/screen_compiler/tutorial_compile.py --all --check
+	@python3 tools/screen_compiler/intro_compile.py --all --check
 
 # Dialogue content: screens/dialogue/*.json is the source of truth for the
 # NPC dialogue table (ids assign by sorted filename) and
@@ -518,6 +525,9 @@ registry-check:
 
 src/screens/tutorial_text_generated.h src/screens/tutorial_count_generated.h &: screens/tutorial.json
 	@python3 tools/screen_compiler/tutorial_compile.py --all -o src/screens/
+
+src/screens/intro_text_generated.h src/screens/intro_count_generated.h &: screens/intro.json
+	@python3 tools/screen_compiler/intro_compile.py --all -o src/screens/
 
 src/game/dialogue_content.c src/game/dialogue_ids_generated.h &: $(wildcard screens/dialogue/*.json)
 	@python3 tools/screen_compiler/dialogue_compile.py --all -o src/game/
@@ -723,6 +733,7 @@ $(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_b
 $(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o $(BUILD_DIR)/travel/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
 $(BUILD_DIR)/game/marks_banked.o $(BUILD_DIR)/debug/game/marks_banked.o $(BUILD_DIR)/travel/game/marks_banked.o: $(GFX_OUT_DIR)/rider_tiles.h $(GFX_OUT_DIR)/ap_tiles.h
 $(BUILD_DIR)/screens/menu_chrome_banked.o $(BUILD_DIR)/debug/screens/menu_chrome_banked.o $(BUILD_DIR)/travel/screens/menu_chrome_banked.o: $(GFX_OUT_DIR)/menus_tile_tiles.h
+$(BUILD_DIR)/game/gamble_content.o $(BUILD_DIR)/debug/game/gamble_content.o: $(GFX_OUT_DIR)/menus_button_tiles.h
 
 # Per-file alloc caps (see docs/roadmap.md post-mortem): the bank-3 patrol
 # path needs a hard-capped budget in these units to keep its commit-path
@@ -898,11 +909,11 @@ $(GENERATED_MUSIC_DIR)/chest_opening.c: assets/music/chest\ opening.uge tools/co
 $(GENERATED_MUSIC_DIR)/game_over.c: assets/music/game\ over.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
 	python3 tools/compile_music.py "$<" 7 song_game_over "$@"
 
-# End-credits theme (assets/music/demo complete.uge, loops).  Played when
+# End-credits theme (assets/music/ending.uge, loops).  Played when
 # the final-boss victory exits to the ending screen (THE END).  Bank 7
 # like the other late songs.
-$(GENERATED_MUSIC_DIR)/demo_complete.c: assets/music/demo\ complete.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
-	python3 tools/compile_music.py "$<" 7 song_demo_complete "$@"
+$(GENERATED_MUSIC_DIR)/ending.c: assets/music/ending.uge tools/compile_music.py | $(GENERATED_MUSIC_DIR) doctor
+	python3 tools/compile_music.py "$<" 7 song_ending "$@"
 
 # Chuck-a-luck table theme (assets/music/casino.uge, loops) for Nis's
 # table.  Bank 7 has ~640 B free (release) and this track is ~3.3 KB, so it lives
@@ -931,7 +942,7 @@ $(GENERATED_MUSIC_DIR)/underground.c: assets/music/underground\ pass.uge tools/c
 # (driver-faithful approximation, not the ROM mix). Explicit target so
 # song builds stay fast; re-run after changing any assets/music/*.uge.
 MUSIC_PREVIEW_DIR = tools/level_editor/public/audio
-MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening_more.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/demo_complete.wav $(MUSIC_PREVIEW_DIR)/underground.wav
+MUSIC_PREVIEW_WAVS = $(MUSIC_PREVIEW_DIR)/battle.wav $(MUSIC_PREVIEW_DIR)/desolate_landscape.wav $(MUSIC_PREVIEW_DIR)/forest.wav $(MUSIC_PREVIEW_DIR)/boss_fight.wav $(MUSIC_PREVIEW_DIR)/village.wav $(MUSIC_PREVIEW_DIR)/castle.wav $(MUSIC_PREVIEW_DIR)/mimic.wav $(MUSIC_PREVIEW_DIR)/mimic_intro.wav $(MUSIC_PREVIEW_DIR)/opening_more.wav $(MUSIC_PREVIEW_DIR)/chest_opening.wav $(MUSIC_PREVIEW_DIR)/game_over.wav $(MUSIC_PREVIEW_DIR)/ending.wav $(MUSIC_PREVIEW_DIR)/underground.wav
 
 music-preview: music $(MUSIC_PREVIEW_WAVS)
 	@echo "Music previews up to date in $(MUSIC_PREVIEW_DIR)"

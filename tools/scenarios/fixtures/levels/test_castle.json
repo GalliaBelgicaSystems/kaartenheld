@@ -1,5 +1,6 @@
 {
   "id": "test_castle",
+  "act": 1,
   "name": "TEST Ruined Castle",
   "map": {
     "width": 20,

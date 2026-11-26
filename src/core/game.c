@@ -16,6 +16,10 @@
  * flushed once per frame below. */
 uint8_t g_autosave_pending;
 
+extern uint8_t g_menus_chrome_loaded;
+void menus_chrome_stream_banked(void);
+void marks_screen_stream_banked(void);
+
 /* Reset the render cache so the next render takes the full-redraw path.
  * Inline (not banked): pure WRAM writes, and the fixed bank has room
  * again. */
@@ -32,6 +36,7 @@ void game_render_reset(Game *g)
     g->render_cache.prev_screen = g->prev_screen;
     g->render_cache.prev_map_id = g->world.map_id;
     g->battle.dirty = BATTLE_DIRTY_ALL;
+    g_menus_chrome_loaded = 0;
     /* Hide the overworld HUD window on screen switches / resets;
      * overworld_screen_render re-enables it after painting 0x9C00. */
     LCDC_REG &= (uint8_t)~0x20u;
@@ -101,14 +106,10 @@ void game_init(Game *g)
     g->title_menu_index = 0;
     g->intro_slide = 0;
     game_prepare_new_game(g);
-    /* On real hardware the `uint8_t g_sound_enabled = 1` default is applied
-     * by CRT0's .data copy; the debug harness skips CRT0 and jumps straight
-     * to main(), so re-assert the sound-on default here (matches the
-     * hardware boot state).  Without this, audio_play_music() no-ops under
-     * the harness and music_track assertions report NONE.  Boot stays silent
-     * (MUSIC_NONE from audio_init) through SPLASH and NOTICE; notice_screen
-     * starts MUSIC_TITLE when Kaartenheld appears on SCREEN_TITLE. */
-    g_sound_enabled = 1;
+    /* Boot stays silent (MUSIC_NONE from audio_init) through SPLASH and
+     * NOTICE: world_load_map skips its scene-track start while
+     * g_boot_phase < 3, and notice_screen starts MUSIC_TITLE when
+     * Kaartenheld appears on SCREEN_TITLE. */
     game_render(g);
 
 #ifdef DEBUG_BUILD
@@ -315,6 +316,22 @@ void game_render(Game *g)
              * before returning so the next iteration can synchronize
              * normally. */
             ui_lcd_off();
+            if (g->screen != SCREEN_OVERWORLD && g->screen != SCREEN_DIALOGUE) {
+                SCX_REG = 0;
+                SCY_REG = 0;
+                if (g->screen != SCREEN_SPLASH && g->screen != SCREEN_NOTICE &&
+                    !g_menus_chrome_loaded) {
+                    g_bk_call_bank = 11;
+                    g_bk_call_target = (uint16_t)&menus_chrome_stream_banked;
+                    banked_call_run();
+                }
+                if (g->screen == SCREEN_BATTLE || g->screen == SCREEN_ITEM ||
+                    g->screen == SCREEN_SHOP) {
+                    g_bk_call_bank = 8;
+                    g_bk_call_target = (uint16_t)&marks_screen_stream_banked;
+                    banked_call_run();
+                }
+            }
             screen_render(g);
             ui_lcd_on();
             return;

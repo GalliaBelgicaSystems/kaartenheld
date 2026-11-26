@@ -1,0 +1,68 @@
+{
+ "act": 1,
+ "name": "carl_intro_yes_won",
+ "test": true,
+ "description": "Post-victory YES never re-fights: with TUTORIAL_SPAR_WON latched (flag survives zone wipes, unlike the defeat bit), confirming YES on the spar offer clears the stashed spar and closes plainly -- no encounter, no battle, back to the overworld.",
+ "initial_state": {
+  "scene": "TEST_FIELD",
+  "player": {
+   "x": 13,
+   "y": 8,
+   "facing": "RIGHT"
+  },
+  "seed": 5002,
+  "flags": {
+   "FIELD_CHEST": true,
+   "TUTORIAL_SPAR_WON": true
+  }
+ },
+ "actions": [
+  {
+   "type": "wait",
+   "frames": 5
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  },
+  {
+   "type": "press",
+   "button": "A"
+  },
+  {
+   "type": "wait",
+   "frames": 20
+  }
+ ],
+ "assertions": [
+  {
+   "type": "screen",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "game_state",
+   "expected": "OVERWORLD"
+  },
+  {
+   "type": "defeat_bit",
+   "actor": "SLIME_FIELD",
+   "expected_state": "ALIVE"
+  },
+  {
+   "type": "event_not_occurred",
+   "event": "ENCOUNTER_STARTED"
+  }
+ ]
+}

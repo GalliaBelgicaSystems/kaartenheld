@@ -97,6 +97,13 @@ void credits_screen_render(Game *g);
  * tutorial_content.c (static data must not duplicate per TU). */
 #include "tutorial_count_generated.h"
 
+/* Shared by intro_screen.c (slide advance + wrap) and title_content.c
+ * (slide table end).  Generated from screens/intro.json — single
+ * source, the two cannot drift.  Count-only header: the slide arrays
+ * live in intro_text_generated.h, included once by title_content.c
+ * (static data must not duplicate per TU). */
+#include "intro_count_generated.h"
+
 /* Shared slide-show renderer (intro + tutorial + splash screens).
  * `bank` is the content body's ROM bank (4 = ASCII slides, 7 = splash). */
 void slide_screen_render(Game *g, ScreenId scr, uint16_t content_target, uint8_t slide, uint8_t bank);
@@ -118,10 +125,10 @@ void thanks_content_render(void);
 void ending_content_render(void);
 void game_over_content_render(void);
 
-/* Demo-outro flag (simple_screens.c, WRAM): set when the slime-lord wake
- * dialogue routes to THANKS, cleared when THANKS restarts.  Lets the
- * banked thanks body show congratulations after the outro but a
- * "try to beat the Lord of Slimes" note after an ordinary game-over. */
-extern uint8_t g_demo_completed;
+/* Outro flag (simple_screens.c, WRAM): checked by thanks_content_render()
+ * to show congratulations instead of the "try to beat the Lord of Slimes"
+ * note.  Currently stays 0 because the slime-lord wake dialogue routes to
+ * SCREEN_ENDING instead of SCREEN_THANKS; cleared when THANKS restarts. */
+extern uint8_t g_game_completed;
 
 #endif /* SCREEN_H */

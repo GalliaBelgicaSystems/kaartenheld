@@ -220,7 +220,9 @@ static void gem_draw_detail(uint8_t bit)
         GEM_DRAW_TEXT(0, r, NULL, 20);
     for (i = 0; i < 20; i++)
         menu_stamp_chrome(15, i, UI_TILE_MENUS_BOTTOM_BORDER);
-    GEM_DRAW_TEXT(0, 16, "B:BACK", 20);
+    GEM_DRAW_TEXT(0, 16, NULL, 20);
+    menu_stamp_chrome(16, 0, UI_TILE_BUTTON_B);
+    GEM_DRAW_TEXT(1, 16, "BACK", 19);
     GEM_DRAW_TEXT(0, 17, NULL, 20);
 }
 
@@ -455,11 +457,20 @@ void item_gem_render_banked(void)
         (uint8_t)((uint8_t)(g->item_menu_scroll + GEM_WINDOW) < total),
         'v', UI_TILE_MENUS_LIST_SCROLL_ARROW,
         UI_TILE_MENUS_BOTTOM_BORDER);
-    if (g->item_menu_message == GEM_MSG_MAX)
+    if (g->item_menu_message == GEM_MSG_MAX) {
         GEM_DRAW_TEXT(0, 16, "MAX 3 GEMS", 20);
-    else if (total == 0)
-        GEM_DRAW_TEXT(0, 16, "B:BACK", 20);
-    else
-        GEM_DRAW_TEXT(0, 16, "A:EQUIP SEL:INFO", 20);
+    } else if (total == 0) {
+        GEM_DRAW_TEXT(0, 16, NULL, 20);
+        menu_stamp_chrome(16, 0, UI_TILE_BUTTON_B);
+        GEM_DRAW_TEXT(1, 16, "BACK", 19);
+    } else {
+        GEM_DRAW_TEXT(0, 16, NULL, 20);
+        menu_stamp_chrome(16, 0, UI_TILE_BUTTON_A);
+        GEM_DRAW_TEXT(1, 16, "EQUIP", 5);
+        menu_stamp_chrome(16, 7, UI_TILE_BUTTON_SELECT_1);
+        menu_stamp_chrome(16, 8, UI_TILE_BUTTON_SELECT_2);
+        menu_stamp_chrome(16, 9, UI_TILE_BUTTON_SELECT_3);
+        GEM_DRAW_TEXT(10, 16, "INFO", 10);
+    }
     GEM_DRAW_TEXT(0, 17, NULL, 20);
 }

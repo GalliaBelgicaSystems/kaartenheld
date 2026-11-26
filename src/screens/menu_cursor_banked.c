@@ -1369,6 +1369,14 @@ extern volatile uint8_t *s_ic_dst;
 extern char *s_ic_buf;
 extern uint8_t s_ic_txt_i;
 
+static void pk_stamp_button(uint8_t y, uint8_t x, uint8_t tile)
+{
+    if (y >= 18 || x >= 20) return;
+    VBK_REG = 0;
+    BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + ((uint16_t)y << 5) + x), tile);
+    g_ui_screen_buf[y][x] = ' ';
+}
+
 static void pk_draw_text(uint8_t x, uint8_t y, const char *text, uint8_t len)
 {
     uint8_t ended = (text == 0);
@@ -1480,7 +1488,13 @@ void item_picker_render_banked(void)
     pk_draw_rows(g);
     for (r = 10; r <= 13; r++)
         pk_blank_row(r);
-    pk_draw_text(0, 14, "LR CYCLE  A:OK B:NO", 20);
+    pk_draw_text(0, 14, NULL, 20);
+    pk_stamp_button(14, 0, UI_TILE_BUTTON_DPAD_LR);
+    pk_draw_text(1, 14, "CYCLE", 5);
+    pk_stamp_button(14, 7, UI_TILE_BUTTON_A);
+    pk_draw_text(8, 14, "OK", 2);
+    pk_stamp_button(14, 11, UI_TILE_BUTTON_B);
+    pk_draw_text(12, 14, "NO", 8);
     for (r = 15; r <= 17; r++)
         pk_blank_row(r);
 }
@@ -1622,19 +1636,47 @@ void shop_clean_tail_banked(void)
             for (y = 8; y <= 17; y++)
                 cu_blank_span(y, 0, 20);
         }
+        /* Empty-tab leave hint (row 7) + button footer
+         * (row 16): bank-2 render leaves both rows for
+         * this tail (bank 2 ceiling, AGENTS.md 52.18). */
+        pk_stamp_button(7, 0, UI_TILE_BUTTON_B);
+        sh_draw_text_diff(1, 7, "Leave   ", 8);
+        pk_stamp_button(16, 0, UI_TILE_BUTTON_A);
+        if (g->item_menu_tab == 1)
+            sh_draw_text_diff(1, 16, "Sell ", 5);
+        else
+            sh_draw_text_diff(1, 16, "Buy  ", 5);
+        pk_stamp_button(16, 6, UI_TILE_BUTTON_B);
+        sh_draw_text_diff(7, 16, "Leave        ", 13);
         return;
     }
 
     sh_draw_msg(g);
+    /* Button footer (row 16): bank-2 render leaves the row
+     * for this tail (bank 2 ceiling).  Same layout as empty. */
+    pk_stamp_button(16, 0, UI_TILE_BUTTON_A);
+    if (g->item_menu_tab == 1)
+        sh_draw_text_diff(1, 16, "Sell ", 5);
+    else
+        sh_draw_text_diff(1, 16, "Buy  ", 5);
+    pk_stamp_button(16, 6, UI_TILE_BUTTON_B);
+    sh_draw_text_diff(7, 16, "Leave        ", 13);
 
     if (same_screen) {
         uint8_t rem = (g_shop_vis_count > g->item_menu_scroll)
             ? (uint8_t)(g_shop_vis_count - g->item_menu_scroll) : 0;
         if (rem > SHOP_VISIBLE) rem = SHOP_VISIBLE;
-        /* Live rows stamped BG icon tiles at cols 1..2 directly to VRAM;
-         * keep the text mirror clean (e.g. after flipping back from an
-         * empty-tab "(nothing to sell)" message). */
+        /* Live rows stamped BG icon tiles at cols 1..2 directly to VRAM,
+         * and an empty-tab row 7 stamped UI_TILE_BUTTON_B at col 0 with
+         * a ' ' buffer; repaint col 0 unconditionally here so switching
+         * back to a non-empty tab never leaves the stale [B] tile. */
         for (y = 5u; y < (uint8_t)(5u + rem); y++) {
+            uint8_t pos = (uint8_t)(g->item_menu_scroll + (y - 5u));
+            char c = (g->item_menu_index == pos) ? '>' : ' ';
+            VBK_REG = 0;
+            BANKED_VRAM_WRITE((volatile uint8_t *)(0x9800u + ((uint16_t)y << 5)),
+                              (uint8_t)(ui_font_tile_base + (uint8_t)(c - ' ')));
+            g_ui_screen_buf[y][0] = c;
             g_ui_screen_buf[y][1] = ' ';
             g_ui_screen_buf[y][2] = ' ';
         }

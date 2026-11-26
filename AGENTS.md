@@ -1359,7 +1359,7 @@ Soundtrack tracks authored in **hUGETracker** (`.uge`, e.g. `assets/music/Battle
   * **ROM Bank 8 (overflow bank)**: banked-copy-read data that outgrew banks 4/5 lives here, starting with the shared overworld sprite blob (`src/game/enemy_ow_content.c`, streamed by `ui_sprite_init` via `banked_copy(8, ...)`), plus the transcribed SFX.  Readers must go through `banked_copy` (never direct pointers); offsets are bank-independent.  A banked reader must share its table's bank: the blob's tile count lives WITH the blob (`src/game/enemy_ow_count.c`, bank 8, emitted by `battle_compile.py`) -- when it lived in `battle_types.c` (bank 4) the boot read returned 0xFF and `ui_init`'s `t+=8` chunk loop wrapped past 255 forever, so the release ROM never booted (walkthrough boot anchors failed on every walk).  Banked bodies may live here too (the audio mapping/jingle bodies): they must stay pure (WRAM + regs + same-bank calls only -- a body must NEVER switch away its own bank mid-function, or the CPU fetches its continuation through the new bank's window).  The link allows 16 banks (`-Wl-yo16`, 256 KB ROM); `make memmap` tracks `_CODE_8` like the rest.
   * Bank 3 is thin in the release build (16330/16384 B, 54 B free): the ring-flag stores alone cost 31 B of it.  Any bank-3 addition needs a memmap check plus a release-link verification, not just the debug map.
 * **Bank-7 overflow songs (dual-bank playback)**:
-  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).  The ninth and tenth songs (`opening.uge` -> `song_opening`, `MUSIC_OVERWORLD`; `chest opening.uge` -> `song_chest_opening`, `MUSIC_CHEST`) share bank 7 the same way: the SFX moved to bank 8 to make room, so no third driver copy (and no third copy of its ~100 B WRAM state) was needed.  The eleventh song (`demo complete.uge` -> `generated/music/demo_complete.c`, symbol `song_demo_complete`, `MUSIC_ENDING`) shares bank 7 too (loops over the THE END credits after a final-boss victory); fitting it moved the world-anim bodies (`anim_swap_banked.c`: pure, trampoline-dispatched, no same-bank data) to bank 8, which has room.
+  * A seventh song (`Mimic.uge` -> `generated/music/mimic.c`, symbol `song_mimic`, `#pragma bank 7`) lives in **ROM Bank 7** next to a **second copy of the hUGE driver** (`build/*/lib/hUGEDriver_b7.o`: same code, all exports renamed `_b7` via repeatable `rgb2sdas.py -r`).  Driver + song must share a bank because the driver reads song bytes through the mapped window.  An eighth song, the mimic battle intro (`Mimic_intro.uge` -> `generated/music/mimic_intro.c`, symbol `song_mimic_intro`), shares bank 7: `MUSIC_MIMIC` plays the intro once, then `audio_update()` swaps in the looping `song_mimic` after 224 timer ticks (~0.9 s: the intro is a rows-0-7 sting with a note cut on row 8, so the swap skips the order's remaining silence; the ROM driver loops whole songs, so intro and loop must be separate songs).  The ninth and tenth songs (`opening.uge` -> `song_opening`, `MUSIC_OVERWORLD`; `chest opening.uge` -> `song_chest_opening`, `MUSIC_CHEST`) share bank 7 the same way: the SFX moved to bank 8 to make room, so no third driver copy (and no third copy of its ~100 B WRAM state) was needed.  The eleventh song (`ending.uge` -> `generated/music/ending.c`, symbol `song_ending`, `MUSIC_ENDING`) shares bank 7 too (loops over the THE END credits after a final-boss victory); fitting it moved the world-anim bodies (`anim_swap_banked.c`: pure, trampoline-dispatched, no same-bank data) to bank 8, which has room.
   * Ambient birdsong was removed entirely (no `bird*.pcm`, no `bird_ambient_banked`, no `EVENT_BIRD_CHIRP`): Wake Grove and Carl's field are silent like every other map.  The removal changes no WRAM (birdsong was zero-WRAM by design), so the measured branch-vs-master growth stays `_DATA` +41 B (stack gap 158->133 B against the 126 B floor): the chest jingle's 2 BSS bytes, the forest row-4 extension (`g_active_tile_palette` 32->40 B) and the 8-entry animation index list (`g_anim_cells`/`g_anim_count`, 17 B).  A +23 B WRAM layout shift was proven to break `battle_boot` with ghost input (post-mortem in `docs/roadmap.md`).  `battle_boot` + `stack-budget` stay green; any further WRAM growth must re-run them first.  Banked results return through explicit `g_bk_byte_b` stores, never bare C returns.
   * `huge_music_play_banked(song, bank)` records the song's bank in `g_huge_music_bank`; `huge_music_update()` / `huge_music_mute_channel()` select that bank around the `_b7` (bank 7) or plain (bank 6) driver call, then restore home bank 1.  All plays go through `huge_music_play_banked` with an explicit bank (there is no bank-6 shorthand left).  New songs go to bank 7 through this path -- never bank 6.
   * The assembler exports underscore twins (`hUGE_init` + `_hUGE_init`, ...): a second-bank conversion must rename BOTH (missing twins surface as `Multiple definition of _hUGE_*` at link).  Recipe-only Makefile edits do not retrigger the rule (prerequisites unchanged) -- delete the `hUGEDriver_b7.o`/`.obj` pair first.
@@ -1865,9 +1865,9 @@ Rules:
   fixtures; `make debug` chains `levels-test` automatically.  memmap
   guards the bank-4 fixture budget.
 
-## 42.4 Acts: demo (act 1) vs shared vs future acts
+## 42.4 Acts: act 1 vs shared vs future acts
 
-Act 1 is the demo (ends after the lord-of-slimes fight).  Levels and
+Act 1 is the released first act (ends after the lord-of-slimes fight).  Levels and
 scenarios carry a top-level `act` key so act-1 story tests can be skipped
 while iterating on act 2:
 
@@ -1875,16 +1875,18 @@ while iterating on act 2:
   levels use `"act": 2` with an `act2_` id prefix and an `Act 2 — ...`
   display name, so the editor's filter box isolates them with zero
   tooling.
-* Scenarios (`tools/scenarios/tests/*.json`): `"act": 1` (154: proves
-  demo-specific content — Carl/mayor/guard/dog/merchant/shopkeys/
+* Scenarios (`tools/scenarios/tests/*.json`): `"act": 1` (proves
+  act-1-specific content — Carl/mayor/guard/dog/merchant/shopkeys/
   heal-mage/skeleton/gamble/wizard, act-1 map boots/gates/chests,
-  boss/mimic/throne) or `"act": "always"` (405: proves a shared
+  boss/mimic/throne) or `"act": "always"` (proves a shared
   engine/system rule, even when staged on an act-1 fixture as background
   — e.g. `arrows_shop_buy` stages `MERCHANT_QUEST: 2` but tests the
   generic shop).  Staging a flag as background is not testing it; only
   assertions that prove act-1 content (story flags, quest variables,
   `DOG_ASK` / `TUTORIAL_CARL_*` / `KOBOLD_INVITE` dialogue args,
-  named-actor state) mark a scenario act 1.
+  named-actor state) mark a scenario act 1.  `validate_scenario()`
+  additionally requires a numbered scenario's staged scene to belong to
+  that act (an `always` scene may be anything).
 * Recorded borderline calls: `south_knight_bump` is `always` (the only
   hostile-bump test); `actor_slime_combat`, `boss_despair_*`, and the
   whole `gamble_*` family (including bet/roll mechanics and the
@@ -1893,10 +1895,13 @@ while iterating on act 2:
   the dice system.
 
 Current status: the key is inert for filtering (`compile.py --all`,
-`validate.py`, the editor `/api/levels`, and `run_all()` all ignore it),
-so the layout stays flat (`levels/*.json`, no subdirs — recursive globs
-need tooling changes first) and `make test-harness` still runs the full
-suite (CI gate).  `validate_scenario()` requires a valid top-level `act`
+the editor `/api/levels`, and `run_all()` all ignore it), so the layout
+stays flat (`levels/*.json`, no subdirs — recursive globs need tooling
+changes first) and `make test-harness` still runs the full suite (CI
+gate).  It is load-bearing elsewhere: `compile.py` emits it into the
+actor tables (zone defeats, §53.8), `validate.py` keys ActorId
+uniqueness and the `act2_` prefix on it, and `validate_scenario()`
+checks scenario/scene act agreement.  `validate_scenario()` requires a valid top-level `act`
 (`int >= 1` or `"always"`) on every scenario, and the level editor
 preserves `act` verbatim on load/save round-trips.  Local fast loop while
 on act 2 — run shared + act-2 scenarios only:
@@ -2939,6 +2944,47 @@ in `src/core/game.c`, called once per frame right after
   unconditionally every frame, so a request can never go stale --
   not across screens, saves, loads, or harness teleports.
 
+## 52.29 Per-frame debug builders share the VBlank budget (Nov 2026)
+
+`debug_snapshot()` (core + extended builders) runs EVERY frame in the
+debug ROM, inside the same VBlank budget as the game.  A 128-iteration
+bit-decode loop in the extended snapshot builder pushed the overworld
+frame over budget: every game frame then took two VBlanks (vsync waits
+for the next one), so boot ran at half speed and the title arrived ~400
+frames late -- `verify-music` 5a/5c failed (START hold landed on NOTICE,
+no SFX), while the music-clock checks stayed green (the timer ISR is
+cycle-based, unaffected).  Symptom class: anything paced in game frames
+(boot timeline, input windows, patrols) runs slow while cycle-paced
+systems (audio ISR) look fine.  Keep per-frame debug work bounded (the
+decoder is byte-first with zero-skip: 16 iterations when empty); never
+scan the full 128-bit mask per frame.  `verify-music` is the canary
+(its title-wait budget assumes full-rate frames), not the harness
+(SameBoy steps frames discretely and cannot see pacing).
+
+## 52.30 make_sym truncation aliases must never clobber exact names (Nov 2026)
+
+`tools/make_sym.py` maps the linker's 8-char-truncated `.map` names back
+to full symbols (`_g_scen_l` -> `g_scen_load`, ...).  A prefix rule once
+aliased every `_g_game*` map name to `g_game` -- so renaming
+`g_demo_completed` to `g_game_completed` (whose truncated map form is
+`_g_game_c`) silently moved `g_game` in the committed `.sym` from `C94C`
+to the flag byte `DA96`.  The ROM was fine (linker-resolved); every host
+tool reading `g_game` was not: `verify-music` failed its boot-silence,
+gate-crossing and dialogue checks on a perfectly healthy ROM, while the
+SameBoy harness stayed green (it reads `g_snap_buf`/telemetry, never
+`g_game` -- the same split that makes 52.15 blind).  The same latent
+off-by-one corrupted `g_scen_load` (`D420` read as `D421`) via `_g_scen_l`
+long before any rename.  Rules:
+
+* Truncation aliases fill gaps only: an exact `.noi`/`.map` entry always
+  wins; two different addresses aliasing one key with no exact entry is a
+  hard `make_sym` error (non-zero exit fails the link rule), never
+  last-wins.
+* After ANY rename that introduces a `_g_*`/`g_*` prefix collision (or any
+  `make_sym.py` change), regen both `.sym` files and eyeball
+  `g_game`/`g_scen_load` before trusting host-tool results -- a wrong
+  `.sym` makes healthy ROMs look broken and broken ROMs look healthy.
+
 ---
 
 # 53. State Ownership
@@ -3014,24 +3060,26 @@ in sync; changing one without the other silently breaks every scenario.
 
 * Core snapshot (`g_snap_buf`, 36 bytes): byte 12 is `state.flags.bytes[0]`,
   byte 19 is `state.scene.scene_id`.  Existing scenarios depend on these.
-* Extended snapshot (`g_state_snap_buf`, 294 bytes, version 0x08): version
+* Extended snapshot (`g_state_snap_buf`, 317 bytes, version 0x0A): version
   byte 0, flags 1..8, variables 9..40 (all MAX_STATE_VARIABLES as int16
   LE -- grown from 9..24 for the 9th variable in Nov 2026; the builder
   always copied 16 vars while the layout reserved 8, so vars 9+ used to
   alias the currency bytes), currency count 41 + entries 42..53, party
   count 54 + members 55..66, inventory (collection) count 67 + entries
-  68..167, world count 168 + entries 169..216, progression count 217 +
-  entries 218..265, equipment 266, camera/world geometry 267..272,
-  battle-deck count at 273 followed by up to 20 deck card ids at
-  274..293.
-* State-load descriptor (`g_scen_state_buf`, 320 bytes, version 0x05):
+  68..167, world count 168 + entries 169..216 (16 lowest set defeat bits
+  decoded), progression count 217 + entries 218..265, equipment 266,
+  camera/world geometry 267..272, battle-deck count at 273 followed by
+  up to 20 deck card ids at 274..293, economy state at 294..299, zone at
+  300, and raw zone defeat bitmask at 301..316.
+* State-load descriptor (`g_scen_state_buf`, 326 bytes, version 0x06):
   variables section carries up to 16 entries (vid + int16 LE, 3 bytes
   each at 19..66), so variables 9+ load through descriptors; the
   optional deck section at 297 (present flag) / 298 (count) / 299..318
   (card ids)
   replaces the starter deck when present — an explicit empty deck is how
   scenarios reach `battle_start`'s packed fallback path now that
-  `DECK_MIN_CARDS` blocks emptying a deck through gameplay.
+  `DECK_MIN_CARDS` blocks emptying a deck through gameplay; status mask
+  at 319; economy state at 320..325.
 * Every important gameplay transition must emit a telemetry event; state
   assertions must be possible without screenshots.
 
@@ -3086,6 +3134,35 @@ The byte offsets in `g_snap_buf` / `g_state_snap_buf` are an internal
 transport contract and may change; scenarios must not depend on them.
 Semantic assertions (`flag`, `variable`, `inventory`, `party_hp`,
 `party_level`, `actor_state`, `screen_row`, ...) are the stable API.
+
+## 53.8 Zone-scoped defeat bitmask (acts)
+
+Enemy defeats persist per story zone (`WorldState.zone` + 128 defeat
+bits, `src/rpg/state.h`), not game-wide: the loader (`actor_load_banked.c`,
+the single funnel every map load passes through) clears the old zone's
+bits when the table zone (`WorldActorTable.act`, compiled from
+`levels/*.json` act, `compile.py`) changes, so leaving a zone respawns
+its enemies.  The wipe runs during the load, before the frame's
+`scene_sync_from_world` + autosave flush (`game_update`), so a slot
+saved after a zone change holds the cleared mask -- never a mix.
+The clear emits `EVENT_ZONE_CHANGED` (old, new); silent settles
+(zone 0 on boot/staged setup) stay quiet.  ActorIds index the bits
+(`N-1`) and must be unique within a zone only (`validate.py` enforces
+range 1..128 plus per-act uniqueness, so zones may reuse ids).
+Save+quit preserves the exact zone state (zone + bits travel in
+`GameState`/SRAM); zone 0 means unsettled and settles without clearing,
+so staged scenario bits survive the first load.  One-shot bosses that
+must never respawn are story flags, never defeat bits.  Regression:
+`actor_defeat_save_load`.
+
+Deliberate re-farm rule: a zone change is a full reset -- kills recount
+toward `MONSTERS_DEFEATED`, and re-killed enemies grant their loot and
+gold again (no take-backs on what was already granted).  Carl is the
+one exception to the *offer*, not the reset: his body still respawns
+with the zone, but the `TUTORIAL_SPAR_WON` flag latch (set by his
+victory event) keeps the leave-the-field offer, the `?` mark and the
+INTRO YES re-fight suppressed -- the lesson is taught once, the spar
+itself stays zone-bound like every other fight.
 
 ---
 
@@ -3425,7 +3502,7 @@ the commit/PR without booting anything.
   planner routes through the expanded castle chain and all corridor
   columns avoid patrol boxes), so persistent state never bleeds
   between milestones.  Walk D stops at the boot title screen (START → menu,
-  DOWN to the TUTORIAL entry, A, then RIGHT through the seven slides); it never
+  DOWN to the TUTORIAL entry, A, then RIGHT through the nine slides); it never
   enters the game.
 * Determinism is verified: the walk's position/caret/text checks make the
   29 frames byte-identical across repeated runs.

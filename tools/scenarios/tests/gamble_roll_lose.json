@@ -78,7 +78,7 @@
     {
       "type": "screen_row",
       "row": 16,
-      "contains": "A:AGAIN B:LEAVE"
+      "contains": "AGAIN"
     },
     {
       "type": "currency",

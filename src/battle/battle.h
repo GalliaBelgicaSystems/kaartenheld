@@ -388,7 +388,7 @@ void battle_ff_defeat_banked(void);
 void battle_init_deck_banked(void);
 
 /* Banked navigation / selection cluster (src/battle/battle_nav_banked.c,
- * ROM bank 4), dispatched by the fixed thin wrappers in battle.c via the
+ * ROM bank 11), dispatched by the fixed thin wrappers in battle.c via the
  * WRAM trampoline: g_bk_ptr_a = Battle*, g_bk_byte_a = opcode,
  * g_bk_byte_b = argument, boolean results returned in g_bk_byte_c. */
 #define NAV_OP_CURSOR_MOVE      1

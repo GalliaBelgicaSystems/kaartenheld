@@ -6,6 +6,7 @@ Authoritative bridge for Game Boy snapshot, telemetry, and screen inspection.
 """
 import subprocess, pty, os, select, time, tty, termios, fcntl, re, signal, json, sys
 from pathlib import Path
+from level_compiler.scene_registry import TEST_SCENE_ORDER
 
 _TOOLS_DIR = Path(__file__).resolve().parent
 if str(_TOOLS_DIR / "screen_compiler") not in sys.path:
@@ -25,9 +26,7 @@ def _scene_id_maps():
         base = reg.get("_test_base", 240)
     except (OSError, ValueError):
         scenes, base = {}, 240
-    test_names = ["test_field", "test_town", "test_forest",
-                  "test_mountain_pass", "test_castle", "test_south_field",
-                  "test_gamble", "test_underground"]
+    test_names = list(TEST_SCENE_ORDER)
     real = {num: sid.upper() for sid, num in scenes.items()
             if isinstance(num, int)}
     test = {base + i: sid.upper() for i, sid in enumerate(test_names)}
@@ -119,7 +118,7 @@ EVENT_TYPE_MAP = {
     62: "TARGET_CHANGED",
     63: "CARDS_GREYED", 64: "CARDS_UNGREYED",
     65: "ACTOR_MOVED", 66: "DIALOGUE_CHOICE",
-    67: "CARD_EQUIP_LOCKED", 68: "MARKET_UPDATED",
+    67: "CARD_EQUIP_LOCKED", 68: "MARKET_UPDATED", 69: "ZONE_CHANGED",
 }
 EVENT_ID_MAP = {GAME_ID_BASE + 0: "TOWN_ARRIVAL",
                 GAME_ID_BASE + 1: "QUEST_START",
@@ -949,8 +948,8 @@ class EmulatorSession:
 
     # Extended RPG state snapshot: parses g_state_snap_buf (300 bytes,
     # layout in src/debug/telemetry.h STATE_SNAP_*).
-    STATE_SNAP_SIZE = 300
-    STATE_SNAP_VERSION = 9
+    STATE_SNAP_SIZE = 317
+    STATE_SNAP_VERSION = 10
     STATE_SNAP_FLAGS_OFF = 1
     STATE_SNAP_FLAGS_SIZE = 8
     STATE_SNAP_VARIABLES_OFF = 9
@@ -978,6 +977,9 @@ class EmulatorSession:
     STATE_SNAP_MARKET_GOLD_IN_OFF = 295
     STATE_SNAP_MARKET_GOLD_OUT_OFF = 297
     STATE_SNAP_MARKET_BATTLES_OFF = 299
+    STATE_SNAP_ZONE_OFF = 300
+    STATE_SNAP_ZONE_BITS_OFF = 301
+    STATE_SNAP_ZONE_BITS_SIZE = 16
 
     def state_snapshot(self):
         """Read g_state_snap_buf and return the canonical GameState as a dict."""
@@ -1082,6 +1084,15 @@ class EmulatorSession:
             "battles": buf[self.STATE_SNAP_MARKET_BATTLES_OFF],
         }
 
+        # Zone tail (v10, zone defeats AGENTS.md 53.8, appended): the
+        # recorded zone plus the raw 16-byte defeat bitmask (bit (N-1)
+        # = ActorId N).  The world list above decodes only the 16
+        # lowest set ids; defeat_bit asserts read these bytes.
+        zone = buf[self.STATE_SNAP_ZONE_OFF]
+        defeat_bits = list(buf[self.STATE_SNAP_ZONE_BITS_OFF:
+                               self.STATE_SNAP_ZONE_BITS_OFF +
+                               self.STATE_SNAP_ZONE_BITS_SIZE])
+
         return {
             "flags": flags,
             "variables": variables,
@@ -1089,6 +1100,8 @@ class EmulatorSession:
             "party": party,
             "inventory": inventory,
             "world": world,
+            "zone": zone,
+            "defeat_bits": defeat_bits,
             "progression": progression,
             "deck": deck,
             "market": market,
@@ -1128,6 +1141,8 @@ class EmulatorSession:
     DBG_ACT_SET_DECK_RING = 23
     DBG_ACT_SET_MARKET_INDEX = 24
     DBG_ACT_SET_FILTER_MAT = 25
+    DBG_ACT_SET_DEFEAT = 26
+    DBG_ACT_TELEPORT = 27
 
     def debug_action(self, action, a0=0, a1=0, a2=0):
         """Run a debug action through the ROM's real mechanic functions."""

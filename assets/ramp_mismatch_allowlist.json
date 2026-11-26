@@ -1142,6 +1142,174 @@
       "off_colors": [
         "#b59263"
       ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        0,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#c34e1b"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        0,
+        2
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        1,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#c34e1b"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        1,
+        2
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        2,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#755930"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        2,
+        2
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        3,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#755930"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        4,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        5,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        6,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        7,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        8,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        9,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
+    },
+    {
+      "sheet": "menus_tile",
+      "tile": [
+        10,
+        1
+      ],
+      "declared": "fight1",
+      "used_ramp": "fight1",
+      "off_colors": [
+        "#b59263"
+      ]
     }
   ]
 }

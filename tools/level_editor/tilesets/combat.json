@@ -188,7 +188,7 @@
       "label": "hp icon",
       "gb_constant": "TILE_COMBAT_HP_ICON",
       "walkable": false,
-      "color": "#e5b49e",
+      "color": "#c34e1b",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_hp_icon.png",
       "category": "terrain"
@@ -388,7 +388,7 @@
       "label": "left middle boss",
       "gb_constant": "TILE_COMBAT_LEFT_MIDDLE_BOSS",
       "walkable": false,
-      "color": "#6c6767",
+      "color": "#6f6967",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_left_middle_boss.png",
       "category": "enemy"
@@ -398,7 +398,7 @@
       "label": "middle center boss",
       "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS",
       "walkable": false,
-      "color": "#100707",
+      "color": "#140b07",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_center_boss.png",
       "category": "enemy"
@@ -448,7 +448,7 @@
       "label": "top left kobold",
       "gb_constant": "TILE_COMBAT_TOP_LEFT_KOBOLD",
       "walkable": false,
-      "color": "#ab9090",
+      "color": "#b68f8f",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_top_left_kobold.png",
       "category": "enemy"
@@ -458,7 +458,7 @@
       "label": "top middle kobold",
       "gb_constant": "TILE_COMBAT_TOP_MIDDLE_KOBOLD",
       "walkable": false,
-      "color": "#a28080",
+      "color": "#b37e7f",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_top_middle_kobold.png",
       "category": "enemy"
@@ -468,7 +468,7 @@
       "label": "top right kobold",
       "gb_constant": "TILE_COMBAT_TOP_RIGHT_KOBOLD",
       "walkable": false,
-      "color": "#beadad",
+      "color": "#c3acad",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_top_right_kobold.png",
       "category": "enemy"
@@ -478,7 +478,7 @@
       "label": "bottom left kobold",
       "gb_constant": "TILE_COMBAT_BOTTOM_LEFT_KOBOLD",
       "walkable": false,
-      "color": "#b8a3a3",
+      "color": "#c0a2a3",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_bottom_left_kobold.png",
       "category": "enemy"
@@ -488,7 +488,7 @@
       "label": "bottom middle kobold",
       "gb_constant": "TILE_COMBAT_BOTTOM_MIDDLE_KOBOLD",
       "walkable": false,
-      "color": "#916c6c",
+      "color": "#a2696b",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_bottom_middle_kobold.png",
       "category": "enemy"
@@ -498,7 +498,7 @@
       "label": "bottom right kobold",
       "gb_constant": "TILE_COMBAT_BOTTOM_RIGHT_KOBOLD",
       "walkable": false,
-      "color": "#b29c9c",
+      "color": "#b99b9b",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_bottom_right_kobold.png",
       "category": "enemy"
@@ -638,7 +638,7 @@
       "label": "left middle boss 2",
       "gb_constant": "TILE_COMBAT_LEFT_MIDDLE_BOSS_2",
       "walkable": false,
-      "color": "#716b68",
+      "color": "#726d6b",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_left_middle_boss_2.png",
       "category": "enemy"
@@ -648,7 +648,7 @@
       "label": "middle center boss 2",
       "gb_constant": "TILE_COMBAT_MIDDLE_CENTER_BOSS_2",
       "walkable": false,
-      "color": "#180e09",
+      "color": "#19110d",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_middle_center_boss_2.png",
       "category": "enemy"
@@ -928,7 +928,7 @@
       "label": "fire icon menu",
       "gb_constant": "TILE_COMBAT_FIRE_ICON_MENU",
       "walkable": false,
-      "color": "#d1a5a5",
+      "color": "#e7b9a5",
       "ascii": "#",
       "image_url": "/tiles/combat/combat_fire_icon_menu.png",
       "category": "terrain"

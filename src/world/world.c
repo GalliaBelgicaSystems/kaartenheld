@@ -31,8 +31,10 @@ void world_gate_check_banked(void);
 /* Bank-12 combined diagonal gate check (src/world/diagonal_banked.c). */
 void diagonal_gate_check_banked(void);
 
+extern volatile uint8_t g_boot_phase;
 
-void world_load_map(World *w, MapId map_id, const GameState *state)
+
+void world_load_map(World *w, MapId map_id, GameState *state)
 {
     const SceneDefinition *def;
 
@@ -57,8 +59,14 @@ void world_load_map(World *w, MapId map_id, const GameState *state)
     w->move_param = MAP_NONE;
     w->move_dir = NBR_N;
     /* The scene owns its music (SceneDefinition.music): switch to it on
-     * every map load so gate crossings boot the right area track. */
-    audio_play_music(def ? def->music : MUSIC_OVERWORLD);
+     * every map load so gate crossings boot the right area track.  Skip
+     * during game_init() (g_boot_phase < 3): boot stays silent through
+     * SPLASH and NOTICE until SCREEN_TITLE starts MUSIC_TITLE, and starting
+     * the scene track here would let the 256 Hz timer ISR play
+     * opening more.uge while scene_load_tiles/actor_load_scene unpack. */
+    if (g_boot_phase >= 3) {
+        audio_play_music(def ? def->music : MUSIC_OVERWORLD);
+    }
     /* New scene: start the camera at the scene origin; world_update_scroll
      * brings the player into view (and clamps) on the next overworld frame. */
     w->scroll_x = 0;
@@ -70,7 +78,7 @@ void world_load_map(World *w, MapId map_id, const GameState *state)
     scene_load_tiles(w, map_id);
 
     /* Scene data determines which hostile actors are spawned.  Actors
-     * whose ActorId is DEFEATED in state are not re-spawned. */
+     * whose ActorId bit is set in the zone bitmask are not re-spawned. */
     actor_load_scene(w, map_id, state);
 }
 
@@ -85,7 +93,7 @@ void world_update_scroll(World *w)
     banked_call_run();
 }
 
-void world_init(World *w, const GameState *state)
+void world_init(World *w, GameState *state)
 {
     if (!w) return;
     /* Runtime player position seeds from the canonical state (which
@@ -105,7 +113,7 @@ void world_init(World *w, const GameState *state)
 }
 
 void world_change_map(World *w, MapId map_id, uint8_t spawn_x, uint8_t spawn_y,
-                      const GameState *state)
+                      GameState *state)
 {
     MapId old_map;
     if (!w) return;
@@ -222,7 +230,7 @@ WorldMoveResult world_try_begin_move(World *w, int8_t dx, int8_t dy,
     return MOVE_RESULT_MOVED;
 }
 
-WorldMoveResult world_update_move(World *w, const GameState *state)
+WorldMoveResult world_update_move(World *w, GameState *state)
 {
     uint8_t target_x, target_y;
 

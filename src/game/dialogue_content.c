@@ -115,8 +115,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_GUARD_AFTER_MAYOR,
         "GUARD:",
-        2,
-        {"Mayor trusts you.", "Welcome, hero!"},
+        3,
+        {"Mayor trusts you.", "Welcome,", "Card Wielder!"},
         0,
         0
     },
@@ -153,6 +153,14 @@ const DialogueDefinition g_dialogues[] = {
         1
     },
     {
+        DIALOGUE_ID_HEAL_MAGE_CONFIRM,
+        "HEAL MAGE:",
+        8,
+        {"Are you sure you", "want me to heal", "you? You're still", "in fairly good", "shape. I'm so old", "I can only heal", "you once!", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_HEAL_MAGE_DECLINED,
         "HEAL MAGE:",
         2,
@@ -163,8 +171,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_HEAL_MAGE_REFUSED,
         "HEAL MAGE:",
-        8,
-        {"You need another", "heal? Are you", "the hero or what?", "If you want to", "heal during", "combat, buy the", "ring from the", "merchant!"},
+        9,
+        {"You need another", "heal? Are you the", "Card Wielder", "or what?", "If you want to", "heal during", "combat, buy the", "ring from the", "merchant!"},
         0,
         0
     },
@@ -252,7 +260,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_MAYOR_INTRO,
         "MAYOR:",
         11,
-        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!", "Card wielder, slay", "three monsters and", "I'll reward you!"},
+        {"I am the Mayor of", "this settlement!", "This is Slime ", "country! We are", "but tolerated...", "Oh, how I wish", "to see these", "monsters die!", "Card Wielder, slay", "three monsters and", "I'll reward you!"},
         0,
         0
     },
@@ -275,8 +283,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_MERCHANT_THANKS,
         "MERCHANT:",
-        3,
-        {"You found them!", "Thank you, hero!", "My shop is open now."},
+        4,
+        {"You found them!", "Thank you,", "Card Wielder!", "My shop is open now."},
         0,
         0
     },
@@ -315,8 +323,8 @@ const DialogueDefinition g_dialogues[] = {
     {
         DIALOGUE_ID_QUEST_DONE,
         "MAYOR:",
-        2,
-        {"Use your power.", "Go forth, hero!"},
+        3,
+        {"Use your power.", "Go forth,", "Card Wielder!"},
         0,
         0
     },
@@ -396,7 +404,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_SLIME_LORD_DEFEAT,
         "Lord of Slimes:",
         4,
-        {"Card wielder, you", "put up a good", "fight, but you are", "no match for me!"},
+        {"Card Wielder, you", "put up a good", "fight, but you are", "no match for me!"},
         0,
         0
     },
@@ -404,7 +412,7 @@ const DialogueDefinition g_dialogues[] = {
         DIALOGUE_ID_SLIME_LORD_INTRO,
         "Lord of Slimes:",
         6,
-        {"Card wielder, you", "dare challenge me!", "You cannot stop", "what is coming.", "Slimes will rule", "this planet soon!"},
+        {"Card Wielder, you", "dare challenge me!", "You cannot stop", "what is coming.", "Slimes will rule", "this planet soon!"},
         STORY_FLAG_ID_SLIME_LORD_INTRO,
         0
     },

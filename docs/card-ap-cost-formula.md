@@ -61,7 +61,7 @@ AP is the **energy pool**, `VARIABLE_ID_ENERGY_POOL` (`src/game/game_ids.h:101`)
 refilled at battle start and at every transition into a decision phase —
 attack *and* defend each get a fresh pool (`src/battle/battle.h:15-24`,
 `docs/technical-manual.md` §6.2).  It starts at 1 and story grants raise it;
-the grants in the demo (tutorial, field cache, Monster Hunt, mimic) top out
+the grants in the current game (tutorial, field cache, Monster Hunt, mimic) top out
 at 5.
 
 So selection is a **budget**: `src/battle/battle_nav_banked.c:38` sums the
@@ -395,7 +395,7 @@ roundtrip.  Nothing new enters `GameState`; `BattleCard.cost`
 
 ### 7.1 A 5-AP card is a whole turn, a 6-AP card is the endgame
 
-With a mid-demo pool, a plain mythril card can never be combined with
+With a mid-act-1 pool, a plain mythril card can never be combined with
 anything, and a mythril rider (6 AP) cannot be played at all — it is a card
 for a pool-6 source that does not exist yet (the completed grant ladder,
 base 1 + all four +1s, tops out at 5).  Meanwhile five 1-AP
@@ -603,7 +603,7 @@ pinned by the pool: any shift-legal increase overshoots it (material weight
 `(53 + 7) >> 3 = 7`, and drags plain steel to 4 with it).  A smaller
 premium breaks the floor it exists for (8 instead of 12 leaves a mythril
 shield at `8 + 16 + 8 = 32 -> 4`), a larger one strands plain mythril above
-the demo pool (16 puts the sword at `9 + 16 + 16 = 41 -> 6` with no rider
+the act-1 pool (16 puts the sword at `9 + 16 + 16 = 41 -> 6` with no rider
 involved).  Rider 16 makes every bronze rider cost 3 and breaks §6.1;
 rider 0 makes statuses free.  Treat all three weights as part of the card
 language, like the bands themselves.
