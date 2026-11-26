@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v10: DAYS:180 no gap (WIP: grayscale, palettes pending)",
-      "taken_from": "4ee9b04f0f5f191734e5a93e62489928c2fcaa6f"
+      "description": "Journey camp menu v11: double space after gold, DAYS:180 (WIP: grayscale, palettes pending)",
+      "taken_from": "f3db9a9b3b3a699f461fa3bb293add302dec5d71"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "4ee9b04f0f5f191734e5a93e62489928c2fcaa6f"
+      "taken_from": "f3db9a9b3b3a699f461fa3bb293add302dec5d71"
     }
   ]
 }
