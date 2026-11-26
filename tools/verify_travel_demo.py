@@ -17,10 +17,11 @@ inside `nix develop` for PyBoy)
            (rebuild ROM first):
            SHARE path on the act-1 road, slime-pack FIGHT on act 2.
   camp:    daily camp menu (shipped tuning): B walks on, HUNT
-           finds 2-8 prov (30% jackpot haul of 20-30) with
-           a 0-1 step detour, REST heals 5 for +1 step, STUDY
-           costs 6 prov and saves 0-2 steps (or wanders lost
-           +0-2), 2 dry days cost 5 HP.
+           finds 2-8 prov (30% jackpot haul of 20-30, shifted
+           by weather: +10 clear, -20 storm) with a 0-1 step
+           detour, REST heals 5 for +1 step, STUDY costs 6 prov
+           and saves 0-2 steps (or wanders lost +0-2),
+           2 dry days cost 5 HP.
   acts:    per-road per-act tables (shipped tuning): chapter 1
            walks the 8-step act-1 road, the town signpost walks
            the 16-step road to the desolate field, whose signpost

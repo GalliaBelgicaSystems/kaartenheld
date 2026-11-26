@@ -19,8 +19,9 @@ Route schema:
     min..max at jackpot_chance %, rest heal + delay, starve
     provisions hp + every, study save/lost min..max + provisions),
     weather (optional per-weather weight 0..255 + days_min/max
-    1..10 + extra provisions -10..10 per day; each road tunes its
-    own climate, weights sum <= 255),
+    1..10 + extra provisions -10..10 per day + hunt jackpot-chance
+    delta -100..+100; each road tunes its own climate, so a desert
+    road hunts worse than a green one, weights sum <= 255),
     methods (1..2 entries: paid instant or foot slog with its own
     event pool; every pool event must list the road act in its
     own acts tag, and so must every opt battle it stages).
@@ -414,10 +415,16 @@ def load_routes(scenes, event_ids, event_acts):
                     if not isinstance(v, int) or not (-10 <= v <= 10):
                         fail("%s: weather.%s.%s must be -10..10"
                              % (rid, n, key))
+                for key in ("hunt",):
+                    v = entry.get(key, 0)
+                    if not isinstance(v, int) or not (-100 <= v <= 100):
+                        fail("%s: weather.%s.%s must be -100..100"
+                             % (rid, n, key))
                 wxrow[n] = {"weight": wgt,
                             "days_min": entry.get("days_min", 1),
                             "days_max": entry.get("days_max", 1),
-                            "provisions": entry.get("provisions", 0)}
+                            "provisions": entry.get("provisions", 0),
+                            "hunt": entry.get("hunt", 0)}
             wsum = sum(wxrow[n]["weight"] for n in WEATHER_NAMES)
             if wsum > 255:
                 fail("%s: weather weights sum to %d (max 255, fixed-bank "
@@ -535,6 +542,8 @@ def emit(routes, events, scenes, battle_ids):
                      % ", ".join(str(wr[n]["days_max"]) for n in WEATHER_NAMES))
         lines.append("        { %s }, /* weather_prov (extra/day) */"
                      % ", ".join(str(wr[n]["provisions"]) for n in WEATHER_NAMES))
+        lines.append("        { %s }, /* weather_hunt (jackpot-chance delta) */"
+                     % ", ".join(str(wr[n]["hunt"]) for n in WEATHER_NAMES))
         lines.append("        %d, /* method_count */" % len(doc["methods"]))
         lines.append("        {")
         for m in doc["methods"]:

@@ -115,6 +115,8 @@ typedef struct {
     uint8_t weather_days_min[TRAVEL_WEATHER_COUNT]; /* duration range */
     uint8_t weather_days_max[TRAVEL_WEATHER_COUNT];
     int8_t weather_prov[TRAVEL_WEATHER_COUNT];  /* extra provisions/day */
+    int8_t weather_hunt[TRAVEL_WEATHER_COUNT];  /* jackpot-chance delta
+     * while this weather holds (-100..+100, added to the base) */
     uint8_t method_count;
     TravelMethod methods[TRAVEL_METHODS_MAX];
 } TravelRoute;

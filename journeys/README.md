@@ -28,7 +28,8 @@ behave differently per act, and different roads draw different events:
   a desert route just eats more).
 - `camp`: the daily camp menu tuning — `hunt` (provisions yield
   range plus detour range, plus a rare `jackpot` haul that can
-  rescue a starving party), `rest` (heal plus schedule delay),
+  rescue a starving party; green roads roll it at 30%, desolate
+  roads at 20%), `rest` (heal plus schedule delay),
   `starve` (HP lost and every-N-days cadence without provisions),
   `study` (steps-saved / getting-lost ranges plus extra provisions).
 - `methods`: carriage (instant, paid) and/or on-foot (fixed `steps`,
@@ -37,8 +38,10 @@ behave differently per act, and different roads draw different events:
 - `weather` (optional): the road's ambient climate — one entry per
   weather (`clear`, `rain`, `storm`, `heat`, `cold`, `wind`, `snow`,
   `fog`) with a roll `weight` (0 = never; all weights sum to at most
-  255), a `days_min`/`days_max` duration, and extra `provisions`
-  burned per day while it holds. Each road tunes its own climate, so
+  255), a `days_min`/`days_max` duration, extra `provisions`
+  burned per day while it holds, and a `hunt` delta added to the
+  hunting jackpot chance (clear skies hunt well at +10, storms
+  and snow barely at all). Each road tunes its own climate, so
   the same trip runs hotter, colder, or stormier depending on the act:
   act-1 roads stay gentle (light storms, no snow) while act-2 roads
   roll real heat, cold snaps, and snow. Snow also slows the march:

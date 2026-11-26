@@ -127,17 +127,25 @@ void travel_camp_banked(void)
     int16_t net;
     int16_t v;
     int16_t healed;
+    int16_t chance;
     action = g_bk_byte_a;
     g_bk_byte_b = 0;
     g_bk_byte_c = SFX_CONFIRM;
     if (action == 0) {
         /* Hunt/forage: finds provisions before the day's burn so a
          * starving hero can eat what they just found; may add a
-         * detour (no road event).  A jackpot roll (jackpot_chance %)
-         * pays the big haul instead of the base yield: the rare
-         * windfall that can pull a starving party out of the
-         * hunt-every-two-steps spiral. */
-        if (tb_roll(1, 100) <= s_route.hunt_jackpot_chance) {
+         * detour (no road event).  A jackpot roll (base chance plus
+         * the active weather's delta, clamped 0..100) pays the big
+         * haul instead of the base yield: clear skies hunt well,
+         * storms and snow barely at all, so the same road feeds
+         * differently under different skies. */
+        chance = (int16_t)s_route.hunt_jackpot_chance;
+        if (g_travel_weather != TRAVEL_WEATHER_NONE) {
+            chance += (int16_t)s_route.weather_hunt[g_travel_weather];
+        }
+        if (chance < 0) chance = 0;
+        if (chance > 100) chance = 100;
+        if (tb_roll(1, 100) <= (uint8_t)chance) {
             found = tb_roll(s_route.hunt_jackpot_min,
                             s_route.hunt_jackpot_max);
         } else {
