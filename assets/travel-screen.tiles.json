@@ -960,7 +960,7 @@
       ],
       "kind": "tile",
       "tile": "hunt icon fork",
-      "what": "Travel tile \"hunt icon bow\" (assets/travel-tile.png, see assets/travel-tileset.csv). HUNT icon, single tile."
+      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -978,7 +978,7 @@
       ],
       "kind": "tile",
       "tile": "button fill",
-      "what": "Travel tile \"box background\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+      "what": "Travel tile \"hunt icon bow\" (assets/travel-tile.png, see assets/travel-tileset.csv). HUNT icon, single tile."
     },
     {
       "at": [

@@ -160,7 +160,7 @@ static const ChromeCell s_marker_cells[] = {
 static const ChromeCell s_hunt_cells[] = {
     { 0, 7, 0xFF }, { 1, 7, 0 }, { 2, 7, 1 }, { 3, 7, 1 }, { 4, 7, 1 },
     { 5, 7, 2 }, { 6, 7, 0xFF },
-    { 0, 8, 0xFF }, { 1, 8, 3 }, { 2, 8, 10 }, { 3, 8, 4 }, { 4, 8, 4 },
+    { 0, 8, 0xFF }, { 1, 8, 3 }, { 2, 8, 4 }, { 3, 8, 4 }, { 4, 8, 10 },
     { 5, 8, 5 }, { 6, 8, 0xFF },
     { 0, 9, 0xFF }, { 1, 9, 3 }, { 2, 9, 14 }, { 3, 9, 15 }, { 4, 9, 16 },
     { 5, 9, 5 }, { 6, 9, 0xFF },
@@ -335,10 +335,9 @@ static void tp_frame_init(const char *title)
     tp_text((uint8_t)((20 - len) >> 1), 0, title, 20);
 }
 
-/* Last row (row 17): heart + health, money with G, DAYS: + days left.
- * "[heart]15/15 121G DAYS: 180". The heart is the boot-loaded HUD icon
- * (UI_TILE_TRAVEL_HEART); buffer marker 'H' keeps the diff-skip stable
- * (row 17 has no other writer). */
+/* Last row (row 17): empty square, heart, current HP, money with G,
+ * DAYS: + days left. "[ ][heart]15 121G DAYS: 180". No max-HP readout.
+ * The heart is the boot-loaded HUD icon (UI_TILE_TRAVEL_HEART). */
 static void tp_lastrow(void)
 {
     int16_t gold;
@@ -351,14 +350,18 @@ static void tp_lastrow(void)
     s_row_used[17] = 1;
     s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)17 << 5));
     s_buf = &g_ui_screen_buf[17][0];
+    if (*s_buf != ' ') {
+        tp_sync_write(s_dst, ui_font_tile_base);
+        *s_buf = ' ';
+    }
+    s_dst++;
+    s_buf++;
     if (*s_buf != 'H') {
         tp_sync_write(s_dst, UI_TILE_TRAVEL_HEART);
         *s_buf = 'H';
     }
     s_n = 0;
     tp_put_u16(g_game.state.party.members[0].hp);
-    tp_putc('/');
-    tp_put_u16(g_game.state.party.members[0].max_hp);
     tp_putc(' ');
     tp_put_u16((uint16_t)gold);
     tp_putc('G');
@@ -366,7 +369,7 @@ static void tp_lastrow(void)
     tp_puts("DAYS:");
     tp_putc(' ');
     tp_put_u16((uint16_t)day);
-    tp_text(1, 17, s_line, 19);
+    tp_text(2, 17, s_line, 18);
 }
 
 /* Supply stock (row 15): "SUPPLIES: 36". */
