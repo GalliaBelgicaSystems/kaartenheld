@@ -29,6 +29,16 @@
       "file": "gamble-farewell.png",
       "description": "Nis says goodbye ('Come back anytime!') after leaving the table",
       "taken_from": "96dbc3ae"
+    },
+    {
+      "file": "travel-chrome-idle.png",
+      "description": "Journey camp menu with tile chrome: wash, markers, HUNT/REST/STUDY MAP buttons + cursor, B-CONTINUE (WIP: grayscale, palettes pending)",
+      "taken_from": "65015b6ec4e8927c57a3d17a55fb77385b36c2be"
+    },
+    {
+      "file": "travel-chrome-method.png",
+      "description": "Journey method pick with chrome frame (text options: no label tiles in sheet)",
+      "taken_from": "65015b6ec4e8927c57a3d17a55fb77385b36c2be"
     }
   ]
 }
