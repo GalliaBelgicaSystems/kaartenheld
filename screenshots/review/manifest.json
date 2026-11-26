@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v7: bow right-aligned, slim heart row (blank, heart, HP, gold, DAYS) (WIP: grayscale, palettes pending)",
-      "taken_from": "a09394c422f81388316820c3eb99c44074473e0d"
+      "description": "Journey camp menu v8: HUNT button cols 2-6, bow at 4 (WIP: grayscale, palettes pending)",
+      "taken_from": "4c602df367a6785036a8fb5f0c3a0f673e1ca9f0"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "a09394c422f81388316820c3eb99c44074473e0d"
+      "taken_from": "4c602df367a6785036a8fb5f0c3a0f673e1ca9f0"
     }
   ]
 }
