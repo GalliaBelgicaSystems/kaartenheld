@@ -194,27 +194,30 @@ static const ChromeCell s_study_cells[] = {
     { 17, 10, 7 }, { 18, 10, 9 }, { 19, 10, 0xFF }
 };
 
-/* CONTINUE button (cols 6-13, rows 13-15): B icon + CO/NT/IN/UE.
- * The B row sits centered on row 14 (left side above it, bottom edge
- * below). Only stamped where continuing is the B button (camp idle);
+/* CONTINUE button (cols 6-13, rows 11-13): B icon + CO/NT/IN/UE.
+ * The B row sits on row 12 (top edge above it, bottom edge below).
+ * Only stamped where continuing is the B button (camp idle);
  * A-key continues keep their text prompt (no A icon in the sheet).
- * Side cols blanked: SUPPLY/METHOD text would show through. Row 12
- * stays empty (old top edge removed). */
+ * Side cols blanked: SUPPLY/METHOD/MESSAGE text would show through. */
 static const ChromeCell s_continue_cells[] = {
+    { 0, 11, 0xFF }, { 1, 11, 0xFF }, { 2, 11, 0xFF }, { 3, 11, 0xFF },
+    { 4, 11, 0xFF }, { 5, 11, 0xFF },
+    { 6, 11, 0 }, { 7, 11, 1 }, { 8, 11, 1 }, { 9, 11, 1 },
+    { 10, 11, 1 }, { 11, 11, 1 }, { 12, 11, 1 }, { 13, 11, 2 },
+    { 14, 11, 0xFF }, { 15, 11, 0xFF }, { 16, 11, 0xFF },
+    { 17, 11, 0xFF }, { 18, 11, 0xFF }, { 19, 11, 0xFF },
+    { 0, 12, 0xFF }, { 1, 12, 0xFF }, { 2, 12, 0xFF }, { 3, 12, 0xFF },
+    { 4, 12, 0xFF }, { 5, 12, 0xFF },
+    { 6, 12, 3 }, { 7, 12, 24 }, { 8, 12, 25 }, { 9, 12, 26 },
+    { 10, 12, 27 }, { 11, 12, 28 }, { 12, 12, 4 }, { 13, 12, 5 },
+    { 14, 12, 0xFF }, { 15, 12, 0xFF }, { 16, 12, 0xFF },
+    { 17, 12, 0xFF }, { 18, 12, 0xFF }, { 19, 12, 0xFF },
     { 0, 13, 0xFF }, { 1, 13, 0xFF }, { 2, 13, 0xFF }, { 3, 13, 0xFF },
     { 4, 13, 0xFF }, { 5, 13, 0xFF },
-    { 6, 13, 0 }, { 7, 13, 1 }, { 8, 13, 1 }, { 9, 13, 1 },
-    { 10, 13, 1 }, { 11, 13, 1 }, { 12, 13, 1 }, { 13, 13, 2 },
+    { 6, 13, 6 }, { 7, 13, 7 }, { 8, 13, 7 }, { 9, 13, 7 },
+    { 10, 13, 7 }, { 11, 13, 7 }, { 12, 13, 7 }, { 13, 13, 9 },
     { 14, 13, 0xFF }, { 15, 13, 0xFF }, { 16, 13, 0xFF },
-    { 17, 13, 0xFF }, { 18, 13, 0xFF }, { 19, 13, 0xFF },
-    { 0, 14, 0xFF }, { 1, 14, 0xFF }, { 2, 14, 0xFF }, { 3, 14, 0xFF },
-    { 4, 14, 0xFF }, { 5, 14, 0xFF },
-    { 6, 14, 3 }, { 7, 14, 24 }, { 8, 14, 25 }, { 9, 14, 26 },
-    { 10, 14, 27 }, { 11, 14, 28 }, { 12, 14, 4 }, { 13, 14, 5 },
-    { 14, 14, 0xFF }, { 15, 14, 0xFF }, { 16, 14, 0xFF },
-    { 17, 14, 0xFF }, { 18, 14, 0xFF }, { 19, 14, 0xFF },
-    { 6, 15, 6 }, { 7, 15, 7 }, { 8, 15, 7 }, { 9, 15, 7 },
-    { 10, 15, 7 }, { 11, 15, 7 }, { 12, 15, 7 }, { 13, 15, 9 }
+    { 17, 13, 0xFF }, { 18, 13, 0xFF }, { 19, 13, 0xFF }
 };
 
 static void tp_chrome_run(const ChromeCell *cells, uint8_t n, uint8_t selected)
@@ -268,7 +271,7 @@ static void tp_study_button(uint8_t selected)
 
 static void tp_continue_button(void)
 {
-    tp_chrome_run(s_continue_cells, 48, 0);
+    tp_chrome_run(s_continue_cells, 60, 0);
 }
 
 /* Diff-skipping text row with space padding (ui_draw_text_line shape). */
@@ -366,7 +369,7 @@ static void tp_lastrow(void)
     tp_text(1, 17, s_line, 19);
 }
 
-/* Supply stock (row 16): "SUPPLIES: 36". */
+/* Supply stock (row 15): "SUPPLIES: 36". */
 static void tp_supplies(void)
 {
     int16_t prov;
@@ -378,7 +381,7 @@ static void tp_supplies(void)
     if (prov == 0) {
         tp_putc('!');
     }
-    tp_line_done(16);
+    tp_line_done(15);
 }
 
 /* Append one signed delta ("+15G", "-2P") with a unit char. */

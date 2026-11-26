@@ -15,7 +15,7 @@
     "Two-row glyphs split into top/bottom halves; single-row glyphs use part \"single\".",
     "Scenery rows 2-4 are positional slots (starting-point-*/destination-*, rows top/middle/bottom). The biome art comes from assets/travels/<biome>.json (grove 3x8 + vista 3x8 of existing tileset tiles); origin = route start, destination = route end, wiring picks the biome tileset per side (see scenery).",
     "Journey chrome (box, icons, labels, progress markers) comes from assets/travel-tile.png (160x16 px, 20 cols x 2 rows) named by assets/travel-tileset.csv; \"what\" on chrome cells is the CSV name verbatim. Brown-top markers run on the origin half, grey-top on the destination half.",
-    "Forest ground uses the 3 travel floor icons (forest floor icon 1/2/3) for the forest biome as starter or destination; they are staged in the travel sheet (missing from the forest tileset) and get backported into forest gfx at wiring \u2014 assets/travels/forest.json keeps forest.* names until TILE ids exist.",
+    "Forest ground uses the 3 travel floor icons (forest floor icon 1/2/3) for the forest biome as starter or destination; they are staged in the travel sheet (missing from the forest tileset) and get backported into forest gfx at wiring — assets/travels/forest.json keeps forest.* names until TILE ids exist.",
     "Names follow the assets/*.csv style: lowercase words with spaces.",
     "The mockup is a loose artist render, not pixel-exact: names describe INTENT per cell, the artist snaps art to the 8px grid when drawing."
   ],
@@ -1388,7 +1388,7 @@
     {
       "at": [
         6,
-        13
+        11
       ],
       "kind": "tile",
       "tile": "button corner top left",
@@ -1397,7 +1397,7 @@
     {
       "at": [
         7,
-        13
+        11
       ],
       "kind": "tile",
       "tile": "button edge top",
@@ -1406,7 +1406,7 @@
     {
       "at": [
         8,
-        13
+        11
       ],
       "kind": "tile",
       "tile": "button edge top",
@@ -1415,7 +1415,7 @@
     {
       "at": [
         9,
-        13
+        11
       ],
       "kind": "tile",
       "tile": "button edge top",
@@ -1424,7 +1424,7 @@
     {
       "at": [
         10,
-        13
+        11
       ],
       "kind": "tile",
       "tile": "button edge top",
@@ -1433,7 +1433,7 @@
     {
       "at": [
         11,
-        13
+        11
       ],
       "kind": "tile",
       "tile": "button edge top",
@@ -1442,7 +1442,7 @@
     {
       "at": [
         12,
-        13
+        11
       ],
       "kind": "tile",
       "tile": "button edge top",
@@ -1451,7 +1451,7 @@
     {
       "at": [
         13,
-        13
+        11
       ],
       "kind": "tile",
       "tile": "button corner top right",
@@ -1460,7 +1460,7 @@
     {
       "at": [
         6,
-        14
+        12
       ],
       "kind": "tile",
       "tile": "button b icon",
@@ -1469,7 +1469,7 @@
     {
       "at": [
         7,
-        14
+        12
       ],
       "kind": "tile",
       "tile": "button label continue left",
@@ -1478,7 +1478,7 @@
     {
       "at": [
         8,
-        14
+        12
       ],
       "kind": "tile",
       "tile": "button label continue inner left",
@@ -1487,7 +1487,7 @@
     {
       "at": [
         9,
-        14
+        12
       ],
       "kind": "tile",
       "tile": "button label continue middle left",
@@ -1496,7 +1496,7 @@
     {
       "at": [
         10,
-        14
+        12
       ],
       "kind": "tile",
       "tile": "button label continue middle right",
@@ -1505,7 +1505,7 @@
     {
       "at": [
         11,
-        14
+        12
       ],
       "kind": "tile",
       "tile": "button label continue inner right",
@@ -1514,7 +1514,7 @@
     {
       "at": [
         12,
-        14
+        12
       ],
       "kind": "tile",
       "tile": "button label continue right",
@@ -1523,11 +1523,83 @@
     {
       "at": [
         13,
-        14
+        12
       ],
       "kind": "tile",
       "tile": "button edge right",
       "what": "Travel tile \"right box side\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        6,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button corner bottom left",
+      "what": "Travel tile \"bottom left box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        7,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        8,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        9,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        10,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        11,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        12,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button edge bottom",
+      "what": "Travel tile \"bottom box\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+    },
+    {
+      "at": [
+        13,
+        13
+      ],
+      "kind": "tile",
+      "tile": "button corner bottom right",
+      "what": "Travel tile \"bottom right box corner\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
