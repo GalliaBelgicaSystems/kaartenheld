@@ -38,7 +38,7 @@ def main():
         assert d.wait_for(lambda: d.text_has("TRAVEL"), ticks=300), d.rows()
         shot(d, "travel-chrome-method.png")
         d.press("a", settle=20)  # ON FOOT (default) -> camp IDLE
-        assert d.wait_for(lambda: d.text_has("STEP"), ticks=300), d.rows()
+        assert d.wait_for(lambda: d.text_has("SUPPLIES:"), ticks=300), d.rows()
         shot(d, "travel-chrome-idle.png")
     finally:
         d.close()

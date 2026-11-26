@@ -379,44 +379,19 @@ static void tp_lastrow(void)
     tp_text(1, 17, s_line, 19);
 }
 
+/* Supply stock (row 16): "SUPPLIES: 36". */
 static void tp_supplies(void)
 {
     int16_t prov;
     prov = g_game.state.variables.values[VARIABLE_ID_PROVISIONS - 1];
     if (prov < 0) prov = 0;
     s_n = 0;
-    tp_puts("PROV ");
+    tp_puts("SUPPLIES: ");
     tp_put_u16((uint16_t)prov);
     if (prov == 0) {
         tp_putc('!');
     }
-    tp_line_done(14);
-}
-
-static void tp_step(void)
-{
-    uint8_t done;
-    done = (uint8_t)(g_travel_total - g_travel_left);
-    s_n = 0;
-    tp_puts("STEP ");
-    tp_put_u16(done);
-    tp_puts(" OF ");
-    tp_put_u16(g_travel_total);
-    tp_line_done(15);
-}
-
-static void tp_method_duration(void)
-{
-    uint8_t steps;
-    steps = s_route.methods[g_travel_choice].steps;
-    if (steps == 0) {
-        tp_text(0, 15, "INSTANT", 20);
-    } else {
-        s_n = 0;
-        tp_put_u16(steps);
-        tp_puts(" STEPS");
-        tp_line_done(15);
-    }
+    tp_line_done(16);
 }
 
 /* Append one signed delta ("+15G", "-2P") with a unit char. */
@@ -677,11 +652,6 @@ void travel_paint_banked(void)
     }
     tp_wash();
     tp_markers();
-    if (view == TRAVEL_VIEW_METHOD) {
-        tp_method_duration();
-    } else if (!g_travel_supply) {
-        tp_step();
-    }
     tp_supplies();
     tp_lastrow();
     if (view == TRAVEL_VIEW_IDLE) {
