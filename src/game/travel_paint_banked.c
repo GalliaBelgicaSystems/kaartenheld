@@ -194,23 +194,27 @@ static const ChromeCell s_study_cells[] = {
     { 17, 10, 7 }, { 18, 10, 9 }, { 19, 10, 0xFF }
 };
 
-/* CONTINUE button (cols 6-13, rows 12-13): B icon + CO/NT/IN/UE.
- * Only stamped where continuing is the B button (camp idle); A-key
- * continues keep their text prompt (no A icon in the sheet).
- * Side cols blanked: SUPPLY/METHOD text would show through. */
+/* CONTINUE button (cols 6-13, rows 13-15): B icon + CO/NT/IN/UE.
+ * The B row sits centered on row 14 (left side above it, bottom edge
+ * below). Only stamped where continuing is the B button (camp idle);
+ * A-key continues keep their text prompt (no A icon in the sheet).
+ * Side cols blanked: SUPPLY/METHOD text would show through. Row 12
+ * stays empty (old top edge removed). */
 static const ChromeCell s_continue_cells[] = {
-    { 0, 12, 0xFF }, { 1, 12, 0xFF }, { 2, 12, 0xFF }, { 3, 12, 0xFF },
-    { 4, 12, 0xFF }, { 5, 12, 0xFF },
-    { 6, 12, 0 }, { 7, 12, 1 }, { 8, 12, 1 }, { 9, 12, 1 },
-    { 10, 12, 1 }, { 11, 12, 1 }, { 12, 12, 1 }, { 13, 12, 2 },
-    { 14, 12, 0xFF }, { 15, 12, 0xFF }, { 16, 12, 0xFF },
-    { 17, 12, 0xFF }, { 18, 12, 0xFF }, { 19, 12, 0xFF },
     { 0, 13, 0xFF }, { 1, 13, 0xFF }, { 2, 13, 0xFF }, { 3, 13, 0xFF },
     { 4, 13, 0xFF }, { 5, 13, 0xFF },
-    { 6, 13, 24 }, { 7, 13, 25 }, { 8, 13, 26 }, { 9, 13, 27 },
-    { 10, 13, 28 }, { 11, 13, 4 }, { 12, 13, 4 }, { 13, 13, 5 },
+    { 6, 13, 0 }, { 7, 13, 1 }, { 8, 13, 1 }, { 9, 13, 1 },
+    { 10, 13, 1 }, { 11, 13, 1 }, { 12, 13, 1 }, { 13, 13, 2 },
     { 14, 13, 0xFF }, { 15, 13, 0xFF }, { 16, 13, 0xFF },
-    { 17, 13, 0xFF }, { 18, 13, 0xFF }, { 19, 13, 0xFF }
+    { 17, 13, 0xFF }, { 18, 13, 0xFF }, { 19, 13, 0xFF },
+    { 0, 14, 0xFF }, { 1, 14, 0xFF }, { 2, 14, 0xFF }, { 3, 14, 0xFF },
+    { 4, 14, 0xFF }, { 5, 14, 0xFF },
+    { 6, 14, 3 }, { 7, 14, 24 }, { 8, 14, 25 }, { 9, 14, 26 },
+    { 10, 14, 27 }, { 11, 14, 28 }, { 12, 14, 4 }, { 13, 14, 5 },
+    { 14, 14, 0xFF }, { 15, 14, 0xFF }, { 16, 14, 0xFF },
+    { 17, 14, 0xFF }, { 18, 14, 0xFF }, { 19, 14, 0xFF },
+    { 6, 15, 6 }, { 7, 15, 7 }, { 8, 15, 7 }, { 9, 15, 7 },
+    { 10, 15, 7 }, { 11, 15, 7 }, { 12, 15, 7 }, { 13, 15, 9 }
 };
 
 static void tp_chrome_run(const ChromeCell *cells, uint8_t n, uint8_t selected)
@@ -264,7 +268,7 @@ static void tp_study_button(uint8_t selected)
 
 static void tp_continue_button(void)
 {
-    tp_chrome_run(s_continue_cells, 40, 0);
+    tp_chrome_run(s_continue_cells, 48, 0);
 }
 
 /* Diff-skipping text row with space padding (ui_draw_text_line shape). */
