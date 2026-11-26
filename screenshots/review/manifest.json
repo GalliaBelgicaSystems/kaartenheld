@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v5: no title separator; numbered rows prove B=14, SUPPLIES=16 (WIP: grayscale, palettes pending)",
-      "taken_from": "b3a9a51f518c70ddf7582948214ff46946635f49"
+      "description": "Journey camp menu v6: continue rows 11-13 (B on 12), SUPPLIES on 15, row 16 empty (WIP: grayscale, palettes pending)",
+      "taken_from": "f4689a62a576247391ea38fcde6119cb160c85dd"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "b3a9a51f518c70ddf7582948214ff46946635f49"
+      "taken_from": "f4689a62a576247391ea38fcde6119cb160c85dd"
     }
   ]
 }
