@@ -337,7 +337,7 @@ static void tp_frame_init(const char *title)
 }
 
 /* Last row (row 17): empty square, heart, current HP, money with G,
- * DAYS: + days left. "[ ][heart]15 121G DAYS: 180". No max-HP readout.
+ * DAYS: + days left with no gap ("DAYS:180", cols 10-18 with the pad).
  * The heart is the boot-loaded HUD icon (UI_TILE_TRAVEL_HEART). */
 static void tp_lastrow(void)
 {
@@ -368,7 +368,6 @@ static void tp_lastrow(void)
     tp_putc('G');
     tp_putc(' ');
     tp_puts("DAYS:");
-    tp_putc(' ');
     tp_put_u16((uint16_t)day);
     tp_text(2, 17, s_line, 18);
 }
