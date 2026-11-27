@@ -976,34 +976,18 @@
   "travel3": {
    "colors": [
     "#ffffff",
-    "#a98655",
     "#be0000",
+    "#000000",
     "#000000"
    ],
    "refs": [
     "TRAVEL/background",
-    "TRAVEL/dirt_ground",
     "TRAVEL/flag",
+    "TRAVEL/black",
     "TRAVEL/black"
    ],
    "slots": [
-    "travel:3"
-   ]
-  },
-  "travel4": {
-   "colors": [
-    "#ffffff",
-    "#938da1",
-    "#be0000",
-    "#000000"
-   ],
-   "refs": [
-    "TRAVEL/background",
-    "TRAVEL/desolate_ground",
-    "TRAVEL/flag",
-    "TRAVEL/black"
-   ],
-   "slots": [
+    "travel:3",
     "travel:4"
    ]
   },
@@ -1135,7 +1119,7 @@
    "1": "travel1",
    "2": "travel2",
    "3": "travel3",
-   "4": "travel4",
+   "4": "travel3",
    "5": "fight4",
    "6": "travel1",
    "7": "travel1"

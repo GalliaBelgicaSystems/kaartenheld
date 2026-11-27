@@ -701,17 +701,16 @@ def main():
     compile_sheet("menu_cursor", {(0, 0): "fight3", (1, 0): "fight3"},
                   require_slot=False)
     # Journey chrome (travel-tile.png, 20x2: box/icons/labels row plus
-    # floors + brown/grey progress markers).  Row 0 is all box chrome
+    # floors + progress markers).  Row 0 is all box chrome
     # (travel1: corners/edges/fill, icons, label slices, B button);
     # row 1 cols 0-8 repeat the STUDY/CONTINUE label tail (travel1),
     # cols 9-11 are the forest floor icons (travel2: dirt tan + rubble),
-    # cols 12-15 the brown-top markers and 16-19 the grey-top markers
-    # (travel3/travel4: paper + ground + flag red + black).
+    # cols 12-19 the black progress markers (travel3: white glyphs,
+    # flag red, black; both halves share it).
     travel_declared = {(x, 0): "travel1" for x in range(20)}
     travel_declared.update({(x, 1): "travel1" for x in range(9)})
     travel_declared.update({(x, 1): "travel2" for x in range(9, 12)})
-    travel_declared.update({(x, 1): "travel3" for x in range(12, 16)})
-    travel_declared.update({(x, 1): "travel4" for x in range(16, 20)})
+    travel_declared.update({(x, 1): "travel3" for x in range(12, 20)})
     compile_sheet("travel_chrome", travel_declared)
     # Menu chrome (menus-tile.png, 16x4: 12 single-cell UI icons on row 0,
     # cols 0-11, plus the 4x4 hero-status portrait at cols 12-15, rows 0-3
