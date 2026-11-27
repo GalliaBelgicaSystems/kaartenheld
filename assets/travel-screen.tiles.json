@@ -640,21 +640,12 @@
     },
     {
       "at": [
-        1,
+        2,
         5
       ],
       "kind": "tile",
       "tile": "progress bar start",
       "what": "Travel tile \"start marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Trip start, origin half."
-    },
-    {
-      "at": [
-        2,
-        5
-      ],
-      "kind": "tile",
-      "tile": "progress bar",
-      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -671,8 +662,8 @@
         5
       ],
       "kind": "tile",
-      "tile": "progress dot lit",
-      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
+      "tile": "progress bar",
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -698,8 +689,8 @@
         5
       ],
       "kind": "tile",
-      "tile": "progress dot lit",
-      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
+      "tile": "progress bar",
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -707,8 +698,8 @@
         5
       ],
       "kind": "tile",
-      "tile": "progress bar",
-      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+      "tile": "progress dot lit",
+      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
     },
     {
       "at": [
@@ -725,8 +716,8 @@
         5
       ],
       "kind": "tile",
-      "tile": "progress dot lit",
-      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
+      "tile": "progress bar",
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -734,8 +725,8 @@
         5
       ],
       "kind": "tile",
-      "tile": "progress bar",
-      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+      "tile": "progress dot lit",
+      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
     },
     {
       "at": [
@@ -752,8 +743,8 @@
         5
       ],
       "kind": "tile",
-      "tile": "progress dot lit",
-      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
+      "tile": "progress bar",
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
@@ -761,8 +752,8 @@
         5
       ],
       "kind": "tile",
-      "tile": "progress bar",
-      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
+      "tile": "progress dot lit",
+      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
     },
     {
       "at": [
@@ -779,8 +770,8 @@
         5
       ],
       "kind": "tile",
-      "tile": "progress dot lit",
-      "what": "Travel tile \"step marker brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv). Reached milestone."
+      "tile": "progress bar",
+      "what": "Travel tile \"black empty brown top\" (assets/travel-tile.png, see assets/travel-tileset.csv)."
     },
     {
       "at": [
