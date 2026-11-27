@@ -32,6 +32,10 @@ when a route names it, and fails loudly otherwise.
 - `grove` is the origin-side arrangement (cols 0-7 of the strip):
   edge, 3x feature pair, wash col. `vista` is the destination-side
   arrangement (cols 10-17): skyline, accent, far peak, ground.
+- Ground rows (row 2 of grove/vista) name travel-sheet floor icons:
+  `"travel.forest_floor_icon_1"` etc. (only the 3 floor icons, cycled
+  across the 8 cols). Trees and transition tiles always use
+  `"<tileset>.<tile_id>"` from the layout's own tileset.
 - `transition` is one tile per row, stamped in both cols 8-9 (the
   strip's middle seam). Use the biome's plain wash/wash/dirt tiles.
 
@@ -39,9 +43,16 @@ when a route names it, and fails loudly otherwise.
 
 Each journey route declares `origin_biome` / `destination_biome`.
 `tools/screen_compiler/travel_art_compile.py` fetches the origin grove
-plus dest vista per route, resolves every name through the tileset
-manifest to a `TILE_*` symbol (validated against `src/world/world.h`,
-uint8_t range), and emits `src/game/travel_art_content.c` with one
-composed 3-row x 18-col strip per route (grove 8 + transition 2 +
-vista 8), parallel to `g_travel_routes`. The horse, progress bar and
-flag are journey UI drawn on top.
+plus dest vista per route and emits `src/game/travel_art_content.c`
+with one composed strip per route, parallel to `g_travel_routes`.
+Trees resolve through the tileset manifest to a `TILE_*` symbol
+(validated against `src/world/world.h`, uint8_t range); they live in
+`cells` (rows 0-1) and `trans` (transition seam). Ground rows (row 2)
+name travel-sheet floor icons (`"travel.<tile_id>"`, e.g.
+`travel.forest_floor_icon_1` — names match
+`assets/travel-tileset.csv` case/space/underscore-insensitively) and
+land in `floor_o` / `floor_d` as chrome indices (`TCHROME_*` order),
+staged from the chrome window by the paint, not the world tileset.
+Ground rows must name exactly the 3 distinct floor icons; anything
+else in a ground row fails the compile loudly. The horse, progress
+bar and flag are journey UI drawn on top.

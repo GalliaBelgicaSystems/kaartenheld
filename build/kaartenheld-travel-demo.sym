@@ -30,7 +30,7 @@
 00:E4000 00003418
 00:34000 0000366C
 00:44000 00003867
-00:D4000 00003C8D
+00:D4000 00003C69
 00:94000 00003D0D
 00:24000 00003E0A
 00:74000 00003E56
@@ -1256,8 +1256,8 @@
 00:B6ED6 _travel_burn_banked
 00:B6B9D _travel_c
 00:B6B9D _travel_camp_banked
-00:D7974 _travel_chrome_load_banked
-00:D7A0D _travel_chrome_tiles
+00:D7950 _travel_chrome_load_banked
+00:D79E9 _travel_chrome_tiles
 00:72F7 _travel_h
 00:72F7 _travel_hero_dead
 00:714D _travel_o
@@ -2055,7 +2055,7 @@
 00:33F6 l__CODE_10
 00:301F l__CODE_11
 00:3F30 l__CODE_12
-00:3C8D l__CODE_13
+00:3C69 l__CODE_13
 00:3418 l__CODE_14
 00:3418 l__CODE_15
 00:3E0A l__CODE_2
@@ -2451,8 +2451,8 @@
 00:B6ED6 travel_burn_banked
 00:B6B9D travel_c
 00:B6B9D travel_camp_banked
-00:D7974 travel_chrome_load_banked
-00:D7A0D travel_chrome_tiles
+00:D7950 travel_chrome_load_banked
+00:D79E9 travel_chrome_tiles
 00:72F7 travel_h
 00:72F7 travel_hero_dead
 00:714D travel_o
