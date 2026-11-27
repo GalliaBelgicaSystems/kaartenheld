@@ -28,6 +28,7 @@ static uint8_t s_row_used[18];
 static uint8_t s_i;
 static uint8_t s_n;
 static volatile uint8_t *s_dst;
+static volatile uint8_t *s_atr;
 static char *s_buf;
 
 /* Decimal, subtraction only (no / or % in banked bodies either). */
@@ -88,9 +89,20 @@ static void tp_sync_write(volatile uint8_t *dst, uint8_t tile)
 
 void travel_chrome_load_banked(void);
 
+/* CRAM slot per chrome tile (travel set programmed on journey entry):
+ * 1 box/labels/icons, 2 floors, 3 brown markers (+heart), 4 grey. */
+static uint8_t tp_chrome_slot(uint8_t idx)
+{
+    if (idx >= 36) return 4;
+    if (idx >= 32) return 3;
+    if (idx >= 29) return 2;
+    return 1;
+}
+
 /* Stamp one chrome tile with diff-skip against the screen buffer.
- * Buffer marker is (idx + 1): never collides with font text (0x20+)
- * or the space clear, so cursor swaps repaint exactly once. */
+ * Buffer marker is 0x80+idx: never collides with font text (0x20-0x5F)
+ * or the space clear -- idx+1 aliasing 0x20 skipped every 32nd tile
+ * (floor icon 3 never stamped, leaving white gaps in the wash row). */
 static void tp_chrome_cell(uint8_t x, uint8_t y, uint8_t idx)
 {
     uint8_t id;
@@ -98,13 +110,17 @@ static void tp_chrome_cell(uint8_t x, uint8_t y, uint8_t idx)
     if (x >= 20 || y >= 18) return;
     s_row_used[y] = 1;
     id = (uint8_t)(UI_TILE_TRAVEL_CHROME_BASE + idx);
-    mark = (char)(idx + 1);
+    mark = (char)(0x80u + idx);
     VBK_REG = 0;
     s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
     s_buf = &g_ui_screen_buf[y][x];
     if (*s_buf != mark) {
         tp_sync_write(s_dst, id);
         *s_buf = mark;
+        VBK_REG = 1;
+        s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+        tp_sync_write(s_atr, tp_chrome_slot(idx));
+        VBK_REG = 0;
     }
 }
 
@@ -238,6 +254,10 @@ static void tp_chrome_run(const ChromeCell *cells, uint8_t n, uint8_t selected)
             if (*s_buf != ' ') {
                 tp_sync_write(s_dst, ui_font_tile_base);
                 *s_buf = ' ';
+                VBK_REG = 1;
+                s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)cells[i].y << 5) + cells[i].x);
+                tp_sync_write(s_atr, 0);
+                VBK_REG = 0;
             }
             s_row_used[cells[i].y] = 1;
         } else {
@@ -355,12 +375,20 @@ static void tp_lastrow(void)
     if (*s_buf != ' ') {
         tp_sync_write(s_dst, ui_font_tile_base);
         *s_buf = ' ';
+        VBK_REG = 1;
+        s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)17 << 5));
+        tp_sync_write(s_atr, 0);
+        VBK_REG = 0;
     }
     s_dst++;
     s_buf++;
     if (*s_buf != 'H') {
         tp_sync_write(s_dst, UI_TILE_TRAVEL_HEART);
         *s_buf = 'H';
+        VBK_REG = 1;
+        s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)17 << 5) + 1);
+        tp_sync_write(s_atr, 3);
+        VBK_REG = 0;
     }
     s_n = 0;
     tp_put_u16(g_game.state.party.members[0].hp);

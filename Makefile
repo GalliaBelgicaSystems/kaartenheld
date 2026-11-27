@@ -394,12 +394,13 @@ gfx: manifest
 	@cp assets/title-red.png tools/level_editor/public/tiles/title/logo.png
 	@echo "Title logo: src/gfx/title_logo_tiles.inc + public/tiles/title/logo.png"
 	# ── Travel chrome (assets/travel-tile.png, 20 cols × 2 rows) ────────
-	# Invariant journey UI (box, icons, labels, markers, floors). Ramps
-	# are per-tile light->dark in assets/travel-chrome-shades.json
-	# (regen: python3 tools/travel_chrome_shades.py). Sheet order is
-	# row-major = assets/travel-tileset.csv order = TCHROME_* order.
+	# Ramps come from assets/palette.txt (TRAVEL set) via
+	# tools/palette_compiler.py (make manifest): box/labels travel1,
+	# floors travel2, brown markers travel3, grey markers travel4.
+	# Sheet order is row-major = assets/travel-tileset.csv order =
+	# TCHROME_* order.
 	@python3 tools/png2gb.py assets/travel-tile.png --name travel_chrome_tiles \
-		--shade-map assets/travel-chrome-shades.json --raw \
+		--shade-map generated/tiles/shades/travel_chrome.json --raw \
 		-o $(GFX_OUT_DIR)/travel_chrome_tiles.inc
 	# ── Studio splash logo (assets/gallia_belgica_systems.png, 13x5) ──────
 	# Fixed global shade map -> one CGB palette [white, red, blue, black]

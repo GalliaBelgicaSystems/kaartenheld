@@ -3,6 +3,7 @@
 #include "screen.h"
 #include "banked.h"
 #include "ui.h"
+#include "world/world.h"
 
 /* Journey screen (travel-demo ROM only).  The paint lives in the bank-13
  * body (travel_paint_banked.c: the fixed bank cannot host it, AGENTS.md
@@ -25,9 +26,10 @@ void travel_screen_render(Game *g)
     if (rc->valid && rc->prev_screen == SCREEN_JOURNEY) return;
     same_screen = (uint8_t)(rc->prev_screen == SCREEN_JOURNEY);
     if (!same_screen) {
-        /* UI-mode CRAM (base set): clear any world/battle tint before
-         * painting the journey UI (mirrors shop/item screens). */
-        ui_set_cram_palette(0);
+        /* Journey CRAM set (travel1-4 chrome + text + heart slots): clear
+         * any world/battle tint before painting the journey UI (mirrors
+         * the shop/item screens). */
+        ui_set_cram_palette(WORLD_TILESET_TRAVEL);
     }
     g_bk_call_bank = 13;
     g_bk_call_target = (uint16_t)&travel_paint_banked;

@@ -13,7 +13,10 @@ typedef enum {
     WORLD_TILESET_VILLAGE  = 12,
     WORLD_TILESET_DESOLATE = 14,
     WORLD_TILESET_CASTLE   = 15,
-    WORLD_TILESET_UNDERGROUND = 16
+    WORLD_TILESET_UNDERGROUND = 16,
+    /* Journey chrome (travel-demo ROM only): box/labels/markers/floors.
+     * Never a map tileset; only the journey screen programs it. */
+    WORLD_TILESET_TRAVEL   = 17
 } WorldTilesetKind;
 
 /* Hard caps for the tile buffer: a scene may be any size up to these.

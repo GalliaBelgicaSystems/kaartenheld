@@ -1310,6 +1310,102 @@
       "off_colors": [
         "#b59263"
       ]
+    },
+    {
+      "sheet": "travel_chrome",
+      "tile": [
+        12,
+        1
+      ],
+      "declared": "travel3",
+      "used_ramp": "travel3",
+      "off_colors": [
+        "#050402"
+      ]
+    },
+    {
+      "sheet": "travel_chrome",
+      "tile": [
+        13,
+        1
+      ],
+      "declared": "travel3",
+      "used_ramp": "travel3",
+      "off_colors": [
+        "#050402"
+      ]
+    },
+    {
+      "sheet": "travel_chrome",
+      "tile": [
+        14,
+        1
+      ],
+      "declared": "travel3",
+      "used_ramp": "travel3",
+      "off_colors": [
+        "#050402"
+      ]
+    },
+    {
+      "sheet": "travel_chrome",
+      "tile": [
+        15,
+        1
+      ],
+      "declared": "travel3",
+      "used_ramp": "travel3",
+      "off_colors": [
+        "#060606"
+      ]
+    },
+    {
+      "sheet": "travel_chrome",
+      "tile": [
+        16,
+        1
+      ],
+      "declared": "travel4",
+      "used_ramp": "travel4",
+      "off_colors": [
+        "#050402"
+      ]
+    },
+    {
+      "sheet": "travel_chrome",
+      "tile": [
+        17,
+        1
+      ],
+      "declared": "travel4",
+      "used_ramp": "travel4",
+      "off_colors": [
+        "#050402"
+      ]
+    },
+    {
+      "sheet": "travel_chrome",
+      "tile": [
+        18,
+        1
+      ],
+      "declared": "travel4",
+      "used_ramp": "travel4",
+      "off_colors": [
+        "#050402"
+      ]
+    },
+    {
+      "sheet": "travel_chrome",
+      "tile": [
+        19,
+        1
+      ],
+      "declared": "travel4",
+      "used_ramp": "travel4",
+      "off_colors": [
+        "#060606"
+      ]
     }
   ]
 }

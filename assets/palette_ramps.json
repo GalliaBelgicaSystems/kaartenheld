@@ -935,6 +935,78 @@
     "village:7"
    ]
   },
+  "travel1": {
+   "colors": [
+    "#ffffff",
+    "#755930",
+    "#dfbd8d",
+    "#dfbd8d"
+   ],
+   "refs": [
+    "TRAVEL/background",
+    "TRAVEL/outlines",
+    "TRAVEL/cards_bg",
+    "TRAVEL/cards_bg"
+   ],
+   "slots": [
+    "travel:1",
+    "travel:5",
+    "travel:6",
+    "travel:7"
+   ]
+  },
+  "travel2": {
+   "colors": [
+    "#a98655",
+    "#906e3f",
+    "#906e3f",
+    "#906e3f"
+   ],
+   "refs": [
+    "TRAVEL/dirt_ground",
+    "TRAVEL/dirt_rubble",
+    "TRAVEL/dirt_rubble",
+    "TRAVEL/dirt_rubble"
+   ],
+   "slots": [
+    "travel:2"
+   ]
+  },
+  "travel3": {
+   "colors": [
+    "#ffffff",
+    "#a98655",
+    "#be0000",
+    "#000000"
+   ],
+   "refs": [
+    "TRAVEL/background",
+    "TRAVEL/dirt_ground",
+    "TRAVEL/flag",
+    "TRAVEL/black"
+   ],
+   "slots": [
+    "travel:0",
+    "travel:3"
+   ]
+  },
+  "travel4": {
+   "colors": [
+    "#ffffff",
+    "#938da1",
+    "#be0000",
+    "#000000"
+   ],
+   "refs": [
+    "TRAVEL/background",
+    "TRAVEL/desolate_ground",
+    "TRAVEL/flag",
+    "TRAVEL/black"
+   ],
+   "slots": [
+    "travel:4"
+   ]
+  },
   "underground1": {
    "colors": [
     "#000000",
@@ -1057,6 +1129,16 @@
   "title": {
    "0": "title",
    "1": "title_logo"
+  },
+  "travel": {
+   "0": "travel3",
+   "1": "travel1",
+   "2": "travel2",
+   "3": "travel3",
+   "4": "travel4",
+   "5": "travel1",
+   "6": "travel1",
+   "7": "travel1"
   },
   "underground": {
    "0": "underground1",
