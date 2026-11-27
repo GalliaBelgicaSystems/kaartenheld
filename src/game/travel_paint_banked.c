@@ -387,7 +387,7 @@ static void tp_lastrow(void)
         *s_buf = 'H';
         VBK_REG = 1;
         s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)17 << 5) + 1);
-        tp_sync_write(s_atr, 3);
+        tp_sync_write(s_atr, 5);
         VBK_REG = 0;
     }
     s_n = 0;

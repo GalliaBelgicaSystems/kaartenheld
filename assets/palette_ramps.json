@@ -263,7 +263,8 @@
    ],
    "slots": [
     "base:0",
-    "menu:0"
+    "menu:0",
+    "travel:0"
    ]
   },
   "fight2": {
@@ -317,7 +318,8 @@
    ],
    "slots": [
     "base:1",
-    "menu:1"
+    "menu:1",
+    "travel:5"
    ]
   },
   "fight5": {
@@ -950,7 +952,6 @@
    ],
    "slots": [
     "travel:1",
-    "travel:5",
     "travel:6",
     "travel:7"
    ]
@@ -986,7 +987,6 @@
     "TRAVEL/black"
    ],
    "slots": [
-    "travel:0",
     "travel:3"
    ]
   },
@@ -1131,12 +1131,12 @@
    "1": "title_logo"
   },
   "travel": {
-   "0": "travel3",
+   "0": "fight1",
    "1": "travel1",
    "2": "travel2",
    "3": "travel3",
    "4": "travel4",
-   "5": "travel1",
+   "5": "fight4",
    "6": "travel1",
    "7": "travel1"
   },
