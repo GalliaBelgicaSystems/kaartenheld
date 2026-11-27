@@ -39,6 +39,11 @@
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
       "taken_from": "6d6d384b05f828ad45a3cc6db0003c2727b8f5dd"
+    },
+    {
+      "file": "travel-strips-placeholder.png",
+      "description": "Journey strip layouts per route (4x tree pairs, travel floor grounds, transition seam) rendered from the biome JSONs",
+      "taken_from": "6ed6346b5d37a62231e919b8d7e333372f4f45e3"
     }
   ]
 }
