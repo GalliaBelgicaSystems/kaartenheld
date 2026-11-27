@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v14: all-brown marker row, flag at col 17",
-      "taken_from": "81c906f711c20b556b449b0112e6548ea25142b4"
+      "description": "Journey camp menu v15: scenery + markers span cols 2-17",
+      "taken_from": "a480dde2959f7217374fc35896356047314b15ce"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "81c906f711c20b556b449b0112e6548ea25142b4"
+      "taken_from": "a480dde2959f7217374fc35896356047314b15ce"
     },
     {
       "file": "travel-strips-placeholder.png",
