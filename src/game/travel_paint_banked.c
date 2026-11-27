@@ -160,15 +160,18 @@ static const ChromeCell s_wash_cells[] = {
     { 17, 4, 30 }, { 18, 4, 31 }
 };
 
-/* Static progress markers (row 5): brown-top origin half (1-9),
- * grey-top destination half (10-18). Reached/upcoming states are
- * wiring-step work (same as the old dot art: static until then). */
+/* Static progress markers (row 5, cols 1-17): start, then five
+ * (empty, empty, step) groups, ending with the flag at col 17.
+ * Cols 0 and 18 stay blank. All brown tops (slot 3). */
 static const ChromeCell s_marker_cells[] = {
-    { 1, 5, 32 }, { 2, 5, 33 }, { 3, 5, 33 }, { 4, 5, 33 },
-    { 5, 5, 34 }, { 6, 5, 33 }, { 7, 5, 33 }, { 8, 5, 34 },
-    { 9, 5, 33 }, { 10, 5, 37 }, { 11, 5, 38 }, { 12, 5, 37 },
-    { 13, 5, 37 }, { 14, 5, 38 }, { 15, 5, 37 }, { 16, 5, 37 },
-    { 17, 5, 37 }, { 18, 5, 39 }
+    { 0, 5, 0xFF },
+    { 1, 5, 32 }, { 2, 5, 33 }, { 3, 5, 33 }, { 4, 5, 34 },
+    { 5, 5, 33 }, { 6, 5, 33 }, { 7, 5, 34 },
+    { 8, 5, 33 }, { 9, 5, 33 }, { 10, 5, 34 },
+    { 11, 5, 33 }, { 12, 5, 33 }, { 13, 5, 34 },
+    { 14, 5, 33 }, { 15, 5, 33 }, { 16, 5, 34 },
+    { 17, 5, 35 },
+    { 18, 5, 0xFF }, { 19, 5, 0xFF }
 };
 
 /* HUNT button (cols 2-6): bow icon + H/UN/T label. Bow sits at col 4;
@@ -273,7 +276,7 @@ static void tp_wash(void)
 
 static void tp_markers(void)
 {
-    tp_chrome_run(s_marker_cells, 18, 0);
+    tp_chrome_run(s_marker_cells, 20, 0);
 }
 
 static void tp_hunt_button(uint8_t selected)
