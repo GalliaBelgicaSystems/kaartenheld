@@ -32,13 +32,13 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v13: STUDY frame cols 12-17 (WIP: grayscale, palettes pending)",
-      "taken_from": "7ca3734a3e85f06c5d1d5d921a54d0a03f46fdef"
+      "description": "Journey camp menu final: travel palette (brown menu text, red heart, tan fill) (WIP: scenery strips still wash)",
+      "taken_from": "6d6d384b05f828ad45a3cc6db0003c2727b8f5dd"
     },
     {
       "file": "travel-chrome-method.png",
       "description": "Journey method pick v2 (no route line)",
-      "taken_from": "7ca3734a3e85f06c5d1d5d921a54d0a03f46fdef"
+      "taken_from": "6d6d384b05f828ad45a3cc6db0003c2727b8f5dd"
     }
   ]
 }
