@@ -125,6 +125,17 @@ galliabelgica_red: #b84444
 galliabelgica_black: #000000
 
 
+TRAVEL
+background: #ffffff
+outlines: #755930
+cards_bg: #dfbd8d
+black: #000000
+flag: #be0000
+dirt_ground: #a98655
+dirt_rubble: #906e3f
+desolate_ground: #938da1
+
+
 field1: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/tree_ladder_and_dirt, FOREST/void_holes
 field2: FOREST/grass, FOREST/tree_leaves_terrain_outline_big_grass, FOREST/dark_tree_leaves, FOREST/tree_ladder_and_dirt
 field3: FOREST/grass, FOREST/tree_stump_light, FOREST/tree_stump_dark, FOREST/tree_ladder_and_dirt
@@ -166,7 +177,6 @@ fight4: COMBAT/background, COMBAT/ice_icon, COMBAT/poison_icon, COMBAT/heart_fir
 fight5: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/poison_icon
 fight6: COMBAT/background, COMBAT/card_background, COMBAT/card_outline, COMBAT/ice_icon
 fight7: COMBAT/card_background, COMBAT/slime_combat, COMBAT/numbers_icons, UNUSED
-fighthealth: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, SPRITES/slime_light
 fightslime: COMBAT/background, COMBAT/slime_combat, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightslime_knight: COMBAT/background, COMBAT/slime_outline_combat_dark, COMBAT/slime_outline_combat, COMBAT/boss_spider_bat_combat_body
 fightbat: COMBAT/background, COMBAT/bat_combat_inner_wings, COMBAT/heart_fire_enemy_eyes, COMBAT/boss_spider_bat_combat_body
@@ -183,3 +193,7 @@ inventory2: COMBAT/background, COMBAT/iron_light, COMBAT/iron_dark, UNUSED
 inventory3: COMBAT/background, COMBAT/mithril_light, COMBAT/mithril_dark, UNUSED
 inventory4: COMBAT/background, COMBAT/wood_light, COMBAT/wood_mid, COMBAT/wood_dark
 inventory5: COMBAT/background, COMBAT/steel_light, COMBAT/steel_dark, UNUSED
+travel1: TRAVEL/background, TRAVEL/outlines, TRAVEL/cards_bg, UNUSED
+travel2: TRAVEL/dirt_ground, TRAVEL/dirt_rubble, UNUSED, UNUSED
+travel3: TRAVEL/background, TRAVEL/dirt_ground, TRAVEL/flag, TRAVEL/black
+travel4: TRAVEL/background, TRAVEL/desolate_ground, TRAVEL/flag, TRAVEL/black
