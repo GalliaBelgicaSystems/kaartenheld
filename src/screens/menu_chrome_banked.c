@@ -29,7 +29,7 @@ uint8_t g_menus_chrome_loaded;
 
 /* Hero-status portrait VRAM slots (ui.h): 16 cells in header order
  * (row-major from sheet (12,0)): the 15 orphaned box slots around
- * riders 228-231, AP pips 236-240 and the spin tile 241, plus dice
+ * riders 228-231, AP pips 236-240 and the spin tile 245, plus dice
  * slot 246 (the gamble entry restreams all dice, and every ITEM entry
  * restreams hero, so the time-share is safe).
  * The bank-13 STATUS renderer carries a copy of this table (it cannot

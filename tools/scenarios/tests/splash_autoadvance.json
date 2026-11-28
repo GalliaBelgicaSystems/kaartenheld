@@ -32,7 +32,7 @@
   {
    "type": "oam_tile",
    "entry": 39,
-   "expected": 241
+   "expected": 245
   },
   {
    "type": "event_occurred",

@@ -16,6 +16,13 @@
  * arbitrates every YES/NO dialogue (Heal Mage, kobold table invite,
  * Carl's spar offer); what an answer means is game-owned data below. */
 void dialogue_choice_nav_banked(void);
+#ifdef TRAVEL_DEMO
+/* Signpost picker body (src/game/signpost_nav_banked.c, bank 11):
+ * same dispatch shape, own bank (bank 12 sits ~200 B under its
+ * ceiling).  Reports the same 0/1/2/5 codes plus 13 (confirmed with
+ * the route + method staged). */
+void signpost_nav_banked(void);
+#endif
 
 void dialogue_screen_update(Game *g)
 {
@@ -42,8 +49,17 @@ void dialogue_screen_update(Game *g)
      * staged remove, then the staged thanks whose completion_flag owns
      * the one-shot flag), and 0/1/5 to stay/advance plainly.  The staged
      * ids are opaque data to the engine (never game branches). */
-    g_bk_call_bank = 12;
-    g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
+#ifdef TRAVEL_DEMO
+    if (g->dialogue.choice == DIALOGUE_CHOICE_SIGNPOST) {
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&signpost_nav_banked;
+    } else {
+#endif
+        g_bk_call_bank = 12;
+        g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
+#ifdef TRAVEL_DEMO
+    }
+#endif
     banked_call_run();
     if (g_bk_byte_a != 0) {
         /* Choice toggle, plain advance, every confirm: the same
@@ -137,6 +153,18 @@ void dialogue_screen_update(Game *g)
              * was opened, and return to the journey screen. */
             dialogue_end(&g->dialogue);
             travel_resume_from_ruins(g);
+            return;
+#endif
+#ifdef TRAVEL_DEMO
+        } else if (g_bk_byte_a == 13) {
+            /* Signpost picker confirmed (destination + CARRIAGE/WALK
+             * chosen on the dialogue's last row): close the dialogue
+             * and open the journey with the staged route + method --
+             * no full-screen method view.  travel_start_method owns
+             * the fare deduction (the picker already blocked an
+             * unaffordable carriage). */
+            dialogue_end(&g->dialogue);
+            travel_start_method(g_bk_byte_b, g_bk_byte_c);
             return;
 #endif
         } else if (g_bk_byte_a == 6) {

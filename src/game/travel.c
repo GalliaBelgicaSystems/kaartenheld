@@ -53,7 +53,6 @@ uint8_t travel_view(void)
 {
     if (g_travel_supply) return TRAVEL_VIEW_SUPPLY;
     if (g_travel_msg != TRAVEL_MSG_NONE) return TRAVEL_VIEW_MSG;
-    if (g_travel_method == 0xFF) return TRAVEL_VIEW_METHOD;
     if (g_travel_event == TRAVEL_EVENT_NONE) return TRAVEL_VIEW_IDLE;
     if (s_event.kind == TRAVEL_EVENT_BATTLE) return TRAVEL_VIEW_AMBUSH;
     if (s_event.kind == TRAVEL_EVENT_RUINS) return TRAVEL_VIEW_RUINS;
@@ -107,9 +106,52 @@ static void travel_load_event(uint8_t event)
                 (uint8_t)sizeof(TravelEventFail));
 }
 
-/* Start a route (event-executor hook, content.h).  Opens the method
- * pick (carriage vs foot); the default is the first free method so a
- * stray confirm never spends gold. */
+/* Start a route with the signpost picker's method already chosen (no
+ * full-screen method view).  Paid instant methods deduct and arrive at
+ * once (no steps, no events, no days); foot methods stage their own
+ * duration and event pool.  Unaffordable paid methods never start (the
+ * picker blocks them; this re-check is safety for direct starts). */
+void travel_start_method(uint8_t route, uint8_t method)
+{
+    const TravelMethod *m;
+    int16_t gold;
+    uint8_t count;
+    Game *g;
+    banked_copy(14, &count, &g_travel_route_count, 1);
+    if (route >= count) return;
+    travel_load_route(route);
+    if (method >= s_route.method_count) method = 0;
+    m = travel_method_ptr(method);
+    g = &g_game;
+    gold = currency_get(&g->state, CURRENCY_ID_GOLD);
+    if (gold < m->cost_gold) return;
+    if (m->cost_gold > 0) {
+        currency_add(&g->state, CURRENCY_ID_GOLD,
+                     (int16_t)(0 - m->cost_gold));
+    }
+    audio_play_sfx(SFX_CONFIRM);
+    g_travel_route = route;
+    g_travel_method = method;
+    g_travel_choice = 0;
+    g_travel_supply = 0;
+    travel_clear_state();
+    if (m->steps == 0) {
+        travel_arrive(g);
+        return;
+    }
+    g_travel_total = m->steps;
+    g_travel_left = m->steps;
+    /* Seed the camp-action stream from the shared RNG (one draw per
+     * journey; nonzero seeds can never hit the xorshift fixed point). */
+    g_travel_rng = rng_next();
+    if (!g_travel_rng) g_travel_rng = 0xACE1;
+    g_travel_msg = TRAVEL_MSG_NONE;
+    g_travel_active = 1;
+    screen_change(g, SCREEN_JOURNEY);
+}
+
+/* Start a route (event-executor hook, content.h).  Legacy direct starts
+ * take the first free method (a stray confirm never spends gold). */
 void travel_start(uint8_t route)
 {
     uint8_t i;
@@ -117,19 +159,13 @@ void travel_start(uint8_t route)
     banked_copy(14, &count, &g_travel_route_count, 1);
     if (route >= count) return;
     travel_load_route(route);
-    g_travel_route = route;
-    g_travel_method = 0xFF;
-    g_travel_supply = 0;
-    travel_clear_state();
     for (i = 0; i < s_route.method_count; i++) {
         if (s_route.methods[i].cost_gold == 0) {
-            g_travel_choice = i;
-            break;
+            travel_start_method(route, i);
+            return;
         }
     }
-    g_travel_msg = TRAVEL_MSG_NONE;
-    g_travel_active = 1;
-    screen_change(&g_game, SCREEN_JOURNEY);
+    travel_start_method(route, 0);
 }
 
 bool game_travel_active(void)
@@ -147,43 +183,6 @@ static void travel_burn(Game *g, uint8_t n, uint8_t step_mode)
     g_bk_byte_a = n;
     g_bk_byte_b = step_mode;
     banked_call_run();
-}
-
-/* Confirm the picked method.  Paid instant methods deduct and arrive
- * at once (no steps, no events, no days); foot methods stage their own
- * duration and event pool.  Too poor stays put with a refusal line. */
-static void travel_confirm_method(Game *g)
-{
-    const TravelMethod *m;
-    int16_t gold;
-    if (!g) return;
-    m = travel_method_ptr(g_travel_choice);
-    gold = currency_get(&g->state, CURRENCY_ID_GOLD);
-    if (gold < m->cost_gold) {
-        g_travel_msg = TRAVEL_MSG_NOGOLD;
-        audio_play_sfx(SFX_BACK);
-        g->render_cache.valid = false;
-        return;
-    }
-    if (m->cost_gold > 0) {
-        currency_add(&g->state, CURRENCY_ID_GOLD,
-                     (int16_t)(0 - m->cost_gold));
-    }
-    audio_play_sfx(SFX_CONFIRM);
-    g_travel_method = g_travel_choice;
-    g_travel_choice = 0;
-    if (m->steps == 0) {
-        travel_arrive(g);
-        return;
-    }
-    travel_clear_state();
-    g_travel_total = m->steps;
-    g_travel_left = m->steps;
-    /* Seed the camp-action stream from the shared RNG (one draw per
-     * journey; nonzero seeds can never hit the xorshift fixed point). */
-    g_travel_rng = rng_next();
-    if (!g_travel_rng) g_travel_rng = 0xACE1;
-    g->render_cache.valid = false;
 }
 
 /* Open the route's supply merchant (event-executor hook, content.h). */
@@ -757,24 +756,8 @@ void travel_update(Game *g)
         }
         return;
     }
-    if (g_travel_method == 0xFF) {
-        /* Method pick: toggle the way, B backs out, A confirms. */
-        if (input_pressed(INPUT_B)) {
-            travel_exit_to_overworld(g);
-            return;
-        }
-        if (input_pressed(INPUT_UP) || input_pressed(INPUT_DOWN) ||
-            input_pressed(INPUT_LEFT) || input_pressed(INPUT_RIGHT)) {
-            if (s_route.method_count > 1) {
-                travel_cycle_choice(g, 1, 1);
-            }
-            return;
-        }
-        if (input_pressed(INPUT_A) || input_pressed(INPUT_START)) {
-            travel_confirm_method(g);
-        }
-        return;
-    }
+    /* No method view: the signpost picker stages the method before the
+     * journey opens, so every live journey already has one. */
     if (g_travel_event != TRAVEL_EVENT_NONE) {
         travel_update_event(g);
         return;

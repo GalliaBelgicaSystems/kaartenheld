@@ -49,7 +49,7 @@ CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c
 TRAVEL_SRCS = $(SRC_DIR)/game/travel.c $(SRC_DIR)/game/travel_screen.c \
 	$(SRC_DIR)/game/travel_content.c $(SRC_DIR)/game/travel_paint_banked.c \
 	$(SRC_DIR)/game/travel_logic_banked.c $(SRC_DIR)/game/travel_art_content.c \
-	$(SRC_DIR)/game/travel_chrome_content.c
+	$(SRC_DIR)/game/travel_chrome_content.c $(SRC_DIR)/game/signpost_nav_banked.c
 SRCS := $(filter-out $(TEST_CONTENT_SRCS) $(TRAVEL_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 11 in

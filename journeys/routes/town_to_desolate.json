@@ -106,7 +106,7 @@
     },
     {
       "id": "foot",
-      "name": "ON FOOT",
+      "name": "WALK",
       "cost_gold": 0,
       "steps": 16,
       "frequency": 64,

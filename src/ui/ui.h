@@ -270,16 +270,21 @@ void ic_menu_riders_load(void);
 #define ENEMY_OW_LIMIT           128u
 
 /* Save-spin indicator: OAM entry 39 (actor slots use 0-37, markers
- * 30-37, so 39 is always free) with tile 241.  Tile 241 is free in
- * both fetch blocks (BG ids 241-244 sit between the AP-pip stream
- * 236-240 and the dice stream 246-255; OBJ 241 aliases the same bytes
- * no BG writer touches).  The per-phase glyph is re-streamed from the
+ * 30-37, so 39 is always free) with tile 245.  Tile 245 is free in
+ * both fetch blocks (BG ids 245 sits between the AP-pip stream
+ * 236-240 and the dice stream 246-255; the journey chrome window
+ * 208-247 stamps 241-243 for live markers, so 241 (the old spin
+ * tile) clobbered the empty-box markers with red spinner glyphs --
+ * the save spinner re-streams from the font every phase, painting
+ * red bg + black - / / over the black empty boxes; 245 is the
+ * grey-empty chrome cell the journey paint never stamps, and no
+ * other BG writer touches it).  The per-phase glyph is re-streamed from the
  * font each phase change, so no boot-time load and no clobber state.
  * CGB uses prop 5 (OBJ palette slot 5, sprites7: white box at color 1,
  * dark brown ink at color 3); DMG uses prop 0x10 (OBP1 = 0xE0: shade 0
  * white box at color 1, shade 3 black ink at color 3). */
 #define SPIN_OAM_ENTRY           39u
-#define SPIN_TILE                241u
+#define SPIN_TILE                245u
 #define SPIN_TTL                 120u
 #define SPIN_PX                  152u
 #define SPIN_PY                  136u

@@ -535,7 +535,7 @@
       "properties": {
         "entity_id": "ENTITY_ID_SIGNPOST",
         "display_name": "SIGNPOST",
-        "dialogue": "DIALOGUE_ID_FIELD_SIGNPOST",
+        "dialogue": "DIALOGUE_ID_FIELD_SIGNPOST_TRAVEL",
         "actor_id": 0,
         "facing": "DOWN",
         "flags": [

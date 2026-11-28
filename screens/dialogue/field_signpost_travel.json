@@ -1,0 +1,12 @@
+{
+  "id": "field_signpost_travel",
+  "speaker": "",
+  "lines": [
+    "NORTH: Passage to",
+    "forest",
+    "EAST: Human ",
+    "settlement",
+    "< FIELD ROAD >"
+  ],
+  "choice": "signpost"
+}

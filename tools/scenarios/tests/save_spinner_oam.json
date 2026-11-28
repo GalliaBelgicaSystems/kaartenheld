@@ -2,7 +2,7 @@
  "act": "always",
  "name": "save_spinner_oam",
  "test": true,
- "description": "Pure-OAM save spinner preserves overworld BG VRAM/CRAM: walking through the field gate into TEST_TOWN triggers autosave, placing the spinner at OAM[39] with tile 241 and CGB OBJ palette slot 5 (sprites7 white backdrop) over the Window HUD's white corner cell (0x9C00) while leaving the underlying BG corner tile (19,17) intact as TILE_VILLAGE_18 (146) on BG palette 5.",
+ "description": "Pure-OAM save spinner preserves overworld BG VRAM/CRAM: walking through the field gate into TEST_TOWN triggers autosave, placing the spinner at OAM[39] with tile 245 and CGB OBJ palette slot 5 (sprites7 white backdrop) over the Window HUD's white corner cell (0x9C00) while leaving the underlying BG corner tile (19,17) intact as TILE_VILLAGE_18 (146) on BG palette 5.",
  "initial_state": {
   "scene": "TEST_FIELD",
   "player": {
@@ -38,7 +38,7 @@
   {
    "type": "oam_tile",
    "entry": 39,
-   "expected": 241
+   "expected": 245
   },
   {
    "type": "oam_attr",

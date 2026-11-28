@@ -597,23 +597,6 @@ static void tp_shortcut(void)
     tp_line_done(11);
 }
 
-/* One method row: "> CARRIAGE 50G" or "  ON FOOT". */
-static void tp_method(uint8_t idx, uint8_t y)
-{
-    const TravelMethod *m;
-    m = &s_route.methods[idx];
-    s_n = 0;
-    tp_putc((idx == g_travel_choice) ? '>' : ' ');
-    tp_putc(' ');
-    tp_puts(m->name);
-    if (m->cost_gold > 0) {
-        tp_putc(' ');
-        tp_put_u16((uint16_t)m->cost_gold);
-        tp_putc('G');
-    }
-    tp_line_done(y);
-}
-
 /* One supply row: "> PROV 6 2G". */
 static void tp_supply(uint8_t idx, uint8_t y, const char *label)
 {
@@ -650,13 +633,11 @@ static void tp_cost(void)
  * same-screen updates diff-skip and blank unused rows without flashing. */
 void travel_paint_banked(void)
 {
-    const TravelRoute *r;
     const TravelEvent *e;
     uint8_t same_screen;
     uint8_t view;
     uint8_t y;
     same_screen = g_bk_byte_a;
-    r = &s_route;
     e = &s_event;
     for (y = 0; y < 18; y++) {
         s_row_used[y] = 0;
@@ -665,8 +646,6 @@ void travel_paint_banked(void)
         view = TRAVEL_VIEW_SUPPLY;
     } else if (g_travel_msg != TRAVEL_MSG_NONE) {
         view = TRAVEL_VIEW_MSG;
-    } else if (g_travel_method == 0xFF) {
-        view = TRAVEL_VIEW_METHOD;
     } else if (g_travel_event == TRAVEL_EVENT_NONE) {
         view = TRAVEL_VIEW_IDLE;
     } else if (e->kind == TRAVEL_EVENT_BATTLE) {
@@ -695,11 +674,6 @@ void travel_paint_banked(void)
     } else if (view == TRAVEL_VIEW_SUPPLY) {
         tp_supply(0, 9, "PROV");
         tp_text(0, 13, (g_travel_choice == 1) ? "> LEAVE" : "  LEAVE", 20);
-    } else if (view == TRAVEL_VIEW_METHOD) {
-        tp_method(0, 9);
-        if (r->method_count > 1) {
-            tp_method(1, 11);
-        }
     } else if (view == TRAVEL_VIEW_AMBUSH) {
         tp_text(0, 9, e->text, 20);
         tp_text(0, 11, "[A] FIGHT", 20);

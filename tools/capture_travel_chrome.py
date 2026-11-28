@@ -1,14 +1,16 @@
 """Capture travel-demo journey screens with the new tile chrome.
 
-Drives: field boot -> signpost -> JOURNEY (method view shot) -> ON FOOT
--> camp IDLE (chrome buttons shot). Saves to screenshots/review/.
+Drives: field boot -> signpost dialogue -> destination row (method
+pick shot) -> WALK -> camp IDLE (chrome buttons shot). Saves to
+screenshots/review/.
 Usage: python3 tools/capture_travel_chrome.py (inside nix develop).
 """
 import os
 import sys
 
 sys.path.insert(0, os.path.join("tools"))
-from verify_travel_demo import D, boot_to_overworld, SCREEN_JOURNEY
+from verify_travel_demo import (D, boot_to_overworld, pick_pages_to,
+                                confirm_dest, SCREEN_DIALOGUE)
 
 OUT = os.path.join("screenshots", "review")
 
@@ -33,11 +35,13 @@ def main():
         st = d.scene()
         assert (st["player_x"], st["player_y"]) == (5, 8), st
         d.press("a", settle=30)
-        assert d.wait_for(lambda: d.screen() == SCREEN_JOURNEY,
-                          ticks=300), "no JOURNEY (screen=%d)" % d.screen()
-        assert d.wait_for(lambda: d.text_has("TRAVEL"), ticks=300), d.rows()
+        assert d.wait_for(lambda: d.screen() == SCREEN_DIALOGUE,
+                          ticks=300), "no DIALOGUE (screen=%d)" % d.screen()
+        pick_pages_to(d, "< FIELD ROAD >")
+        confirm_dest(d)  # destination confirmed -> method row
+        assert d.wait_for(lambda: d.text_has("< WALK >"), ticks=300), d.rows()
         shot(d, "travel-chrome-method.png")
-        d.press("a", settle=20)  # ON FOOT (default) -> camp IDLE
+        d.press("a", settle=20)  # WALK (default) -> camp IDLE
         assert d.wait_for(lambda: d.text_has("SUPPLIES:"), ticks=300), d.rows()
         shot(d, "travel-chrome-idle.png")
     finally:

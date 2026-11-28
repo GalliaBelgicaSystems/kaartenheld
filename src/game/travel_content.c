@@ -50,7 +50,7 @@ const TravelRoute g_travel_routes[] = {
                 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
             { /* foot */
-                "ON FOOT", /* name */
+                "WALK", /* name */
                 0, /* cost_gold */
                 10, /* steps (0 = instant) */
                 64, /* frequency */
@@ -100,7 +100,7 @@ const TravelRoute g_travel_routes[] = {
                 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
             { /* foot */
-                "ON FOOT", /* name */
+                "WALK", /* name */
                 0, /* cost_gold */
                 10, /* steps (0 = instant) */
                 64, /* frequency */
@@ -150,7 +150,7 @@ const TravelRoute g_travel_routes[] = {
                 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
             { /* foot */
-                "ON FOOT", /* name */
+                "WALK", /* name */
                 0, /* cost_gold */
                 8, /* steps (0 = instant) */
                 64, /* frequency */
@@ -200,7 +200,7 @@ const TravelRoute g_travel_routes[] = {
                 { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, /* pool_weight */
             },
             { /* foot */
-                "ON FOOT", /* name */
+                "WALK", /* name */
                 0, /* cost_gold */
                 16, /* steps (0 = instant) */
                 64, /* frequency */

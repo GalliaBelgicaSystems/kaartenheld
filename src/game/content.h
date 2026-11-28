@@ -111,6 +111,12 @@ const char *game_battle_enemy_type_id(uint8_t battle_id);
  * victory/flee hooks, abandon on defeat/load/new-game).
  * All state is transient WRAM -- GameState is untouched. */
 void travel_start(uint8_t route);
+/* Start a route with the signpost picker's method already chosen (no
+ * full-screen method view): validates the route/method, deducts a
+ * paid fare, and either arrives at once (instant) or stages the foot
+ * slog.  Unaffordable paid methods never start (the picker blocks
+ * them; this re-check is safety). */
+void travel_start_method(uint8_t route, uint8_t method);
 void travel_open_supply(uint8_t route);
 bool game_travel_active(void);
 void travel_on_victory(void);

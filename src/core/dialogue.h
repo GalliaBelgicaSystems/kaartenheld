@@ -26,14 +26,21 @@ typedef struct {
      * "> STAY  LEAVE" for Carl's leave-the-field offer -- both keep the
      * second option at col 8 so the choice UI's cursor repaints at cols 0/7
      * stay valid); validated by dialogue_compile.py; the choice UI only
-     * repaints its cursor cells. */
+     * repaints its cursor cells.
+     * Signpost picker (DIALOGUE_CHOICE_SIGNPOST, travel-demo only): the
+     * last line is a cycling "< ... >" row, repainted live in two phases
+     * (destination, then CARRIAGE/WALK) with LEFT/RIGHT + A.  The JSON
+     * carries the destination placeholder; the method row is painted
+     * from game-owned strings (see signpost_nav_banked.c). */
     uint8_t choice;
 } DialogueDefinition;
 
-/* Choice prompt kinds.  Only YES/NO exists today; generalize when a second
- * need appears (roadmap YAGNI). */
+/* Choice prompt kinds.  YES/NO is the two-option cursor toggle;
+ * SIGNPOST is the travel-demo signpost picker (destination cycle, then
+ * CARRIAGE/WALK cycle, both on the last row with LEFT/RIGHT + A). */
 #define DIALOGUE_CHOICE_NONE   0
 #define DIALOGUE_CHOICE_YES_NO 1
+#define DIALOGUE_CHOICE_SIGNPOST 2
 
 /* Choice answers. */
 #define DIALOGUE_CHOICE_YES 0

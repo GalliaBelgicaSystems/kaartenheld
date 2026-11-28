@@ -59,46 +59,15 @@ const EventDefinition g_events[] = {
         1,
         {{ EVENT_ACTION_TRAVEL_SUPPLY, TRAVEL_ROUTE_FIELD_TO_VILLAGE, 0, 0 }}
     },
-    {
-        /* Same road, younger days: while the Convergence countdown is
-         * still chapter 1 the field signpost walks the act-1 road
-         * table instead of the act-2 one.  First-match wins,
-         * so this precedes the act-2 fallthrough below. */
-        EVENT_ID_TRAVEL_DEMO_ACT1, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_FIELD,
-        1,
-        {{ EVENT_COND_VARIABLE, VARIABLE_ID_CHAPTER, 1, false, false }},
-        1,
-        {{ EVENT_ACTION_JOURNEY_START, TRAVEL_ROUTE_FIELD_TO_VILLAGE_ACT1, 0, 0 }}
-    },
-    {
-        /* Travel-demo prototype: the field signpost starts the
-         * field-to-village journey instead of teleporting.
-         * First-match wins, so this precedes the signpost dialogue
-         * fallthrough (which the travel consume-guard also skips). */
-        EVENT_ID_TRAVEL_DEMO, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_FIELD,
-        0,
-        {{ EVENT_COND_NONE, 0, 0, false, false }},
-        1,
-        {{ EVENT_ACTION_JOURNEY_START, TRAVEL_ROUTE_FIELD_TO_VILLAGE, 0, 0 }}
-    },
-    {
-        /* Outward leg: the town signpost walks the 16-step road to
-         * the desolate field instead of talking. */
-        EVENT_ID_TRAVEL_RETURN, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_TOWN,
-        0,
-        {{ EVENT_COND_NONE, 0, 0, false, false }},
-        1,
-        {{ EVENT_ACTION_JOURNEY_START, TRAVEL_ROUTE_TOWN_TO_DESOLATE, 0, 0 }}
-    },
-    {
-        /* Loop closer: the desolate signpost walks the road back to
-         * the field instead of talking. */
-        EVENT_ID_TRAVEL_DESOLATE_RETURN, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_DESOLATE_FIELD,
-        0,
-        {{ EVENT_COND_NONE, 0, 0, false, false }},
-        1,
-        {{ EVENT_ACTION_JOURNEY_START, TRAVEL_ROUTE_DESOLATE_TO_FIELD, 0, 0 }}
-    },
+    /* Signpost journeys (travel demo): NO event rows.  Interacting
+     * with a signpost falls through to its actor dialogue
+     * (field/village/desolate_signpost, choice kind SIGNPOST): the
+     * last row picks the destination, then CARRIAGE/WALK, and the
+     * picker confirm (code 13) opens the journey with the staged
+     * route + method -- no full-screen method view.  The chapter
+     * filter for the field road's act lives in the picker
+     * (signpost_nav_banked.c), and the road mapping in the dialogue
+     * ids, so one dialogue per signpost covers every act. */
     {
         /* Sunken-ruins AP chest (travel demo, one-shot via its own
          * flag): the relic raises the pool by 1 and warns the road

@@ -47,14 +47,16 @@
 
 #define TRAVEL_EVENT_NONE 0xFF
 
-/* Journey screen views (travel_screen.c render switch). */
+/* Journey screen views (travel_screen.c render switch).  The method
+ * pick lives in the signpost dialogue (LEFT/RIGHT + A on its last
+ * row), never as a full screen: journeys always start with a method
+ * staged, so there is no METHOD view. */
 #define TRAVEL_VIEW_IDLE 0
 #define TRAVEL_VIEW_AMBUSH 1
 #define TRAVEL_VIEW_HELP 2
 #define TRAVEL_VIEW_MSG 3
-#define TRAVEL_VIEW_METHOD 4
-#define TRAVEL_VIEW_SUPPLY 5
-#define TRAVEL_VIEW_RUINS 6
+#define TRAVEL_VIEW_SUPPLY 4
+#define TRAVEL_VIEW_RUINS 5
 
 /* Result message ids (g_travel_msg). */
 #define TRAVEL_MSG_NONE 0

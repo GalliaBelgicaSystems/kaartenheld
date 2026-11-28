@@ -32,7 +32,7 @@ behave differently per act, and different roads draw different events:
   roads at 20%), `rest` (heal plus schedule delay),
   `starve` (HP lost and every-N-days cadence without provisions),
   `study` (steps-saved / getting-lost ranges plus extra provisions).
-- `methods`: carriage (instant, paid) and/or on-foot (fixed `steps`,
+- `methods`: carriage (instant, paid) and/or walk (fixed `steps`,
   per-step event `frequency`, and a `pool` of `{event, weight}`
   entries; weights sum to at most 255 for the fixed-bank sampler).
 - `weather` (optional): the road's ambient climate — one entry per

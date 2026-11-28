@@ -91,11 +91,11 @@ static void commit_write_save(GameState *state, uint8_t slot)
     s_save_spin_ttl = SPIN_TTL;
 }
 
-/* Boot-notice spin primed flag: forces tile 241 to stream on the very
+/* Boot-notice spin primed flag: forces tile 245 to stream on the very
  * first SCREEN_NOTICE frame regardless of (frame & 7) alignment. */
 static uint8_t s_notice_spin_primed;
 
-/* Save-spin indicator tick: OAM entry 39 (always free) with tile 241
+/* Save-spin indicator tick: OAM entry 39 (always free) with tile 245
  * (free in both fetch blocks; re-streamed from the font every phase
  * so there is no boot load and no clobber state).  A phase redraws the
  * glyph (\ | / -); OAM is rewritten every frame so transition wipes

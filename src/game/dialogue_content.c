@@ -49,6 +49,14 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_DESOLATE_SIGNPOST,
+        "",
+        4,
+        {"West: Oakhaven", "town, the long", "road back.", "< FIELD ROAD >"},
+        0,
+        2
+    },
+    {
         DIALOGUE_ID_DOG_ASK,
         "DOG:",
         2,
@@ -111,6 +119,14 @@ const DialogueDefinition g_dialogues[] = {
         {"NORTH: Passage to", "forest", "EAST: Human ", "settlement"},
         0,
         0
+    },
+    {
+        DIALOGUE_ID_FIELD_SIGNPOST_TRAVEL,
+        "",
+        5,
+        {"NORTH: Passage to", "forest", "EAST: Human ", "settlement", "< FIELD ROAD >"},
+        0,
+        2
     },
     {
         DIALOGUE_ID_GUARD_AFTER_MAYOR,
@@ -535,6 +551,14 @@ const DialogueDefinition g_dialogues[] = {
         {"South: Qorim", "desert, 2 days", "travel.", "East: Tagavorate", "of Kavasar, 1 day", "travel.", "With right prep,", "I could travel."},
         0,
         0
+    },
+    {
+        DIALOGUE_ID_VILLAGE_SIGNPOST_TRAVEL,
+        "",
+        9,
+        {"South: Qorim", "desert, 2 days", "travel.", "East: Tagavorate", "of Kavasar, 1 day", "travel.", "With right prep,", "I could travel.", "< DESOLATE ROAD >"},
+        0,
+        2
     },
     {
         DIALOGUE_ID_WAKE_STAIRS,
