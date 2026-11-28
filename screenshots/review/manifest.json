@@ -32,12 +32,12 @@
     },
     {
       "file": "travel-chrome-idle.png",
-      "description": "Journey camp menu v15: scenery + markers span cols 2-17",
+      "description": "Journey camp menu: scenery + markers span cols 2-17 (black empties, no spinner clobber)",
       "taken_from": "a480dde2959f7217374fc35896356047314b15ce"
     },
     {
       "file": "travel-chrome-method.png",
-      "description": "Journey method pick v2 (no route line)",
+      "description": "Signpost picker method row: dialogue box over the field, < WALK > on the last row (no full-screen method view)",
       "taken_from": "a480dde2959f7217374fc35896356047314b15ce"
     },
     {
