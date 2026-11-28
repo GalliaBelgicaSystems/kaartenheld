@@ -29,6 +29,21 @@
       "file": "gamble-farewell.png",
       "description": "Nis says goodbye ('Come back anytime!') after leaving the table",
       "taken_from": "96dbc3ae"
+    },
+    {
+      "file": "travel-chrome-idle.png",
+      "description": "Journey camp menu: scenery + markers span cols 2-17 (black empties, no spinner clobber)",
+      "taken_from": "a480dde2959f7217374fc35896356047314b15ce"
+    },
+    {
+      "file": "travel-chrome-method.png",
+      "description": "Signpost picker method row: dialogue box over the field, < WALK > on the last row (no full-screen method view)",
+      "taken_from": "a480dde2959f7217374fc35896356047314b15ce"
+    },
+    {
+      "file": "travel-strips-placeholder.png",
+      "description": "Journey strip layouts per route (4x tree pairs, travel floor grounds, transition seam) rendered from the biome JSONs",
+      "taken_from": "6ed6346b5d37a62231e919b8d7e333372f4f45e3"
     }
   ]
 }

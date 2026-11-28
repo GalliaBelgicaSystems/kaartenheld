@@ -1,0 +1,28 @@
+{
+  "id": "pilgrims",
+  "kind": "choice",
+  "text": "PILGRIMS BLOCK ROAD.",
+  "opt1": "WAIT",
+  "opt1_effects": {
+    "text": "THEY PASS ON.",
+    "risk": 50,
+    "days": 1,
+    "fail": {
+      "text": "LONG PRAYERS.",
+      "days": 2
+    }
+  },
+  "opt2": "PUSH",
+  "opt2_effects": {
+    "text": "SHOVING THROUGH.",
+    "risk": 50,
+    "hurt": 3,
+    "fail": {
+      "text": "TRAMPLED.",
+      "hurt": 5
+    }
+  },
+  "acts": [
+    1
+  ]
+}

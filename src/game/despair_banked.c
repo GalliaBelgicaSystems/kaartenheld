@@ -7,7 +7,7 @@
 #include "actor.h"
 
 /* ── Unwinnable-boss desperation, game-owned data + check (ROM bank 8) ──
- * THIS game ("Kaartenheld") ends its first act with an unwinnable Lord of
+ * THIS game ("Kaartenheld") opens its Act 2 with an unwinnable Lord of
  * Slimes: once the boss drops to its threshold HP it survives (clamped
  * to 1), flashes, announces its focus, and answers the hero's A press
  * with a scripted lethal reprisal into the wake-grove outro.  The

@@ -1,0 +1,26 @@
+{
+  "id": "pack_breaks",
+  "kind": "choice",
+  "text": "YOUR PACK TEARS.",
+  "opt1": "MEND",
+  "opt1_effects": {
+    "text": "STITCHED UP.",
+    "risk": 50,
+    "days": 1,
+    "fail": {
+      "text": "STILL LEAKS.",
+      "days": 1,
+      "provisions": -1
+    }
+  },
+  "opt2": "DUMP",
+  "opt2_effects": {
+    "text": "LIGHTER LOAD.",
+    "risk": 50,
+    "fail": {
+      "text": "LOST MORE.",
+      "provisions": -6
+    },
+    "provisions": -4
+  }
+}

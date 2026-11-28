@@ -1,0 +1,27 @@
+{
+  "id": "strange_fog",
+  "kind": "choice",
+  "text": "FOG CLOSES IN.",
+  "opt1": "WAIT",
+  "opt1_effects": {
+    "text": "FOG LIFTS.",
+    "risk": 50,
+    "days": 1,
+    "fail": {
+      "text": "FOG LINGERS.",
+      "days": 2
+    }
+  },
+  "opt2": "PUSH ON",
+  "opt2_effects": {
+    "text": "LOST TIME.",
+    "risk": 50,
+    "hurt": 2,
+    "delay": 1,
+    "fail": {
+      "text": "CLIFF EDGE.",
+      "hurt": 4,
+      "delay": 2
+    }
+  }
+}

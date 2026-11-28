@@ -62,12 +62,23 @@ void game_new_game(GameState *state)
     state->scene.scene_id = SCENE_TEST_FIELD;
     scene_spawn(MAP_TEST_FIELD);
 #else
+#ifdef TRAVEL_DEMO
+    state->scene.scene_id = SCENE_ACT2_FIELD;
+    scene_spawn(MAP_ACT2_FIELD);
+#else
     state->scene.scene_id = SCENE_WAKE_GROVE;
     scene_spawn(MAP_WAKE_GROVE);
+#endif
 #endif
     state->scene.player_x = g_bk_byte_b;
     state->scene.player_y = g_bk_byte_c;
     state->scene.player_facing = g_bk_byte_d;
+#ifdef TRAVEL_DEMO
+    /* Demo start: two steps above the field signpost (5,9), facing it. */
+    state->scene.player_x = 5;
+    state->scene.player_y = 7;
+    state->scene.player_facing = DIRECTION_DOWN;
+#endif
 
     state->party.count = 1;
     state->party.members[0].id = CHARACTER_HERO;
@@ -84,6 +95,20 @@ void game_new_game(GameState *state)
     state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 1;
     state->currency.amount[CURRENCY_ID_GOLD - 1] = HERO_START_GOLD;
     state->currency.amount[CURRENCY_ID_ARROWS - 1] = HERO_START_ARROWS;
+#ifdef TRAVEL_DEMO
+    /* Travel demo: testing-phase hero (5 AP + stronger cards).  The main
+     * ROM keeps pool 1 and the plain starter deck (Act 1 untouched). */
+    state->variables.values[VARIABLE_ID_ENERGY_POOL - 1] = 5;
+    state->currency.amount[CURRENCY_ID_ARROWS - 1] = 20;
+    /* Convergence countdown (travel-demo ROM): 180 days left.  Main-ROM
+     * behavior unchanged (slots stay zero there). */
+    state->variables.values[VARIABLE_ID_DAY - 1] = CONVERGENCE_DAYS;
+    state->variables.values[VARIABLE_ID_LORD_POWER - 1] = 0;
+    /* Road provisions for the travel demo (supplied by the field merchant).
+     * 10 steps + detours + a possible ruins day: 36 provisions
+     * covers the trip without starving a clean run. */
+    state->variables.values[VARIABLE_ID_PROVISIONS - 1] = 36;
+#endif
     /* Neutral market at boot (game_state_zero leaves 0, which is outside
      * the valid 24-48 band; readers treat out-of-band as neutral, but a
      * new game states it explicitly). */
@@ -113,6 +138,26 @@ void game_new_game(GameState *state)
             banked_copy(2, &id, &g_hero_starter_deck_ids[i], 1);
             deck_add_card(&state->cards, id);
         }
+#ifdef TRAVEL_DEMO
+        /* Testing-phase muscle: curated steel shield + iron ring plus
+         * synthesized steel fire/ice bows and iron fire/ice daggers.
+         * Loot ids encode material/effect/weapon (loot.h): steel fire
+         * bow 0xD2, steel ice bow 0xDA, iron fire dagger 0xB3, iron
+         * ice dagger 0xBB.  AP 3-4 each, playable at pool 5.  Each goes
+         * to the collection and the draw pile through the real paths. */
+        {
+            static const uint8_t extra_ids[] = {
+                CARD_STEEL_SHIELD, CARD_IRON_RING, 0xD2, 0xDA, 0xB3, 0xBB
+            };
+            for (i = 0; i < 6; i++) {
+                deck_collection_add(&state->cards, (CardId)extra_ids[i], 1);
+            }
+            g_bk_byte_d = 0;
+            for (i = 0; i < 6; i++) {
+                deck_add_card(&state->cards, (CardId)extra_ids[i]);
+            }
+        }
+#endif
     }
 }
 
@@ -138,6 +183,23 @@ void game_on_level_up(GameState *state, ProgressionTarget target,
 ScreenId game_screen_after_victory(const Game *g)
 {
     if (!g) return SCREEN_OVERWORLD;
+#ifdef TRAVEL_DEMO
+    /* Road ambush won: pay the data-driven gold and resume the journey.
+     * Ruins fights are ordinary world battles (the journey is only
+     * suspended), so they return to the overworld like any other.
+     * A day's toll can still kill a 1-HP victor while starving --
+     * that is a cold game over, not a resume. */
+    if (game_travel_active() && !game_travel_in_ruins()) {
+        travel_on_victory();
+        if (travel_hero_dead(g)) {
+            travel_abandon((Game *)g);
+            ((Game *)g)->game_over_choice = 0;
+            audio_play_music(MUSIC_NONE);
+            return SCREEN_GAME_OVER;
+        }
+        return SCREEN_JOURNEY;
+    }
+#endif
     if (game_variable_get(&g->state, VARIABLE_ID_ENDING_SHOWN) != 0) {
         return SCREEN_ENDING;
     }
@@ -158,8 +220,8 @@ void game_slime_despair_outro(void)
 
 void game_slime_despair_wake(void)
 {
-    /* Fade to white, then wake the hero in the finale backdrop
-     * (SCENE_END_WAKE_SCENE) and play the strange wake dialogue. */
+    /* Fade to white, then wake the hero in the Act 2 opener backdrop
+     * (SCENE_ACT2_WAKE_START) and play the strange wake dialogue. */
     g_slime_despair = 1;
     g_bk_call_bank = 10;
     g_bk_call_target = (uint16_t)&game_despair_fade_out_banked;
@@ -167,7 +229,7 @@ void game_slime_despair_wake(void)
 #ifdef TEST_LEVELS
     scene_load(&g_game, SCENE_TEST_FOREST, 12, 10);
 #else
-    scene_load(&g_game, SCENE_END_WAKE_SCENE, 12, 10);
+    scene_load(&g_game, SCENE_ACT2_WAKE_START, 12, 10);
 #endif
     /* scene_load leaves facing untouched, so route it explicitly to the
      * authored spawn facing (UP) instead of the engage direction.  Reset

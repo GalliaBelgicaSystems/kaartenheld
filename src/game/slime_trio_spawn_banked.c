@@ -1,4 +1,8 @@
+#ifdef TRAVEL_DEMO
+#pragma bank 12
+#else
 #pragma bank 10
+#endif
 
 #include <stdint.h>
 #include "banked.h"
@@ -7,7 +11,7 @@
 
 extern uint8_t g_oam_tilecache_valid;
 
-/* Slime-trio spawn (game content, ROM bank 10 = GAME_EVENT_BANK).
+/* Slime-trio spawn (game content, shares GAME_EVENT_BANK).
  * Dispatched from the event executor's EVENT_ACTION_SPAWN_SLIME_TRIO
  * branch via the WRAM trampoline.  Lives in the event-table bank
  * precisely so its row scan is an in-bank read (a bank-2 body would
@@ -44,8 +48,8 @@ void game_slime_trio_spawn_banked(void)
     uint8_t found;
 
     /* Resolve our ow byte from our own event row (first
-     * SPAWN_SLIME_TRIO action in the table).  This file lives in bank 10
-     * (GAME_EVENT_BANK) precisely so these are in-bank reads: the event
+     * SPAWN_SLIME_TRIO action in the table).  This file shares
+     * GAME_EVENT_BANK precisely so these are in-bank reads: the event
      * table is NOT mapped while other banks run, so this scan must never
      * move to another bank (that cross-bank wild read was the 2026-11-03
      * spawn failure). */

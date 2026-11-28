@@ -52,6 +52,9 @@ static void game_prepare_new_game(Game *g)
     g->game_over_choice = 0;
     g->shop_id = 0;
     g->notice_frame = 0;
+#ifdef TRAVEL_DEMO
+    travel_abandon(g);
+#endif
     game_new_game(&g->state);
     world_init(&g->world, &g->state);
     dialogue_init(&g->dialogue);
@@ -157,13 +160,13 @@ void game_update(Game *g)
         g_bk_call_bank = 8;
         g_bk_call_target = (uint16_t)&game_frame_tick_banked;
         banked_call_run();
-        /* Carl's leave-the-field offer (bank 10: bank 8 sits hard
-         * against 16 KB, so the tick cannot host it).  Own dispatch:
-         * a banked body can never nest another trampoline call
-         * (AGENTS.md 52.11.1).  Stages only g_bk_dlg_id, consumed
+        /* Carl's leave-the-field offer (bank 5: banks 8 and 10 both
+         * sit hard against 16 KB, so the tick cannot host it).  Own
+         * dispatch: a banked body can never nest another trampoline
+         * call (AGENTS.md 52.11.1).  Stages only g_bk_dlg_id, consumed
          * below with the other post-tick requests. */
         if (g->screen == SCREEN_OVERWORLD) {
-            g_bk_call_bank = 10;
+            g_bk_call_bank = 5;
             g_bk_call_target = (uint16_t)&carl_skip_offer_banked;
             banked_call_run();
         }
@@ -293,6 +296,9 @@ void game_render(Game *g)
         !((g->prev_screen == SCREEN_OVERWORLD && g->screen == SCREEN_DIALOGUE) ||
           (rc->prev_screen == SCREEN_DIALOGUE && g->screen == SCREEN_OVERWORLD) ||
           (rc->prev_screen == SCREEN_ITEM && g->screen == SCREEN_ITEM) ||
+#ifdef TRAVEL_DEMO
+          (rc->prev_screen == SCREEN_JOURNEY && g->screen == SCREEN_JOURNEY) ||
+#endif
           (rc->prev_screen == SCREEN_SHOP && g->screen == SCREEN_SHOP))) {
         /* A full redraw hides the sprite in real OAM first: the redraw
          * runs synchronously inside this frame, and the sprite must not

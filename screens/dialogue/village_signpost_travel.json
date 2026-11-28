@@ -1,0 +1,16 @@
+{
+  "id": "village_signpost_travel",
+  "speaker": "",
+  "lines": [
+    "South: Qorim",
+    "desert, 2 days",
+    "travel.",
+    "East: Tagavorate",
+    "of Kavasar, 1 day",
+    "travel.",
+    "With right prep,",
+    "I could travel.",
+    "< DESOLATE ROAD >"
+  ],
+  "choice": "signpost"
+}

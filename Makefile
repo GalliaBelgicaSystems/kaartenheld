@@ -14,6 +14,7 @@ SRC_DIR = src
 
 TARGET = $(BUILD_DIR)/kaartenheld.gb
 TARGET_DEBUG = $(BUILD_DIR)/kaartenheld_debug.gb
+TARGET_TRAVEL = $(BUILD_DIR)/kaartenheld-travel-demo.gb
 
 JOBS ?= auto
 
@@ -41,7 +42,15 @@ TEST_CONTENT_SRCS = $(SRC_DIR)/game/scenes_content_test.c $(SRC_DIR)/game/actors
 CONTENT_SRCS = $(SRC_DIR)/game/scenes_content.c $(SRC_DIR)/game/actors_content.c \
 	$(SRC_DIR)/game/scenes_terrain_b6.c $(SRC_DIR)/game/scenes_terrain_b11.c $(SRC_DIR)/game/scenes_terrain_b9.c \
 	$(SRC_DIR)/game/scenes_terrain_b12.c
-SRCS := $(filter-out $(TEST_CONTENT_SRCS),$(SRCS))
+# Travel-demo-only sources (new ROM, kaartenheld-travel-demo.gb): the
+# journey slice (state, screen, generated tables).  Excluded from the
+# main ROMs so journey content can never affect the main game or its
+# memory budget; linked into OBJS_TRAVEL only.
+TRAVEL_SRCS = $(SRC_DIR)/game/travel.c $(SRC_DIR)/game/travel_screen.c \
+	$(SRC_DIR)/game/travel_content.c $(SRC_DIR)/game/travel_paint_banked.c \
+	$(SRC_DIR)/game/travel_logic_banked.c $(SRC_DIR)/game/travel_art_content.c \
+	$(SRC_DIR)/game/travel_chrome_content.c $(SRC_DIR)/game/signpost_nav_banked.c
+SRCS := $(filter-out $(TEST_CONTENT_SRCS) $(TRAVEL_SRCS),$(SRCS))
 # Release-only source: the title-logo data+loader must stay in bank 5 for
 # the harness build (layout-pinned; AGENTS.md 52.19) but moves to bank 11 in
 # release (pristine) to free the tight world/shop banks.  Excluded from
@@ -103,17 +112,23 @@ HUGEDRIVER_B9_OBJ_DEBUG = $(BUILD_DIR)/debug/lib/hUGEDriver_b9.o
 
 OBJS = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(RELEASE_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ) $(HUGEDRIVER_B9_OBJ)
 OBJS_DEBUG = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/debug/%.o,$(DEBUG_SRCS)) $(MUSIC_OBJS_DEBUG) $(SFX_OBJS_DEBUG) $(HUGEDRIVER_OBJ_DEBUG) $(HUGEDRIVER_B7_OBJ_DEBUG) $(HUGEDRIVER_B9_OBJ_DEBUG)
+# Travel-demo prototype ROM: same release content, separate objects with
+# -DTRAVEL_DEMO (own build dir so the main ROMs never see the flag).
+# Music/SFX/driver blobs carry no demo branches, so the release ones link.
+OBJS_TRAVEL = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/travel/%.o,$(RELEASE_SRCS)) $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/travel/%.o,$(TRAVEL_SRCS)) $(MUSIC_OBJS) $(SFX_OBJS) $(HUGEDRIVER_OBJ) $(HUGEDRIVER_B7_OBJ) $(HUGEDRIVER_B9_OBJ)
 
 # Emulator detection
 EMULATOR ?= $(shell command -v pyboy 2>/dev/null || command -v sameboy 2>/dev/null || command -v mgba-sdl 2>/dev/null || command -v mgba-qt 2>/dev/null || command -v mgba 2>/dev/null || echo "")
 
-.PHONY: all release debug run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
+.PHONY: all release debug travel-demo run run-debug test test-harness test-scenario test-sentinels validate state roundtrip screenshot screenshots gifs manual verify-walkthrough parity lint lint-travel memmap stack-budget verify-oam verify-vram verify-scroll verify-music verify-endurance vram-check vram-text vram-dialogue gfx manifest palette-check ramp-check tiles tiles-check reload-boss-tiles reload-boss-tiles-check levels-test levels-test-check doctor music music-preview music-size sfx sfx-preview level levels levels-check screens screens-check dialogues dialogues-check shops shops-check journeys journeys-check travel-art travel-art-check spawns-check entities entities-check registry-check editor clean enemy-ranks card-costs economy-check
 
 all: $(TARGET)
 
 release: $(TARGET)
 
 debug: $(TARGET_DEBUG)
+
+travel-demo: $(TARGET_TRAVEL)
 
 # Compile-to-assembly warning pass.  -Wall cannot be part of the normal
 # build: sdcc's --use-stdout pipeline corrupts the .asm stream when warnings
@@ -153,6 +168,32 @@ lint: gfx tiles sfx $(SRCS)
 		fi; \
 	done; \
 	if [ "$$ok" = "1" ]; then echo "lint: no warnings"; else exit 1; fi
+
+# Travel-demo lint pass: compile-to-assembly -Wf-Wall, banked-ABI,
+# banked-di/ei, and LCD-off checks over TRAVEL_SRCS + -DTRAVEL_DEMO
+# branches so travel-demo code never skips lint.
+lint-travel: gfx tiles sfx journeys
+	@ok=1; \
+	for f in $(TRAVEL_SRCS) $(SRC_DIR)/game/events_content.c $(SRC_DIR)/game/slime_trio_spawn_banked.c $(SRC_DIR)/game/content.c $(SRC_DIR)/game/choice_nav_banked.c $(SRC_DIR)/core/event.c $(SRC_DIR)/core/game.c $(SRC_DIR)/screens/battle_screen.c $(SRC_DIR)/screens/dialogue_screen.c $(SRC_DIR)/screens/screen.c $(SRC_DIR)/screens/save_load_screen.c $(SRC_DIR)/world/interaction.c; do \
+		out=$$($(CC) -S -DTRAVEL_DEMO -Wf-Wall $(INCLUDES) -o /dev/null "$$f" 2>&1 || true); \
+		if echo "$$out" | grep -q "warning"; then \
+			echo "=== $$f (TRAVEL_DEMO) ==="; echo "$$out" | grep "warning"; ok=0; \
+		fi; \
+	done; \
+	CC="$(CC)" INCLUDES="$(INCLUDES)" CHECK_TRAVEL=1 sh tools/check_banked_copies.sh || ok=0; \
+	for f in $(TRAVEL_SRCS); do \
+		if grep -q "#pragma bank" "$$f"; then \
+			hits=$$(sed -e 's|//.*$$||' -e 's|/\*.*\*/||g' "$$f" | grep -nE '^[[:space:]]*(di|ei)[[:space:]]*$$|__asm[[:space:]]+(di|ei)[[:space:]]+__endasm|__critical|\<CRITICAL\>|enable_interrupts|disable_interrupts|set_interrupts' | grep -vE '^[0-9]+:[[:space:]]*\*'); \
+			if [ -n "$$hits" ]; then \
+				echo "$$hits" | sed "s|^|$$f:|"; \
+				echo "BANKED-DI-EI: $$f has $$(echo "$$hits" | wc -l) forbidden interrupt op(s) in a banked body (AGENTS.md 52.11.3)"; ok=0; \
+			fi; \
+		fi; \
+		if sed -e 's|//.*$$||' "$$f" | grep -nE "ui_lcd_off[[:space:]]*\(" | grep -vqE '^[0-9]+:[[:space:]]*\*'; then \
+			echo "$$f: ui_lcd_off outside the render allowlist"; ok=0; \
+		fi; \
+	done; \
+	if [ "$$ok" = "1" ]; then echo "lint-travel: no warnings"; else exit 1; fi
 
 # Regenerate GB tile data headers from PNG assets (docs/graphics.md pipeline).
 # Deterministic: rerunning produces byte-identical output.  Requires Pillow,
@@ -352,6 +393,15 @@ gfx: manifest
 	@mkdir -p tools/level_editor/public/tiles/title
 	@cp assets/title-red.png tools/level_editor/public/tiles/title/logo.png
 	@echo "Title logo: src/gfx/title_logo_tiles.inc + public/tiles/title/logo.png"
+	# ── Travel chrome (assets/travel-tile.png, 20 cols × 2 rows) ────────
+	# Ramps come from assets/palette.txt (TRAVEL set) via
+	# tools/palette_compiler.py (make manifest): box/labels travel1,
+	# floors travel2, brown markers travel3, grey markers travel4.
+	# Sheet order is row-major = assets/travel-tileset.csv order =
+	# TCHROME_* order.
+	@python3 tools/png2gb.py assets/travel-tile.png --name travel_chrome_tiles \
+		--shade-map generated/tiles/shades/travel_chrome.json --raw \
+		-o $(GFX_OUT_DIR)/travel_chrome_tiles.inc
 	# ── Studio splash logo (assets/gallia_belgica_systems.png, 13x5) ──────
 	# Fixed global shade map -> one CGB palette [white, red, blue, black]
 	# rendered by the bank-11 splash body.  LLM-only content (no editor view).
@@ -379,7 +429,7 @@ levels-check:
 	@python3 tools/level_compiler/validate.py levels/*.json
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c --check
 
-src/game/scenes_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b7.c src/game/scenes_terrain_b9.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
+src/game/scenes_content.c src/game/actors_content.c src/game/scenes_terrain_b6.c src/game/scenes_terrain_b9.c src/game/scenes_terrain_b11.c src/game/scenes_terrain_b12.c src/world/scene_ids_generated.h &: $(wildcard levels/*.json)
 	@python3 tools/level_compiler/compile.py --all --actors-bank 4 -o src/game/scenes_content.c
 # ^ Also (re)generates src/world/scene_ids_generated.h (MAP_*/SCENE_* values
 # from levels/registry.json) as a side effect; the wildcard above includes
@@ -450,6 +500,28 @@ shops:
 shops-check:
 	@python3 tools/screen_compiler/shops_compile.py --all --check
 	@python3 tools/level_compiler/validate.py --shop-refs
+
+# Journey content: journeys/routes/*.json + journeys/events/*.json is the
+# source of truth for the travel-demo ROM's road events (route table +
+# event table in ROM bank 9).  Main ROMs never build it (TRAVEL_SRCS).
+journeys:
+	@python3 tools/screen_compiler/journey_compile.py --all -o src/game/travel_content.c
+	@echo "All journeys compiled to src/game/travel_content.c"
+
+journeys-check:
+	@python3 tools/screen_compiler/journey_compile.py --all --check
+
+# Travel strip art: assets/travels/<biome>.json (one layout per biome,
+# see assets/travels/README.md) is the source of truth for the journey
+# backdrop tiles.  The compiler resolves the named tileset tiles per
+# route's origin_biome/destination_biome and emits a per-route strip
+# table.  Main ROMs never build it (TRAVEL_SRCS).
+travel-art:
+	@python3 tools/screen_compiler/travel_art_compile.py --all -o src/game/travel_art_content.c
+	@echo "All travel art compiled to src/game/travel_art_content.c"
+
+travel-art-check:
+	@python3 tools/screen_compiler/travel_art_compile.py --all --check
 
 # Spawn actions: EVENT_ACTION_SPAWN_* rows in src/game/events_content.c
 # carry compiled bytes (e.g. the slime ow_type); validate.py resolves
@@ -626,7 +698,7 @@ PROJECT_HEADERS = $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/*/*.h) \
 # here -- their rule depends on the phony `manifest`, so they remake (new
 # mtime) on every make run and would force a full rebuild every time.
 # Their consumers are wired explicitly above.
-$(OBJS) $(OBJS_DEBUG): $(PROJECT_HEADERS)
+$(OBJS) $(OBJS_DEBUG) $(OBJS_TRAVEL): $(PROJECT_HEADERS)
 
 # Toolchain self-check: every required native binary must not only resolve
 # but EXECUTE (a broken file shadowing the real one fails at exec time with
@@ -655,11 +727,39 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	@mkdir -p $(dir $@)
 	$(CC) -c $(INCLUDES) -o $@ $<
 
+# File-timestamp rule for journey tables so travel_content.o only
+# recompiles when journey JSONs change (not on every make invocation).
+src/game/travel_content.c src/game/travel_routes_generated.h &: $(wildcard journeys/routes/*.json) $(wildcard journeys/events/*.json) tools/screen_compiler/journey_compile.py
+	@python3 tools/screen_compiler/journey_compile.py --all -o src/game/travel_content.c
+
+# File-timestamp rule for travel strip art so travel_art_content.o only
+# recompiles when routes, biome layouts or the compiler change.
+src/game/travel_art_content.c &: $(wildcard journeys/routes/*.json) $(wildcard assets/travels/*.json) tools/screen_compiler/travel_art_compile.py
+	@python3 tools/screen_compiler/travel_art_compile.py --all -o src/game/travel_art_content.c
+
+$(BUILD_DIR)/travel/game/travel_content.o: src/game/travel_content.c src/game/travel_routes_generated.h
+$(BUILD_DIR)/travel/game/events_content.o: src/game/travel_routes_generated.h
+$(BUILD_DIR)/travel/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DTRAVEL_DEMO $(INCLUDES) -o $@ $<
+
+build/travel/world/world.o: src/world/world.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DTRAVEL_DEMO -Wf--max-allocs-per-node500 $(INCLUDES) -o $@ $<
+
+build/travel/world/patrol_banked.o: src/world/patrol_banked.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DTRAVEL_DEMO -Wf--max-allocs-per-node500 $(INCLUDES) -o $@ $<
+
+build/travel/world/actor_load_banked.o: src/world/actor_load_banked.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
+	$(CC) -c -DTRAVEL_DEMO -Wf--max-allocs-per-node500 $(INCLUDES) -o $@ $<
+
 # Ensure UI modules rebuild when generated sprite headers change
-$(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
-$(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
-$(BUILD_DIR)/game/marks_banked.o $(BUILD_DIR)/debug/game/marks_banked.o: $(GFX_OUT_DIR)/rider_tiles.h $(GFX_OUT_DIR)/ap_tiles.h
-$(BUILD_DIR)/screens/menu_chrome_banked.o $(BUILD_DIR)/debug/screens/menu_chrome_banked.o: $(GFX_OUT_DIR)/menus_tile_tiles.h
+$(BUILD_DIR)/ui/ui_world_sprite_banked.o $(BUILD_DIR)/debug/ui/ui_world_sprite_banked.o $(BUILD_DIR)/travel/ui/ui_world_sprite_banked.o: $(GFX_OUT_DIR)/enemy_ow_tiles.h
+$(BUILD_DIR)/ui/ui.o $(BUILD_DIR)/debug/ui/ui.o $(BUILD_DIR)/travel/ui/ui.o: $(GFX_OUT_DIR)/hero_desolate_sprite_tile.h
+$(BUILD_DIR)/game/marks_banked.o $(BUILD_DIR)/debug/game/marks_banked.o $(BUILD_DIR)/travel/game/marks_banked.o: $(GFX_OUT_DIR)/rider_tiles.h $(GFX_OUT_DIR)/ap_tiles.h
+$(BUILD_DIR)/screens/menu_chrome_banked.o $(BUILD_DIR)/debug/screens/menu_chrome_banked.o $(BUILD_DIR)/travel/screens/menu_chrome_banked.o: $(GFX_OUT_DIR)/menus_tile_tiles.h
 $(BUILD_DIR)/game/gamble_content.o $(BUILD_DIR)/debug/game/gamble_content.o: $(GFX_OUT_DIR)/menus_button_tiles.h
 
 # Per-file alloc caps (see docs/roadmap.md post-mortem): the bank-3 patrol
@@ -1039,6 +1139,12 @@ $(TARGET_DEBUG): gfx tiles levels levels-test screens dialogues shops entities m
 	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld_debug.noi $(BUILD_DIR)/kaartenheld_debug.sym
 	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "KAARTENHELD" -W no-overwrite $@
 
+$(TARGET_TRAVEL): gfx tiles levels screens dialogues shops src/game/travel_content.c entities music $(OBJS_TRAVEL) build/crt0.o $(GB_LITE) $(SM83_LITE) | $(BUILD_DIR)
+	@$(CC) -no-crt -Wm-yc -Wl-yt0x19 -Wl-yo16 $(LDFLAGS) -Wl-m -Wl-j -o $@ build/crt0.o $(OBJS_TRAVEL) $(GB_LITE) $(SM83_LITE) > $(BUILD_DIR)/link-travel.log 2>&1; rc=$$?; cat $(BUILD_DIR)/link-travel.log; test $$rc -eq 0
+	@if grep -Eq "Possible overflow|spans into the next" $(BUILD_DIR)/link-travel.log; then echo "link: BANK OVERFLOW detected (see $(BUILD_DIR)/link-travel.log)" >&2; exit 1; fi
+	@python3 tools/make_sym.py $(BUILD_DIR)/kaartenheld-travel-demo.noi $(BUILD_DIR)/kaartenheld-travel-demo.sym
+	@$(RGBFIX) -v -C -m 0x1b -r 2 -t "TRAVEL-DEMO" -W no-overwrite $@
+
 build/crt0.o: src/crt0.s | $(BUILD_DIR)
 	sdasgb -o $@ $<
 
@@ -1242,9 +1348,10 @@ vram-dialogue: release
 
 # Print a reproducible memory budget (code/WRAM usage, _HOME headroom vs the
 # 0x8000 ceiling).  Exits non-zero if a documented invariant is violated.
-memmap: debug release
+memmap: debug release travel-demo
 	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld_debug.map
 	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld.map
+	@python3 tools/memmap.py $(BUILD_DIR)/kaartenheld-travel-demo.map
 
 clean:
 	@# Remove intermediate build artifacts but NEVER the tracked files in
@@ -1254,7 +1361,9 @@ clean:
 	@# dirty with deletions.
 	find $(BUILD_DIR) -mindepth 1 \
 		! -name 'kaartenheld.gb' ! -name 'kaartenheld_debug.gb' \
+		! -name 'kaartenheld-travel-demo.gb' \
 		! -name 'kaartenheld.sym' ! -name 'kaartenheld_debug.sym' \
+		! -name 'kaartenheld-travel-demo.sym' \
 		! -name 'kaartenheld_manual.pdf' \
 		-exec rm -rf {} + 2>/dev/null || true
 	rm -rf $(GENERATED_MUSIC_DIR)

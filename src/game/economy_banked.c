@@ -42,7 +42,7 @@ static uint16_t economy_expected_for_scene(uint8_t scene)
         scene == SCENE_CASTLE_HALL || scene == SCENE_THRONE_ROOM ||
         scene == SCENE_UNDERGROUND_TUNNEL ||
         scene == SCENE_UNDERGROUND_TUNNEL_SOUTH ||
-        scene == SCENE_END_WAKE_SCENE)
+        scene == SCENE_ACT2_WAKE_START || scene == SCENE_END_WAKE_SCENE)
         return 800;
     return 200;
 }

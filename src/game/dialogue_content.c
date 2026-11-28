@@ -25,6 +25,14 @@
 
 const DialogueDefinition g_dialogues[] = {
     {
+        DIALOGUE_ID_ACT2_WAKE_CHEST,
+        "CHEST:",
+        4,
+        {"AP up! Power", "surges through you", "Your energy pool", "grows by one."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_CARL_MAILBOX,
         "",
         3,
@@ -39,6 +47,14 @@ const DialogueDefinition g_dialogues[] = {
         {"This chest", "is locked."},
         0,
         0
+    },
+    {
+        DIALOGUE_ID_DESOLATE_SIGNPOST,
+        "",
+        4,
+        {"West: Oakhaven", "town, the long", "road back.", "< FIELD ROAD >"},
+        0,
+        2
     },
     {
         DIALOGUE_ID_DOG_ASK,
@@ -89,12 +105,28 @@ const DialogueDefinition g_dialogues[] = {
         0
     },
     {
+        DIALOGUE_ID_FIELD_MERCHANT,
+        "MERCHANT",
+        4,
+        {"SUPPLIES! PROV FOR", "THE ROAD. EAT OR", "THE WILD WILL FIND", "YOU HUNGRY."},
+        0,
+        0
+    },
+    {
         DIALOGUE_ID_FIELD_SIGNPOST,
         "",
         4,
         {"NORTH: Passage to", "forest", "EAST: Human ", "settlement"},
         0,
         0
+    },
+    {
+        DIALOGUE_ID_FIELD_SIGNPOST_TRAVEL,
+        "",
+        5,
+        {"NORTH: Passage to", "forest", "EAST: Human ", "settlement", "< FIELD ROAD >"},
+        0,
+        2
     },
     {
         DIALOGUE_ID_GUARD_AFTER_MAYOR,
@@ -321,6 +353,30 @@ const DialogueDefinition g_dialogues[] = {
         1
     },
     {
+        DIALOGUE_ID_RUINS_CHEST_AP,
+        "CHEST:",
+        3,
+        {"OLD RELIC! AP up!", "The road will cost", "one more day."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_RUINS_CHEST_EMPTY,
+        "CHEST:",
+        2,
+        {"EMPTY. NOTHING", "LEFT INSIDE."},
+        0,
+        0
+    },
+    {
+        DIALOGUE_ID_RUINS_LEAVE,
+        "",
+        2,
+        {"LEAVE RUINS?", "> YES   NO"},
+        0,
+        1
+    },
+    {
         DIALOGUE_ID_SHOPKEYS_FOUND,
         "",
         3,
@@ -495,6 +551,14 @@ const DialogueDefinition g_dialogues[] = {
         {"South: Qorim", "desert, 2 days", "travel.", "East: Tagavorate", "of Kavasar, 1 day", "travel.", "With right prep,", "I could travel."},
         0,
         0
+    },
+    {
+        DIALOGUE_ID_VILLAGE_SIGNPOST_TRAVEL,
+        "",
+        9,
+        {"South: Qorim", "desert, 2 days", "travel.", "East: Tagavorate", "of Kavasar, 1 day", "travel.", "With right prep,", "I could travel.", "< DESOLATE ROAD >"},
+        0,
+        2
     },
     {
         DIALOGUE_ID_WAKE_STAIRS,

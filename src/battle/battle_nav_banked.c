@@ -1,11 +1,11 @@
-#pragma bank 4
+#pragma bank 11
 
 #include "battle.h"
 #include "rpg/status.h"
 #include "banked.h"
 #include "rng.h"
 
-/* ── Banked battle navigation / selection cluster (ROM bank 4) ──────
+/* ── Banked battle navigation / selection cluster (ROM bank 11) ──────
  * Hosts the hand-cursor / combo-selection / target-selection / enemy
  * liveness logic, moved out of the fixed bank (which was overflowing
  * make memmap, AGENTS.md §52.18) into a single banked dispatch body.
@@ -277,7 +277,7 @@ void battle_nav_banked(void)
          * path's trigger into a victory.  The engine names no game ids
          * here (AGENTS.md 55.1); the same floor runs in the check body
          * itself.  Pure WRAM writes (staging discipline: the fixed
-         * wrappers own telemetry), roomy bank 4. */
+         * wrappers own telemetry), roomy bank 11. */
         if (g_despair_slot != 0xFF && g_despair_slot < b->enemy_count) {
             if (b->enemies[g_despair_slot].hp == 0) {
                 b->enemies[g_despair_slot].hp = 1;

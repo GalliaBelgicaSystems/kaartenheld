@@ -1,0 +1,31 @@
+{
+  "id": "abandoned_village",
+  "kind": "choice",
+  "text": "EMPTY VILLAGE LOOMS.",
+  "opt1": "SEARCH",
+  "opt1_effects": {
+    "text": "LEFT IN HASTE.",
+    "risk": 50,
+    "gold": 6,
+    "delay": 1,
+    "fail": {
+      "text": "CAVED-IN CELLAR.",
+      "gold": 2,
+      "hurt": 1,
+      "delay": 1,
+      "provisions": 1
+    },
+    "provisions": 2
+  },
+  "opt2": "PASS BY",
+  "opt2_effects": {
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
+}

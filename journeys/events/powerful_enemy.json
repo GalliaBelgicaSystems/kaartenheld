@@ -1,0 +1,30 @@
+{
+  "id": "powerful_enemy",
+  "kind": "choice",
+  "text": "SLIME PACK LOOMS.",
+  "opt1": "FIGHT",
+  "opt1_effects": {
+    "text": "DRAW WEAPONS!",
+    "risk": 50,
+    "battle": "slime_trio",
+    "fail": {
+      "text": "THEIR BIG ONE.",
+      "battle": "slime_trio",
+      "hurt": 5
+    }
+  },
+  "opt2": "FLEE",
+  "opt2_effects": {
+    "text": "LIVE TO WALK.",
+    "risk": 50,
+    "delay": 2,
+    "fail": {
+      "text": "CUT OFF.",
+      "hurt": 2,
+      "delay": 3
+    }
+  },
+  "acts": [
+    2
+  ]
+}

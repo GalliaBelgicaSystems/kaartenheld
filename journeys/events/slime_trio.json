@@ -1,0 +1,15 @@
+{
+  "id": "slime_trio",
+  "kind": "battle",
+  "text": "SLIMES ATTACK!",
+  "battle": "BATTLE_SLIME_TRIO",
+  "enemy_name": "SLIMES",
+  "enemy_hp": 14,
+  "victory_gold": 14,
+  "victory_days": 1,
+  "late_enemy_hp": 20,
+  "acts": [
+    2
+  ],
+  "victory_provisions": 3
+}

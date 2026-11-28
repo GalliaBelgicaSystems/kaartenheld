@@ -1,0 +1,312 @@
+{
+  "act": 2,
+  "id": "act2_wake_cache",
+  "name": "Act 2 — Wake Cache",
+  "map": {
+    "width": 14,
+    "height": 14,
+    "tileset": "underground",
+    "music": "MUSIC_UNDERGROUND",
+    "map_id": "MAP_ACT2_WAKE_CACHE"
+  },
+  "default_walkable": "underground.underground_floor_with_debris_1",
+  "layers": {
+    "terrain": [
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_top_left_corner_wall",
+        "underground.underground_top_wall_4",
+        "underground.underground_top_wall_1",
+        "underground.underground_top_wall_2",
+        "underground.underground_top_wall_3",
+        "underground.underground_top_wall_4",
+        "underground.underground_top_wall_1",
+        "underground.underground_top_right_corner_wall",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_right_wall_1",
+        "underground.underground_floor",
+        "underground.underground_floor_with_debris_3",
+        "underground.underground_floor_with_debris_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_floor",
+        "underground.underground_floor_with_debris_3",
+        "underground.underground_left_wall_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_right_wall_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_floor",
+        "underground.underground_floor",
+        "underground.underground_floor_with_debris_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_floor",
+        "underground.underground_left_wall_2",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_stairs",
+        "underground.underground_floor_with_debris_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_floor",
+        "underground.underground_floor_with_debris_3",
+        "underground.underground_floor_with_debris_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_left_wall_3",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_right_wall_4",
+        "underground.underground_floor_with_debris_3",
+        "underground.underground_floor_with_debris_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_floor",
+        "underground.underground_floor_with_light",
+        "underground.underground_floor_with_debris_2",
+        "underground.underground_left_wall_4",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_right_wall_1",
+        "underground.underground_floor",
+        "underground.underground_floor_with_debris_3",
+        "underground.underground_floor_with_debris_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_floor",
+        "underground.underground_floor_with_debris_3",
+        "underground.underground_left_wall_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_right_wall_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_floor",
+        "underground.underground_floor_with_debris_3",
+        "underground.underground_floor_with_debris_2",
+        "underground.underground_floor_with_debris_1",
+        "underground.underground_floor",
+        "underground.underground_left_wall_2",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_bottom_left_corner_wall",
+        "underground.underground_bottom_wall_4",
+        "underground.underground_bottom_wall_1",
+        "underground.underground_bottom_wall_2",
+        "underground.underground_bottom_wall_3",
+        "underground.underground_bottom_wall_4",
+        "underground.underground_bottom_wall_1",
+        "underground.underground_bottom_right_corner_wall",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ],
+      [
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1",
+        "underground.underground_black_emptyness_1"
+      ]
+    ]
+  },
+  "player": {
+    "spawn": {
+      "x": 6,
+      "y": 8,
+      "facing": "UP",
+      "animation_frames": [
+        "actors.actors_hero_frame_1",
+        "actors.actors_hero_frame_2"
+      ]
+    }
+  },
+  "exits": [
+    {
+      "x": 3,
+      "y": 6,
+      "target_scene": "act2_wake_hall",
+      "target_x": 15,
+      "target_y": 6,
+      "direction": "WEST",
+      "tile_char": "<",
+      "tunnel": "tunnel_hall_cache"
+    }
+  ],
+  "neighbors": {
+    "north": "",
+    "south": "",
+    "east": "",
+    "west": ""
+  },
+  "objects": [
+    {
+      "id": "wake_cache_chest",
+      "type": "chest",
+      "position": {
+        "x": 6,
+        "y": 5
+      },
+      "properties": {
+        "entity_id": "ENTITY_ID_CHEST",
+        "display_name": "CHEST",
+        "actor_id": 0,
+        "facing": "DOWN",
+        "flags": [
+          "BLOCKING",
+          "INTERACTABLE"
+        ],
+        "visual": "T",
+        "hp": 0,
+        "max_hp": 0,
+        "gold_reward": 0,
+        "ai": "AI_NONE",
+        "open_flag": "STORY_FLAG_ID_WAKE_CHEST"
+      }
+    }
+  ],
+  "regions": [
+    {
+      "id": "wake_cache",
+      "bounds": {
+        "x": 1,
+        "y": 1,
+        "width": 12,
+        "height": 12
+      },
+      "description": "A plain square side room holding an AP cache chest.",
+      "gameplay": {
+        "purpose": "story",
+        "difficulty": 1
+      }
+    }
+  ]
+}

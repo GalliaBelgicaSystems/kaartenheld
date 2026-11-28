@@ -1,0 +1,15 @@
+{
+  "id": "skirmish_spiders",
+  "kind": "battle",
+  "text": "SPIDER ATTACKS!",
+  "battle": "BATTLE_SPIDER",
+  "enemy_name": "SPIDER",
+  "enemy_hp": 12,
+  "victory_gold": 9,
+  "victory_days": 1,
+  "late_enemy_hp": 18,
+  "acts": [
+    2
+  ],
+  "victory_provisions": 3
+}

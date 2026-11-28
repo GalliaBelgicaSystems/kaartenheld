@@ -1,0 +1,26 @@
+{
+  "id": "route_info",
+  "kind": "choice",
+  "text": "TRAVELER HAS NEWS.",
+  "opt1": "LISTEN",
+  "opt1_effects": {
+    "text": "SHORTCUTS REVEALED.",
+    "risk": 50,
+    "save": 1,
+    "fail": {
+      "text": "BAD RUMORS.",
+      "delay": 1
+    }
+  },
+  "opt2": "WALK ON",
+  "opt2_effects": {
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
+}

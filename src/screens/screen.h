@@ -27,7 +27,10 @@ typedef enum {
     SCREEN_SPLASH    = 12,
     SCREEN_CREDITS   = 13,
     SCREEN_GAMBLE    = 14,
-    SCREEN_NOTICE    = 15
+    SCREEN_NOTICE    = 15,
+#ifdef TRAVEL_DEMO
+    SCREEN_JOURNEY   = 16
+#endif
 } ScreenId;
 
 /*
@@ -77,6 +80,10 @@ void splash_screen_update(Game *g);
 void splash_screen_render(Game *g);
 void notice_screen_update(Game *g);
 void notice_screen_render(Game *g);
+#ifdef TRAVEL_DEMO
+void travel_screen_update(Game *g);
+void travel_screen_render(Game *g);
+#endif
 void intro_screen_update(Game *g);
 void intro_screen_render(Game *g);
 void tutorial_screen_update(Game *g);

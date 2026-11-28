@@ -464,9 +464,33 @@ OVERFLOW_TERRAIN_BANK = {
     "grassy_forest": 9,
     "mountain_pass": 9,
     "south_ridge": 9,
-    # Finale backdrop (teleport-only, never walked): its 24x18 scattered
-    # floor is ~930 B of terrain blocks, which bank 5 cannot hold.
-    "end_wake_scene": 9,
+    # Act 2 wake opener (teleport-only, never walked): its 24x18 scattered
+    # floor is ~930 B of terrain blocks, which bank 5 cannot hold.  Bank 9
+    # overflowed in the merge (repaint growth + the finale wake scene),
+    # so the whole wake network rides the bank-12 release spill bank,
+    # whose stamp body already exists (no scene.c dispatch change needed).
+    "act2_wake_start": 12,
+    # Act-2 wake network side rooms (hall + cache): small square boxes,
+    # same overflow bank as the wake opener.
+    "act2_wake_hall": 12,
+    "act2_wake_cache": 12,
+    # Travel-demo field copy (same 24x18 footprint as field, ~1325 B):
+    # bank 12 is the release spill bank with room to spare, and its
+    # stamp body already exists (no scene.c dispatch change needed).
+    "act2_field": 12,
+    # Travel-demo town copy (same 20x18 footprint as town, ~950 B):
+    # alongside village_area in bank 11 for the same reason.
+    "act2_town": 11,
+    # Travel-demo desolate copy (same 26x20 footprint as desolate_field,
+    # ~690 B): bank 6 (with desolate_field) overflowed, so it rides the
+    # bank-12 release spill bank, whose stamp body already exists (no
+    # scene.c dispatch change needed).
+    "act2_desolate_field": 12,
+    # Finale wake scene (teleport-only like the Act 2 opener): bank 9
+    # overflowed in the merge (act-2 rooms + repaint growth), and the
+    # travel-demo ROM's bank 12 is tight (travel event table), so it
+    # rides bank 11, whose stamp body already exists.
+    "end_wake_scene": 11,
 }
 
 
@@ -849,6 +873,15 @@ background, chests, NPC tiles, ASCII).  The old per-tileset kobold/bat
 substring branches are gone: every hostile resolves through its enemy
 type to one shared transparent sprite."""
 def resolve_sprite_kind(obj, entity_types=None):
+    # Per-object override (e.g. a signpost in a tileset with no signpost
+    # art keeps its "?" readable via the ASCII glyph stamp instead of
+    # the invisible TILE kind).  Checked before the entity-type
+    # fallback so one object can differ from its type default.
+    sk_prop = (obj.get("properties") or {}).get("sprite_kind")
+    if sk_prop == "ascii":
+        return "SPRITE_KIND_ASCII"
+    if sk_prop == "tile":
+        return "SPRITE_KIND_TILE"
     frames = obj.get("animation_frames") or []
     names = " ".join(str(f) for f in frames) + " " + str(obj.get("overworld_sprite") or "")
     for token, kind in (("boss", "SPRITE_KIND_BOSS"),

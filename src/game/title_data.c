@@ -22,9 +22,15 @@ uint8_t const g_title_logo_image_width = 16;
 uint8_t const g_title_logo_image_height = 3;
 uint8_t const g_title_logo_image_palette = 1;
 
+#ifdef TRAVEL_DEMO
+const char g_title_subtitle_text[21] = "TRAVEL DEMO         ";
+uint8_t const g_title_subtitle_x = 4;
+uint8_t const g_title_subtitle_y = 5;
+#else
 const char g_title_subtitle_text[21] = "                    ";
 uint8_t const g_title_subtitle_x = 10;
 uint8_t const g_title_subtitle_y = 5;
+#endif
 
 const char g_title_graphic[5][20+1] = {
 "  /\\____/\\          ",

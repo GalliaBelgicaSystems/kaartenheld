@@ -88,6 +88,25 @@ for f in $(grep -rl "^#pragma bank" src --include='*.c' | LC_ALL=C sort); do
         fail=1
     fi
 done
+if [ "${CHECK_TRAVEL:-0}" = "1" ]; then
+    for f in src/game/travel_paint_banked.c src/game/travel_logic_banked.c src/game/travel_content.c src/game/events_content.c src/game/slime_trio_spawn_banked.c; do
+        count=$((count + 1))
+        if ! $CC -S -DTRAVEL_DEMO $INCLUDES -o "$tmp/out.asm" "$f" \
+                2>"$tmp/err.txt"; then
+            echo "banked-abi: cannot compile $f (with flags: -DTRAVEL_DEMO):"
+            sed 's/^/    /' "$tmp/err.txt" >&2
+            fail=1
+            continue
+        fi
+        hits=$(grep -nE '___memcpy|___sdcc_banked_call|___sdcc_call_hl' \
+            "$tmp/out.asm" || true)
+        if [ -n "$hits" ]; then
+            echo "banked-abi: FAIL $f (-DTRAVEL_DEMO) lowers to RAM-resident helpers:"
+            printf '%s\n' "$hits" | sed 's/^/    /'
+            fail=1
+        fi
+    done
+fi
 if [ "$fail" = 0 ]; then
     echo "banked-abi: clean ($count banked units, no RAM-resident lowerings)"
 fi

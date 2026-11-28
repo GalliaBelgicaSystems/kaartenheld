@@ -1,0 +1,26 @@
+{
+  "id": "water_source",
+  "kind": "choice",
+  "text": "PROVISIONS FOUND.",
+  "opt1": "TAKE",
+  "opt1_effects": {
+    "text": "PACKED AWAY.",
+    "risk": 50,
+    "heal": 2,
+    "fail": {
+      "text": "STALE PACK.",
+      "provisions": 2
+    },
+    "provisions": 2
+  },
+  "opt2": "FILL UP",
+  "opt2_effects": {
+    "text": "SKINS BULGING.",
+    "risk": 50,
+    "fail": {
+      "text": "LEAKY SKIN.",
+      "provisions": 3
+    },
+    "provisions": 6
+  }
+}

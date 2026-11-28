@@ -1,0 +1,29 @@
+{
+  "id": "wounded_monster",
+  "kind": "choice",
+  "text": "HURT BEAST SNARLS.",
+  "opt1": "FINISH",
+  "opt1_effects": {
+    "text": "DRAW WEAPONS!",
+    "risk": 50,
+    "battle": "weak_beast",
+    "fail": {
+      "text": "IT LASHES OUT.",
+      "battle": "weak_beast",
+      "hurt": 2
+    }
+  },
+  "opt2": "AVOID",
+  "opt2_effects": {
+    "text": "WIDE BERTH.",
+    "risk": 50,
+    "delay": 1,
+    "fail": {
+      "text": "IT FOLLOWS.",
+      "delay": 2
+    }
+  },
+  "acts": [
+    2
+  ]
+}

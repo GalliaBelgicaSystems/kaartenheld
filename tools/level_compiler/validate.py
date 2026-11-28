@@ -875,6 +875,9 @@ def validate_level(level_data, tilesets=None, all_level_ids=None):
         if not isinstance(visual, str) or len(visual) != 1:
             errors.append(f"Object '{oid}' visual must be a single character")
             objects_ok = False
+        if "sprite_kind" in props and props["sprite_kind"] not in ("ascii", "tile"):
+            errors.append(f"Object '{oid}' sprite_kind must be 'ascii' or 'tile'")
+            objects_ok = False
         if otype == "enemy":
             for key in ("hp", "max_hp", "ai"):
                 if key not in props:

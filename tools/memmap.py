@@ -310,7 +310,7 @@ def main():
         "_loot_synth_banked": "loot def synthesis (bank 8)",
         "_game_loot_drop_banked": "victory drop roll (bank 9)",
         "_world_patrol_slot_banked": "world actor patrol step (bank 12 release / bank 5 debug)",
-        "_battle_nav_banked": "battle hand/target nav cluster (bank 4)",
+        "_battle_nav_banked": "battle hand/target nav cluster (bank 11)",
         "_battle_turn_draw_banked": "battle hand-refill decision (bank 4)",
         "_battle_stage_combo_banked": "battle combo stager (bank 4)",
         "_game_despair_check_banked": "desperation gate + HP floor (bank 8)",
@@ -444,6 +444,11 @@ def main():
         "_terrain_stamp_b11_banked": "overflow terrain stamp (bank 11)",
         "_terrain_stamp_b9_banked": "overflow terrain stamp (bank 9)",
         "_terrain_stamp_b12_banked": "overflow terrain stamp (bank 12)",
+        "_travel_paint_banked": "travel-demo journey paint (bank 11)",
+        "_travel_burn_banked": "travel-demo day burn (bank 11)",
+        "_travel_camp_banked": "travel-demo camp actions (bank 11)",
+        "_travel_wx_apply_banked": "travel-demo weather mod applicator (bank 14)",
+        "_travel_starve_battle_banked": "travel-demo starving ambush picker (bank 14)",
     }
     for sym, desc in optional_banked_targets.items():
         if sym in symbols:

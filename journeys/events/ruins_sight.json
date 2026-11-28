@@ -1,0 +1,7 @@
+{
+  "id": "ruins_sight",
+  "kind": "ruins",
+  "text": "YOU SPOT OLD RUINS.",
+  "explore_text": "YOU ENTER THE RUINS.",
+  "ignore_text": "YOU WALK ON."
+}

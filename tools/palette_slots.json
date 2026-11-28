@@ -93,6 +93,17 @@
    "0": "title",
    "1": "title_logo",
    "_why": "Title logo encodes with title_logo; the title screen programs the ramp directly (title_content.c). Slot 1 matches the logo image palette."
+  },
+  "travel": {
+   "0": "fight1",
+   "1": "travel1",
+   "2": "travel2",
+   "3": "travel3",
+   "4": "travel3",
+   "5": "fight4",
+   "6": "travel1",
+   "7": "travel1",
+   "_why": "Journey screen (travel-demo ROM only): 0 text=fight1 (same brown-on-white menu ink: font bytes encode black, fight1 maps index 3 to brown); 1 chrome=travel1 (white bg, brown outline, tan fill: box, icons, labels); 2 floors=travel2 (dirt tan + rubble); 3 brown/black markers=travel3 (white glyphs, flag red, black; both halves share it since the grey tops were dropped); 5 HUD heart=fight4 (white bg, exact combat red at index 3: the boot-loaded heart encodes red there, travel3 would show it black); 6-7 unused travel1 duplicates (nothing stamps them). No dialogue on this screen, so slot 4 needs no PAPER reservation."
   }
  },
  "aliases": {

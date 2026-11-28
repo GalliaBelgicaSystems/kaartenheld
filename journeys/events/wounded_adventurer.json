@@ -1,0 +1,27 @@
+{
+  "id": "wounded_adventurer",
+  "kind": "choice",
+  "text": "HURT FIGHTER ASKS.",
+  "opt1": "AID",
+  "opt1_effects": {
+    "text": "HE SHARES LOOT.",
+    "risk": 50,
+    "gold": 10,
+    "fail": {
+      "text": "HE DIES SMILING.",
+      "provisions": -2
+    },
+    "provisions": -2
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
+}

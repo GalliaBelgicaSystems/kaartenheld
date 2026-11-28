@@ -81,9 +81,9 @@ def validate_dialogue(data, path, story_flags):
             f"{path}: unknown completion_flag '{flag}' (not a "
             f"STORY_FLAG_ID_* in game_ids.h; flags stay LLM-driven)")
     choice = data.get("choice")
-    if choice is not None and choice != "yes_no":
+    if choice is not None and choice not in ("yes_no", "signpost"):
         errors.append(
-            f"{path}: unknown choice '{choice}' (only 'yes_no' is supported)")
+            f"{path}: unknown choice '{choice}' (only 'yes_no'/'signpost' supported)")
     if choice == "yes_no":
         # Engine contract (dialogue_screen.c): the choice cursor only
         # repaints the option row's two cursor cells (cols 0 and 7), so a
@@ -96,6 +96,16 @@ def validate_dialogue(data, path, story_flags):
                 f"{path}: choice dialogue must end with the option row "
                 f"'> YES   NO' (or '> STAY  LEAVE' for the stay/leave offer; "
                 f"cursor cols 0/7)")
+    if choice == "signpost":
+        # Signpost picker (travel-demo): the last row is a live cycling
+        # "< ... >" row (destination phase, then CARRIAGE/WALK phase),
+        # repainted by choice_nav_banked.  The JSON carries the
+        # destination placeholder; it must look like a cycling row so a
+        # plain-ROM advance (main ROM has no picker) still reads sanely.
+        if not lines or not (lines[-1].startswith("< ") and lines[-1].endswith(" >")):
+            errors.append(
+                f"{path}: signpost dialogue must end with a cycling row "
+                f"'< ... >' (destination placeholder, repainted live)")
     return errors, warnings
 
 
@@ -162,7 +172,8 @@ def build_content_output(rows, id_map):
         r = by_id[name]
         flag = r.get("completion_flag")
         flag_c = flag if flag else "0"
-        choice_c = "1" if r.get("choice") == "yes_no" else "0"
+        _choice = r.get("choice")
+        choice_c = {"yes_no": "1", "signpost": "2"}.get(_choice, "0")
         lines.append("    {")
         lines.append(f"        {name},")
         lines.append(f'        "{c_escape(r["speaker"])}",')

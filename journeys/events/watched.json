@@ -1,0 +1,23 @@
+{
+  "id": "watched",
+  "kind": "choice",
+  "text": "EYES ON THE RIDGE.",
+  "opt1": "CALL OUT",
+  "opt1_effects": {
+    "text": "GONE LIKE SMOKE.",
+    "risk": 50,
+    "fail": {
+      "text": "IT WAVES BACK."
+    }
+  },
+  "opt2": "HURRY",
+  "opt2_effects": {
+    "text": "QUICKEN PACE.",
+    "risk": 50,
+    "save": 1,
+    "fail": {
+      "text": "DEAD END.",
+      "delay": 1
+    }
+  }
+}

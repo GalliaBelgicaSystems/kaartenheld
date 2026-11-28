@@ -1,0 +1,26 @@
+{
+  "id": "depot_parts",
+  "kind": "choice",
+  "text": "DEPOT FULL OF SCRAP.",
+  "opt1": "SCRAP",
+  "opt1_effects": {
+    "text": "HEAVY BUT RICH.",
+    "risk": 50,
+    "gold": 9,
+    "fail": {
+      "text": "RUSTED JUNK.",
+      "gold": 3
+    }
+  },
+  "opt2": "LEAVE",
+  "opt2_effects": {
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
+}

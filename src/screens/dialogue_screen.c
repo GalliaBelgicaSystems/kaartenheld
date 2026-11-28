@@ -16,6 +16,13 @@
  * arbitrates every YES/NO dialogue (Heal Mage, kobold table invite,
  * Carl's spar offer); what an answer means is game-owned data below. */
 void dialogue_choice_nav_banked(void);
+#ifdef TRAVEL_DEMO
+/* Signpost picker body (src/game/signpost_nav_banked.c, bank 11):
+ * same dispatch shape, own bank (bank 12 sits ~200 B under its
+ * ceiling).  Reports the same 0/1/2/5 codes plus 13 (confirmed with
+ * the route + method staged). */
+void signpost_nav_banked(void);
+#endif
 
 void dialogue_screen_update(Game *g)
 {
@@ -42,8 +49,17 @@ void dialogue_screen_update(Game *g)
      * staged remove, then the staged thanks whose completion_flag owns
      * the one-shot flag), and 0/1/5 to stay/advance plainly.  The staged
      * ids are opaque data to the engine (never game branches). */
-    g_bk_call_bank = 12;
-    g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
+#ifdef TRAVEL_DEMO
+    if (g->dialogue.choice == DIALOGUE_CHOICE_SIGNPOST) {
+        g_bk_call_bank = 11;
+        g_bk_call_target = (uint16_t)&signpost_nav_banked;
+    } else {
+#endif
+        g_bk_call_bank = 12;
+        g_bk_call_target = (uint16_t)&dialogue_choice_nav_banked;
+#ifdef TRAVEL_DEMO
+    }
+#endif
     banked_call_run();
     if (g_bk_byte_a != 0) {
         /* Choice toggle, plain advance, every confirm: the same
@@ -130,6 +146,27 @@ void dialogue_screen_update(Game *g)
             g->title_menu_index = 0;
             screen_change(g, SCREEN_TITLE);
             return;
+#ifdef TRAVEL_DEMO
+        } else if (g_bk_byte_a == 12) {
+            /* Sunken-ruins exit confirmed (YES on LEAVE RUINS?):
+             * close the dialogue, burn the looted day if the chest
+             * was opened, and return to the journey screen. */
+            dialogue_end(&g->dialogue);
+            travel_resume_from_ruins(g);
+            return;
+#endif
+#ifdef TRAVEL_DEMO
+        } else if (g_bk_byte_a == 13) {
+            /* Signpost picker confirmed (destination + CARRIAGE/WALK
+             * chosen on the dialogue's last row): close the dialogue
+             * and open the journey with the staged route + method --
+             * no full-screen method view.  travel_start_method owns
+             * the fare deduction (the picker already blocked an
+             * unaffordable carriage). */
+            dialogue_end(&g->dialogue);
+            travel_start_method(g_bk_byte_b, g_bk_byte_c);
+            return;
+#endif
         } else if (g_bk_byte_a == 6) {
 #ifdef DEBUG_BUILD
             if (g_bk_byte_b) telemetry_emit(EVENT_HEALED, g_bk_byte_b, 3, 0, 0);
@@ -179,15 +216,13 @@ void dialogue_screen_update(Game *g)
             start_battle_from_world(g);
             return;
         }
-        /* Outro: the slime-lord wake dialogue ("Where am I?")
-         * routes to the ENDING screen (white document page;
-         * screen_change starts MUSIC_ENDING on entry) -- the run is
-         * over, win or lose.  Every other dialogue returns to the
-         * overworld (game-over quits show the try-again text).  The
-         * despair flag is cleared here; battle_start clears it for
-         * the next fight.  Single screen_change call (fixed-bank
-         * budget, AGENTS.md 52.18). */
-        screen_change(g, g_slime_despair ? (g_slime_despair = 0, SCREEN_ENDING) : SCREEN_OVERWORLD);
+        /* Act 2 opener: the slime-lord wake dialogue ("Where am I?")
+         * returns to the overworld -- the run continues in the new
+         * area.  The despair flag is cleared here; battle_start
+         * clears it for the next fight.  Single screen_change call
+         * (fixed-bank budget, AGENTS.md 52.18). */
+        g_slime_despair = 0;
+        screen_change(g, SCREEN_OVERWORLD);
     }
 }
 
@@ -244,7 +279,7 @@ void dialogue_screen_render(Game *g)
                 ui_sprite_commit();
             }
             ui_lcd_on();
-            /* Despair outro (finale): the defeat faded out to white
+            /* Despair outro (Act 2 opener): the defeat faded out to white
              * on the result screen -- fade the wake area back in over the
              * just-redrawn world.  The box body carries the fade (same
              * bank, no new dispatch): with the flag set this repaint runs

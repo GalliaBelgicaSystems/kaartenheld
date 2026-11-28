@@ -103,6 +103,31 @@ void battle_hud_load_banked(void);
 const char *game_battle_enemy_type_id(uint8_t battle_id);
 
 /* Content registration helpers, implemented in the content modules. */
+#ifdef TRAVEL_DEMO
+/* Travel-demo journey hooks (src/game/travel.c, travel-demo ROM only).
+ * The engine reaches travel state only through these: the event
+ * executor (travel_start / travel_open_supply), the journey screen
+ * (travel_update), and the battle/save exit paths (active/ruins probes,
+ * victory/flee hooks, abandon on defeat/load/new-game).
+ * All state is transient WRAM -- GameState is untouched. */
+void travel_start(uint8_t route);
+/* Start a route with the signpost picker's method already chosen (no
+ * full-screen method view): validates the route/method, deducts a
+ * paid fare, and either arrives at once (instant) or stages the foot
+ * slog.  Unaffordable paid methods never start (the picker blocks
+ * them; this re-check is safety). */
+void travel_start_method(uint8_t route, uint8_t method);
+void travel_open_supply(uint8_t route);
+bool game_travel_active(void);
+void travel_on_victory(void);
+void travel_on_fled(void);
+void travel_resume_from_ruins(struct Game *g);
+bool game_travel_in_ruins(void);
+/* Drop the whole journey state (terminal game over / load / new game). */
+void travel_abandon(struct Game *g);
+/* True when the hero's HP hit zero (starvation or the day's toll). */
+bool travel_hero_dead(const struct Game *g);
+#endif
 void game_events_register(void);
 void game_dialogue_register(void);
 void game_actors_register(void);

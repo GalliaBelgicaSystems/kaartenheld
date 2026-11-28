@@ -36,9 +36,96 @@
  *                    MONSTERS_DEFEATED counter (no quest gating), so kills
  *                    before the quest starts still count.
  */
+#ifdef TRAVEL_DEMO
+#pragma bank 12
+#include "travel_routes_generated.h"
+#else
 #pragma bank 10
+#endif
 
 const EventDefinition g_events[] = {
+#ifdef TRAVEL_DEMO
+    {
+        /* Travel-demo supply merchants: ANY merchant on ANY map opens
+         * the provisions shop instead of talking.  One ANY-map row
+         * serves the field, town and desolate merchants because every
+         * route prices supplies identically (2G, 3/day); a per-route
+         * price split would need per-map rows again.  First-match wins,
+         * so this precedes the dialogue fallthrough (which the
+         * consume-guard also skips after a screen change). */
+        EVENT_ID_TRAVEL_SUPPLY, EVENT_TRIGGER_INTERACT, ENTITY_ID_MERCHANT, EVENT_MAP_ANY,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_TRAVEL_SUPPLY, TRAVEL_ROUTE_FIELD_TO_VILLAGE, 0, 0 }}
+    },
+    /* Signpost journeys (travel demo): NO event rows.  Interacting
+     * with a signpost falls through to its actor dialogue
+     * (field/village/desolate_signpost, choice kind SIGNPOST): the
+     * last row picks the destination, then CARRIAGE/WALK, and the
+     * picker confirm (code 13) opens the journey with the staged
+     * route + method -- no full-screen method view.  The chapter
+     * filter for the field road's act lives in the picker
+     * (signpost_nav_banked.c), and the road mapping in the dialogue
+     * ids, so one dialogue per signpost covers every act. */
+    {
+        /* Sunken-ruins AP chest (travel demo, one-shot via its own
+         * flag): the relic raises the pool by 1 and warns the road
+         * will cost one more day (burned on the way out).  No
+         * autosave here: journey state is transient WRAM, so saving
+         * inside the detour map would trap CONTINUE in ruins. */
+        EVENT_ID_RUINS_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, MAP_ACT2_RUINS,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, false, false }},
+        3,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_RUINS_CHEST_AP, 0, 0 },
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, 0 }
+        }
+    },
+    {
+        /* Sunken-ruins exit (travel demo): the first-room signpost
+         * asks LEAVE RUINS? (YES/NO); YES resumes the journey
+         * through choice code 12, NO closes plainly. */
+        EVENT_ID_RUINS_EXIT, EVENT_TRIGGER_INTERACT, ENTITY_ID_SIGNPOST, MAP_ACT2_RUINS,
+        0,
+        {{ EVENT_COND_NONE, 0, 0, false, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_RUINS_LEAVE, 0, 0 }}
+    },
+    {
+        /* Opened ruins chest (travel demo): the relic is gone, so
+         * repeats report empty here instead of falling through to
+         * the any-map CHEST_LOCKED row (which demands the dog's
+         * Old Key and would misreport a looted chest as locked). */
+        EVENT_ID_RUINS_CHEST_EMPTY, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, MAP_ACT2_RUINS,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_RUINS_CHEST, 0, true, false }},
+        1,
+        {{ EVENT_ACTION_DIALOGUE, DIALOGUE_ID_RUINS_CHEST_EMPTY, 0, 0 }}
+    },
+#endif
+    {
+        /* Act-2 wake-cache AP chest (map-scoped, first-match: precedes the
+         * generic CHEST_LOCKED / FIELD_CHEST fallbacks below).  One +1 AP
+         * pool grant (uniform ADD 1, like the tutorial/chest/Monster Hunt
+         * milestones), announced by its own dialogue.  One-shot via
+         * STORY_FLAG_ID_WAKE_CHEST; repeats fall through to no
+         * interaction.  The chest is an OAM sprite: setting the flag
+         * flips it to the open frame (and it stays open), no floor-paint
+         * stamp. */
+        EVENT_ID_WAKE_CHEST, EVENT_TRIGGER_INTERACT, ENTITY_ID_CHEST, MAP_ACT2_WAKE_CACHE,
+        1,
+        {{ EVENT_COND_FLAG, STORY_FLAG_ID_WAKE_CHEST, 0, false, false }},
+        4,
+        {
+            { EVENT_ACTION_DIALOGUE, DIALOGUE_ID_ACT2_WAKE_CHEST, 0, 0 },
+            { EVENT_ACTION_ADD_VARIABLE, VARIABLE_ID_ENERGY_POOL, 1, 0 },
+            { EVENT_ACTION_SET_FLAG, STORY_FLAG_ID_WAKE_CHEST, 0, 0 },
+            { EVENT_ACTION_AUTOSAVE, 0, 0, 0 }
+        }
+    },
     {
         EVENT_ID_TOWN_ARRIVAL, EVENT_TRIGGER_MAP_ENTER, ENTITY_ID_NONE, MAP_TOWN,
         1,

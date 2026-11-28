@@ -1,0 +1,28 @@
+{
+  "id": "occupied_camp",
+  "kind": "choice",
+  "text": "CAMP IS OCCUPIED.",
+  "opt1": "FIGHT",
+  "opt1_effects": {
+    "text": "DRAW WEAPONS!",
+    "risk": 50,
+    "battle": "skirmish_bats",
+    "fail": {
+      "text": "THEY WERE READY.",
+      "battle": "skirmish_bats",
+      "hurt": 2
+    }
+  },
+  "opt2": "SNEAK BY",
+  "opt2_effects": {
+    "text": "SILENT STEPS.",
+    "risk": 50,
+    "save": 1,
+    "fail": {
+      "text": "TWIG SNAPS."
+    }
+  },
+  "acts": [
+    2
+  ]
+}

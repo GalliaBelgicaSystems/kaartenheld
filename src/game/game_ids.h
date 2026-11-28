@@ -71,6 +71,19 @@
 #define EVENT_ID_DOG_HINT       (EVENT_ID_FIRST_GAME + 26)
 #define EVENT_ID_DOG_ASK        (EVENT_ID_FIRST_GAME + 27)
 #define EVENT_ID_DOG_THANKS     (EVENT_ID_FIRST_GAME + 28)
+#ifdef TRAVEL_DEMO
+#define EVENT_ID_TRAVEL_DEMO    (EVENT_ID_FIRST_GAME + 29)
+#define EVENT_ID_TRAVEL_SUPPLY  (EVENT_ID_FIRST_GAME + 30)
+#define EVENT_ID_RUINS_CHEST    (EVENT_ID_FIRST_GAME + 31)
+#define EVENT_ID_RUINS_EXIT     (EVENT_ID_FIRST_GAME + 32)
+#define EVENT_ID_RUINS_CHEST_EMPTY (EVENT_ID_FIRST_GAME + 33)
+#define EVENT_ID_TRAVEL_DEMO_ACT1 (EVENT_ID_FIRST_GAME + 34)
+#define EVENT_ID_TRAVEL_RETURN  (EVENT_ID_FIRST_GAME + 35)
+#define EVENT_ID_TRAVEL_DESOLATE_RETURN (EVENT_ID_FIRST_GAME + 37)
+#define EVENT_ID_WAKE_CHEST     (EVENT_ID_FIRST_GAME + 36)
+#else
+#define EVENT_ID_WAKE_CHEST     (EVENT_ID_FIRST_GAME + 29)
+#endif
 
 /* ── Dialogues (engine range: NONE=0; game range >= 0x80) ──
  * Values come from the generated dialogue_ids_generated.h (single source
@@ -122,7 +135,14 @@ typedef enum {
                                        * first-victory bronze shield */
     STORY_FLAG_ID_SLIME_LORD_INTRO = 13, /* Lord of Slimes throne-room intro
                                           * dialogue played (advancing 5 rows) */
-    STORY_FLAG_ID_COUNT        = 14
+    STORY_FLAG_ID_WAKE_CHEST = 14, /* act-2 wake-cache AP chest opened
+                                    * (one-shot loot state, like FIELD_CHEST) */
+#ifdef TRAVEL_DEMO
+    STORY_FLAG_ID_RUINS_CHEST = 15, /* sunken-ruins AP chest (demo only) */
+    STORY_FLAG_ID_COUNT        = 16
+#else
+    STORY_FLAG_ID_COUNT        = 15
+#endif
 } StoryFlagId;
 
 /* Named variables.  VARIABLE_ID_x - 1 indexes VariableState.values[]. */
@@ -135,7 +155,12 @@ typedef enum {
     VARIABLE_ID_ENERGY_POOL        = 6,   /* battle energy pool: story events raise it, no cap */
     VARIABLE_ID_GEM_OWNED          = 7,   /* owned-gem bitmask (bit i = gem i won) */
     VARIABLE_ID_GEM_EQUIPPED       = 8,   /* equipped-gem bitmask (subset of owned, max MAX_EQUIPPED_GEMS bits) */
-    VARIABLE_ID_DOG_QUEST          = 9    /* 0 = not started, 1 = ACTIVE (heard the hint), 2 = complete (key traded) */
+    VARIABLE_ID_DOG_QUEST          = 9,   /* 0 = not started, 1 = ACTIVE (heard the hint), 2 = complete (key traded) */
+    VARIABLE_ID_DAY                = 10,  /* Convergence countdown (days left, starts at CONVERGENCE_DAYS) */
+    VARIABLE_ID_LORD_POWER         = 11,  /* Lord of Slimes strength (0 = normal, 1 = converged/supreme) */
+    VARIABLE_ID_PROVISIONS        = 12,  /* journey provisions (3 burned per travel day) */
+    VARIABLE_ID_WATER_RETIRED      = 13   /* retired: water folded into provisions (never reuse
+                                        * without a save-format audit; gameplay must not read it) */
 } VariableIdNamed;
 
 /* Named currencies.  CURRENCY_ID_x - 1 indexes CurrencyState.amount[].
@@ -147,6 +172,11 @@ typedef enum {
     CURRENCY_ID_GOLD = 1,
     CURRENCY_ID_ARROWS = 2
 } CurrencyIdNamed;
+
+/* Convergence countdown (docs/travel-system.md §35): days left until the
+ * Lord of Slimes peaks.  Travel steps and road events burn days; at zero
+ * the Lord goes supreme (VARIABLE_ID_LORD_POWER) and late fights differ. */
+#define CONVERGENCE_DAYS 180
 
 /* Shared arrow pool tuning (limited-arrows). */
 #define ARROWS_MAX         30
@@ -182,8 +212,20 @@ typedef enum {
  * reads rows through banked_copy(), so the table is free to live in any
  * bank: bank 10 hosts it because bank 2 (cards catalog + the DECK view
  * build) is full.  Keep in sync with events_content.c's `#pragma bank`. */
+/* The travel-demo event table (loop legs) outgrew bank 10, so the
+ * travel build keeps the table in the bank-12 spill bank instead.
+ * Main ROMs keep bank 10 (byte-identical objects).  The slime-trio
+ * spawn body moves with it (it scans the table in-bank). */
+#ifdef TRAVEL_DEMO
+#define GAME_EVENT_BANK  12
+#else
 #define GAME_EVENT_BANK  10
-#define GAME_EVENT_COUNT 29
+#endif
+#ifdef TRAVEL_DEMO
+#define GAME_EVENT_COUNT 38
+#else
+#define GAME_EVENT_COUNT 30
+#endif
 /* GAME_DIALOGUE_COUNT lives in the generated dialogue_ids_generated.h
  * (emitted by dialogue_compile.py from the screens/dialogue files). */
 

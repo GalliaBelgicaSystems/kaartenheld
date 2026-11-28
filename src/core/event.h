@@ -80,7 +80,16 @@ typedef enum {
     /* Stage an autosave: the game_update flush writes the active slot
      * once, on canonical state.  Content-owned (game rows name it);
      * the engine only stages the request (AGENTS.md §55.1). */
-    EVENT_ACTION_AUTOSAVE = 11
+    EVENT_ACTION_AUTOSAVE = 11,
+#ifdef TRAVEL_DEMO
+    /* Start a journey route (travel-demo ROM): arg0 = route index
+     * into g_travel_routes.  Handled by the game layer (travel.c);
+     * the engine only forwards the id. */
+    EVENT_ACTION_JOURNEY_START = 12,
+    /* Open the route's supply merchant (travel-demo ROM): arg0 = route
+     * index whose supply table prices provisions.  Game layer. */
+    EVENT_ACTION_TRAVEL_SUPPLY = 13
+#endif
 } EventActionType;
 
 typedef struct {

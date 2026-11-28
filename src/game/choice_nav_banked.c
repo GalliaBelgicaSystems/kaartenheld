@@ -249,6 +249,19 @@ void dialogue_choice_nav_banked(void)
             g_bk_byte_d = (uint8_t)DIALOGUE_ID_SKELETON_TAKEN;
             return;
         }
+        /* Sunken-ruins exit (travel demo): YES resumes the journey
+         * through fixed-wrapper code 12 (burns the looted day, if
+         * any, and returns to SCREEN_JOURNEY); NO closes plainly. */
+#ifdef TRAVEL_DEMO
+        if (g_game.dialogue.id == DIALOGUE_ID_RUINS_LEAVE) {
+            if (g_game.dialogue.choice_index == DIALOGUE_CHOICE_NO) {
+                g_bk_byte_a = 2;
+                return;
+            }
+            g_bk_byte_a = 12;
+            return;
+        }
+#endif
         /* Village dog's key trade: YES swaps the bone for the Old Key
          * through the real collection API (fixed wrapper, code 10:
          * staged remove + staged add + staged quest-COMPLETE +

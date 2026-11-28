@@ -514,6 +514,105 @@ static const WorldActorDefinition g_underground_tunnel_south_actors[] = {
     },
 };
 
+static const WorldActorDefinition g_act2_field_actors[] = {
+    {
+        0, ENTITY_ID_CHEST, 21, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'T', "CHEST", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_CHEST, 13, 0
+    },
+    {
+        0, ENTITY_ID_SIGNPOST, 5, 9, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "SIGNPOST", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_FIELD_SIGNPOST_TRAVEL, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
+    {
+        0, ENTITY_ID_MERCHANT, 7, 9, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'C', "MERCHANT", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_FIELD_MERCHANT, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 7, 0
+    },
+};
+
+static const WorldActorDefinition g_act2_town_actors[] = {
+    {
+        0, ENTITY_ID_SIGNPOST, 5, 7, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "SIGNPOST", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_VILLAGE_SIGNPOST_TRAVEL, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
+    {
+        0, ENTITY_ID_MERCHANT, 3, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'C', "MERCHANT", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_FIELD_MERCHANT, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 7, 0
+    },
+};
+
+static const WorldActorDefinition g_act2_ruins_actors[] = {
+    {
+        0, ENTITY_ID_SIGNPOST, 0, 3, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "EXIT", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_RUINS_LEAVE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_TILE, 0xFF, 0
+    },
+    {
+        77, ENTITY_ID_SLIME, 4, 5, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'E', "SLIME", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_SLIME, AI_NONE, 10, 10, 5, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 9, 0
+    },
+    {
+        78, ENTITY_ID_BAT, 10, 8, DIRECTION_DOWN,
+        ACTOR_FLAG_HOSTILE | ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'V', "BAT", INTERACTION_COMBAT, 0, DIALOGUE_ID_NONE, BATTLE_BAT, AI_NONE, 10, 10, 8, CURRENCY_ID_GOLD,
+        0, 0,
+         SPRITE_KIND_ENEMY, 0, 0
+    },
+    {
+        0, ENTITY_ID_CHEST, 16, 6, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'T', "CHEST", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_CHEST, 13, 0
+    },
+};
+
+static const WorldActorDefinition g_act2_wake_cache_actors[] = {
+    {
+        0, ENTITY_ID_CHEST, 6, 5, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'T', "CHEST", INTERACTION_NONE, 0, DIALOGUE_ID_NONE, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_CHEST, 13, 0
+    },
+};
+
+static const WorldActorDefinition g_act2_desolate_field_actors[] = {
+    {
+        0, ENTITY_ID_SIGNPOST, 5, 15, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        '?', "SIGNPOST", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_DESOLATE_SIGNPOST, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ASCII, 0xFF, 0
+    },
+    {
+        0, ENTITY_ID_MERCHANT, 4, 16, DIRECTION_DOWN,
+        ACTOR_FLAG_BLOCKING | ACTOR_FLAG_INTERACTABLE,
+        'C', "MERCHANT", INTERACTION_DIALOGUE, 0, DIALOGUE_ID_FIELD_MERCHANT, BATTLE_NONE, AI_NONE, 0, 0, 0, 0,
+        0, 0,
+         SPRITE_KIND_ENEMY, 7, 0
+    },
+};
+
 const WorldActorTable g_actor_tables[] = {
     { MAP_FIELD,           g_field_actors,
         (uint8_t)(sizeof(g_field_actors) / sizeof(g_field_actors[0])), 1 },
@@ -547,6 +646,20 @@ const WorldActorTable g_actor_tables[] = {
         0, 1 },
     { MAP_UNDERGROUND_TUNNEL_SOUTH, g_underground_tunnel_south_actors,
         (uint8_t)(sizeof(g_underground_tunnel_south_actors) / sizeof(g_underground_tunnel_south_actors[0])), 1 },
+    { MAP_ACT2_WAKE_START, 0,
+        0, 2 },
+    { MAP_ACT2_FIELD,      g_act2_field_actors,
+        (uint8_t)(sizeof(g_act2_field_actors) / sizeof(g_act2_field_actors[0])), 2 },
+    { MAP_ACT2_TOWN,       g_act2_town_actors,
+        (uint8_t)(sizeof(g_act2_town_actors) / sizeof(g_act2_town_actors[0])), 2 },
+    { MAP_ACT2_RUINS,      g_act2_ruins_actors,
+        (uint8_t)(sizeof(g_act2_ruins_actors) / sizeof(g_act2_ruins_actors[0])), 2 },
+    { MAP_ACT2_WAKE_HALL,  0,
+        0, 2 },
+    { MAP_ACT2_WAKE_CACHE, g_act2_wake_cache_actors,
+        (uint8_t)(sizeof(g_act2_wake_cache_actors) / sizeof(g_act2_wake_cache_actors[0])), 2 },
+    { MAP_ACT2_DESOLATE_FIELD, g_act2_desolate_field_actors,
+        (uint8_t)(sizeof(g_act2_desolate_field_actors) / sizeof(g_act2_desolate_field_actors[0])), 2 },
     { MAP_END_WAKE_SCENE,  0,
         0, 1 },
 };
@@ -568,7 +681,10 @@ uint8_t chest_is_open_banked(void)
 {
     if (g_game.world.map_id == MAP_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
     if (g_game.world.map_id == MAP_MOUNTAIN_PASS && g_bk_byte_b == 10 && g_bk_byte_c == 2 && (g_game.state.flags.bytes[0] & 8)) return 1;
+    if (g_game.world.map_id == MAP_ACT2_FIELD && g_bk_byte_b == 21 && g_bk_byte_c == 8 && (g_game.state.flags.bytes[0] & 4)) return 1;
+    if (g_game.world.map_id == MAP_ACT2_RUINS && g_bk_byte_b == 16 && g_bk_byte_c == 6 && (g_game.state.flags.bytes[1] & 64)) return 1;
+    if (g_game.world.map_id == MAP_ACT2_WAKE_CACHE && g_bk_byte_b == 6 && g_bk_byte_c == 5 && (g_game.state.flags.bytes[1] & 32)) return 1;
     return 0;
 }
 
-const uint8_t g_actor_table_count = 17;
+const uint8_t g_actor_table_count = 24;

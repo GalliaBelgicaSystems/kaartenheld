@@ -1,0 +1,28 @@
+{
+  "id": "distress_signal",
+  "kind": "choice",
+  "text": "SIGNAL FIRE BURNS.",
+  "opt1": "ANSWER",
+  "opt1_effects": {
+    "text": "GRATEFUL SOULS.",
+    "risk": 50,
+    "gold": 8,
+    "delay": 1,
+    "fail": {
+      "text": "FALSE ALARM.",
+      "delay": 1
+    }
+  },
+  "opt2": "IGNORE",
+  "opt2_effects": {
+    "text": "KEEP THE PACE.",
+    "risk": 50,
+    "save": 1,
+    "fail": {
+      "text": "YOU HESITATE."
+    }
+  },
+  "acts": [
+    1
+  ]
+}

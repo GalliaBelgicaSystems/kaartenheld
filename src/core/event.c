@@ -5,6 +5,9 @@
 #include "rpg/deck.h"
 #include "rpg/currency.h"
 #include "banked.h"
+#ifdef TRAVEL_DEMO
+#include "content.h"
+#endif
 
 /* Game-layer slime-trio spawn body (src/game/slime_trio_spawn_banked.c,
  * ROM bank 10 = GAME_EVENT_BANK).  Declared here so the fixed-bank
@@ -126,19 +129,32 @@ static void event_execute_actions(Game *g, const EventDefinition *def,
             (void)ok;
 #endif
         } else if (t == EVENT_ACTION_SPAWN_SLIME_TRIO) {
-            /* Slime-knight armor split (game content, bank 10): the
+            /* Slime-knight armor split (game content): the
              * felled knight's runtime slot becomes a slime-trio
              * encounter in place.  Thin dispatch only -- the body
              * lives in the event-table bank so its row scan is an
-             * in-bank read.  Keeps engine files free of game ids
+             * in-bank read (bank 12 in the travel build, 10
+             * elsewhere).  Keeps engine files free of game ids
              * (AGENTS.md §55.1). */
+#ifdef TRAVEL_DEMO
+            g_bk_call_bank = 12;
+#else
             g_bk_call_bank = 10;
+#endif
             g_bk_call_target = (uint16_t)&game_slime_trio_spawn_banked;
             banked_call_run();
         } else if (t == EVENT_ACTION_AUTOSAVE) {
             /* Stage an autosave (game_update flushes once, on canonical
              * state).  Generic mechanism; the game rows decide when. */
             g_autosave_pending = 1;
+#ifdef TRAVEL_DEMO
+        } else if (t == EVENT_ACTION_JOURNEY_START) {
+            /* Travel-demo route start (game layer, travel.c). */
+            travel_start((uint8_t)a0);
+        } else if (t == EVENT_ACTION_TRAVEL_SUPPLY) {
+            /* Travel-demo supply merchant (game layer, travel.c). */
+            travel_open_supply((uint8_t)a0);
+#endif
         }
     }
 }

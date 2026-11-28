@@ -1,173 +1,168 @@
 {
- "act": 1,
- "name": "boss_battle_ending",
- "test": true,
- "description": "The Lord of Slimes is unwinnable: pinned to 1 HP (any hit would kill him), the first attack clamps him to 1 and opens the concentrating telegraph (flashing art, rows 9+10 message, waits for A). A fires the fixed 99-damage reprisal (DEFEAT, no victory) with the explosion SFX and no game-over music; the next A exits the battle into the Lord of Slimes defeat taunt (throne room, two pages), and closing it whites out into the wake dialogue (Where am I?), and closing that routes to the ENDING screen (white page, THE END) -- the finale.",
- "actions": [
-  {
-   "type": "wait",
-   "frames": 5
-  },
-  {
-   "type": "set_enemy_hp",
-   "index": 0,
-   "hp": 1
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "press",
-   "button": "SELECT"
-  },
-  {
-   "type": "wait",
-   "frames": 45
-  },
-  {
-   "type": "wait",
-   "frames": 200
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 100
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 100
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 100
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 100
-  },
-  {
-   "type": "press",
-   "button": "A"
-  },
-  {
-   "type": "wait",
-   "frames": 200
+  "act": 1,
+  "name": "boss_battle_ending",
+  "test": true,
+  "description": "The Lord of Slimes is unwinnable: pinned to 1 HP (any hit would kill him), the first attack clamps him to 1 and opens the concentrating telegraph (flashing art, rows 9+10 message, waits for A). A fires the fixed 99-damage reprisal (DEFEAT, no victory) with the explosion SFX and no game-over music; the next A exits the battle into the Lord of Slimes defeat taunt (throne room, two pages), and closing it whites out into the wake dialogue (Where am I?), and closing that returns to the overworld -- the Act 2 opener (no end credits, the run continues).",
+  "actions": [
+    {
+      "type": "wait",
+      "frames": 5
+    },
+    {
+      "type": "set_enemy_hp",
+      "index": 0,
+      "hp": 1
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 45
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 45
+    },
+    {
+      "type": "press",
+      "button": "SELECT"
+    },
+    {
+      "type": "wait",
+      "frames": 45
+    },
+    {
+      "type": "wait",
+      "frames": 200
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 100
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 100
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 100
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 100
+    },
+    {
+      "type": "press",
+      "button": "A"
+    },
+    {
+      "type": "wait",
+      "frames": 200
+    }
+  ],
+  "assertions": [
+    {
+      "type": "screen",
+      "expected": "OVERWORLD"
+    },
+    {
+      "type": "scene",
+      "expected": "TEST_FOREST"
+    },
+    {
+      "type": "variable",
+      "variable": "ENDING_SHOWN",
+      "expected": 0
+    },
+    {
+      "type": "variable",
+      "variable": "MONSTERS_DEFEATED",
+      "expected": 3
+    },
+    {
+      "type": "event_occurred",
+      "event": "BATTLE_LOST"
+    },
+    {
+      "type": "event_not_occurred",
+      "event": "BATTLE_WON"
+    },
+    {
+      "type": "event_occurred",
+      "event": "DAMAGE_RECEIVED"
+    },
+    {
+      "type": "music_track",
+      "expected": "FOREST"
+    },
+    {
+      "type": "player_position",
+      "expected_x": 12,
+      "expected_y": 10
+    },
+    {
+      "type": "battle_player_hp",
+      "expected": 21
+    },
+    {
+      "type": "player_facing",
+      "expected": "UP"
+    },
+    {
+      "type": "screen_row_not_contains",
+      "row": 9,
+      "contains": "SLIMES"
+    }
+  ],
+  "initial_state": {
+    "scene": "TEST_CASTLE",
+    "player": {
+      "x": 9,
+      "y": 5,
+      "facing": "RIGHT"
+    },
+    "seed": 8503,
+    "flags": {
+      "ARRIVED_TOWN": true
+    },
+    "variables": {
+      "QUEST_MONSTER_HUNT": 0,
+      "MONSTERS_DEFEATED": 3
+    },
+    "party": {
+      "HERO": {
+        "hp": 120,
+        "max_hp": 120
+      }
+    },
+    "start_battle": true,
+    "world": {
+      "BAT_CASTLE": "DEFEATED"
+    },
+    "deck": {
+      "BRONZE_SWORD": 20
+    }
   }
- ],
- "assertions": [
-  {
-   "type": "screen",
-   "expected": "ENDING"
-  },
-  {
-   "type": "scene",
-   "expected": "TEST_FOREST"
-  },
-  {
-   "type": "variable",
-   "variable": "ENDING_SHOWN",
-   "expected": 0
-  },
-  {
-   "type": "variable",
-   "variable": "MONSTERS_DEFEATED",
-   "expected": 3
-  },
-  {
-   "type": "event_occurred",
-   "event": "BATTLE_LOST"
-  },
-  {
-   "type": "event_not_occurred",
-   "event": "BATTLE_WON"
-  },
-  {
-   "type": "event_occurred",
-   "event": "DAMAGE_RECEIVED"
-  },
-  {
-   "type": "music_track",
-   "expected": "ENDING"
-  },
-  {
-   "type": "screen_row",
-   "row": 1,
-   "contains": "THE END"
-  },
-  {
-   "type": "screen_row",
-   "row": 5,
-   "contains": "beating Kaartenheld!"
-  },
-  {
-   "type": "battle_player_hp",
-   "expected": 21
-  },
-  {
-   "type": "player_facing",
-   "expected": "UP"
-  },
-  {
-   "type": "screen_row_not_contains",
-   "row": 9,
-   "contains": "SLIMES"
-  }
- ],
- "initial_state": {
-  "scene": "TEST_CASTLE",
-  "player": {
-   "x": 9,
-   "y": 5,
-   "facing": "RIGHT"
-  },
-  "seed": 8503,
-  "flags": {
-   "ARRIVED_TOWN": true
-  },
-  "variables": {
-   "QUEST_MONSTER_HUNT": 0,
-   "MONSTERS_DEFEATED": 3
-  },
-  "party": {
-   "HERO": {
-    "hp": 120,
-    "max_hp": 120
-   }
-  },
-  "start_battle": true,
-  "world": {
-   "BAT_CASTLE": "DEFEATED"
-  },
-  "deck": {
-   "BRONZE_SWORD": 20
-  }
- }
 }

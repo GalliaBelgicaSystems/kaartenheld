@@ -78,18 +78,34 @@ void battle_screen_update(Game *g)
                         game_screen_after_victory(g));
                 } else {
                     world_on_battle_fled(g);
+#ifdef TRAVEL_DEMO
+                    if (game_travel_active() && !game_travel_in_ruins()) {
+                        travel_on_fled();
+                        screen_change(g, SCREEN_JOURNEY);
+                    } else {
+#endif
                     screen_change(g, SCREEN_OVERWORLD);
+#ifdef TRAVEL_DEMO
+                    }
+#endif
                 }
             } else {
                 /* Slime-lord desperation outro (unwinnable final battle):
                  * game-owned flow in content.c (own function keeps this
                  * frame lean, AGENTS.md 52.18); the flag stays set for the
-                 * dialogue close (which routes to THANKS) and battle_start
-                 * clears it for the next fight. */
+                 * wake dialogue close (which returns to the overworld)
+                 * and battle_start clears it for the next fight. */
                 if (g_slime_despair != 0) {
                     game_slime_despair_outro();
                     return;
                 }
+#ifdef TRAVEL_DEMO
+                /* Travel deaths (road ambush or ruins) are terminal:
+                 * abandon the journey and fall through to cold game over. */
+                if (game_travel_active()) {
+                    travel_abandon(g);
+                }
+#endif
                 world_on_battle_end(g, false);
                 vg->game_over_choice = 0;
                 /* Stop everything: the per-frame tick is gated off on

@@ -17,7 +17,14 @@
     "wake_grove": 19,
     "underground_tunnel": 20,
     "underground_tunnel_south": 21,
-    "end_wake_scene": 23
+    "act2_wake_start": 23,
+    "act2_wake_hall": 27,
+    "act2_wake_cache": 28,
+    "act2_field": 24,
+    "act2_town": 25,
+    "act2_ruins": 26,
+    "act2_desolate_field": 29,
+    "end_wake_scene": 30
   },
   "_retired": {
     "forest2": 6,

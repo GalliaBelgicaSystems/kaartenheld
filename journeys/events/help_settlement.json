@@ -1,0 +1,30 @@
+{
+  "id": "help_settlement",
+  "kind": "choice",
+  "text": "VILLAGE NEEDS HANDS.",
+  "opt1": "HELP",
+  "opt1_effects": {
+    "text": "PAID IN KIND.",
+    "risk": 50,
+    "gold": 10,
+    "days": 2,
+    "fail": {
+      "text": "POOR HARVEST.",
+      "gold": 4,
+      "days": 2,
+      "provisions": 2
+    },
+    "provisions": 4
+  },
+  "opt2": "PASS BY",
+  "opt2_effects": {
+    "text": "YOU WALK ON.",
+    "risk": 50,
+    "fail": {
+      "text": "YOU WALK ON."
+    }
+  },
+  "acts": [
+    1
+  ]
+}

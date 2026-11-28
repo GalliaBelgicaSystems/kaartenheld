@@ -1800,14 +1800,29 @@ def walk_sweep(planner, checks):
             want_music = -1
         s = Session(checks, "sweep")
         god_mode(s)
-        if name == "end_wake_scene":
-            # Teleport-only finale (despair outro): no portal targets it
-            # by design, so the sweep cannot walk there.  Recorded as an
-            # explicit SKIP (not a pass, not silent): capture_walkthrough
-            # tallies "SKIP" statuses separately from passes/failures.
-            # The release scene_load path is exercised by hand, not here.
+        if name in ("act2_wake_start", "act2_wake_hall", "act2_wake_cache",
+                      "end_wake_scene"):
+            # Teleport-only opener network (despair outro): no portal
+            # targets these rooms by design, so the sweep cannot walk there.
+            # Recorded as an explicit SKIP (not a pass, not silent):
+            # capture_walkthrough tallies "SKIP" statuses separately from
+            # passes/failures.  The release scene_load path is exercised by
+            # hand, not here.
             checks.append(("sweep", "sweep %s reachable" % name, "SKIP",
-                           "isolated finale (no inbound portal by design)",
+                           "isolated opener (no inbound portal by design)",
+                           "skipped: teleport-only"))
+            s.close()
+            continue
+        if name in ("act2_field", "act2_town", "act2_ruins",
+                      "act2_desolate_field"):
+            # Travel-demo maps (journeys/ + travel ROM only): no portal
+            # targets them by design, so the sweep cannot walk there.
+            # Same explicit-SKIP contract as the opener above; the
+            # travel-demo driver (tools/verify_travel_demo.py) covers
+            # their boot/merchant/signpost paths instead (ruins entry,
+            # chest and exit ride the travel events, not portals).
+            checks.append(("sweep", "sweep %s reachable" % name, "SKIP",
+                           "travel-demo map (no inbound portal by design)",
                            "skipped: teleport-only"))
             s.close()
             continue

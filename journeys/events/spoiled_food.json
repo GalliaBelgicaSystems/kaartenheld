@@ -1,0 +1,26 @@
+{
+  "id": "spoiled_food",
+  "kind": "choice",
+  "text": "PROVISIONS SPOILED.",
+  "opt1": "TOSS IT",
+  "opt1_effects": {
+    "text": "CLEAN PACK.",
+    "risk": 50,
+    "fail": {
+      "text": "SPOILED THE REST.",
+      "provisions": -5
+    },
+    "provisions": -3
+  },
+  "opt2": "RISK IT",
+  "opt2_effects": {
+    "text": "BAD IDEA.",
+    "risk": 50,
+    "hurt": 4,
+    "fail": {
+      "text": "VIOLENTLY ILL.",
+      "hurt": 7,
+      "days": 1
+    }
+  }
+}

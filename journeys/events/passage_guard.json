@@ -1,0 +1,29 @@
+{
+  "id": "passage_guard",
+  "kind": "choice",
+  "text": "BEAST GUARDS PASS.",
+  "opt1": "FIGHT",
+  "opt1_effects": {
+    "text": "DRAW WEAPONS!",
+    "risk": 50,
+    "battle": "skirmish_spiders",
+    "fail": {
+      "text": "FROM BEHIND!",
+      "battle": "skirmish_spiders",
+      "hurt": 3
+    }
+  },
+  "opt2": "DETOUR",
+  "opt2_effects": {
+    "text": "LONG WAY ROUND.",
+    "risk": 50,
+    "delay": 2,
+    "fail": {
+      "text": "RAVINE MAZE.",
+      "delay": 3
+    }
+  },
+  "acts": [
+    2
+  ]
+}

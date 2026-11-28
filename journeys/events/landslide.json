@@ -1,0 +1,29 @@
+{
+  "id": "landslide",
+  "kind": "choice",
+  "text": "SLIDE BLOCKS ROUTE.",
+  "opt1": "CLIMB",
+  "opt1_effects": {
+    "text": "OVER THE TOP.",
+    "risk": 50,
+    "hurt": 4,
+    "wx": {
+      "rain": {"hurt": 2},
+      "storm": {"hurt": 3}
+    },
+    "fail": {
+      "text": "FALLING ROCKS.",
+      "hurt": 7
+    }
+  },
+  "opt2": "DETOUR",
+  "opt2_effects": {
+    "text": "LONG WAY ROUND.",
+    "risk": 50,
+    "delay": 2,
+    "fail": {
+      "text": "LONG WAY.",
+      "delay": 3
+    }
+  }
+}

@@ -1,0 +1,864 @@
+#include "travel.h"
+#include "game.h"
+#include "screen.h"
+#include "banked.h"
+#include "ui.h"
+#include "rpg/state.h"
+#include "game_ids.h"
+
+/* ── Travel-demo journey paint (travel-demo ROM only, bank 13) ─────
+ * The fixed bank cannot host the travel screens (AGENTS.md 52.18).
+ * Bank 13 (not 11: the paint + chrome no longer fit the bank-11
+ * budget next to ow_hud/menu-chrome/save-load). This banked body owns
+ * the whole journey paint behind the thin wrapper in travel_screen.c.
+ *
+ * Bank discipline (AGENTS.md 52.11.1/52.11.3): self-contained -- WRAM
+ * reads (g_game state, travel staging bytes, s_route/s_event/s_event_fail),
+ * raw VRAM writes via BANKED_VRAM_WRITE.  No fixed-bank calls, no di/ei.
+ * First entry (same_screen == 0, LCD off) clears VRAM + g_ui_screen_buf;
+ * same-screen updates (same_screen == 1, LCD on) diff-skip against
+ * g_ui_screen_buf so cursor moves and view switches have zero flash.
+ */
+
+#pragma bank 13
+
+/* File-static scratch (WRAM, never stack: AGENTS.md 52.14). */
+static char s_line[21];
+static uint8_t s_row_used[18];
+static uint8_t s_i;
+static uint8_t s_n;
+static volatile uint8_t *s_dst;
+static volatile uint8_t *s_atr;
+static char *s_buf;
+
+/* Decimal, subtraction only (no / or % in banked bodies either). */
+static uint8_t tp_u16(uint16_t v, char *dst)
+{
+    static const uint16_t places[] = { 10000, 1000, 100, 10, 1 };
+    uint8_t n;
+    uint8_t i;
+    uint8_t started;
+    uint8_t d;
+    n = 0;
+    started = 0;
+    for (i = 0; i < 5; i++) {
+        d = 0;
+        while (v >= places[i]) {
+            v = (uint16_t)(v - places[i]);
+            d++;
+        }
+        if (d != 0 || started != 0 || i == 4) {
+            dst[n] = (char)('0' + d);
+            n++;
+            started = 1;
+        }
+    }
+    dst[n] = '\0';
+    return n;
+}
+
+static void tp_putc(char ch)
+{
+    if (s_n < 20) {
+        s_line[s_n] = ch;
+        s_n++;
+    }
+}
+
+static void tp_puts(const char *s)
+{
+    if (!s) return;
+    while (*s != '\0' && s_n < 20) {
+        s_line[s_n] = *s;
+        s_n++;
+        s++;
+    }
+}
+
+static void tp_put_u16(uint16_t v)
+{
+    char num[6];
+    tp_u16(v, num);
+    tp_puts(num);
+}
+
+static void tp_sync_write(volatile uint8_t *dst, uint8_t tile)
+{
+    BANKED_VRAM_WRITE(dst, tile);
+}
+
+void travel_chrome_load_banked(void);
+
+/* CRAM slot per chrome tile (travel set programmed on journey entry):
+ * 1 box/labels/icons, 2 floors, 3 brown markers (+heart), 4 grey. */
+static uint8_t tp_chrome_slot(uint8_t idx)
+{
+    if (idx >= 36) return 4;
+    if (idx >= 32) return 3;
+    if (idx >= 29) return 2;
+    return 1;
+}
+
+/* Stamp one chrome tile with diff-skip against the screen buffer.
+ * Buffer marker is 0x80+idx: never collides with font text (0x20-0x5F)
+ * or the space clear -- idx+1 aliasing 0x20 skipped every 32nd tile
+ * (floor icon 3 never stamped, leaving white gaps in the wash row). */
+static void tp_chrome_cell(uint8_t x, uint8_t y, uint8_t idx)
+{
+    uint8_t id;
+    char mark;
+    if (x >= 20 || y >= 18) return;
+    s_row_used[y] = 1;
+    id = (uint8_t)(UI_TILE_TRAVEL_CHROME_BASE + idx);
+    mark = (char)(0x80u + idx);
+    VBK_REG = 0;
+    s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    s_buf = &g_ui_screen_buf[y][x];
+    if (*s_buf != mark) {
+        tp_sync_write(s_dst, id);
+        *s_buf = mark;
+        VBK_REG = 1;
+        s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+        tp_sync_write(s_atr, tp_chrome_slot(idx));
+        VBK_REG = 0;
+    }
+}
+
+/* Placeholder scenery wash (rows 2-4, cols 1-18): tan wash with a
+ * forest-floor texture row. Real biome strips (dual-tileset staging
+ * + palettes) are follow-up work; geometry (origin cols 1-10,
+ * destination cols 11-18) already matches the spec split. */
+typedef struct {
+    uint8_t x;
+    uint8_t y;
+    uint8_t idx;
+} ChromeCell;
+
+/* 0xFE marks the cursor-swappable bottom-middle cell of a button:
+ * selected ? CURSOR shaft : plain bottom edge.
+ * 0xFF marks a gap cell that must be blanked (space): view switches
+ * otherwise leave the previous view's text behind inside button rows.
+ * Table indices are TCHROME_* (travel.h) in CSV row-major order. */
+#define CHROME_CURSOR_CELL 0xFEu
+#define CHROME_BLANK_CELL 0xFFu
+
+/* Placeholder scenery wash, tree rows only (rows 2-3, cols 2-17).
+ * Stamped only when the route has no strip (wash fallback); strip
+ * routes paint travel_art_content.c art here instead. */
+static const ChromeCell s_wash_top_cells[] = {
+    { 0, 2, 0xFF }, { 1, 2, 0xFF },
+    { 2, 2, 4 }, { 3, 2, 4 }, { 4, 2, 4 }, { 5, 2, 4 },
+    { 6, 2, 4 }, { 7, 2, 4 }, { 8, 2, 4 }, { 9, 2, 4 },
+    { 10, 2, 4 }, { 11, 2, 4 }, { 12, 2, 4 }, { 13, 2, 4 },
+    { 14, 2, 4 }, { 15, 2, 4 }, { 16, 2, 4 }, { 17, 2, 4 },
+    { 18, 2, 0xFF }, { 19, 2, 0xFF },
+    { 0, 3, 0xFF }, { 1, 3, 0xFF },
+    { 2, 3, 4 }, { 3, 3, 4 }, { 4, 3, 4 }, { 5, 3, 4 },
+    { 6, 3, 4 }, { 7, 3, 4 }, { 8, 3, 4 }, { 9, 3, 4 },
+    { 10, 3, 4 }, { 11, 3, 4 }, { 12, 3, 4 }, { 13, 3, 4 },
+    { 14, 3, 4 }, { 15, 3, 4 }, { 16, 3, 4 }, { 17, 3, 4 },
+    { 18, 3, 0xFF }, { 19, 3, 0xFF }
+};
+
+/* Ground row (row 4, cols 2-17): forest-floor texture, always chrome
+ * (the strip layouts name these same travel-sheet icons). */
+static const ChromeCell s_wash_ground_cells[] = {
+    { 0, 4, 0xFF }, { 1, 4, 0xFF },
+    { 2, 4, 29 }, { 3, 4, 30 }, { 4, 4, 31 }, { 5, 4, 29 },
+    { 6, 4, 30 }, { 7, 4, 31 }, { 8, 4, 29 }, { 9, 4, 30 },
+    { 10, 4, 31 }, { 11, 4, 29 }, { 12, 4, 30 }, { 13, 4, 31 },
+    { 14, 4, 29 }, { 15, 4, 30 }, { 16, 4, 31 }, { 17, 4, 29 },
+    { 18, 4, 0xFF }, { 19, 4, 0xFF }
+};
+
+/* Static progress markers (row 5, cols 2-17): start, then four
+ * (empty, empty, step) groups plus a final pair, ending with the flag
+ * at col 17. Cols 0-1 and 18-19 stay blank. All brown tops (slot 3). */
+static const ChromeCell s_marker_cells[] = {
+    { 0, 5, 0xFF }, { 1, 5, 0xFF },
+    { 2, 5, 32 },
+    { 3, 5, 33 }, { 4, 5, 33 }, { 5, 5, 34 },
+    { 6, 5, 33 }, { 7, 5, 33 }, { 8, 5, 34 },
+    { 9, 5, 33 }, { 10, 5, 33 }, { 11, 5, 34 },
+    { 12, 5, 33 }, { 13, 5, 33 }, { 14, 5, 34 },
+    { 15, 5, 33 }, { 16, 5, 33 },
+    { 17, 5, 35 },
+    { 18, 5, 0xFF }, { 19, 5, 0xFF }
+};
+
+/* HUNT button (cols 2-6): bow icon + H/UN/T label. Bow sits at col 4;
+ * gap col 1 blanked (button starts at col 2). */
+static const ChromeCell s_hunt_cells[] = {
+    { 0, 7, 0xFF }, { 1, 7, 0xFF }, { 2, 7, 0 }, { 3, 7, 1 }, { 4, 7, 1 },
+    { 5, 7, 1 }, { 6, 7, 2 },
+    { 0, 8, 0xFF }, { 1, 8, 0xFF }, { 2, 8, 3 }, { 3, 8, 4 }, { 4, 8, 10 },
+    { 5, 8, 4 }, { 6, 8, 5 },
+    { 0, 9, 0xFF }, { 1, 9, 0xFF }, { 2, 9, 3 }, { 3, 9, 14 }, { 4, 9, 15 },
+    { 5, 9, 16 }, { 6, 9, 5 },
+    { 0, 10, 0xFF }, { 1, 10, 0xFF }, { 2, 10, 6 }, { 3, 10, 7 },
+    { 4, 10, 0xFE }, { 5, 10, 7 }, { 6, 10, 9 }
+};
+
+/* REST button (cols 7-11): centered bed icon + R/ES/T label. STUDY's
+ * frame now starts at col 12, so no gap blank is needed. */
+static const ChromeCell s_rest_cells[] = {
+    { 7, 7, 0 }, { 8, 7, 1 }, { 9, 7, 1 }, { 10, 7, 1 },
+    { 11, 7, 2 },
+    { 7, 8, 3 }, { 8, 8, 4 }, { 9, 8, 11 }, { 10, 8, 4 },
+    { 11, 8, 5 },
+    { 7, 9, 3 }, { 8, 9, 17 }, { 9, 9, 18 }, { 10, 9, 19 },
+    { 11, 9, 5 },
+    { 7, 10, 6 }, { 8, 10, 7 }, { 9, 10, 0xFE }, { 10, 10, 7 },
+    { 11, 10, 9 }
+};
+
+/* STUDY MAP button (cols 12-17, 6 wide): frame starts at col 12 and
+ * ends at col 17. Icons (glass 14, map 15) and labels stay put; col 13
+ * is new fill on rows 8-9, labels run ST/UD/YM/AP at 13-16. Cols 18-19
+ * blanked (old right edge stood at 18). */
+static const ChromeCell s_study_cells[] = {
+    { 12, 7, 0 }, { 13, 7, 1 }, { 14, 7, 1 }, { 15, 7, 1 },
+    { 16, 7, 1 }, { 17, 7, 2 }, { 18, 7, 0xFF }, { 19, 7, 0xFF },
+    { 12, 8, 3 }, { 13, 8, 4 }, { 14, 8, 12 }, { 15, 8, 13 },
+    { 16, 8, 4 }, { 17, 8, 5 }, { 18, 8, 0xFF }, { 19, 8, 0xFF },
+    { 12, 9, 3 }, { 13, 9, 20 }, { 14, 9, 21 }, { 15, 9, 22 },
+    { 16, 9, 23 }, { 17, 9, 5 }, { 18, 9, 0xFF }, { 19, 9, 0xFF },
+    { 12, 10, 6 }, { 13, 10, 7 }, { 14, 10, 0xFE }, { 15, 10, 7 },
+    { 16, 10, 7 }, { 17, 10, 9 }, { 18, 10, 0xFF }, { 19, 10, 0xFF }
+};
+
+/* CONTINUE button (cols 6-13, rows 11-13): B icon + CO/NT/IN/UE.
+ * The B row sits on row 12 (top edge above it, bottom edge below).
+ * Only stamped where continuing is the B button (camp idle);
+ * A-key continues keep their text prompt (no A icon in the sheet).
+ * Side cols blanked: SUPPLY/METHOD/MESSAGE text would show through. */
+static const ChromeCell s_continue_cells[] = {
+    { 0, 11, 0xFF }, { 1, 11, 0xFF }, { 2, 11, 0xFF }, { 3, 11, 0xFF },
+    { 4, 11, 0xFF }, { 5, 11, 0xFF },
+    { 6, 11, 0 }, { 7, 11, 1 }, { 8, 11, 1 }, { 9, 11, 1 },
+    { 10, 11, 1 }, { 11, 11, 1 }, { 12, 11, 1 }, { 13, 11, 2 },
+    { 14, 11, 0xFF }, { 15, 11, 0xFF }, { 16, 11, 0xFF },
+    { 17, 11, 0xFF }, { 18, 11, 0xFF }, { 19, 11, 0xFF },
+    { 0, 12, 0xFF }, { 1, 12, 0xFF }, { 2, 12, 0xFF }, { 3, 12, 0xFF },
+    { 4, 12, 0xFF }, { 5, 12, 0xFF },
+    { 6, 12, 3 }, { 7, 12, 24 }, { 8, 12, 25 }, { 9, 12, 26 },
+    { 10, 12, 27 }, { 11, 12, 28 }, { 12, 12, 4 }, { 13, 12, 5 },
+    { 14, 12, 0xFF }, { 15, 12, 0xFF }, { 16, 12, 0xFF },
+    { 17, 12, 0xFF }, { 18, 12, 0xFF }, { 19, 12, 0xFF },
+    { 0, 13, 0xFF }, { 1, 13, 0xFF }, { 2, 13, 0xFF }, { 3, 13, 0xFF },
+    { 4, 13, 0xFF }, { 5, 13, 0xFF },
+    { 6, 13, 6 }, { 7, 13, 7 }, { 8, 13, 7 }, { 9, 13, 7 },
+    { 10, 13, 7 }, { 11, 13, 7 }, { 12, 13, 7 }, { 13, 13, 9 },
+    { 14, 13, 0xFF }, { 15, 13, 0xFF }, { 16, 13, 0xFF },
+    { 17, 13, 0xFF }, { 18, 13, 0xFF }, { 19, 13, 0xFF }
+};
+
+static void tp_chrome_run(const ChromeCell *cells, uint8_t n, uint8_t selected)
+{
+    uint8_t i;
+    uint8_t idx;
+    for (i = 0; i < n; i++) {
+        idx = cells[i].idx;
+        if (idx == CHROME_CURSOR_CELL) {
+            idx = selected ? 8u : 7u;
+            tp_chrome_cell(cells[i].x, cells[i].y, idx);
+        } else if (idx == CHROME_BLANK_CELL) {
+            VBK_REG = 0;
+            s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)cells[i].y << 5) + cells[i].x);
+            s_buf = &g_ui_screen_buf[cells[i].y][cells[i].x];
+            if (*s_buf != ' ') {
+                tp_sync_write(s_dst, ui_font_tile_base);
+                *s_buf = ' ';
+                VBK_REG = 1;
+                s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)cells[i].y << 5) + cells[i].x);
+                tp_sync_write(s_atr, 0);
+                VBK_REG = 0;
+            }
+            s_row_used[cells[i].y] = 1;
+        } else {
+            tp_chrome_cell(cells[i].x, cells[i].y, idx);
+        }
+    }
+}
+
+static void tp_wash_top(void)
+{
+    tp_chrome_run(s_wash_top_cells, 40, 0);
+}
+
+static void tp_wash_ground(void)
+{
+    tp_chrome_run(s_wash_ground_cells, 20, 0);
+}
+
+/* Journey CRAM slots the scenery strips may program (slots 4/6/7:
+ * nothing stamps them -- text/box/floors/markers use 0-2/3/5 and the
+ * heart uses 5. The scene-transition wipe blackens 4, but journey
+ * entry reprograms the whole CRAM set before the paint runs). */
+static const uint8_t s_strip_slots[3] = {4, 6, 7};
+
+/* Base VRAM slot for strip tiles (world window 128+, unused while
+ * journeying; the overworld tileset reload restores it on exit). */
+#define TP_STRIP_VRAM_BASE 128u
+
+/* Current route's strip, or 0 when the wash fallback applies
+ * (unknown route or ramp_count over budget). Pointer-bump lookup:
+ * indexing the struct array would multiply (SDCC mult lib in fixed). */
+static const TravelArtStrip *tp_strip_row(void)
+{
+    const TravelArtStrip *st;
+    uint8_t n;
+    if (g_travel_route >= travel_art_strip_count) return 0;
+    st = travel_art_strips;
+    n = g_travel_route;
+    while (n != 0) {
+        st++;
+        n--;
+    }
+    if (st->use_strip == 0) return 0;
+    if (st->ramp_count > 3) return 0;
+    return st;
+}
+
+/* Stream one route's blobs + ramps (first entry and battle return,
+ * like the chrome load). travel_art_tiles/ramps live in this bank. */
+static void tp_strip_load(const TravelArtStrip *st)
+{
+    uint8_t n;
+    uint8_t i;
+    uint8_t c;
+    volatile uint8_t *dst;
+    const uint8_t *src;
+    if (st == 0) return;
+    VBK_REG = 0;
+    src = travel_art_tiles;
+    dst = (volatile uint8_t *)(0x8000u + ((uint16_t)TP_STRIP_VRAM_BASE << 4));
+    for (n = 0; n < travel_art_tile_count; n++) {
+        for (c = 0; c < 16; c++) {
+            tp_sync_write(dst, *src);
+            dst++;
+            src++;
+        }
+    }
+    for (i = 0; i < st->ramp_count; i++) {
+        BCPS_REG = (uint8_t)(0x80 | (s_strip_slots[i] << 3));
+        for (c = 0; c < 8; c++) {
+            tp_sync_write(&BCPD_REG, st->ramps[(uint8_t)((uint8_t)(i << 3) + c)]);
+        }
+    }
+}
+
+/* Stamp one scenery cell (tile from the 128+ strip window). Buffer
+ * mark 0xC0+tile never collides with font text or chrome marks. */
+static void tp_strip_cell(uint8_t x, uint8_t y, uint8_t tile, uint8_t pal)
+{
+    uint8_t id;
+    char mark;
+    if (x >= 20 || y >= 18) return;
+    if (pal > 2) return;
+    s_row_used[y] = 1;
+    id = (uint8_t)(TP_STRIP_VRAM_BASE + tile);
+    mark = (char)(0xC0u + tile);
+    VBK_REG = 0;
+    s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    s_buf = &g_ui_screen_buf[y][x];
+    if (*s_buf != mark) {
+        tp_sync_write(s_dst, id);
+        *s_buf = mark;
+        VBK_REG = 1;
+        s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+        tp_sync_write(s_atr, s_strip_slots[pal]);
+        VBK_REG = 0;
+    }
+}
+
+/* Stamp the route strip over rows 2-3 (screen cols 2-17). */
+static void tp_strip_cells(const TravelArtStrip *st)
+{
+    uint8_t i;
+    if (st == 0) return;
+    for (i = 0; i < 32; i++) {
+        tp_strip_cell((uint8_t)(2u + (uint8_t)(i & 15u)), (uint8_t)(2u + (i >> 4)),
+                     st->cells[i], st->pals[i]);
+    }
+}
+
+static void tp_markers(void)
+{
+    tp_chrome_run(s_marker_cells, 20, 0);
+}
+
+static void tp_hunt_button(uint8_t selected)
+{
+    tp_chrome_run(s_hunt_cells, 28, selected);
+}
+
+static void tp_rest_button(uint8_t selected)
+{
+    tp_chrome_run(s_rest_cells, 20, selected);
+}
+
+static void tp_study_button(uint8_t selected)
+{
+    tp_chrome_run(s_study_cells, 32, selected);
+}
+
+static void tp_continue_button(void)
+{
+    tp_chrome_run(s_continue_cells, 60, 0);
+}
+
+/* Diff-skipping text row with space padding (ui_draw_text_line shape). */
+static void tp_text(uint8_t x, uint8_t y, const char *text, uint8_t max_chars)
+{
+    char ch;
+    uint8_t ended;
+    if (y >= 18 || x >= 20) return;
+    s_row_used[y] = 1;
+    if ((uint8_t)(x + max_chars) > 20) max_chars = (uint8_t)(20 - x);
+    VBK_REG = 0;
+    ended = (text == NULL);
+    s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    s_buf = &g_ui_screen_buf[y][x];
+    for (s_i = 0; s_i < max_chars; s_i++) {
+        if (!ended) {
+            ch = text[s_i];
+            if (ch == '\0') {
+                ended = 1;
+                ch = ' ';
+            }
+        } else {
+            ch = ' ';
+        }
+        if (*s_buf != ch) {
+            tp_sync_write(s_dst, (uint8_t)(ui_font_tile_base + (uint8_t)(ch - ' ')));
+            *s_buf = ch;
+        }
+        s_dst++;
+        s_buf++;
+    }
+}
+
+static void tp_line_done(uint8_t y)
+{
+    s_line[s_n] = '\0';
+    tp_text(0, y, s_line, 20);
+}
+
+/* First-entry full clear + centered title (LCD off). Row 1 stays
+ * empty: no separator line under the title. */
+static void tp_frame_init(const char *title)
+{
+    uint8_t x;
+    uint8_t y;
+    uint8_t len;
+    volatile uint8_t *v;
+    VBK_REG = 0;
+    for (y = 0; y < 18; y++) {
+        v = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5));
+        for (x = 0; x < 20; x++) {
+            tp_sync_write(&v[x], ui_font_tile_base);
+            g_ui_screen_buf[y][x] = ' ';
+        }
+        g_ui_screen_buf[y][20] = '\0';
+    }
+    len = 0;
+    if (title) {
+        while (title[len] != '\0' && len < 20) len++;
+    }
+    tp_text((uint8_t)((20 - len) >> 1), 0, title, 20);
+}
+
+/* Last row (row 17): empty square, heart, current HP, money with G,
+ * DAYS: + days left with no gap ("DAYS:180", cols 10-18 with the pad).
+ * The heart is the boot-loaded HUD icon (UI_TILE_TRAVEL_HEART). */
+static void tp_lastrow(void)
+{
+    int16_t gold;
+    int16_t day;
+    gold = g_game.state.currency.amount[CURRENCY_ID_GOLD - 1];
+    if (gold < 0) gold = 0;
+    day = g_game.state.variables.values[VARIABLE_ID_DAY - 1];
+    if (day < 0) day = 0;
+    VBK_REG = 0;
+    s_row_used[17] = 1;
+    s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)17 << 5));
+    s_buf = &g_ui_screen_buf[17][0];
+    if (*s_buf != ' ') {
+        tp_sync_write(s_dst, ui_font_tile_base);
+        *s_buf = ' ';
+        VBK_REG = 1;
+        s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)17 << 5));
+        tp_sync_write(s_atr, 0);
+        VBK_REG = 0;
+    }
+    s_dst++;
+    s_buf++;
+    if (*s_buf != 'H') {
+        tp_sync_write(s_dst, UI_TILE_TRAVEL_HEART);
+        *s_buf = 'H';
+        VBK_REG = 1;
+        s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)17 << 5) + 1);
+        tp_sync_write(s_atr, 5);
+        VBK_REG = 0;
+    }
+    s_n = 0;
+    tp_put_u16(g_game.state.party.members[0].hp);
+    tp_putc(' ');
+    tp_putc(' ');
+    tp_put_u16((uint16_t)gold);
+    tp_putc('G');
+    tp_putc(' ');
+    tp_putc(' ');
+    tp_puts("DAYS:");
+    tp_put_u16((uint16_t)day);
+    tp_text(2, 17, s_line, 18);
+}
+
+/* Supply stock (row 15): "SUPPLIES: 36". */
+static void tp_supplies(void)
+{
+    int16_t prov;
+    prov = g_game.state.variables.values[VARIABLE_ID_PROVISIONS - 1];
+    if (prov < 0) prov = 0;
+    s_n = 0;
+    tp_putc(' ');
+    tp_putc(' ');
+    tp_puts("SUPPLIES: ");
+    tp_put_u16((uint16_t)prov);
+    if (prov == 0) {
+        tp_putc('!');
+    }
+    tp_line_done(15);
+}
+
+/* Append one signed delta ("+15G", "-2P") with a unit char. */
+static void tp_delta_part(int16_t v, char unit)
+{
+    uint16_t mag;
+    if (v == 0) return;
+    if (s_n != 0) tp_putc(' ');
+    if (v < 0) {
+        tp_putc('-');
+        mag = (uint16_t)(0 - v);
+    } else {
+        tp_putc('+');
+        mag = (uint16_t)v;
+    }
+    tp_put_u16(mag);
+    tp_putc(unit);
+}
+
+/* Append net steps ("+1 STEP", "-2 STEPS"). */
+static void tp_delta_steps(int16_t net)
+{
+    uint16_t mag;
+    if (net == 0) return;
+    if (s_n != 0) tp_putc(' ');
+    if (net < 0) {
+        tp_putc('-');
+        mag = (uint16_t)(0 - net);
+    } else {
+        tp_putc('+');
+        mag = (uint16_t)net;
+    }
+    tp_put_u16(mag);
+    tp_puts(" STEP");
+    if (mag != 1) tp_putc('S');
+}
+
+/* Append net days ("+1 DAY", "-2 DAYS"). */
+static void tp_delta_days(int16_t net)
+{
+    uint16_t mag;
+    if (net == 0) return;
+    if (s_n != 0) tp_putc(' ');
+    if (net < 0) {
+        tp_putc('-');
+        mag = (uint16_t)(0 - net);
+    } else {
+        tp_putc('+');
+        mag = (uint16_t)net;
+    }
+    tp_put_u16(mag);
+    tp_puts(" DAY");
+    if (mag != 1) tp_putc('S');
+}
+
+/* Generic choice-outcome line (gold, provisions, HP, net steps,
+ * net days; zero parts skipped, clamped safely at 20 cols). */
+static void tp_delta_core(int16_t gold, int8_t prov,
+                          int16_t hp, int16_t steps, int8_t days)
+{
+    s_n = 0;
+    tp_delta_part(gold, 'G');
+    tp_delta_part(prov, 'P');
+    if (hp != 0) {
+        tp_delta_part(hp, 'H');
+        tp_putc('P');
+    }
+    tp_delta_steps(steps);
+    tp_delta_days(days);
+    tp_line_done(11);
+}
+
+static void tp_delta(const TravelEvent *e, uint8_t opt1)
+{
+    int16_t hp;
+    int16_t steps;
+    hp = (int16_t)((int16_t)(opt1 ? e->opt1_heal : e->opt2_heal) -
+                   (int16_t)(opt1 ? e->opt1_hurt : e->opt2_hurt));
+    steps = (int16_t)((int16_t)(opt1 ? e->opt1_delay : e->opt2_delay) -
+                      (int16_t)(opt1 ? e->opt1_save : e->opt2_save));
+    tp_delta_core(opt1 ? e->opt1_gold : e->opt2_gold,
+                  opt1 ? e->opt1_prov : e->opt2_prov,
+                  hp, steps,
+                  (int8_t)(opt1 ? e->opt1_days : e->opt2_days));
+}
+
+static void tp_fail_delta(uint8_t opt1)
+{
+    const TravelEventFailOpt *f;
+    int16_t hp;
+    int16_t steps;
+    f = opt1 ? &s_event_fail.opt1 : &s_event_fail.opt2;
+    hp = (int16_t)((int16_t)f->heal - (int16_t)f->hurt);
+    steps = (int16_t)((int16_t)f->delay - (int16_t)f->save);
+    tp_delta_core(f->gold, f->prov, hp, steps, f->days);
+}
+
+/* "> HELP IGNORE" / "  HELP>IGNORE" (choice options from the row). */
+static void tp_options(const TravelEvent *e)
+{
+    s_n = 0;
+    tp_putc((g_travel_choice == 0) ? '>' : ' ');
+    tp_putc(' ');
+    tp_puts(e->opt1);
+    tp_putc((g_travel_choice == 0) ? ' ' : '>');
+    tp_puts(e->opt2);
+    tp_line_done(11);
+}
+
+/* "+8G LOOT!" (ambush victory line, "+8G +2P LOOT!" when the win
+ * also pays provisions). */
+static void tp_loot(const TravelEvent *e)
+{
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16((uint16_t)e->victory_gold);
+    tp_putc('G');
+    if (e->victory_provisions > 0) {
+        tp_putc(' ');
+        tp_putc('+');
+        tp_put_u16((uint16_t)e->victory_provisions);
+        tp_putc('P');
+    }
+    tp_puts(" LOOT!");
+    tp_line_done(9);
+}
+
+/* "+1 DAY" (ambush time-cost line). */
+static void tp_daycost(const TravelEvent *e)
+{
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16(e->victory_days);
+    tp_puts(" DAY");
+    if (e->victory_days != 1) tp_putc('S');
+    tp_line_done(11);
+}
+
+/* "+N PROV" (hunt yield, staged in g_travel_amount). */
+static void tp_found(void)
+{
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16(g_travel_amount);
+    tp_puts(" PROV");
+    tp_line_done(11);
+}
+
+/* "+N STEPS" (hunt/rest/lost detour, staged in g_travel_extra). */
+static void tp_detour(uint8_t y)
+{
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16(g_travel_extra);
+    tp_puts(" STEP");
+    if (g_travel_extra != 1) tp_putc('S');
+    tp_line_done(y);
+}
+
+/* "+N HP" (rest heal, staged in g_travel_amount). */
+static void tp_healed(void)
+{
+    s_n = 0;
+    tp_putc('+');
+    tp_put_u16(g_travel_amount);
+    tp_puts(" HP");
+    tp_line_done(11);
+}
+
+/* "-N STEPS" (study shortcut, staged in g_travel_amount). */
+static void tp_shortcut(void)
+{
+    s_n = 0;
+    tp_putc('-');
+    tp_put_u16(g_travel_amount);
+    tp_puts(" STEP");
+    if (g_travel_amount != 1) tp_putc('S');
+    tp_line_done(11);
+}
+
+/* One supply row: "> PROV 6 2G". */
+static void tp_supply(uint8_t idx, uint8_t y, const char *label)
+{
+    int16_t count;
+    if (!label) return;
+    count = g_game.state.variables.values[VARIABLE_ID_PROVISIONS - 1];
+    if (count < 0) count = 0;
+    s_n = 0;
+    tp_putc((idx == g_travel_choice) ? '>' : ' ');
+    tp_putc(' ');
+    tp_puts(label);
+    tp_putc(' ');
+    tp_put_u16((uint16_t)count);
+    tp_putc(' ');
+    tp_put_u16(s_route.provisions_price);
+    tp_putc('G');
+    tp_line_done(y);
+}
+
+/* "NEED 50G!" (premium refusal line, cost from the staged method). */
+static void tp_cost(void)
+{
+    const TravelMethod *m;
+    m = &s_route.methods[g_travel_choice];
+    s_n = 0;
+    tp_puts("NEED ");
+    tp_put_u16((uint16_t)m->cost_gold);
+    tp_puts("G!");
+    tp_line_done(11);
+}
+
+/* No-arg dispatch body: reads same_screen in g_bk_byte_a and staged
+ * travel state straight from WRAM.  First entry clears VRAM + buffer;
+ * same-screen updates diff-skip and blank unused rows without flashing. */
+void travel_paint_banked(void)
+{
+    const TravelEvent *e;
+    const TravelArtStrip *st;
+    uint8_t same_screen;
+    uint8_t view;
+    uint8_t y;
+    same_screen = g_bk_byte_a;
+    e = &s_event;
+    st = tp_strip_row();
+    for (y = 0; y < 18; y++) {
+        s_row_used[y] = 0;
+    }
+    if (g_travel_supply) {
+        view = TRAVEL_VIEW_SUPPLY;
+    } else if (g_travel_msg != TRAVEL_MSG_NONE) {
+        view = TRAVEL_VIEW_MSG;
+    } else if (g_travel_event == TRAVEL_EVENT_NONE) {
+        view = TRAVEL_VIEW_IDLE;
+    } else if (e->kind == TRAVEL_EVENT_BATTLE) {
+        view = TRAVEL_VIEW_AMBUSH;
+    } else if (e->kind == TRAVEL_EVENT_RUINS) {
+        view = TRAVEL_VIEW_RUINS;
+    } else {
+        view = TRAVEL_VIEW_HELP;
+    }
+    if (!same_screen) {
+        tp_frame_init("TRAVELING...");
+        travel_chrome_load_banked();
+        tp_strip_load(st);
+    } else {
+        s_row_used[0] = 1;
+        s_row_used[1] = 1;
+    }
+    if (st != 0) {
+        tp_strip_cells(st);
+    } else {
+        tp_wash_top();
+    }
+    tp_wash_ground();
+    tp_markers();
+    tp_supplies();
+    tp_lastrow();
+    if (view == TRAVEL_VIEW_IDLE) {
+        tp_hunt_button((uint8_t)(g_travel_choice == TRAVEL_CAMP_HUNT));
+        tp_rest_button((uint8_t)(g_travel_choice == TRAVEL_CAMP_REST));
+        tp_study_button((uint8_t)(g_travel_choice == TRAVEL_CAMP_STUDY));
+        tp_continue_button();
+    } else if (view == TRAVEL_VIEW_SUPPLY) {
+        tp_supply(0, 9, "PROV");
+        tp_text(0, 13, (g_travel_choice == 1) ? "> LEAVE" : "  LEAVE", 20);
+    } else if (view == TRAVEL_VIEW_AMBUSH) {
+        tp_text(0, 9, e->text, 20);
+        tp_text(0, 11, "[A] FIGHT", 20);
+    } else if (view == TRAVEL_VIEW_HELP) {
+        tp_text(0, 9, e->text, 20);
+        tp_options(e);
+    } else if (view == TRAVEL_VIEW_RUINS) {
+        tp_text(0, 9, e->text, 20);
+        tp_text(0, 11, (g_travel_choice == 0) ? ">EXPLORE IGNORE" : " EXPLORE>IGNORE", 20);
+    } else {
+        if (g_travel_msg == TRAVEL_MSG_HELPED) {
+            if (g_travel_failed) {
+                tp_text(0, 9, s_event_fail.opt1.text, 20);
+                tp_fail_delta(1);
+            } else {
+                tp_text(0, 9, e->text2, 20);
+                tp_delta(e, 1);
+            }
+        } else if (g_travel_msg == TRAVEL_MSG_IGNORED) {
+            if (g_travel_failed) {
+                tp_text(0, 9, s_event_fail.opt2.text, 20);
+                tp_fail_delta(0);
+            } else {
+                tp_text(0, 9, e->text3, 20);
+                tp_delta(e, 0);
+            }
+        } else if (g_travel_msg == TRAVEL_MSG_WON) {
+            tp_loot(e);
+            if (e->victory_days > 0) {
+                tp_daycost(e);
+            }
+        } else if (g_travel_msg == TRAVEL_MSG_NOGOLD) {
+            tp_text(0, 9, "NOT ENOUGH GOLD.", 20);
+            tp_cost();
+        } else if (g_travel_msg == TRAVEL_MSG_HUNTED) {
+            tp_text(0, 9, "YOU FORAGE.", 20);
+            tp_found();
+            if (g_travel_extra > 0) tp_detour(12);
+        } else if (g_travel_msg == TRAVEL_MSG_RESTED) {
+            tp_text(0, 9, "YOU REST.", 20);
+            if (g_travel_amount > 0) {
+                tp_healed();
+            } else {
+                tp_text(0, 11, "FULL HP.", 20);
+            }
+            if (g_travel_extra > 0) tp_detour(12);
+        } else if (g_travel_msg == TRAVEL_MSG_STUDIED) {
+            tp_text(0, 9, "YOU STUDY MAP.", 20);
+            if (g_travel_amount == 0) {
+                tp_text(0, 11, "NO SHORTCUT.", 20);
+            } else {
+                tp_shortcut();
+            }
+        } else if (g_travel_msg == TRAVEL_MSG_LOST) {
+            tp_text(0, 9, "YOU GET LOST.", 20);
+            if (g_travel_extra > 0) tp_detour(12);
+        }
+        tp_text(0, 13, "[A] CONTINUE", 20);
+    }
+    if (same_screen) {
+        for (y = 2; y < 18; y++) {
+            if (!s_row_used[y]) {
+                tp_text(0, y, "", 20);
+            }
+        }
+    }
+}

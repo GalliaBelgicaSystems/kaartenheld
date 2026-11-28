@@ -49,6 +49,7 @@ typedef char g_cram_keep_kind_ok[((int)WORLD_TILESET_FOREST < 0x80 &&
                                   (int)WORLD_TILESET_VILLAGE < 0x80 &&
                                   (int)WORLD_TILESET_DESOLATE < 0x80 &&
                                   (int)WORLD_TILESET_CASTLE < 0x80 &&
+                                  (int)WORLD_TILESET_TRAVEL < 0x80 &&
                                   (int)WORLD_TILESET_UNDERGROUND < 0x80) ? 1 : -1];
 
 void ui_load_cram_banked(void)
@@ -81,6 +82,9 @@ void ui_load_cram_banked(void)
         case WORLD_TILESET_FOREST:
         case 1: /* Legacy overworld mode */
             pal_data = (const uint8_t *)cgb_bg_palettes_forest;
+            break;
+        case WORLD_TILESET_TRAVEL: /* Journey chrome (travel-demo ROM only) */
+            pal_data = (const uint8_t *)cgb_bg_palettes_travel;
             break;
         case 0: /* Battle / UI mode */
         default:
