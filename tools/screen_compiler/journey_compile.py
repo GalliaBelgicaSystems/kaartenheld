@@ -176,6 +176,9 @@ def load_events(battle_ids):
             days = doc.get("victory_days")
             if not isinstance(days, int) or not (0 <= days <= 255):
                 fail("%s: victory_days must be 0..255" % eid)
+            vprov = doc.get("victory_provisions", 0)
+            if not isinstance(vprov, int) or not (0 <= vprov <= 30):
+                fail("%s: victory_provisions must be 0..30" % eid)
             late = doc.get("late_enemy_hp")
             if not isinstance(late, int) or not (1 <= late <= 255):
                 fail("%s: late_enemy_hp must be 1..255" % eid)
@@ -183,6 +186,7 @@ def load_events(battle_ids):
                            "text": doc["text"], "enemy_name": doc["enemy_name"],
                            "enemy_hp": hp, "victory_gold": gold,
                            "victory_days": days, "late_hp": late,
+                           "victory_provisions": vprov,
                            "acts": check_acts(doc, eid)})
         elif kind == "choice":
             check_text("text", doc.get("text"), eid)
@@ -596,6 +600,7 @@ def emit(routes, events, scenes, battle_ids):
             lines.append("        %d, /* enemy_hp */" % e["enemy_hp"])
             lines.append("        %d, /* victory_gold */" % e["victory_gold"])
             lines.append("        %d, /* victory_days */" % e["victory_days"])
+            lines.append("        %d, /* victory_provisions */" % e["victory_provisions"])
             lines.append("        %d, /* late_enemy_hp */" % e["late_hp"])
             lines.append("        %s, /* text */" % c_str(e["text"]))
             lines.append('        "", /* text2 (unused) */')
@@ -618,6 +623,7 @@ def emit(routes, events, scenes, battle_ids):
             lines.append("        0, /* enemy_hp */")
             lines.append("        0, /* victory_gold (unused) */")
             lines.append("        0, /* victory_days (unused) */")
+            lines.append("        0, /* victory_provisions (unused) */")
             lines.append("        0, /* late_enemy_hp (unused) */")
             lines.append("        %s, /* text */" % c_str(e["text"]))
             lines.append("        %s, /* explore result */" % c_str(e["help_text"]))
@@ -640,6 +646,7 @@ def emit(routes, events, scenes, battle_ids):
             lines.append("        0, /* enemy_hp */")
             lines.append("        0, /* victory_gold (unused) */")
             lines.append("        0, /* victory_days (unused) */")
+            lines.append("        0, /* victory_provisions (unused) */")
             lines.append("        0, /* late_enemy_hp (unused) */")
             lines.append("        %s, /* text */" % c_str(e["text"]))
             doc = e["doc"]

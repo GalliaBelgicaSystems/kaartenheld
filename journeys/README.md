@@ -60,7 +60,8 @@ so rain on the river or fog on the shortcut genuinely hurts.
 Three kinds:
 
 - `battle`: an ambush with fixed stats (`battle` id, `enemy_name`,
-  `enemy_hp`, `victory_gold`, `victory_days`, buffed `late_enemy_hp`
+  `enemy_hp`, `victory_gold`, `victory_days`, `victory_provisions`
+  (provisions granted on victory), buffed `late_enemy_hp`
   once the Convergence clock hits zero).
 - `choice`: a prompt with two options (`opt1`/`opt2`, at most 8 chars
   each). Each option either stages a fight (`battle`: a battle-event

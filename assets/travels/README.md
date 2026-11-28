@@ -19,8 +19,7 @@ when a route names it, and fails loudly otherwise.
   "biome": "forest",
   "tileset": "forest",
   "grove": [[ /* 3 rows x 8 cols of tile names (origin side) */ ]],
-  "vista": [[ /* 3 rows x 8 cols of tile names (destination side) */ ]],
-  "transition": ["<wash tile>", "<wash tile>", "<dirt tile>"]
+  "vista": [[ /* 3 rows x 8 cols of tile names (destination side) */ ]]
 }
 ```
 
@@ -29,15 +28,20 @@ when a route names it, and fails loudly otherwise.
   `desolate_landscape`, ... Every tile name in the file must start
   with `"<tileset>."` and resolve in that tileset's manifest
   (`tools/level_editor/tilesets/<tileset>.json`).
-- `grove` is the origin-side arrangement (cols 0-7 of the strip):
-  edge, 3x feature pair, wash col. `vista` is the destination-side
-  arrangement (cols 10-17): skyline, accent, far peak, ground.
+- `grove` is the origin-side arrangement (cols 0-7 of the strip).
+  `vista` is the destination-side arrangement (cols 8-15). The strip
+  is 16 wide to match the journey screen's scenery area (cols 2-17);
+  there is no middle seam.
 - Ground rows (row 2 of grove/vista) name travel-sheet floor icons:
   `"travel.forest_floor_icon_1"` etc. (only the 3 floor icons, cycled
-  across the 8 cols). Trees and transition tiles always use
-  `"<tileset>.<tile_id>"` from the layout's own tileset.
-- `transition` is one tile per row, stamped in both cols 8-9 (the
-  strip's middle seam). Use the biome's plain wash/wash/dirt tiles.
+  across the 8 cols). Trees always use `"<tileset>.<tile_id>"` from
+  the layout's own tileset.
+- CRAM budget: a strip may use at most 3 distinct world ramps
+  (STRIP_RAMP_BUDGET in the compiler). The journey screen keeps 5
+  CRAM slots live (text/box/floors/markers/heart); only slots 4/6/7
+  are free, so a strip needing more keeps the wash fallback with a
+  compile WARNING (not an error -- the road still works). Trim the
+  layout's tiles to light the strip up.
 
 ## How a layout is used
 
@@ -47,7 +51,7 @@ plus dest vista per route and emits `src/game/travel_art_content.c`
 with one composed strip per route, parallel to `g_travel_routes`.
 Trees resolve through the tileset manifest to a `TILE_*` symbol
 (validated against `src/world/world.h`, uint8_t range); they live in
-`cells` (rows 0-1) and `trans` (transition seam). Ground rows (row 2)
+`cells` (rows 0-1, 16 cols: grove 8 + vista 8). Ground rows (row 2)
 name travel-sheet floor icons (`"travel.<tile_id>"`, e.g.
 `travel.forest_floor_icon_1` — names match
 `assets/travel-tileset.csv` case/space/underscore-insensitively) and

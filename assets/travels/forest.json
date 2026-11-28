@@ -10,6 +10,5 @@
     ["forest.forest_top_left_treetop", "forest.forest_top_right_tree_top", "forest.forest_top_left_treetop", "forest.forest_top_right_tree_top", "forest.forest_top_left_treetop", "forest.forest_top_right_tree_top", "forest.forest_top_left_treetop", "forest.forest_top_right_tree_top"],
     ["forest.forest_bottom_left_treetrunk", "forest.forest_bottom_right_tree_trunk", "forest.forest_bottom_left_treetrunk", "forest.forest_bottom_right_tree_trunk", "forest.forest_bottom_left_treetrunk", "forest.forest_bottom_right_tree_trunk", "forest.forest_bottom_left_treetrunk", "forest.forest_bottom_right_tree_trunk"],
     ["travel.forest_floor_icon_1", "travel.forest_floor_icon_2", "travel.forest_floor_icon_3", "travel.forest_floor_icon_1", "travel.forest_floor_icon_2", "travel.forest_floor_icon_3", "travel.forest_floor_icon_1", "travel.forest_floor_icon_2"]
-  ],
-  "transition": ["forest.forest_plain_floor_2", "forest.forest_plain_floor_2", "forest.forest_plain_floor_2"]
+  ]
 }

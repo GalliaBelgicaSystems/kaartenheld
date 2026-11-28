@@ -793,6 +793,10 @@ void travel_on_victory(void)
 {
     travel_load_event(g_travel_event);
     currency_add(&g_game.state, CURRENCY_ID_GOLD, s_event.victory_gold);
+    if (s_event.victory_provisions > 0) {
+        game_variable_add(&g_game.state, VARIABLE_ID_PROVISIONS,
+                          (int16_t)s_event.victory_provisions);
+    }
     travel_burn(&g_game, s_event.victory_days, 0);
     g_travel_failed = 0;
     g_travel_msg = TRAVEL_MSG_WON;

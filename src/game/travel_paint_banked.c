@@ -142,7 +142,10 @@ typedef struct {
 #define CHROME_CURSOR_CELL 0xFEu
 #define CHROME_BLANK_CELL 0xFFu
 
-static const ChromeCell s_wash_cells[] = {
+/* Placeholder scenery wash, tree rows only (rows 2-3, cols 2-17).
+ * Stamped only when the route has no strip (wash fallback); strip
+ * routes paint travel_art_content.c art here instead. */
+static const ChromeCell s_wash_top_cells[] = {
     { 0, 2, 0xFF }, { 1, 2, 0xFF },
     { 2, 2, 4 }, { 3, 2, 4 }, { 4, 2, 4 }, { 5, 2, 4 },
     { 6, 2, 4 }, { 7, 2, 4 }, { 8, 2, 4 }, { 9, 2, 4 },
@@ -154,7 +157,12 @@ static const ChromeCell s_wash_cells[] = {
     { 6, 3, 4 }, { 7, 3, 4 }, { 8, 3, 4 }, { 9, 3, 4 },
     { 10, 3, 4 }, { 11, 3, 4 }, { 12, 3, 4 }, { 13, 3, 4 },
     { 14, 3, 4 }, { 15, 3, 4 }, { 16, 3, 4 }, { 17, 3, 4 },
-    { 18, 3, 0xFF }, { 19, 3, 0xFF },
+    { 18, 3, 0xFF }, { 19, 3, 0xFF }
+};
+
+/* Ground row (row 4, cols 2-17): forest-floor texture, always chrome
+ * (the strip layouts name these same travel-sheet icons). */
+static const ChromeCell s_wash_ground_cells[] = {
     { 0, 4, 0xFF }, { 1, 4, 0xFF },
     { 2, 4, 29 }, { 3, 4, 30 }, { 4, 4, 31 }, { 5, 4, 29 },
     { 6, 4, 30 }, { 7, 4, 31 }, { 8, 4, 29 }, { 9, 4, 30 },
@@ -273,9 +281,106 @@ static void tp_chrome_run(const ChromeCell *cells, uint8_t n, uint8_t selected)
     }
 }
 
-static void tp_wash(void)
+static void tp_wash_top(void)
 {
-    tp_chrome_run(s_wash_cells, 60, 0);
+    tp_chrome_run(s_wash_top_cells, 40, 0);
+}
+
+static void tp_wash_ground(void)
+{
+    tp_chrome_run(s_wash_ground_cells, 20, 0);
+}
+
+/* Journey CRAM slots the scenery strips may program (slots 4/6/7:
+ * nothing stamps them -- text/box/floors/markers use 0-2/3/5 and the
+ * heart uses 5. The scene-transition wipe blackens 4, but journey
+ * entry reprograms the whole CRAM set before the paint runs). */
+static const uint8_t s_strip_slots[3] = {4, 6, 7};
+
+/* Base VRAM slot for strip tiles (world window 128+, unused while
+ * journeying; the overworld tileset reload restores it on exit). */
+#define TP_STRIP_VRAM_BASE 128u
+
+/* Current route's strip, or 0 when the wash fallback applies
+ * (unknown route or ramp_count over budget). Pointer-bump lookup:
+ * indexing the struct array would multiply (SDCC mult lib in fixed). */
+static const TravelArtStrip *tp_strip_row(void)
+{
+    const TravelArtStrip *st;
+    uint8_t n;
+    if (g_travel_route >= travel_art_strip_count) return 0;
+    st = travel_art_strips;
+    n = g_travel_route;
+    while (n != 0) {
+        st++;
+        n--;
+    }
+    if (st->use_strip == 0) return 0;
+    if (st->ramp_count > 3) return 0;
+    return st;
+}
+
+/* Stream one route's blobs + ramps (first entry and battle return,
+ * like the chrome load). travel_art_tiles/ramps live in this bank. */
+static void tp_strip_load(const TravelArtStrip *st)
+{
+    uint8_t n;
+    uint8_t i;
+    uint8_t c;
+    volatile uint8_t *dst;
+    const uint8_t *src;
+    if (st == 0) return;
+    VBK_REG = 0;
+    src = travel_art_tiles;
+    dst = (volatile uint8_t *)(0x8000u + ((uint16_t)TP_STRIP_VRAM_BASE << 4));
+    for (n = 0; n < travel_art_tile_count; n++) {
+        for (c = 0; c < 16; c++) {
+            tp_sync_write(dst, *src);
+            dst++;
+            src++;
+        }
+    }
+    for (i = 0; i < st->ramp_count; i++) {
+        BCPS_REG = (uint8_t)(0x80 | (s_strip_slots[i] << 3));
+        for (c = 0; c < 8; c++) {
+            tp_sync_write(&BCPD_REG, st->ramps[(uint8_t)((uint8_t)(i << 3) + c)]);
+        }
+    }
+}
+
+/* Stamp one scenery cell (tile from the 128+ strip window). Buffer
+ * mark 0xC0+tile never collides with font text or chrome marks. */
+static void tp_strip_cell(uint8_t x, uint8_t y, uint8_t tile, uint8_t pal)
+{
+    uint8_t id;
+    char mark;
+    if (x >= 20 || y >= 18) return;
+    if (pal > 2) return;
+    s_row_used[y] = 1;
+    id = (uint8_t)(TP_STRIP_VRAM_BASE + tile);
+    mark = (char)(0xC0u + tile);
+    VBK_REG = 0;
+    s_dst = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+    s_buf = &g_ui_screen_buf[y][x];
+    if (*s_buf != mark) {
+        tp_sync_write(s_dst, id);
+        *s_buf = mark;
+        VBK_REG = 1;
+        s_atr = (volatile uint8_t *)(0x9800 + ((uint16_t)y << 5) + x);
+        tp_sync_write(s_atr, s_strip_slots[pal]);
+        VBK_REG = 0;
+    }
+}
+
+/* Stamp the route strip over rows 2-3 (screen cols 2-17). */
+static void tp_strip_cells(const TravelArtStrip *st)
+{
+    uint8_t i;
+    if (st == 0) return;
+    for (i = 0; i < 32; i++) {
+        tp_strip_cell((uint8_t)(2u + (uint8_t)(i & 15u)), (uint8_t)(2u + (i >> 4)),
+                     st->cells[i], st->pals[i]);
+    }
 }
 
 static void tp_markers(void)
@@ -534,13 +639,21 @@ static void tp_options(const TravelEvent *e)
     tp_line_done(11);
 }
 
-/* "+8G LOOT!" (ambush victory line). */
+/* "+8G LOOT!" (ambush victory line, "+8G +2P LOOT!" when the win
+ * also pays provisions). */
 static void tp_loot(const TravelEvent *e)
 {
     s_n = 0;
     tp_putc('+');
     tp_put_u16((uint16_t)e->victory_gold);
-    tp_puts("G LOOT!");
+    tp_putc('G');
+    if (e->victory_provisions > 0) {
+        tp_putc(' ');
+        tp_putc('+');
+        tp_put_u16((uint16_t)e->victory_provisions);
+        tp_putc('P');
+    }
+    tp_puts(" LOOT!");
     tp_line_done(9);
 }
 
@@ -634,11 +747,13 @@ static void tp_cost(void)
 void travel_paint_banked(void)
 {
     const TravelEvent *e;
+    const TravelArtStrip *st;
     uint8_t same_screen;
     uint8_t view;
     uint8_t y;
     same_screen = g_bk_byte_a;
     e = &s_event;
+    st = tp_strip_row();
     for (y = 0; y < 18; y++) {
         s_row_used[y] = 0;
     }
@@ -658,11 +773,17 @@ void travel_paint_banked(void)
     if (!same_screen) {
         tp_frame_init("TRAVELING...");
         travel_chrome_load_banked();
+        tp_strip_load(st);
     } else {
         s_row_used[0] = 1;
         s_row_used[1] = 1;
     }
-    tp_wash();
+    if (st != 0) {
+        tp_strip_cells(st);
+    } else {
+        tp_wash_top();
+    }
+    tp_wash_ground();
     tp_markers();
     tp_supplies();
     tp_lastrow();

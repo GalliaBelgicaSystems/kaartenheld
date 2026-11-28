@@ -7,5 +7,6 @@
   "enemy_hp": 10,
   "victory_gold": 8,
   "victory_days": 1,
-  "late_enemy_hp": 16
+  "late_enemy_hp": 16,
+  "victory_provisions": 3
 }

@@ -12,7 +12,10 @@
  * kind SIGNPOST) pick the journey on the dialogue's last row: phase 0
  * chooses the destination, phase 1 toggles CARRIAGE/WALK, A confirms
  * into code 13 with the staged route + method.  B backs out in either
- * phase (plain close, no journey).  Dispatched from
+ * phase (plain close, no journey).  Arrows mark live options only and
+ * are dynamic: the lone demo road shows its bare name, the method row
+ * shows "CARRIAGE 50G >" / "< WALK" (each side points where you can
+ * still go).  Dispatched from
  * dialogue_screen_update() instead of the bank-12 YES/NO body (bank
  * 12 sits ~200 B under its ceiling; this bank has kilobytes to spare,
  * AGENTS.md 55.5).
@@ -45,8 +48,8 @@ static uint8_t s_sp_id;
 static uint8_t s_sp_phase;
 static uint8_t s_sp_method;
 
-static const char s_sp_carriage[] = "< CARRIAGE 50G >";
-static const char s_sp_walk[] = "< WALK >";
+static const char s_sp_carriage[] = "CARRIAGE 50G >";
+static const char s_sp_walk[] = "< WALK";
 static const char s_sp_poor[] = "NEED 50G!";
 
 static void sp_put_char_ring(uint8_t x, uint8_t y, char ch, uint8_t ox, uint8_t oy)
@@ -61,7 +64,7 @@ static void sp_put_char_ring(uint8_t x, uint8_t y, char ch, uint8_t ox, uint8_t 
 }
 
 /* Repaint the picker's last row (space-padded full width, so a short
- * "< WALK >" clears a longer "< CARRIAGE 50G >"). */
+ * "< WALK" clears a longer "CARRIAGE 50G >"). */
 static void sp_paint_row(uint8_t row_y, const char *s)
 {
     uint8_t x;
@@ -70,6 +73,40 @@ static void sp_paint_row(uint8_t row_y, const char *s)
     while (s[len] != '\0') len++;
     for (x = 0; x < 20; x++) {
         sp_put_char_ring(x, row_y, (x < len) ? s[x] : ' ',
+                         g_game.world.scroll_x, g_game.world.scroll_y);
+    }
+}
+
+/* Paint the destination row without its JSON "< ... >" brackets: the
+ * bracket is only the static placeholder shape, the live arrows mark
+ * live options -- a lone road shows its bare name (neither side has
+ * anywhere to go). Repainted idempotently every phase-0 frame; the
+ * buffer skip makes repeats free. */
+static void sp_paint_dest(uint8_t row_y, const char *s)
+{
+    uint8_t x;
+    uint8_t i;
+    uint8_t len;
+    uint8_t start;
+    uint8_t end;
+    char ch;
+    len = 0;
+    while (s[len] != '\0') len++;
+    start = 0;
+    end = len;
+    if (len >= 4 && s[0] == '<' && s[1] == ' ' &&
+        s[end - 1] == '>' && s[end - 2] == ' ') {
+        start = 2;
+        end = (uint8_t)(end - 2);
+    }
+    for (x = 0; x < 20; x++) {
+        i = (uint8_t)(start + x);
+        if (i < end) {
+            ch = s[i];
+        } else {
+            ch = ' ';
+        }
+        sp_put_char_ring(x, row_y, ch,
                          g_game.world.scroll_x, g_game.world.scroll_y);
     }
 }
@@ -107,6 +144,15 @@ void signpost_nav_banked(void)
     line = (uint8_t)(g_game.dialogue.line_count - 1);
     row_y = (uint8_t)(15 + (uint8_t)(line - g_game.dialogue.current_line));
     edges = (uint8_t)(g_inp_pad & (uint8_t)~g_inp_prev);
+    /* Phase 0 shows the bare destination name: the JSON "< ... >"
+     * brackets are only the static placeholder shape, and a lone
+     * road has no live option on either side. Repainted every frame
+     * (idempotent via the buffer skip) so the placeholder never
+     * lingers past the page turn. */
+    if (s_sp_phase == 0) {
+        sp_paint_dest(row_y,
+            g_game.dialogue.lines[(uint8_t)(g_game.dialogue.line_count - 1)]);
+    }
     /* B backs out in either phase (plain close, no journey). */
     if (edges & (uint8_t)(1u << INPUT_B)) {
         g_game.dialogue.choice_made = 1;

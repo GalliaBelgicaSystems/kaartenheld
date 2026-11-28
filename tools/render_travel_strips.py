@@ -3,8 +3,8 @@
 
 Reads the same sources as travel_art_compile.py (journeys/routes/*.json
 + assets/travels/<biome>.json + tileset manifests + sheets) and draws
-each route's 18x3 strip exactly as laid out: cols 0-7 origin grove,
-cols 8-9 transition, cols 10-17 destination vista. Ground rows come
+each route's 16x3 strip exactly as laid out: cols 0-7 origin grove,
+cols 8-15 destination vista. Ground rows come
 from assets/travel-tile.png, trees from the world tileset sheets.
 
 Usage: python3 tools/render_travel_strips.py (inside nix develop).
@@ -85,19 +85,17 @@ def main():
     strips = []
     for r in routes:
         lo, ld = layouts[r["origin_biome"]], layouts[r["destination_biome"]]
-        img = Image.new("RGB", (18 * 8, 3 * 8), (255, 255, 255))
+        img = Image.new("RGB", (16 * 8, 3 * 8), (255, 255, 255))
         for row in range(3):
             for ci, ref in enumerate(lo["grove"][row]):
                 img.paste(cell_img(ref), (ci * 8, row * 8))
-            for cx in (8, 9):
-                img.paste(cell_img(lo["transition"][row]), (cx * 8, row * 8))
             for ci, ref in enumerate(ld["vista"][row]):
-                img.paste(cell_img(ref), ((10 + ci) * 8, row * 8))
+                img.paste(cell_img(ref), ((8 + ci) * 8, row * 8))
         strips.append((r["id"], img))
 
     draw_h = 12
     gap = 8
-    w = 18 * 8
+    w = 16 * 8
     h = sum(3 * 8 + draw_h + gap for _, _ in strips)
     canvas = Image.new("RGB", (w, h), (0, 0, 0))
     d = ImageDraw.Draw(canvas)

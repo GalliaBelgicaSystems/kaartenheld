@@ -10,5 +10,6 @@
   "late_enemy_hp": 10,
   "acts": [
     2
-  ]
+  ],
+  "victory_provisions": 3
 }

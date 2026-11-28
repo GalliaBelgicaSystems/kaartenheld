@@ -7,12 +7,18 @@
  * Linked into the travel-demo ROM only (TRAVEL_SRCS).
  *
  * Per-route composed strip, row-major (trees only):
- * cols 0-7 origin grove, cols 8-9 origin transition,
- * cols 10-17 destination vista; rows 0-1 in cells, row 2
+ * cols 0-7 origin grove, cols 8-15 destination vista;
+ * rows 0-1 in cells, row 2
  * (ground) in floor_o/floor_d as TCHROME_* indices.
  * Parallel to g_travel_routes (route declaration order).
- * Paint staging (dual-tileset load) is wiring-step work,
- * not part of this emit.
+ * Where a strip fits the journey CRAM window (at most 3
+ * distinct world ramps: STRIP_RAMP_BUDGET), the emit also
+ * carries the used 8x8 tile bytes (travel_art_tiles pool,
+ * parsed from the built gfx .inc files) plus the ramp CRAM
+ * bytes (ramps, in CRAM slot order 4/6/7) and per-cell pool
+ * + ramp indices (cells/pals), and use_strip is 1.  Strips
+ * needing more ramps emit use_strip 0 and the paint keeps
+ * the wash for them (with a WARNING at compile time).
  */
 
 #include "scene.h"
@@ -22,62 +28,119 @@
 typedef struct {
     uint8_t origin_tileset;
     uint8_t dest_tileset;
-    uint8_t cells[36];
-    uint8_t trans[3];
+    uint8_t use_strip;
+    uint8_t ramp_count;
+    uint8_t cells[32];
+    uint8_t pals[32];
+    uint8_t ramps[24];
     uint8_t floor_o[3];
     uint8_t floor_d[3];
 } TravelArtStrip;
 
+const uint8_t travel_art_tiles[] = {
+    0x00, 0x00, 0x00, 0x02, 0x00, 0x09, 0x00, 0x15, 0x00, 0x2C, 0x00, 0x12, 0x00, 0x2D, 0x00, 0x43, /* pool 0: desolate_landscape tile 12 */
+    0x00, 0x00, 0x00, 0x48, 0x00, 0x30, 0x00, 0x40, 0x00, 0x98, 0x00, 0xE0, 0x00, 0x96, 0x00, 0xC8, /* pool 1: desolate_landscape tile 13 */
+    0x00, 0x01, 0x00, 0x09, 0x00, 0x07, 0x00, 0x01, 0x00, 0x01, 0x00, 0x06, 0x00, 0x08, 0x00, 0x00, /* pool 2: desolate_landscape tile 28 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* pool 3: desolate_landscape tile 39 */
+    0x0C, 0x00, 0x1F, 0x00, 0x3A, 0x05, 0x7D, 0x02, 0xFF, 0x00, 0xD7, 0x28, 0x6D, 0x12, 0x7E, 0x01, /* pool 4: forest tile 12 */
+    0x00, 0x00, 0x38, 0x00, 0xFC, 0x00, 0xD6, 0x28, 0xEF, 0x10, 0xFF, 0x00, 0x7F, 0x80, 0xFE, 0x38, /* pool 5: forest tile 13 */
+    0x00, 0x3F, 0x00, 0x1F, 0x07, 0x07, 0x01, 0x01, 0x01, 0x01, 0x06, 0x06, 0x18, 0x18, 0x00, 0x00, /* pool 6: forest tile 28 */
+    0x40, 0xC0, 0xC0, 0xF8, 0x80, 0xB8, 0x80, 0x80, 0xC0, 0xC0, 0xB8, 0xB8, 0x40, 0x40, 0x40, 0x40, /* pool 7: forest tile 29 */
+};
+
+const uint8_t travel_art_tile_count = 8;
+const uint8_t travel_art_strip_count = 4;
+
 const TravelArtStrip travel_art_strips[] = {
     /* desolate_to_field: desolate -> forest */
-    { WORLD_TILESET_DESOLATE, WORLD_TILESET_FOREST, {
-        TILE_DESOLATE_LANDSCAPE_13, TILE_DESOLATE_LANDSCAPE_12, TILE_DESOLATE_LANDSCAPE_13, TILE_DESOLATE_LANDSCAPE_12, TILE_DESOLATE_LANDSCAPE_13, TILE_DESOLATE_LANDSCAPE_12,
-        TILE_DESOLATE_LANDSCAPE_13, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_39, TILE_FOREST_12, TILE_FOREST_13,
-        TILE_FOREST_12, TILE_FOREST_13, TILE_FOREST_12, TILE_FOREST_13, TILE_FOREST_12, TILE_FOREST_13,
-        TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_28, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_28, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_28,
-        TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_39, TILE_FOREST_28, TILE_FOREST_29,
-        TILE_FOREST_28, TILE_FOREST_29, TILE_FOREST_28, TILE_FOREST_29, TILE_FOREST_28, TILE_FOREST_29,
+    { WORLD_TILESET_DESOLATE, WORLD_TILESET_FOREST, 1, 3, {
+        1, 0, 1, 0, 1, 0,
+        1, 3, 4, 5, 4, 5,
+        4, 5, 4, 5, 3, 2,
+        3, 2, 3, 2, 3, 3,
+        6, 7, 6, 7, 6, 7,
+        6, 7,
+    }, {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 1, 1, 1, 1,
+        1, 1, 1, 1, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        2, 2, 2, 2, 2, 2,
+        2, 2,
+    }, {
+        0x32, 0x52, 0xE7, 0x24, 0x84, 0x14, 0x00, 0x00,
+        0xCF, 0x32, 0x25, 0x0D, 0xE3, 0x04, 0xE9, 0x0C,
+        0xCF, 0x32, 0xF2, 0x25, 0x25, 0x0D, 0xE9, 0x0C,
     },
-      { TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_39 },
       { 29, 30, 31 }, /* origin floors: forest_floor_icon_1, forest_floor_icon_2, forest_floor_icon_3 */
       { 29, 30, 31 }, /* destination floors: forest_floor_icon_1, forest_floor_icon_2, forest_floor_icon_3 */
     },
-    /* field_to_village: forest -> village */
-    { WORLD_TILESET_FOREST, WORLD_TILESET_VILLAGE, {
-        TILE_FOREST_12, TILE_FOREST_13, TILE_FOREST_12, TILE_FOREST_13, TILE_FOREST_12, TILE_FOREST_13,
-        TILE_FOREST_12, TILE_FOREST_13, TILE_FOREST_62, TILE_FOREST_62, TILE_VILLAGE_10, TILE_VILLAGE_11,
-        TILE_VILLAGE_11, TILE_VILLAGE_12, TILE_VILLAGE_06, TILE_VILLAGE_41, TILE_VILLAGE_14, TILE_VILLAGE_06,
-        TILE_FOREST_28, TILE_FOREST_29, TILE_FOREST_28, TILE_FOREST_29, TILE_FOREST_28, TILE_FOREST_29,
-        TILE_FOREST_28, TILE_FOREST_29, TILE_FOREST_62, TILE_FOREST_62, TILE_VILLAGE_42, TILE_VILLAGE_43,
-        TILE_VILLAGE_46, TILE_VILLAGE_44, TILE_VILLAGE_06, TILE_VILLAGE_41, TILE_VILLAGE_30, TILE_VILLAGE_06,
+    /* field_to_village: forest -> village (wash fallback: needs 5 ramps) */
+    { WORLD_TILESET_FOREST, WORLD_TILESET_VILLAGE, 0, 5, {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0,
+    }, {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0,
+    }, {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     },
-      { TILE_FOREST_62, TILE_FOREST_62, TILE_FOREST_62 },
       { 29, 30, 31 }, /* origin floors: forest_floor_icon_1, forest_floor_icon_2, forest_floor_icon_3 */
       { 29, 30, 31 }, /* destination floors: forest_floor_icon_1, forest_floor_icon_2, forest_floor_icon_3 */
     },
-    /* field_to_village_act1: forest -> village */
-    { WORLD_TILESET_FOREST, WORLD_TILESET_VILLAGE, {
-        TILE_FOREST_12, TILE_FOREST_13, TILE_FOREST_12, TILE_FOREST_13, TILE_FOREST_12, TILE_FOREST_13,
-        TILE_FOREST_12, TILE_FOREST_13, TILE_FOREST_62, TILE_FOREST_62, TILE_VILLAGE_10, TILE_VILLAGE_11,
-        TILE_VILLAGE_11, TILE_VILLAGE_12, TILE_VILLAGE_06, TILE_VILLAGE_41, TILE_VILLAGE_14, TILE_VILLAGE_06,
-        TILE_FOREST_28, TILE_FOREST_29, TILE_FOREST_28, TILE_FOREST_29, TILE_FOREST_28, TILE_FOREST_29,
-        TILE_FOREST_28, TILE_FOREST_29, TILE_FOREST_62, TILE_FOREST_62, TILE_VILLAGE_42, TILE_VILLAGE_43,
-        TILE_VILLAGE_46, TILE_VILLAGE_44, TILE_VILLAGE_06, TILE_VILLAGE_41, TILE_VILLAGE_30, TILE_VILLAGE_06,
+    /* field_to_village_act1: forest -> village (wash fallback: needs 5 ramps) */
+    { WORLD_TILESET_FOREST, WORLD_TILESET_VILLAGE, 0, 5, {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0,
+    }, {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0,
+    }, {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     },
-      { TILE_FOREST_62, TILE_FOREST_62, TILE_FOREST_62 },
       { 29, 30, 31 }, /* origin floors: forest_floor_icon_1, forest_floor_icon_2, forest_floor_icon_3 */
       { 29, 30, 31 }, /* destination floors: forest_floor_icon_1, forest_floor_icon_2, forest_floor_icon_3 */
     },
-    /* town_to_desolate: village -> desolate */
-    { WORLD_TILESET_VILLAGE, WORLD_TILESET_DESOLATE, {
-        TILE_VILLAGE_19, TILE_VILLAGE_41, TILE_VILLAGE_22, TILE_VILLAGE_07, TILE_VILLAGE_08, TILE_VILLAGE_41,
-        TILE_VILLAGE_22, TILE_VILLAGE_03, TILE_VILLAGE_06, TILE_VILLAGE_06, TILE_DESOLATE_LANDSCAPE_14, TILE_DESOLATE_LANDSCAPE_15,
-        TILE_DESOLATE_LANDSCAPE_14, TILE_DESOLATE_LANDSCAPE_15, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_12, TILE_DESOLATE_LANDSCAPE_14, TILE_DESOLATE_LANDSCAPE_39,
-        TILE_VILLAGE_06, TILE_VILLAGE_06, TILE_VILLAGE_06, TILE_VILLAGE_23, TILE_VILLAGE_24, TILE_VILLAGE_06,
-        TILE_VILLAGE_06, TILE_VILLAGE_06, TILE_VILLAGE_06, TILE_VILLAGE_06, TILE_DESOLATE_LANDSCAPE_30, TILE_DESOLATE_LANDSCAPE_31,
-        TILE_DESOLATE_LANDSCAPE_30, TILE_DESOLATE_LANDSCAPE_31, TILE_DESOLATE_LANDSCAPE_39, TILE_DESOLATE_LANDSCAPE_28, TILE_DESOLATE_LANDSCAPE_30, TILE_DESOLATE_LANDSCAPE_39,
+    /* town_to_desolate: village -> desolate (wash fallback: needs 6 ramps) */
+    { WORLD_TILESET_VILLAGE, WORLD_TILESET_DESOLATE, 0, 6, {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0,
+    }, {
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        0, 0,
+    }, {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     },
-      { TILE_VILLAGE_06, TILE_VILLAGE_06, TILE_VILLAGE_06 },
       { 29, 30, 31 }, /* origin floors: forest_floor_icon_1, forest_floor_icon_2, forest_floor_icon_3 */
       { 29, 30, 31 }, /* destination floors: forest_floor_icon_1, forest_floor_icon_2, forest_floor_icon_3 */
     },

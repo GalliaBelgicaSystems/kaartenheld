@@ -130,6 +130,7 @@ typedef struct {
     uint8_t enemy_hp;
     int16_t victory_gold;           /* battle: loot gold on victory */
     uint8_t victory_days;           /* battle: days the fight costs */
+    int8_t victory_provisions;      /* battle: loot provisions on victory */
     uint8_t late_hp;                /* battle: enemy_hp once DAY hits zero */
     char text[TRAVEL_TEXT_LEN + 1]; /* prompt (all kinds) */
     char text2[TRAVEL_TEXT_LEN + 1];/* opt1 result (choice) */
@@ -246,6 +247,32 @@ void travel_update(struct Game *g);
 
 /* No-arg banked paint body (travel_paint_banked.c, ROM bank 11). */
 void travel_paint_banked(void);
+
+/* ── Journey scenery strips (travel_art_content.c, ROM bank 13) ───
+ * Per-route 16-wide grove+vista art for rows 2-3 (screen cols 2-17),
+ * emitted by travel_art_compile.py.  use_strip is 1 when the strip's
+ * world ramps fit the journey CRAM window (at most 3 distinct ramps:
+ * slots 4/6/7 are the only free ones -- text/box/floors/markers/heart
+ * own 0-3/5); otherwise the paint keeps the wash.  cells[] indexes
+ * travel_art_tiles (inlined 8x8 bytes, same bank); pals[] indexes the
+ * strip's own ramps[] (slot order 4/6/7).  Mirror of the generator's
+ * TravelArtStrip -- keep in sync when the emit changes. */
+typedef struct {
+    uint8_t origin_tileset;
+    uint8_t dest_tileset;
+    uint8_t use_strip;
+    uint8_t ramp_count;
+    uint8_t cells[32];
+    uint8_t pals[32];
+    uint8_t ramps[24];
+    uint8_t floor_o[3];
+    uint8_t floor_d[3];
+} TravelArtStrip;
+
+extern const uint8_t travel_art_tiles[];
+extern const uint8_t travel_art_tile_count;
+extern const uint8_t travel_art_strip_count;
+extern const TravelArtStrip travel_art_strips[];
 
 /* Steps done (total - left), for the progress row. */
 uint8_t travel_steps_done(void);

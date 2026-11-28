@@ -222,6 +222,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "EMPTY CAMP AHEAD.", /* text */
         "LEFTOVERS FOUND.", /* opt1 result */
@@ -246,6 +247,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "EMPTY VILLAGE LOOMS.", /* text */
         "LEFT IN HASTE.", /* opt1 result */
@@ -270,6 +272,7 @@ const TravelEvent g_travel_events[] = {
         10, /* enemy_hp */
         8, /* victory_gold */
         1, /* victory_days */
+        3, /* victory_provisions */
         16, /* late_enemy_hp */
         "AMBUSH! SLIME ATTACK", /* text */
         "", /* text2 (unused) */
@@ -293,6 +296,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "SIGNS OF A BATTLE.", /* text */
         "PICKED CLEAN-ISH.", /* opt1 result */
@@ -317,6 +321,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "TRAVELLER WARNS YOU.", /* text */
         "ROADS WILL CLOSE.", /* opt1 result */
@@ -341,6 +346,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "COOK OFFERS A MEAL.", /* text */
         "HOT AND GOOD.", /* opt1 result */
@@ -365,6 +371,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "DARK PATH BECKONS.", /* text */
         "THORNS AND ALL.", /* opt1 result */
@@ -389,6 +396,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "DEPOT FULL OF SCRAP.", /* text */
         "HEAVY BUT RICH.", /* opt1 result */
@@ -413,6 +421,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "SIGNAL FIRE BURNS.", /* text */
         "GRATEFUL SOULS.", /* opt1 result */
@@ -437,6 +446,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "OLD FOE KNOWS YOU.", /* text */
         "DEBTS REPAID.", /* opt1 result */
@@ -461,6 +471,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "VILLAGE NEEDS HANDS.", /* text */
         "PAID IN KIND.", /* opt1 result */
@@ -485,6 +496,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "WALK TOGETHER?", /* text */
         "SHARED MEAL.", /* opt1 result */
@@ -509,6 +521,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "SLIDE BLOCKS ROUTE.", /* text */
         "OVER THE TOP.", /* opt1 result */
@@ -533,6 +546,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "LOST CHILD ASKS WAY.", /* text */
         "SAFE AT LAST.", /* opt1 result */
@@ -557,6 +571,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "EYES IN THE DARK.", /* text */
         "LONG NIGHT.", /* opt1 result */
@@ -581,6 +596,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "CAMP IS OCCUPIED.", /* text */
         "DRAW WEAPONS!", /* opt1 result */
@@ -605,6 +621,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "OLD SHRINE INVITES.", /* text */
         "BLESSING REST.", /* opt1 result */
@@ -629,6 +646,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "YOUR PACK TEARS.", /* text */
         "STITCHED UP.", /* opt1 result */
@@ -653,6 +671,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "BEAST GUARDS PASS.", /* text */
         "DRAW WEAPONS!", /* opt1 result */
@@ -677,6 +696,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "PILGRIMS BLOCK ROAD.", /* text */
         "THEY PASS ON.", /* opt1 result */
@@ -701,6 +721,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "SLIME PACK LOOMS.", /* text */
         "DRAW WEAPONS!", /* opt1 result */
@@ -725,6 +746,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "GUARDS WANTED.", /* text */
         "DRAW WEAPONS!", /* opt1 result */
@@ -749,6 +771,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "CART BROKE DOWN.", /* text */
         "FRIEND FOR LIFE.", /* opt1 result */
@@ -773,6 +796,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "RIVER RUNS FAST.", /* text */
         "COLD AND FAST.", /* opt1 result */
@@ -797,6 +821,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "TRAVELER HAS NEWS.", /* text */
         "SHORTCUTS REVEALED.", /* opt1 result */
@@ -821,6 +846,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "OLD STONE RECORDS.", /* text */
         "ANCIENT EVENT...", /* opt1 result */
@@ -845,6 +871,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "YOU SPOT OLD RUINS.", /* text */
         "YOU ENTER THE RUINS.", /* explore result */
@@ -868,6 +895,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "HUNGRY FAMILY BEGS.", /* text */
         "BLESSINGS SHARED.", /* opt1 result */
@@ -892,6 +920,7 @@ const TravelEvent g_travel_events[] = {
         8, /* enemy_hp */
         6, /* victory_gold */
         1, /* victory_days */
+        3, /* victory_provisions */
         12, /* late_enemy_hp */
         "BAT ATTACKS!", /* text */
         "", /* text2 (unused) */
@@ -915,6 +944,7 @@ const TravelEvent g_travel_events[] = {
         12, /* enemy_hp */
         9, /* victory_gold */
         1, /* victory_days */
+        3, /* victory_provisions */
         18, /* late_enemy_hp */
         "SPIDER ATTACKS!", /* text */
         "", /* text2 (unused) */
@@ -938,6 +968,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "A DROPPED LETTER.", /* text */
         "LORD OF SLIMES...", /* opt1 result */
@@ -962,6 +993,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "SLIME COVERS A TREE.", /* text */
         "VALUABLE GOO.", /* opt1 result */
@@ -986,6 +1018,7 @@ const TravelEvent g_travel_events[] = {
         14, /* enemy_hp */
         14, /* victory_gold */
         1, /* victory_days */
+        3, /* victory_provisions */
         20, /* late_enemy_hp */
         "SLIMES ATTACK!", /* text */
         "", /* text2 (unused) */
@@ -1009,6 +1042,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "PROVISIONS SPOILED.", /* text */
         "CLEAN PACK.", /* opt1 result */
@@ -1033,6 +1067,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "STORM IS COMING.", /* text */
         "WAIT IT OUT.", /* opt1 result */
@@ -1057,6 +1092,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "MERCHANT NEEDS PROV.", /* text */
         "HE PAYS IN GOLD.", /* opt1 result */
@@ -1081,6 +1117,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "ANIMALS ACT ODDLY.", /* text */
         "BERRY TRAIL.", /* opt1 result */
@@ -1105,6 +1142,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "FOG CLOSES IN.", /* text */
         "FOG LIFTS.", /* opt1 result */
@@ -1129,6 +1167,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "LIGHT ON HORIZON.", /* text */
         "COLD FIRE CACHE.", /* opt1 result */
@@ -1153,6 +1192,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "NOISES IN THE DARK.", /* text */
         "DRAW WEAPONS!", /* opt1 result */
@@ -1177,6 +1217,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "BURIED CACHE HERE.", /* text */
         "JACKPOT.", /* opt1 result */
@@ -1201,6 +1242,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "MERCHANT HAS GOODS.", /* text */
         "STOCKED UP.", /* opt1 result */
@@ -1225,6 +1267,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "SWAP PROV 4 SCRAP?", /* text */
         "FAIR TRADE.", /* opt1 result */
@@ -1249,6 +1292,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "TRAVELER NEEDS HELP.", /* text */
         "YOU SHARE SUPPLIES.", /* opt1 result */
@@ -1273,6 +1317,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "EYES ON THE RIDGE.", /* text */
         "GONE LIKE SMOKE.", /* opt1 result */
@@ -1297,6 +1342,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "PROVISIONS FOUND.", /* text */
         "PACKED AWAY.", /* opt1 result */
@@ -1321,6 +1367,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "WAYSTONE FLICKERS.", /* text */
         "WARMTH SPREADS.", /* opt1 result */
@@ -1345,6 +1392,7 @@ const TravelEvent g_travel_events[] = {
         6, /* enemy_hp */
         6, /* victory_gold */
         1, /* victory_days */
+        3, /* victory_provisions */
         10, /* late_enemy_hp */
         "WEAK BEAST!", /* text */
         "", /* text2 (unused) */
@@ -1368,6 +1416,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "BERRY BUSHES GROW.", /* text */
         "SWEET HAUL.", /* opt1 result */
@@ -1392,6 +1441,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "HURT FIGHTER ASKS.", /* text */
         "HE SHARES LOOT.", /* opt1 result */
@@ -1416,6 +1466,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "HURT BEAST SNARLS.", /* text */
         "DRAW WEAPONS!", /* opt1 result */
@@ -1440,6 +1491,7 @@ const TravelEvent g_travel_events[] = {
         0, /* enemy_hp */
         0, /* victory_gold (unused) */
         0, /* victory_days (unused) */
+        0, /* victory_provisions (unused) */
         0, /* late_enemy_hp (unused) */
         "SIGN LOOKS WRONG.", /* text */
         "WRONG WAY!", /* opt1 result */
